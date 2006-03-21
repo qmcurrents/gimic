@@ -1,0 +1,65 @@
+#
+# $Id$
+#
+
+#DEBUG=1
+#RANGE=1
+#PROF=1
+
+topdir:=@top_srcdir@
+srcdir:=@srcdir@
+
+include $(topdir)/make.config
+
+INST_PROGS:=gimic 
+INST_LIBS:=
+INST_INCLUDES:=
+INST_DATA:=
+# module names are listed in smallcaps and wihtout any .mod
+INST_MODULES:=
+
+ifneq ($(LIBACES2),)
+INST_PROGS+=xcpdens_sym.x
+endif
+
+include $(topdir)/make.rules
+
+gimic_objs=precision.o keydef.o globals.o teletype.o intgrl.o factorial.o \
+	lip.o gtodefs.o cao2sao.o basis.o reorder.o caos.o dboper.o gaussint.o \
+    bfeval.o mpi.o grid.o tensor.o dens.o dfdb.o dfdr.o d2fdrdb.o  \
+    jtensor.o timer.o jfield.o divj.o integral.o edens.o\
+	parallel.o gimic.o 
+
+gimic_src=$(wildcard *.f90 *.c)
+gimic_libs:=$(LIBS) $(LIBGETKW)
+
+pdens_objs=pdens.o
+pdens_src=pdens.f
+pdens_libs=$(LIBACES2)
+
+cpdens_objs=cpdens.o
+cpdens_src=cpdens.f90
+cpdens_libs=$(LIBACES2)
+
+all: $(INST_PROGS)
+
+gimic: $(gimic_objs) 
+	$(FC) $(FLDFLAGS) -o $@ $+ $(gimic_libs) 
+
+xpdens: $(pdens_objs) 
+	$(FC) $(FLDFLAGS) -o $@ $+ $(pdens_libs) 
+
+xcpdens: $(cpdens_objs) 
+	$(FC) $(FLDFLAGS) -o $@ $+ $(cpdens_libs) 
+
+xcpdens_sym.x: xcpdens_sym.o
+	$(FC) $(FLDFLAGS) -o $@ $+ $(cpdens_libs) $(BLAS_LIBS)
+
+.PHONY: dep deps
+dep deps:
+	$(topdir)/config/mkdep90.py $(gimic_src) >deps.mk
+
+ifeq (, $(wildcard $(topdir)/deps.mk))
+$(shell $(topdir)/config/mkdep90.py $(gimic_src) >deps.mk)
+endif
+include $(topdir)/deps.mk

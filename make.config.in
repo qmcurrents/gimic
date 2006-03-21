@@ -1,0 +1,119 @@
+#
+# Config.mk.in
+# written by Jonas Juselius <jonas@iki.fi> Tue Dec  4 12:09:26 EET 2001
+#
+
+@SET_MAKE@
+
+SHELL:=@SHELL@
+
+host:=@host@
+host_os:=@host_os@
+host_cpu:=@host_cpu@
+host_vendor:=@host_vendor@
+
+CC:=@CC@
+FC:=@FC@
+CPP:=@CPP@
+CPPFLAGS:=@CPPFLAGS@
+CFLAGS:=@CFLAGS@
+FCFLAGS:=@FCFLAGS@
+LDFLAGS:=@LDFLAGS@
+LIBS:=@LIBS@
+
+LD:=@LD@
+RAN:=@RANLIB@
+STRIP:=@STRIP@
+AWK:=@AWK@
+AR:=@AR@
+ETAGS:=@ETAGS@
+CTAGS:=@CTAGS@
+LN_S:=@LN_S@
+YACC:=@YACC@
+LEX:=@LEX@
+LEXLIB:=@LEXLIB@
+
+INSTALL:=@INSTALL@
+INSTALL_DATA:=@INSTALL_DATA@
+INSTALL_SCRIPT:=@INSTALL_SCRIPT@
+INSTALL_PROGRAM:=@INSTALL_PROGRAM@
+mkinstalldirs=$(topdir)/config/mkinstalldirs
+
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+inst_bindir=@bindir@
+inst_libdir=@libdir@
+inst_includedir=@includedir@
+inst_datadir=@datadir@
+
+libdir:=@top_libdir@
+bindir:=@top_bindir@
+includedir:=@top_includedir@
+datadir:=@top_datadir@
+
+all_src:=$(wildcard *.f90 *.F *.f *.c)
+all_objs:=$(addsuffix .o, $(basename $(all_src)))
+tag_src:=$(filter-out lex.yy.c, $(all_src))
+tag_src:=$(filter-out y.tab.c, $(tag_src))
+
+# search path used by make to find dependencies
+VPATH=$(includedir):$(libdir):$(bindir)
+
+ARCH=@host@
+
+BLAS_LIBS=@BLAS_LIBS@ 
+LAPACK_LIBS=@LAPACK_LIBS@ $(BLAS_LIBS)
+
+BLAS95=@F90_LIBS_blas95@
+LAPACK95=@F90_LIBS_lapack95@
+LIBGETKW=@F90_LIBS_getkw@
+LIBMPI_F90=@F90_LIBS_mpi_f90@
+LIBACES2=@F90_LIBS_aces2@
+
+#Fortran flags
+fcflags:=@fcflags@
+fdebug:=@fdebug@
+fprof:=@fprof@
+frange:=@frange@
+fldflags:=@fldflags@
+
+# C compiler flags
+cflags:=@cflags@
+cdebug:=@cdebug@
+cprof:=@cprof@
+crange:=@crange@
+cldflags:=@cldflags@
+
+ifdef DEBUG
+  fcflags:=$(fdebug) 
+  cflags:=$(cdebug) 
+  bindir:=.
+endif
+
+fcflags+=-I$(includedir) 
+cflags+=-I$(includedir) 
+
+ifdef PROF
+  fcflags+=$(fprof)
+  fldflags+=$(fprof)
+  cflags+=$(cprof)
+  cldflags+=$(cprof)
+  bindir:=.
+endif
+
+ifdef RANGE
+  fcflags+=$(frange)
+  cflags+=$(crange)
+  bindir:=.
+endif
+
+fldflags:=$(fldflags) -L. -L$(libdir) $(LDFLAGS)
+cldflags:=$(cldflags) -L. -L$(libdir) $(LDFLAGS)
+
+# remove extra whitespace
+FCFLAGS:=$(strip  $(fcflags) $(FCFLAGS))
+FLDFLAGS:=$(strip $(fldflags) $(FLDFLAGS))
+
+CFLAGS:=$(strip   $(cflags) $(CFLAGS))
+CLDFLAGS:=$(strip $(cldflags) $(CLDFLAGS))
+

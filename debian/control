@@ -1,0 +1,15 @@
+Source: gimic
+Section: unknown
+Priority: optional
+Maintainer: Jonas Juselius <jonas@iki.fi>
+Build-Depends: debhelper (>= 4.0.0)
+Standards-Version: 3.6.1
+
+Package: gimic
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Program for calculating magnetically induced currents
+ GIMIC (Gauge-Including Magnetically Induced Currents) is a program to
+ calculate current densities in molecules. For more information see:
+ J. Chem. Phys., 121, 3952 (2004).
+

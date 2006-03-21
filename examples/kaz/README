@@ -1,0 +1,5 @@
+1. run xgimic.sh
+2. run MOL2mol.sh
+3. run gimic
+4a. run gnuplot plot.plt
+4b. run gopenmol koord.xyz -> plot -> vectors -> JVEC.1.txt

@@ -1,0 +1,79 @@
+#
+# $Id: cdens.inp,v 1.15 2002/03/06 15:43:58 jonas Exp $
+# 
+
+CDENS {
+	rerun=off
+	title="CO2"
+	basis="mol"
+	density="XDENS"
+	spherical=off
+	debug=5
+	calc=[cdens, integral, divj]
+
+	cdens {
+		jtensor="JTENSOR"
+		jvector="JVECTOR"
+		orthogonal_magnet=off
+		magnet=[1.0, 0.0, 0.0]
+		scale_vectors=1.0
+		diamag=on
+		paramag=on
+		plot(on) {
+			plots=[1]
+			vector="JVEC"
+			modulus="JMOD"
+			projection="JPRJ"
+			#nvector="NJVEC"
+			gopenmol="jmod.plt"
+		}
+	}
+	
+	grid(std) {      
+		type=even
+		origin=[-4.0,0.0, -4.0]
+		v1=[4.0,0.0, -4.0]
+		v2=[ -4.0,0.0, 4.0]
+		l3=0.0
+		height = [5.0, 5.0] # not used for 'std' grid
+		width  = [5.0, 5.0]  # not used for 'std' grid
+		step=[0.5, 0.5, 0.5]
+		map=[-4.0, -4.0]
+		gridplot=15
+	}
+
+	integral {
+		interpolate=off
+		lip_order=5
+		grid(bond) {      
+			type=gauss
+			origin=[0.0, 1.0, 1.096]
+			v1=[0.0, 0.0, 0.0]
+			v2=[0.0, 0.0, 2.192328]
+			l3=1.096
+			gauss_points=[9,9,0]
+			grid_points=[90,90,0]
+			height=[5.0, 5.0]
+			width=[5.0, 5.0]
+			gridplot=15
+		}
+	}
+
+	divj {
+		plots=[1]
+		gopenmol=divj.plt
+#        grid(std) {      
+#            type=even
+#            origin=[-4.0, -4.0, -4.0]
+#            v1=[4.0,-4.0, -4.0]
+#            v2=[-4.0, 4.0, -4.0]
+#            l3=8.0
+#            height=[5.0, 5.0]
+#            width=[5.0, 5.0]
+#            step=[0.1, 0.1, 0.1]
+#            map=[-4.0, -4.0]
+#            gridplot=15
+#        }
+	}
+
+} #END CDENS
