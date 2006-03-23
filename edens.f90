@@ -1,6 +1,4 @@
 !
-! $Id:$
-!
 ! Calulate the electronic density on a grid.
 ! Coded by Jonas Juselius <jonas@iki.fi> 2003
 ! 
