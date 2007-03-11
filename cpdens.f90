@@ -8,6 +8,7 @@
 ! 
 !********************************************************************** 
 module cpdcom
+    use precision_m
 	implicit none
 	
 	integer(I4), dimension(8,8) :: dirprd
@@ -65,6 +66,7 @@ end module
 !
 !********************************************************************** 
 module sympack
+    use precision_m
 	use cpdcom
 	implicit none
 
@@ -223,6 +225,7 @@ end module
 ! 
 !********************************************************************** 
 module mocoef
+    use precision_m
 	use cpdcom
 	use sympack
 	implicit none
@@ -269,6 +272,7 @@ end module
 !
 !********************************************************************** 
 module densmat
+    use precision_m
 	use cpdcom
 	use mocoef
 	implicit none
@@ -345,6 +349,7 @@ end module
 !
 !********************************************************************** 
 module ccpdensmod
+    use precision_m
 	use cpdcom
 	implicit none
 	
@@ -490,6 +495,7 @@ end module
 ! 
 !********************************************************************** 
 module pdensmat
+    use precision_m
 	use cpdcom
 	use mocoef
 	use sympack
@@ -815,12 +821,14 @@ end module
 ! F90 version     : J. Juselius, July 2002
 !
 ! TODO: So far no symmetry usage has been implemented
+!       SPHERICAL -> CARTESIAN transformation
 !
 ! J. Gauss University of Mainz, 2002
 ! 
 !********************************************************************** 
 
 program cpdens
+    use precision_m
 	use cpdcom
 	use mocoef
 	use densmat
@@ -853,8 +861,8 @@ program cpdens
 	end if
 
 	call setup_commons
-	call init_mos
-	call init_pdens
+	call init_mos()
+	call init_pdens()
 	
 	! get unperturbed (electron-correlated) density matrix and MOs
 	call getdens(dens)
@@ -862,7 +870,7 @@ program cpdens
 
 	! write unperturbed density and MOs to disk
 
-	write(42,*) dens
+	write(42,'(d)') dens
 	write(42,*) 
 	if (.not.correlated) then
 		write(43,*) mos
@@ -889,7 +897,8 @@ program cpdens
 
 		! write perturbed density and MOs to disk
 
-        write(42,*) pdens
+!        write(42,*) pdens
+		write(42,'(d)') pdens
 		write(42,*) 
 
 		! get perturbed MOs for B 
@@ -901,7 +910,7 @@ program cpdens
 
 		! check perturbed density matrices by computing the 
 		! paramagnetic shieldings
-		call psigma(pdens, b) 
+!        call psigma(pdens, b) 
 		print *
 	end do
 

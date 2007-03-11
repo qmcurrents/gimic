@@ -21,7 +21,7 @@ module integral_m
 
 	public init_integral, del_integral, integral_t
 	public integrate, int_t_direct, int_s_direct, int_t_2d, lipton
-	public integral_master, integral_slave, write_integral
+	public integral_master, integral_slave, write_integral, int_mod_direct
 	
 	private 
 	
@@ -164,6 +164,96 @@ contains
 		call msg_out(str_g)
 		call nl
 		write(str_g, '(a,f13.6)') '   Induced current (nA/T)  :', au2si(xsum3)
+		call msg_out(str_g)
+		write(str_g, '(a,f13.6)') '      (conversion factor)  :', au2si(1.d0)
+		call msg_out(str_g)
+		call msg_out(repeat('*', 60))
+	end subroutine
+
+	! integrate the modulus of the current, retaining the sign
+	! test version
+	subroutine int_mod_direct(it)
+		type(integral_t), intent(inout) :: it
+
+		integer(I4) :: i, j, k, p1, p2, p3
+		real(DP), dimension(3) :: normal, rr, center, bb
+		real(DP) :: psum, nsum, w, jp, r, bound, sgn
+		real(DP) :: psum2, nsum2
+		real(DP) :: psum3, nsum3
+		real(DP) :: xsum, xsum2, xsum3
+		type(vector_t) :: jvec
+		type(tensor_t) :: jt
+		
+		call get_grid_size(it%grid, p1, p2, p3)
+		call getkw('cdens.magnet', bb)
+
+		normal=get_grid_normal(it%grid)
+
+		bound=1.d+10
+		call getkw('integral.radius', bound)
+		call grid_center(it%grid,center)
+
+		xsum3=0.d0
+		psum3=0.d0
+		nsum3=0.d0
+		do k=1,p3
+			xsum2=0.d0
+			psum2=0.d0
+			nsum2=0.d0
+			do j=1,p2
+				xsum=0.d0
+				psum=0.d0
+				nsum=0.d0
+				do i=1,p1
+					rr=gridpoint(it%grid, i, j, k)
+					r=sqrt(sum((rr-center)**2))
+					call jtensor(it%jt, rr, jt)
+					jvec%v=matmul(jt%t,bb)
+					if ( r > bound ) then
+						w=0.d0
+					else
+						w=get_weight(it%grid, i, 1) 
+						jp=dot_product(normal,jvec%v)
+						if (abs(jp) < 1.d-12) then ! prob. parallel component
+							sgn=0.d0
+							print *, 'foo', i
+						else if (jp > 0) then
+							sgn=1.d0
+						else
+							sgn=-1.d0
+						end if
+					end if
+					jp=sgn*sqrt(sum(jvec%v**2))
+					xsum=xsum+jp*w
+					if (jp > 0.d0) then
+						psum=psum+jp*w
+					else
+						nsum=nsum+jp*w
+					end if
+				end do
+				w=get_weight(it%grid,j,2)
+				xsum2=xsum2+xsum*w
+				psum2=psum2+psum*w
+				nsum2=nsum2+nsum*w
+			end do
+			w=get_weight(it%grid,k,3)
+			xsum3=xsum3+xsum2*w
+			psum3=psum3+psum2*w
+			nsum3=nsum3+nsum2*w
+		end do
+
+		call nl
+		call msg_out(repeat('*', 60))
+		write(str_g, '(a,f13.6)') 'Induced mod current (au)   :', xsum3
+		call msg_out(str_g)
+		write(str_g, '(a,f13.6,a,f11.6,a)') &
+			'      Positive contribution:', psum3, '  (',au2si(psum3),' )'
+		call msg_out(str_g)
+		write(str_g, '(a,f13.6,a,f11.6,a)') &
+			'      Negative contribution:', nsum3, '  (',au2si(nsum3),' )'
+		call msg_out(str_g)
+		call nl
+		write(str_g, '(a,f13.6)') 'Induced mod current (nA/T) :', au2si(xsum3)
 		call msg_out(str_g)
 		write(str_g, '(a,f13.6)') '      (conversion factor)  :', au2si(1.d0)
 		call msg_out(str_g)

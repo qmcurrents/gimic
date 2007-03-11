@@ -19,7 +19,7 @@ INST_DATA:=
 INST_MODULES:=
 
 ifneq ($(LIBACES2),)
-INST_PROGS+=xcpdens_sym.x
+INST_PROGS+=xcpdens_sym.x xcpdens
 endif
 
 include $(topdir)/make.rules

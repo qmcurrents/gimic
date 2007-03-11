@@ -1,0 +1,35 @@
+#!/bin/sh
+
+snykov() {
+BLASDIR=/opt/intel/cmkl/8.0/lib/64
+INSTDIR=$HOME/gimic
+case $* in 
+	--mpi) 
+	MPIFC=scampif90 ./configure --prefix=${INSTDIR}.par \
+	--with-blas-dir=$BLASDIR --enable-mpi
+	;;
+	*)
+	./configure --prefix=${INSTDIR}.07 --with-blas-dir=$BLASDIR
+	;;
+esac
+}
+
+snowflake() {
+BLASDIR=/opt/lib
+INSTDIR=/opt/gimic
+case $* in
+	--mpi) 
+	./configure --prefix=${INSTDIR}.par --with-blas-dir=$BLASDIR --enable-mpi
+	;;
+	*)
+	./configure --prefix=${INSTDIR} --with-blas-dir=$BLASDIR --with-aces2=$HOME/software/mainz/aces2/lib
+	;;
+esac
+}
+
+case `hostname` in 
+	compute-0-6.*) snykov ;;
+	snowflake*) snowflake ;;
+	*) echo "unknown machine..."; exit 0 ;;
+esac
+

@@ -24,8 +24,8 @@ program gimic
 	call finalize()
 
 	call stockas_klocka()
-	call msg_out('Hello World!®')
-	call program_footer()
+	call msg_out('Hello World! (tm)')
+!    call program_footer()
 	
 	if (bert_is_evil) then
 		call msg_error('Bert is evil, and your results are wicked.')
@@ -399,8 +399,9 @@ contains
 					if (nike_p) then
 !                        call int_t_direct(it)
 						call int_s_direct(it)
+						call int_mod_direct(it)
 					end if
-					call write_integral(it)
+!                    call write_integral(it)
 				case(DIVJ_TAG)
 					if (nike_p) call divj(dj)
 					call divj_plot(dj)
@@ -470,8 +471,6 @@ call nl
 call msg_out(repeat('=',75))
 call msg_out('Said about GIMIC in the press:')
 call msg_out('  - A Pretty Advanced ''Hello World!'' Program')
-call msg_out('  - Better than Viagra!')
-call msg_out('  - It''s a cow, but it flies!')
 call msg_out(repeat('=',75))
 call nl
 	end subroutine
