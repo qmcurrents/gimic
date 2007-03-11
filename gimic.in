@@ -1,0 +1,180 @@
+#!/usr/bin/env @PYTHON@
+# -*- coding: utf-8 -*-
+#
+# Written by Jonas Juselius <jonas.juselius@chem.uit.no> 
+# University of Tromsø, 2007
+#
+# vim:syntax=python
+
+import sys,os
+sys.path.append("@inst_libexecdir@")
+os.environ['PATH']=".:@inst_bindir@:"+os.environ['PATH']
+
+#from subprocess import Popen, PIPE
+import re
+import optparse
+import getkw
+
+def main():
+	usage="usage: %prog [options] [config] density"
+	cmdln=optparse.OptionParser(usage=usage)
+	cmdln.add_option('-t', action='store', dest='title',
+			help='title of job')
+	cmdln.add_option('-d','--debug', action='store', dest='debug',
+			help='debug level')
+	cmdln.add_option('-M','--mpi', action='store_true', dest='mpirun',
+			default=False, help='parallel run')
+	cmdln.add_option('-o','--output', action='store', dest='outfile',
+			help='base name for output file(s)')
+	cmdln.add_option('-D','--debug-file', action='store', dest='debugf',
+			help='debug file name')
+   cmdln.add_option('-v','--verbose', action='store_true', dest='verbose',
+		   help='be verbose')
+   cmdln.add_option('-q','--quiet', action='store_false', dest='verbose',
+		   help='be quiet')
+	(opts, args)=cmdln.parse_args()
+
+	
+	density=None
+	inpfil=None
+	if (len(args) == 0):
+		inpfil="gimic.inp"
+	elif (len(args) == 1):
+		inpfil="gimic.inp"
+		density=args[0]
+	elif (len(args) == 2):
+		inpfil=args[0]
+		density=args[1]
+	else:
+		cmdln.error('incorrect number of files')
+		sys.exit(0)
+	
+	top=getkw.Section('top')
+	top.set_status(True)
+	top.add_kw('title', 'STR', ('',))
+	top.add_kw('debug_file', 'STR', ('DEBUG.out',))
+	top.add_kw('debug', 'INT', (0,))
+	top.add_kw('basis', 'STR', ('mol',))
+	top.add_kw('density', 'STR', 1)
+	top.add_kw('mpirun', 'BOOL', (False,))
+	top.add_kw('rerun', 'BOOL', (False,))
+	top.add_kw('calc', 'STR', None)
+
+	plot=getkw.Section('plot')
+	plot.add_arg('BOOL', (True, ))
+	plot.add_kw('plots','INT', None)
+	plot.add_kw('vector','STR', 1)
+	plot.add_kw('modulus','STR', 1)
+	plot.add_kw('projection','STR', 1)
+	plot.add_kw('nvector','STR', 1)
+	plot.add_kw('gopenmol','STR', 1)
+
+	cdens=getkw.Section('cdens')
+	cdens.add_kw('jtensor', 'STR', ('JTENSOR',))
+	cdens.add_kw('jvector', 'STR', ('JVECTOR',))
+	cdens.add_kw('diamag', 'BOOL', (True,))
+	cdens.add_kw('paramag', 'BOOL', (True,))
+	cdens.add_kw('orthogonal_magnet', 'BOOL', (False,))
+	cdens.add_kw('scale', 'DBL', (1.0,))
+	cdens.add_kw('magnet', 'DBL', 3, req=True)
+	cdens.add_sect(plot)
+
+
+	grid=getkw.Section('grid')
+	grid.set_arg('STR', ('std',))
+	grid.add_kw("type", 'STR', ('even',))
+	grid.add_kw("origin", 'DBL', 3, req=True)
+	grid.add_kw("v1", 'DBL', 3, req=True)
+	grid.add_kw("v2", 'DBL', 3, req=True)
+	grid.add_kw("step", 'DBL', 3)
+	grid.add_kw("map", 'DBL', 2)
+	grid.add_kw("height", 'DBL', 2)
+	grid.add_kw("width", 'DBL', 2)
+	grid.add_kw("l3", 'DBL', 1)
+	grid.add_kw("radius", 'DBL', 1)
+	grid.add_kw("gridplot", 'INT', 1)
+
+	intgrid=getkw.Section('grid')
+	intgrid.set_arg('STR', ('bond',))
+	intgrid.add_kw("type", 'STR', ('even',))
+	intgrid.add_kw("origin", 'DBL', 3, req=True)
+	intgrid.add_kw("v1", 'DBL', 3, req=True)
+	intgrid.add_kw("v2", 'DBL', 3, req=True)
+	intgrid.add_kw("step", 'DBL', 3)
+	intgrid.add_kw("map", 'DBL', 2)
+	intgrid.add_kw("height", 'DBL', 2)
+	intgrid.add_kw("width", 'DBL', 2)
+	intgrid.add_kw("l3", 'DBL', 1)
+	intgrid.add_kw("radius", 'DBL', 1)
+	intgrid.add_kw("gridplot", 'INT', 1)
+
+	divgrid=getkw.Section('grid')
+	intgrid.set_arg('STR', ('std',))
+	divgrid.add_kw("type", 'STR', ('even',))
+	divgrid.add_kw("origin", 'DBL', 3, req=True)
+	divgrid.add_kw("v1", 'DBL', 3, req=True)
+	divgrid.add_kw("v2", 'DBL', 3, req=True)
+	divgrid.add_kw("step", 'DBL', 3)
+	divgrid.add_kw("map", 'DBL', 2)
+	divgrid.add_kw("height", 'DBL', 2)
+	divgrid.add_kw("width", 'DBL', 2)
+	divgrid.add_kw("l3", 'DBL', 1)
+	divgrid.add_kw("radius", 'DBL', 1)
+	divgrid.add_kw("gridplot", 'INT', 1)
+
+	integral=getkw.Section('integral')
+	integral.add_kw('lip_order', 'INT', (10,))
+	integral.add_kw('interpolate', 'BOOL', (False,))
+	integral.add_sect(intgrid)
+
+	divj=getkw.Section('divj')
+	divj.add_kw('plots', 'INT', None)
+	divj.add_kw('gopenmol', 'STRING', ('divj.plt',))
+	divj.add_sect(divgrid)
+
+	top.add_sect(cdens)
+	top.add_sect(grid)
+	top.add_sect(integral)
+	top.add_sect(divj)
+	
+	if inpfil is not None:
+		input=getkw.GetkwParser()
+		inkw=input.parseFile(inpfil)
+		inkw.equalize(start)
+	else:
+		inkw=start
+
+	if opts.title:
+		inkw.setkw('title', opts.title)
+	if opts.debug:
+		inkw.setkw('debug', opts.debug)
+	if opts.mpirun:
+		inkw.setkw('mpirun', opts.mpirun)
+	if opts.outfile:
+		inkw.setkw('outfile', opts.outfile)
+	if opts.lip:
+		inkw.setkw('lip', opts.lip)
+	if opts.debugf:
+		inkw.setkw('debug_file', opts.debugf)
+	if opts.test:
+		tmp=inkw.getsect('grid')
+		tmp.setkw('dim', (opts.test, opts.test, opts.test))
+	if opts.mode:
+		inkw.setkw('mode', opts.mode)
+	if density is not None:
+		inkw.setkw('density', density)
+
+#    inkw.xvalidate(start)
+	inkw.validate()
+
+	infile='GIMIC.' + str(os.getpid())
+	fd=open(infile,'w')
+	print >>fd, inkw
+	fd.close()
+	os.system('gimic.x < ' + infile)
+	os.unlink(infile)
+
+
+if __name__ == '__main__':
+	main()
+

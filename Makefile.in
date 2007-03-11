@@ -11,7 +11,7 @@ srcdir:=@srcdir@
 
 include $(topdir)/make.config
 
-INST_PROGS:=gimic 
+INST_PROGS:=gimic.x gimic
 INST_LIBS:=
 INST_INCLUDES:=
 INST_DATA:=
@@ -24,14 +24,14 @@ endif
 
 include $(topdir)/make.rules
 
-gimic_objs=precision.o keydef.o globals.o teletype.o intgrl.o factorial.o \
+gimic_objs=precision.o globals.o teletype.o intgrl.o factorial.o \
 	lip.o gtodefs.o cao2sao.o basis.o reorder.o caos.o dboper.o gaussint.o \
     bfeval.o mpi.o grid.o tensor.o dens.o dfdb.o dfdr.o d2fdrdb.o  \
     jtensor.o timer.o jfield.o divj.o integral.o edens.o\
 	parallel.o gimic.o 
 
 gimic_src=$(wildcard *.f90 *.c)
-gimic_libs:=$(LIBS) $(LIBGETKW)
+gimic_libs:=$(LIBS) 
 
 pdens_objs=pdens.o
 pdens_src=pdens.f
@@ -43,7 +43,11 @@ cpdens_libs=$(LIBACES2)
 
 all: $(INST_PROGS)
 
-gimic: $(gimic_objs) 
+gimic: gimic.in
+	sed 's/@binexecpath@/$(subst /,\/,$(inst_bindir))/; s/@libexecpath@/$(subst /,\/,$(inst_libexecdir))/; s/@PYTHON@/$(PYTHON_BIN)/' $< > $@
+	chmod 755 $@
+
+gimic.x: $(gimic_objs) 
 	$(FC) $(FLDFLAGS) -o $@ $+ $(gimic_libs) 
 
 xpdens: $(pdens_objs) 

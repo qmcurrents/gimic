@@ -15,6 +15,7 @@ m4_include([config/check_gnu_make.m4])
 m4_include([config/acx_mpi.m4])
 m4_include([config/acx_getkw.m4])
 m4_include([config/acx_f90_mpi.m4])
+m4_include([config/ax_python.m4])
 
 AC_DEFUN([ACX_BUILD_FLAGS],[. ./config/$1.conf])
 

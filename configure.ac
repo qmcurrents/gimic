@@ -103,15 +103,13 @@ AC_LANG_PUSH([Fortran])
 AC_FC_SRCEXT([f90])
 AC_LANG_POP([Fortran])
 
-ACX_GETKW(,AC_MSG_ERROR([libgetkw.a not found!]))
-
 AC_CACHE_SAVE
 AC_LANG_PUSH([Fortran])
 ACX_BLAS(,AC_MSG_WARN([No working blas library found!]))
 ACX_LAPACK(,AC_MSG_WARN([No working lapack library found!]))
 AC_LANG_POP([Fortran])
-#ACX_BLAS95(,AC_MSG_WARN([No working lapack95 library found!]))
-#ACX_LAPACK95(,AC_MSG_WARN([No working lapack95 library found!]))
+ACX_BLAS95(,AC_MSG_WARN([No working lapack95 library found!]))
+ACX_LAPACK95(,AC_MSG_WARN([No working lapack95 library found!]))
 
 ax_save_LIBS="$LIBS"
 AC_MSG_NOTICE([Checking if ACES2 libraries are available])
@@ -128,6 +126,8 @@ if test "x$enable_mpi" = "xyes"; then
 fi
 AC_CACHE_SAVE
 
+AX_PYTHON
+
 AC_CACHE_SAVE
 
 ACX_SUBST_BUILD_FLAGS 
@@ -136,5 +136,5 @@ AC_SUBST(top_bindir,['$(topdir)'])
 AC_SUBST(top_includedir,['$(topdir)/include'])
 AC_SUBST(top_libdir,['$(topdir)/lib'])
 
-AC_CONFIG_FILES([Makefile make.config make.rules])
+AC_CONFIG_FILES([Makefile make.config make.rules gimic])
 AC_OUTPUT

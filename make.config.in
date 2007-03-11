@@ -12,6 +12,12 @@ host_os:=@host_os@
 host_cpu:=@host_cpu@
 host_vendor:=@host_vendor@
 
+PACKAGE_NAME:=@PACKAGE_NAME@
+PACKAGE_TARNAME:=@PACKAGE_TARNAME@
+PACKAGE_VERSION:=@PACKAGE_VERSION@
+DIST_NAME=$(PACKAGE_TARNAME)-$(PACKAGE_VERSION)
+DIST_TARNAME=$(PACKAGE_TARNAME)_$(PACKAGE_VERSION)
+
 CC:=@CC@
 FC:=@FC@
 CPP:=@CPP@
@@ -32,6 +38,7 @@ LN_S:=@LN_S@
 YACC:=@YACC@
 LEX:=@LEX@
 LEXLIB:=@LEXLIB@
+PYTHON_BIN=@PYTHON_BIN@
 
 INSTALL:=@INSTALL@
 INSTALL_DATA:=@INSTALL_DATA@
@@ -39,14 +46,20 @@ INSTALL_SCRIPT:=@INSTALL_SCRIPT@
 INSTALL_PROGRAM:=@INSTALL_PROGRAM@
 mkinstalldirs=$(topdir)/config/mkinstalldirs
 
+FC_MODEXT=@FC_MODEXT@
+FC_MODCASE=@FC_MODCASE@
+
 prefix=@prefix@
 exec_prefix=@exec_prefix@
 inst_bindir=@bindir@
 inst_libdir=@libdir@
+inst_libexecdir=@libexecdir@
 inst_includedir=@includedir@
 inst_datadir=@datadir@
+datarootdir=@datarootdir@
 
 libdir:=@top_libdir@
+libexecdir:=@top_libexecdir@
 bindir:=@top_bindir@
 includedir:=@top_includedir@
 datadir:=@top_datadir@
@@ -66,9 +79,7 @@ LAPACK_LIBS=@LAPACK_LIBS@ $(BLAS_LIBS)
 
 BLAS95=@F90_LIBS_blas95@
 LAPACK95=@F90_LIBS_lapack95@
-LIBGETKW=@F90_LIBS_getkw@
 LIBMPI_F90=@F90_LIBS_mpi_f90@
-LIBACES2=@F90_LIBS_aces2@
 
 #Fortran flags
 fcflags:=@fcflags@
