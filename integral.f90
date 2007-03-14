@@ -104,12 +104,12 @@ contains
 		type(tensor_t) :: jt
 		
 		call get_grid_size(it%grid, p1, p2, p3)
-		call getkw('cdens.magnet', bb)
+		call getkw(input, 'cdens.magnet', bb)
 
 		normal=get_grid_normal(it%grid)
 
 		bound=1.d+10
-		call getkw('integral.radius', bound)
+		call getkw(input, 'integral.radius', bound)
 		call grid_center(it%grid,center)
 
 		xsum3=0.d0
@@ -185,12 +185,12 @@ contains
 		type(tensor_t) :: jt
 		
 		call get_grid_size(it%grid, p1, p2, p3)
-		call getkw('cdens.magnet', bb)
+		call getkw(input, 'cdens.magnet', bb)
 
 		normal=get_grid_normal(it%grid)
 
 		bound=1.d+10
-		call getkw('integral.radius', bound)
+		call getkw(input, 'integral.radius', bound)
 		call grid_center(it%grid,center)
 
 		xsum3=0.d0
@@ -443,7 +443,7 @@ contains
 		normal=get_grid_normal(grid)
 
 		bound=1.d+10
-		call getkw('integral.radius', bound)
+		call getkw(input, 'integral.radius', bound)
 		call grid_center(grid,center)
 
 		xsum3=0.d0
@@ -521,7 +521,7 @@ contains
 		normal=get_grid_normal(grid)
 
 		bound=1.d+10
-		call getkw('integral.radius', bound)
+		call getkw(input, 'integral.radius', bound)
 		call grid_center(grid,center)
 
 		call get_jvectors(jf, 1, jvec)
@@ -594,9 +594,9 @@ contains
 		type(grid_t) :: lgrid
 		
 
-		!call getkw('integral.grid_points', g%npts)
-		call getkw('integral.gauss_points', ngp)
-		call getkw('integral.lip_order', nlip)
+		!call getkw(input, 'integral.grid_points', g%npts)
+		call getkw(input, 'integral.gauss_points', ngp)
+		call getkw(input, 'integral.lip_order', nlip)
 		call msg_info('lip_order kwyword ignored so far... using 3.')
 
 		call copy_grid(g,lgrid)

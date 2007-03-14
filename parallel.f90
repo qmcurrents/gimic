@@ -79,10 +79,10 @@ contains
 #ifdef HAVE_MPI
 !        pt%it_p=.false.; pt%jf_p=.false.; 
 !        pt%dj_p=.false.; pt%ed_p=.false.;
-!        call getkw('cdens', pt%jf_p)
-!        call getkw('integral', pt%it_p)
-!        call getkw('divj', pt%dj_p)
-!        call getkw('edens', pt%ed_p)
+!        call getkw(input, 'cdens', pt%jf_p)
+!        call getkw(input, 'integral', pt%it_p)
+!        call getkw(input, 'divj', pt%dj_p)
+!        call getkw(input, 'edens', pt%ed_p)
 
 		pt%jf=>jf
 		pt%dj=>dj

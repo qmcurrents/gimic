@@ -107,7 +107,7 @@ contains
 		character(MAX_LINE_LEN), dimension(:), pointer :: molbuf
 		integer(I4) :: i, n, ios
 		character(BUFLEN) :: basfile
-		call getkw('basis', basfile)
+		call getkw(input, 'basis', basfile)
 		call msg_note('Basis sets read from file: ' // trim(basfile))
 		call nl
 
@@ -163,27 +163,27 @@ contains
 
 		if (mpirun_p) call bcast_inpbuf(inpbuf)
 
-		call init_parse_buf(inpbuf, ierr)
+!        call init_parse_buf(inpbuf, ierr)
 		if (ierr == 2) then
-			call end_parse()
+			call del_getkw(input)
 			call msg_error('cdens(): parse error')
 			call exit(1)
 		end if
 		
-		call set_active_section('CDENS') 
+!        call set_active_section('CDENS') 
 		
 		i=0
-		call getkw('debug', i)
+		call getkw(input, 'debug', i)
 		call set_debug_level(i)
 
 		call msg_out(fdate())
 		
-		call getkw('title', title)
+		call getkw(input, 'title', title)
 		call msg_out(' TITLE: '// trim(title))
 		call nl
 
 		spherical=.false.
-		call getkw('spherical', spherical)
+		call getkw(input, 'spherical', spherical)
 		
 		if (master_p) then
 			call read_molbuf(molbuf)
@@ -202,7 +202,7 @@ contains
 		use parallel_m
 		call del_basis(mol)
 		call stop_mpi()
-		call end_parse()
+		call del_getkw(input)
 	end subroutine
 
 	subroutine setup_grids(calc, grid, igrid, dgrid, egrid)
@@ -223,7 +223,7 @@ contains
 				i=0
 				call init_grid(grid)
 				call grid_center(grid,center)
-				call getkw('grid.gridplot', i)
+				call getkw(input, 'grid.gridplot', i)
 				if (master_p) then
 					if (i > 0) then
 						call plot_grid_xyz('grid.xyz', grid, mol, i)
@@ -232,13 +232,13 @@ contains
 !                call proper_coordsys(grid)
 			case(DIVJ_TAG)
 				i=0
-				p=keyword_is_set('divj.grid')
+				p=keyword_is_set(input, 'divj.grid')
 				if (p) then
-					call set_active_section('CDENS.divj')
+					call push_section(input, 'CDENS.divj')
 					call init_grid(dgrid)
 					call grid_center(dgrid,center)
-					call getkw('grid.gridplot', i)
-					call set_active_section('CDENS')
+					call getkw(input, 'grid.gridplot', i)
+					call pop_section(input)
 				else
 					call init_grid(dgrid)
 				end if
@@ -250,13 +250,13 @@ contains
 !                call proper_coordsys(grid)
 			case(INTGRL_TAG)
 				i=0
-				p=keyword_is_set('integral.grid')
+				p=keyword_is_set(input, 'integral.grid')
 				if (p) then
-					call set_active_section('CDENS.integral')
+					call push_section(input, 'CDENS.integral')
 					call init_grid(igrid)
 					call grid_center(igrid,center)
-					call getkw('grid.gridplot', i)
-					call set_active_section('CDENS')
+					call getkw(input, 'grid.gridplot', i)
+					call pop_section(input)
 				else
 					call init_grid(igrid)
 				end if
@@ -268,13 +268,13 @@ contains
 !                call proper_coordsys(grid)
 			case(EDENS_TAG)
 				i=0
-				p=keyword_is_set('edens.grid')
+				p=keyword_is_set(input, 'edens.grid')
 				if (p) then
-					call set_active_section('CDENS.edens')
+					call push_section(input, 'CDENS.edens')
 					call init_grid(egrid)
 					call grid_center(egrid,center)
-					call getkw('grid.gridplot', i)
-					call set_active_section('CDENS')
+					call getkw(input, 'grid.gridplot', i)
+					call pop_section(input)
 				else
 					call init_grid(egrid)
 				end if
@@ -292,7 +292,6 @@ contains
 
 	subroutine cdens
 		use globals_m
-		use string_m
 		use basis_m
 		use cao2sao_m
 		use dens_m
@@ -320,7 +319,7 @@ contains
 		integer(I4), dimension(4) :: calc
 		logical :: divj_p, int_p, cdens_p, edens_p, rerun_p
 		logical :: nike_p, xdens_p, modens_p
-		type(string_t), dimension(:), pointer :: cstr
+		character(LINELEN), dimension(:), pointer :: cstr
 
 		divj_p=.false.; int_p=.false.
 		cdens_p=.false.; edens_p=.false.
@@ -331,34 +330,37 @@ contains
 			call init_c2sop(c2s,mol)
 			call set_c2sop(mol, c2s)
 		end if
-		call getkw('rerun', rerun_p)
+		call getkw(input, 'rerun', rerun_p)
 		
 		! figure out work order
 		nullify(cstr)
-		call getkw('calc', cstr)
+		call getkw(input, 'calc', cstr)
 		ncalc=size(cstr)
 		do i=1,ncalc
-			j=size(cstr(i)%str)+1
-			write(str_g, *) cstr(i)%str
-			if (str_g(2:j) == 'cdens') then 
+!            j=size(cstr(i))+1
+!            write(str_g, *) cstr(i)
+!            if (str_g(2:j) == 'cdens') then 
+			if (cstr(i)(1:5) == 'cdens') then 
 				calc(i)=CDENS_TAG
 				cdens_p=.true.
 				xdens_p=.true.
-			else if (str_g(2:j) == 'integral') then 
+!            else if (str_g(2:j) == 'integral') then 
+			else if (cstr(i)(1:8) == 'integral') then 
 				calc(i)=INTGRL_TAG
 				int_p=.true.
 				xdens_p=.true.
-			else if (str_g(2:j) == 'divj') then 
+!            else if (str_g(2:j) == 'divj') then 
+			else if (cstr(i)(1:4) == 'divj') then 
 				calc(i)=DIVJ_TAG
 				divj_p=.true.
 				xdens_p=.true.
-			else if (str_g(2:j) == 'edens') then 
+!            else if (str_g(2:j) == 'edens') then 
+			else if (cstr(i)(1:5) == 'edens') then 
 				calc(i)=EDENS_TAG
 				edens_p=.true.
 				modens_p=.true.
 			end if
 		end do
-		call del_kw_string(cstr)
 		if (mpirun_p .or. rerun_p) nike_p=.false.
 
 		if (xdens_p) call init_dens(xdens, mol)

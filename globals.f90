@@ -5,7 +5,7 @@
 module globals_m
 	use precision_m
 	use teletype_m
-	use getkw_m
+	use getkw_class
 	implicit none 
 	!include 'getkwf.h'
 
@@ -68,6 +68,8 @@ module globals_m
     logical :: bert_is_evil=.false.
 	logical :: mpirun_p=.false.
 	logical :: master_p=.false.
+
+	type(getkw_t) :: input
 
 	character, dimension(0:7), parameter :: shell_names = &
     	& (/'s','p','d','f','g','h','i','j'/)

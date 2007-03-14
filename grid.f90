@@ -44,7 +44,7 @@ contains
 		
 		g%step=1.d0
 		g%gtype='even'
-		call getkw('grid', g%mode)
+		call getkw(input, 'grid', g%mode)
 
 		i=len(trim(g%gtype))
 		if (g%mode(1:i) == 'file') then
@@ -62,12 +62,12 @@ contains
 			return
 		end if
 			
-		call getkw('grid.origin', g%origin)
-		call getkw('grid.v1', g%basv(:,1))
-		call getkw('grid.v2', g%basv(:,2))
-		call getkw('grid.step', g%step)
-		call getkw('grid.map', g%map)
-		call getkw('grid.type', g%gtype)
+		call getkw(input, 'grid.origin', g%origin)
+		call getkw(input, 'grid.v1', g%basv(:,1))
+		call getkw(input, 'grid.v2', g%basv(:,2))
+		call getkw(input, 'grid.step', g%step)
+		call getkw(input, 'grid.map', g%map)
+		call getkw(input, 'grid.type', g%gtype)
 
 		call msg_out('Grid mode = ' // trim(g%mode))
 		if ( g%mode(1:3) /= 'std' ) then 
@@ -84,7 +84,7 @@ contains
 			g%l(i)=normv(i)
 		end do
 		! k vector is special...
-		call getkw('grid.l3', g%l(3))
+		call getkw(input, 'grid.l3', g%l(3))
 		if (g%l(3) < 0.d0) then
 			g%l(3)=-g%l(3)
 			g%basv(:,3)=-g%basv(:,3)
@@ -98,8 +98,8 @@ contains
 			call msg_info('Integration grid selected, "step" keyword&
 			& ignored.')
 			call nl
-			call getkw('grid.gauss_points', ngp)
-			call getkw('grid.grid_points', g%npts)
+			call getkw(input, 'grid.gauss_points', ngp)
+			call getkw(input, 'grid.grid_points', g%npts)
 
 			g%lobato=.true.
 			do i=1,3
@@ -144,7 +144,7 @@ contains
 		real(DP), dimension(3) :: magnet
 		real(DP) :: x
 
-		call getkw('cdens.magnet', magnet) !bugger... can be in "wrong" sect.
+		call getkw(input, 'cdens.magnet', magnet) !bugger... can be in "wrong" sect.
 		! need to implement push/pop active section
 		x=dot_product(g%basv(:,3), magnet)
 		if (x < 0.d0) then
@@ -172,9 +172,9 @@ contains
 		l3=-1.d0
 		lh=-1.d0
 		ht=-1.d0
-		call getkw('grid.l3', l3)
-		call getkw('grid.width', lh)
-		call getkw('grid.height', ht)
+		call getkw(input, 'grid.l3', l3)
+		call getkw(input, 'grid.width', lh)
+		call getkw(input, 'grid.height', ht)
 		if ( l3 < 0.d0 ) then
 			call msg_critical('grid.l3 < 0!')
 			stop 
@@ -461,8 +461,8 @@ contains
 
 		l3=-1.d0
 		r=-1.d0
-		call getkw('grid.l3', l3)
-		call getkw('grid.radius', r)
+		call getkw(input, 'grid.l3', l3)
+		call getkw(input, 'grid.radius', r)
 		if ( l3 < 0.d0 ) stop 'grid.l3 < 0!'
 		if ( r < 0.d0 ) stop 'grid.radius < 0!'
 
@@ -699,7 +699,7 @@ contains
 
 		integer(I4) :: i
 
-		call getkw('grid.map', g%map)
+		call getkw(input, 'grid.map', g%map)
 
 		read(fd, *) g%lobato
 		read(fd, *) g%basv

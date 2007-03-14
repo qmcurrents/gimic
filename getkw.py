@@ -1,14 +1,16 @@
 #!/usr/bin/env python
-# -*- coding: latin-1 -*-
+# -*- coding: utf-8 -*-
+# vim:syntax=python
 #
 # getkw -- a simple input parser for Fortran 95
 #
 # Written by Jonas Juselius <jonas.juselius@chem.uit.no> 
-# University of Tromsø, 2006
+# University of TromsÃ¸, 2006
 #
-# vim:syntax=python
+# TODO: syntax callbacks
+#
 
-import sys,os
+import sys,os,inspect
 import re, string
 from copy import deepcopy
 from pyparsing import \
@@ -33,26 +35,32 @@ class Section:
 		if arg is not None:
 			self.set_kwarg(arg)
 
-	def validate(self):
+	def validate(self,path=None):
+		dlm=''
+		if path is None:
+			path=''
+		else:
+			path=path+dlm+self.name
+			dlm='.'
 		if self.req and not self.set:
-			print '<<< Required section "%s" not set. >>>\n' % (self.name)
+			print '>>> Required section not set: %s \n' % (path)
 			sys.exit(0)
 		if self.arg is not None:
-			self.arg.validate()
+			self.arg.validate(path)
 		for i in self.kw:
 			if len(self.kw[i]) > 1 and not self.kw[i][0].multdef():
-				print '<< Mulitply defined key "%s" >>' % (i)
+				print '>>> Mulitply defined key: %s ' % (path+'.'+i)
 				if strict:
 					sys.exit(1)
 			for j in self.kw[i]:
-				j.validate()
+				j.validate(path)
 		for i in self.sect:
 			if len(self.sect[i]) > 1 and not self.sect[i].multdef():
-				print '<< Mulitply defined section "%s" >>' % (i)
+				print '>>> Mulitply defined section: %s ' % (path+'.'+i)
 				if strict:
 					sys.exit(1)
 			for j in self.sect[i]:
-				j.validate()
+				j.validate(path)
 
 	def __cmp__(self, other):
 		return cmp(self.name,other.name)
@@ -154,45 +162,52 @@ class Section:
 				j.equalize(templ.sect[i][0])
 
 	#cross-validate against a template
-	def xvalidate(self,templ):
+	def xvalidate(self,templ,path=None):
+		dlm=''
+		if path is None:
+			path=''
+		else:
+			path=path+dlm+self.name
+			dlm='.'
 		if templ.req and not self.set:
-			print '<<< Required section "%s" not set. >>>\n' % (self.name)
+			print '>>> Required section not set: %s \n' % path
 			sys.exit(1)
-		self.xvalidate_arg(templ.arg)
+		self.xvalidate_arg(templ.arg,path)
 		for i in self.kw:
-			j=templ.findkw(i)
+			j=templ.findkw(i) 
 			if j is None:
-				print '<< Invalid keyword %s >>' % (i)
+				print '>>> Invalid keyword: %s ' % (path+dlm+i)
 				sys.exit(1)
 			if len(self.kw[i]) > 1 and not j.multdef():
-				print '<< Mulitply defined key "%s" >>' % (i)
+				print '>>> Mulitply defined key: %s ' % (path+dlm+i)
 				if strict:
 					sys.exit(1)
 			for k in self.kw[i]:
-				k.xvalidate(j)
+				k.xvalidate(j,path)
 		for i in self.sect:
-			j=templ.findsect(i)
+			j=templ.findsect(i) 
 			if j is None:
-				print '<< Invalid section %s >>' % (i)
+				print '>>> Invalid section: %s ' % (path+dlm+i)
 				sys.exit(1)
 			if len(self.sect[i]) > 1 and not j.multdef():
-				print '<< Mulitply defined section "%s" >>' % (i)
+				print '>> Multiply defined section: %s ' % (path+dlm+i)
 				if strict:
 					sys.exit(1)
 			for k in self.sect[i]:
-				k.xvalidate(j)
+				k.xvalidate(j,path)
 				
 		
-	def xvalidate_arg(self,templ):
+	def xvalidate_arg(self,templ,path):
 		kw=self.arg
 		if templ is not None:
 			if kw is not None:
 				kw.xvalidate(templ)
 			elif templ.req:
-				print '<<< Required arg "%s" is not set. >>>\n' % (kw.name)
+				print '>>> Required arg not set: %s \n' % (path+
+						'.'+kw.name)
 				sys.exit(1) # return state...
 		elif kw is not None:
-			print '<<< Invalid argument %s >>>' % (kw.name)
+			print '>>> Invalid argument: %s ' % (path+'.'+kw.name)
 			sys.exit(1)
 
 	def __str__(self):
@@ -273,22 +288,30 @@ class Keyword:
 			sys.exit(1)
 		self.set=True
 
-	def validate(self):
+	def validate(self,path):
+		if path is None:
+			path=self.name
+		else:
+			path=path+'.'+self.name
 		if self.req  and not self.set:
-			print '<<< Required key "%s" not set. >>>\n' % (self.name)
+			print '>>> Required key not set: %s \n' % (path)
 			if strict:
 				sys.exit(1)
 
-	def xvalidate(self,templ):
+	def xvalidate(self,templ,path=None):
+		if path is None:
+			path=self.name
+		else:
+			path=path+'.'+self.name
 		if templ.req and not self.set:
-			print '<<< Required key "%s" not set. >>>\n' % (self.name)
+			print '>>> Required key not set: %s \n' % (path)
 			sys.exit(1)
 		if templ.type != self.type:
-			print '<<< Invalid data type in "%s" >>>\n' % (self.name)
+			print '>>> Invalid data type in: %s \n' % (path)
 			sys.exit(1)
 		if self.nargs < 0:  #  < 0 == unlimited arg length
 			if len(templ.arg) != len(self.arg):
-				print '<<< Invalid data length in "%s" >>>\n' % (self.name)
+				print '>>> Invalid data length in: %s \n' % (path)
 				sys.exit(1)
 		return True
 				
@@ -359,8 +382,10 @@ class GetkwParser:
 
 	def __init__(self):
 		self.top=Section('start')
-		self.cur=self.top
-		self.prev=self.top
+		self.stack=[self.top]
+		self.cur=self.stack[0]
+#        self.cur=self.top
+#        self.prev=self.top
 		if GetkwParser.bnf == None:
 			GetkwParser.bnf=self.getkw_bnf()
 		self.parseString=self.bnf.parseString
@@ -389,12 +414,16 @@ class GetkwParser:
 		k=Section(name)
 		if kw is not None:
 			k.set_kwarg(kw, set=True)
-		self.top.add_sect(k, set=True)
-		self.prev=self.cur
-		self.cur=k
+		self.cur.add_sect(k, set=True)  
+		self.pushSect(k)
 	
+	def pushSect(self,k):
+		self.stack.append(k)
+		self.cur=self.stack[-1]
+
 	def popSect(self,s,l,t):
-		self.cur=self.prev
+		del self.stack[-1]
+		self.cur=self.stack[-1]
 	
 	def store_key(self,s,l,t):
 		q=t.asList()

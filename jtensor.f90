@@ -60,8 +60,8 @@ contains
 
 		diamag_p=1
 		paramag_p=1
-		call getkw('cdens.diamag', diamag_p)
-		call getkw('cdens.paramag', paramag_p)
+		call getkw(input, 'cdens.diamag', diamag_p)
+		call getkw(input, 'cdens.paramag', paramag_p)
 
 		if (diamag_p == 0) then
 			call msg_info( 'Diamagnetic contributions not calculated!')
@@ -308,7 +308,7 @@ contains
 		integer(I4), save :: notify=1
 		real(DP), dimension(3) :: r
 
-		call getkw('grid.origin', r)
+		call getkw(input, 'grid.origin', r)
 
 		call bfeval(jt%bfv, r, bfvec)
 		call dfdb(jt%dbt, r, dbvec)

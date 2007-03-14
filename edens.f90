@@ -72,7 +72,7 @@ contains
 	subroutine edens_plot(ed)
 		type(edens_t), intent(inout) :: ed
 		
-		integer(I4), dimension(:), allocatable :: z
+		integer(I4), dimension(:), pointer :: z
 		integer(I4) :: i,j,k,p1,p2,p3
 		real(DP) :: amax
 		real(DP), dimension(3) :: rr
@@ -80,13 +80,14 @@ contains
 
 		call get_grid_size(ed%grid, p1, p2,p3)
 		buf=>ed%buf
-		if (keyword_is_set('edens.plots')) then
-			call get_kw_size('edens.plots', i)
-			allocate(z(i))
-			call getkw('edens.plots', z)
+		if (keyword_is_set(input,'edens.plots')) then
+!            call get_kw_size('edens.plots', i)
+!            allocate(z(i))
+			call getkw(input, 'edens.plots', z)
 		else
-			allocate(z(1))
-			z=1
+			return
+!            allocate(z(1))
+!            z=1
 		end if
 
 		do k=1,size(z)
@@ -222,7 +223,7 @@ contains
 
 		buf=>ed%buf
 		gopen_file=''
-		call getkw('edens.gopenmol', gopen_file)
+		call getkw(input, 'edens.gopenmol', gopen_file)
 		if (trim(gopen_file) == '') return
 		open(GOPFD,file=trim(gopen_file),access='direct',recl=I4)
 

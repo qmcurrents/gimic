@@ -39,7 +39,7 @@ contains
 		f%jt=>jt
 		f%grid=>g
 
-		call set_active_section('CDENS.cdens')
+		call push_section(input, 'CDENS.cdens')
 		if (master_p) then
 			call setup_files(f)
 		end if
@@ -48,7 +48,7 @@ contains
 		allocate(f%jj(i,j))
 		allocate(f%vv(i,j))
 
-		call getkw('scale_vectors', vec_scale)
+		call getkw(input, 'scale_vectors', vec_scale)
 		if ( vec_scale /= D1 ) then
 			write(str_g, '(a,f7.3)') 'Vector scaling =', vec_scale
 			call msg_note(str_g)
@@ -57,8 +57,8 @@ contains
 		
 		foo_p=0
 		f%b=(/D0, D0, D1/)
-		call getkw('magnet', f%b)
-		call getkw('orthogonal_magnet', foo_p)
+		call getkw(input, 'magnet', f%b)
+		call getkw(input, 'orthogonal_magnet', foo_p)
 		if (foo_p > 0) then
 			call msg_note('Magnetic field defined to be orthogonal to &
 				&the grid')
@@ -69,7 +69,7 @@ contains
 		call msg_out(str_g)
 		call nl
 		call flush(6)
-		call set_active_section('CDENS')
+		call pop_section(input)
 	end subroutine
 
 	subroutine setup_files(jf)
@@ -82,12 +82,12 @@ contains
 		jvrecl=3*DP
 		
 		jtensor_file=''
-		call getkw('jtensor', jtensor_file)
+		call getkw(input, 'jtensor', jtensor_file)
         if (jtensor_file == '') then
             call msg_error('setup_files(): No tensor file specified!')
             stop
         end if
-		call getkw('jvector', jvec_file)
+		call getkw(input, 'jvector', jvec_file)
         if (jvec_file == '') then
             call msg_error('setup_files(): No vector file specified!')
             stop
@@ -101,12 +101,12 @@ contains
 		jvec_plt=''
 		njvec_plt=''
 		jprj_plt=''
-		call getkw('plot', plot_p)
+		call getkw(input, 'plot', plot_p)
 		if (plot_p > 0) then
-			call getkw('plot.vector', jvec_plt)
-			call getkw('plot.nvector', njvec_plt)
-			call getkw('plot.modulus', jmod_plt)
-			call getkw('plot.projection', jprj_plt)
+			call getkw(input, 'plot.vector', jvec_plt)
+			call getkw(input, 'plot.nvector', njvec_plt)
+			call getkw(input, 'plot.modulus', jmod_plt)
+			call getkw(input, 'plot.projection', jprj_plt)
 		end if
 	end subroutine
 
@@ -206,7 +206,7 @@ contains
 		type(jfield_t), intent(inout) :: jf
 
 		integer(I4) :: i, j, k, p1, p2, p3
-		integer(I4), dimension(:), allocatable :: z
+		integer(I4), dimension(:), pointer :: z
 		real(DP), dimension(3) :: foo, norm, rr
 		real(DP), dimension(2) :: mr
 		real(DP) :: jmod, jprj, nfac
@@ -215,13 +215,14 @@ contains
 		call get_grid_size(jf%grid, p1, p2, p3)
 		norm=get_grid_normal(jf%grid)
 		
-		if (keyword_is_set('cdens.plot.plots')) then
-			call get_kw_size('cdens.plot.plots', i)
-			allocate(z(i))
-			call getkw('cdens.plot.plots', z)
+		if (keyword_is_set(input, 'cdens.plot.plots')) then
+!            call get_kw_size('cdens.plot.plots', i)
+!            allocate(z(i))
+			call getkw(input, 'cdens.plot.plots', z)
 		else
-			allocate(z(1))
-			z=1
+			return
+!            allocate(z(1))
+!            z=1
 		end if
 		do k=1,size(z)
 			if (z(k) < 1 .or. z(k) > p3 ) then
@@ -298,7 +299,7 @@ contains
 			if (jprj_plt /= '')  close(JPRJFD)
 		end do
 		call jmod_gopenmol(jf)
-		deallocate(z)
+!        if (allocated(z)) deallocate(z)
 	end subroutine
 
 	subroutine jfield(jf)
@@ -449,7 +450,7 @@ contains
 
 		buf=>jf%vv
 		gopen_file=''
-		call getkw('cdens.plot.gopenmol', gopen_file)
+		call getkw(input, 'cdens.plot.gopenmol', gopen_file)
 		if (trim(gopen_file) == '') return
 		open(GOPFD,file=trim(gopen_file),access='direct',recl=4)
 		open(GOPFD2,file=trim('prj_'//gopen_file),access='direct',recl=4)

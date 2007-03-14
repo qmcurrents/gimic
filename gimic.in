@@ -1,10 +1,10 @@
 #!/usr/bin/env @PYTHON@
 # -*- coding: utf-8 -*-
+# vim:syntax=python:filetype=python
 #
 # Written by Jonas Juselius <jonas.juselius@chem.uit.no> 
 # University of Tromsø, 2007
 #
-# vim:syntax=python
 
 import sys,os
 sys.path.append("@inst_libexecdir@")
@@ -28,13 +28,12 @@ def main():
 			help='base name for output file(s)')
 	cmdln.add_option('-D','--debug-file', action='store', dest='debugf',
 			help='debug file name')
-   cmdln.add_option('-v','--verbose', action='store_true', dest='verbose',
+	cmdln.add_option('-v','--verbose', action='store_true', dest='verbose',
 		   help='be verbose')
-   cmdln.add_option('-q','--quiet', action='store_false', dest='verbose',
+	cmdln.add_option('-q','--quiet', action='store_false', dest='verbose',
 		   help='be quiet')
 	(opts, args)=cmdln.parse_args()
 
-	
 	density=None
 	inpfil=None
 	if (len(args) == 0):
@@ -57,11 +56,12 @@ def main():
 	top.add_kw('basis', 'STR', ('mol',))
 	top.add_kw('density', 'STR', 1)
 	top.add_kw('mpirun', 'BOOL', (False,))
+	top.add_kw('spherical', 'BOOL', (True,))
 	top.add_kw('rerun', 'BOOL', (False,))
 	top.add_kw('calc', 'STR', None)
 
 	plot=getkw.Section('plot')
-	plot.add_arg('BOOL', (True, ))
+	plot.set_arg('BOOL', (True, ))
 	plot.add_kw('plots','INT', None)
 	plot.add_kw('vector','STR', 1)
 	plot.add_kw('modulus','STR', 1)
@@ -75,10 +75,9 @@ def main():
 	cdens.add_kw('diamag', 'BOOL', (True,))
 	cdens.add_kw('paramag', 'BOOL', (True,))
 	cdens.add_kw('orthogonal_magnet', 'BOOL', (False,))
-	cdens.add_kw('scale', 'DBL', (1.0,))
+	cdens.add_kw('scale_vectors', 'DBL', (1.0,))
 	cdens.add_kw('magnet', 'DBL', 3, req=True)
 	cdens.add_sect(plot)
-
 
 	grid=getkw.Section('grid')
 	grid.set_arg('STR', ('std',))
@@ -93,13 +92,15 @@ def main():
 	grid.add_kw("l3", 'DBL', 1)
 	grid.add_kw("radius", 'DBL', 1)
 	grid.add_kw("gridplot", 'INT', 1)
+	grid.add_kw("grid_points", 'INT', 3)
+	grid.add_kw("gauss_points", 'INT', 3)
 
 	intgrid=getkw.Section('grid')
 	intgrid.set_arg('STR', ('bond',))
 	intgrid.add_kw("type", 'STR', ('even',))
-	intgrid.add_kw("origin", 'DBL', 3, req=True)
-	intgrid.add_kw("v1", 'DBL', 3, req=True)
-	intgrid.add_kw("v2", 'DBL', 3, req=True)
+	intgrid.add_kw("origin", 'DBL', 3)
+	intgrid.add_kw("v1", 'DBL', 3)
+	intgrid.add_kw("v2", 'DBL', 3)
 	intgrid.add_kw("step", 'DBL', 3)
 	intgrid.add_kw("map", 'DBL', 2)
 	intgrid.add_kw("height", 'DBL', 2)
@@ -107,13 +108,15 @@ def main():
 	intgrid.add_kw("l3", 'DBL', 1)
 	intgrid.add_kw("radius", 'DBL', 1)
 	intgrid.add_kw("gridplot", 'INT', 1)
+	intgrid.add_kw("grid_points", 'INT', 3)
+	intgrid.add_kw("gauss_points", 'INT', 3)
 
 	divgrid=getkw.Section('grid')
 	intgrid.set_arg('STR', ('std',))
 	divgrid.add_kw("type", 'STR', ('even',))
-	divgrid.add_kw("origin", 'DBL', 3, req=True)
-	divgrid.add_kw("v1", 'DBL', 3, req=True)
-	divgrid.add_kw("v2", 'DBL', 3, req=True)
+	divgrid.add_kw("origin", 'DBL', 3)
+	divgrid.add_kw("v1", 'DBL', 3)
+	divgrid.add_kw("v2", 'DBL', 3)
 	divgrid.add_kw("step", 'DBL', 3)
 	divgrid.add_kw("map", 'DBL', 2)
 	divgrid.add_kw("height", 'DBL', 2)
@@ -121,6 +124,8 @@ def main():
 	divgrid.add_kw("l3", 'DBL', 1)
 	divgrid.add_kw("radius", 'DBL', 1)
 	divgrid.add_kw("gridplot", 'INT', 1)
+	divgrid.add_kw("grid_points", 'INT', 3)
+	divgrid.add_kw("gauss_points", 'INT', 3)
 
 	integral=getkw.Section('integral')
 	integral.add_kw('lip_order', 'INT', (10,))
@@ -129,7 +134,7 @@ def main():
 
 	divj=getkw.Section('divj')
 	divj.add_kw('plots', 'INT', None)
-	divj.add_kw('gopenmol', 'STRING', ('divj.plt',))
+	divj.add_kw('gopenmol', 'STR', ('divj.plt',))
 	divj.add_sect(divgrid)
 
 	top.add_sect(cdens)
@@ -140,9 +145,10 @@ def main():
 	if inpfil is not None:
 		input=getkw.GetkwParser()
 		inkw=input.parseFile(inpfil)
-		inkw.equalize(start)
+		inkw.equalize(top)
 	else:
-		inkw=start
+		inkw=top
+
 
 	if opts.title:
 		inkw.setkw('title', opts.title)
@@ -152,20 +158,15 @@ def main():
 		inkw.setkw('mpirun', opts.mpirun)
 	if opts.outfile:
 		inkw.setkw('outfile', opts.outfile)
-	if opts.lip:
-		inkw.setkw('lip', opts.lip)
 	if opts.debugf:
 		inkw.setkw('debug_file', opts.debugf)
-	if opts.test:
-		tmp=inkw.getsect('grid')
-		tmp.setkw('dim', (opts.test, opts.test, opts.test))
-	if opts.mode:
-		inkw.setkw('mode', opts.mode)
 	if density is not None:
 		inkw.setkw('density', density)
 
-#    inkw.xvalidate(start)
-	inkw.validate()
+#    print inkw
+#    print '----------------------------------------'
+	inkw.xvalidate(top)
+#     inkw.validate()
 
 	infile='GIMIC.' + str(os.getpid())
 	fd=open(infile,'w')

@@ -53,7 +53,7 @@ contains
 		type(reorder_t) :: bofh
 
 		xdens_file=''
-		call getkw('density', xdens_file)
+		call getkw(input, 'density', xdens_file)
 		if (xdens_file == '') then
 			xdens_file=DEFAULT_DENSFILE
 		else
@@ -167,7 +167,7 @@ contains
 
 		ncgto=get_ncgto(dd%mol)
 		moran=0
-		call getkw('edens.mos', moran)
+		call getkw(input, 'edens.mos', moran)
 
 		if (moran(1) < 1 .or. moran(2) < 1) then
 			call msg_error('Invalid MO range!')
@@ -207,7 +207,7 @@ contains
 		end if
 
 		dd%d(:,:,0)=D0
-		call getkw('edens.mofile', mofile)
+		call getkw(input, 'edens.mofile', mofile)
 		if (trim(mofile) == '') then
 			call read_dens(dd)
 		end if

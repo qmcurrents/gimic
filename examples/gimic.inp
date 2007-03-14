@@ -2,7 +2,6 @@
 # $Id: cdens.inp,v 1.15 2002/03/06 15:43:58 jonas Exp $
 # 
 
-CDENS {
 	rerun=off
 	title="CO2"
 	basis="mol"
@@ -76,4 +75,3 @@ CDENS {
 #        }
 	}
 
-} #END CDENS

@@ -103,6 +103,16 @@ AC_LANG_PUSH([Fortran])
 AC_FC_SRCEXT([f90])
 AC_LANG_POP([Fortran])
 
+AX_FC_SEARCH_PATH
+AC_FC_LIBRARY_LDFLAGS
+AC_FC_WRAPPERS
+AX_F90_MODULE_FLAG
+AX_F90_MODULE_EXTENSION
+
+if test "x$ax_f90_modext" = "xunknown" ; then
+	AC_MSG_ERROR([unable to find f90 modules extension])
+fi
+
 AC_CACHE_SAVE
 AC_LANG_PUSH([Fortran])
 ACX_BLAS(,AC_MSG_WARN([No working blas library found!]))
