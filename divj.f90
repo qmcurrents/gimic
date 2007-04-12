@@ -35,12 +35,12 @@ contains
 		type(jtensor_t), target :: jt
 
 		integer(I4) :: djrl, p1, p2
-		integer(I4) :: foo_p
+		logical :: foo_p
 
 		dj%bb=D0
 		call getkw(input, 'cdens.magnet', dj%bb)
 		call getkw(input, 'cdens.orthogonal_magnet', foo_p)
-		if (foo_p > 0) then
+		if (foo_p) then
 			call msg_note('init_divj(): &
 				&Magnetic field defined to be orthogonal to the grid')
 			dj%bb=get_grid_normal(dj%grid)

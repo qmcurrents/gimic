@@ -101,9 +101,9 @@ contains
 		character(*), intent(in) :: str
 
 		write(STDERR, 101) repeat('>', 70)
-		write(STDERR, 100) ' <'
-		write(STDERR, 102) ' < ', trim(str)
-		write(STDERR, 100) ' <'
+		write(STDERR, 100) ' >'
+		write(STDERR, 102) ' > ', trim(str)
+		write(STDERR, 100) ' >'
 		write(STDERR, 101) repeat('>', 70)
 
 100 format(a)	

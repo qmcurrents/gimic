@@ -216,7 +216,6 @@ contains
 						jp=dot_product(normal,jvec%v)
 						if (abs(jp) < 1.d-12) then ! prob. parallel component
 							sgn=0.d0
-							print *, 'foo', i
 						else if (jp > 0) then
 							sgn=1.d0
 						else

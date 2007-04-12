@@ -34,12 +34,13 @@ contains
 		type(jtensor_t), target :: jt
 		type(grid_t), target :: g
 
-		integer(I4) :: i, j, k, foo_p 
+		integer(I4) :: i, j, k
+		logical :: foo_p 
 
 		f%jt=>jt
 		f%grid=>g
 
-		call push_section(input, 'CDENS.cdens')
+		call push_section(input, 'cdens')
 		if (master_p) then
 			call setup_files(f)
 		end if
@@ -55,11 +56,11 @@ contains
 		end if
 		call nl
 		
-		foo_p=0
+		foo_p=.false.
 		f%b=(/D0, D0, D1/)
 		call getkw(input, 'magnet', f%b)
 		call getkw(input, 'orthogonal_magnet', foo_p)
-		if (foo_p > 0) then
+		if (foo_p) then
 			call msg_note('Magnetic field defined to be orthogonal to &
 				&the grid')
 			f%b=get_grid_normal(g)
@@ -75,7 +76,7 @@ contains
 	subroutine setup_files(jf)
 		type(jfield_t) :: jf
 	
-		integer(I4) :: plot_p
+		logical :: plot_p
 		integer(I4) :: jtrecl, jvrecl
 
 		jtrecl=9*DP
@@ -95,14 +96,14 @@ contains
         open(JTFD, file=jtensor_file, access='direct', recl=jtrecl)
 		open(JVECFD, file=jvec_file, access='direct', recl=jvrecl)
 
-		plot_p=0
+		plot_p=.false.
 		jvec_file =''
 		jmod_plt=''
 		jvec_plt=''
 		njvec_plt=''
 		jprj_plt=''
 		call getkw(input, 'plot', plot_p)
-		if (plot_p > 0) then
+		if (plot_p) then
 			call getkw(input, 'plot.vector', jvec_plt)
 			call getkw(input, 'plot.nvector', njvec_plt)
 			call getkw(input, 'plot.modulus', jmod_plt)

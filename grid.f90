@@ -44,6 +44,8 @@ contains
 		
 		g%step=1.d0
 		g%gtype='even'
+		g%map=0.0
+!        if (.not.section_is_set(input, 'grid')) print *, 'FUCK!'
 		call getkw(input, 'grid', g%mode)
 
 		i=len(trim(g%gtype))
@@ -65,9 +67,14 @@ contains
 		call getkw(input, 'grid.origin', g%origin)
 		call getkw(input, 'grid.v1', g%basv(:,1))
 		call getkw(input, 'grid.v2', g%basv(:,2))
-		call getkw(input, 'grid.step', g%step)
-		call getkw(input, 'grid.map', g%map)
-		call getkw(input, 'grid.type', g%gtype)
+		if (g%mode == 'std') then
+			call getkw(input, 'grid.step', g%step)
+			call getkw(input, 'grid.type', g%gtype)
+		end if
+
+		if (keyword_is_set(input, 'grid.map')) then
+			call getkw(input, 'grid.map', g%map)
+		end if
 
 		call msg_out('Grid mode = ' // trim(g%mode))
 		if ( g%mode(1:3) /= 'std' ) then 

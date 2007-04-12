@@ -27,12 +27,14 @@ module getkw_class
     implicit none
 	
 	public new_getkw, del_getkw, getkw, getkw_ref, setkw, save_keys
-	public push_section, pop_section, has_keyword, keyword_is_set
+	public push_section, pop_section, has_keyword
+	public keyword_is_set, section_is_set
 	public addkw, add_section, delkw, del_section
 	public getsect, set_verbose, set_strict
 	public kword_t, section_t, getkw_t
 	public memtrack, typtrack
 	public LINELEN
+	public print_tree
 	private
 
 	interface getkw
@@ -99,7 +101,7 @@ module getkw_class
         private
 		real(DP) :: dval
 		integer(SP) :: ival
-		logical :: bool
+		logical :: bool, set=.false.
 		character(LINELEN), dimension(:), pointer :: str
 		real(DP), dimension(:), pointer :: dvec
 		integer(SP), dimension(:), pointer :: ivec
@@ -373,6 +375,7 @@ contains
 
 	subroutine getkw_err(str)
 		character(*), intent(in) :: str
+
 		if (strict) then
 			call perror('getkw: no such key: ' // trim(str))
 			stop
@@ -381,10 +384,28 @@ contains
 		end if
 	end subroutine
 
+	subroutine getkw_errundef(str)
+		character(*), intent(in) :: str
+
+		if (strict) then
+			call perror('getkw: key undefined: ' // trim(str))
+			stop
+		else if (verbose) then
+			call pwarn('getkw: key undefined: ' // trim(str))
+		end if
+	end subroutine
+
 	subroutine getkw_typerr(kw)
 		type(keyword_t) :: kw
-		call perror('getkw: invalid kw type: ' // trim(kw%id) // ' -> ' // &
-		xstr(kw%typ))
+
+		if (strict) then
+			call perror('getkw: invalid kw type: '//trim(kw%id)// ' -> ' // &
+			xstr(kw%typ))
+			stop
+		else if (verbose) then
+			call pwarn('getkw: invalid kw type: '//trim(kw%id)// ' -> ' // &
+			xstr(kw%typ))
+		end if
 	end subroutine
 
 	subroutine getkw_ival(self, path, val)
@@ -400,7 +421,10 @@ contains
 
 		ok=findkw(self%active, path, ptr)
 		if (ok) then
-!            if (ptr%nkw < 1) return
+            if (.not.ptr%key%set) then
+				call getkw_errundef(ptr%id)
+				return
+			end if
 			if (ptr%typ	 /= KW_INT) then
 				call getkw_typerr(ptr)
 			else
@@ -434,6 +458,10 @@ contains
 
 		ok=findkw(self%active, path, ptr)
 		if (ok) then
+            if (.not.ptr%key%set) then
+				call getkw_errundef(ptr%id)
+				return
+			end if
 			if (ptr%typ	 /= KW_IVEC) then
 				call getkw_typerr(ptr)
 			else
@@ -456,6 +484,10 @@ contains
 
 		ok=findkw(self%active, path, ptr)
 		if (ok) then
+            if (.not.ptr%key%set) then
+				call getkw_errundef(ptr%id)
+				return
+			end if
 			if (ptr%typ	 /= KW_DVEC) then
 				call getkw_typerr(ptr)
 			else
@@ -489,6 +521,10 @@ contains
 
 		ok=findkw(self%active, path, ptr)
 		if (ok) then
+            if (.not.ptr%key%set) then
+				call getkw_errundef(ptr%id)
+				return
+			end if
 			if (ptr%typ	 /= KW_LVEC) then
 				call getkw_typerr(ptr)
 			else
@@ -522,6 +558,10 @@ contains
 
 		ok=findkw(self%active, path, ptr)
 		if (ok) then
+            if (.not.ptr%key%set) then
+				call getkw_errundef(ptr%id)
+				return
+			end if
 			if (ptr%typ	 /= KW_STR) then
 				call getkw_typerr(ptr)
 			else
@@ -535,12 +575,10 @@ contains
 	subroutine getkw_str(self, path, val)
 		type(getkw_t), target :: self
 		character(*), intent(in) :: path
-		character(LINELEN), dimension(:), intent(out) :: val
+		character(LINELEN), dimension(:), pointer :: val
 
-		character(LINELEN), dimension(:), pointer :: ptr
-
-		call getkw_str_ref(self, path, ptr)
-		if (associated(ptr)) val=ptr
+		call getkw_str_ref(self, path, val)
+!        if (associated(ptr)) val=ptr
 	end subroutine
 
 	subroutine getkw_string(self, path, val)
@@ -565,6 +603,10 @@ contains
 
 		ok=findkw(self%active, path, ptr)
 		if (ok) then
+            if (.not.ptr%key%set) then
+				call getkw_errundef(ptr%id)
+				return
+			end if
 			if (ptr%typ	 /= KW_DBL) then
 				call getkw_typerr(ptr)
 			else
@@ -587,6 +629,10 @@ contains
 
 		ok=findkw(self%active, path, ptr)
 		if (ok) then
+            if (.not.ptr%key%set) then
+				call getkw_errundef(ptr%id)
+				return
+			end if
 			if (ptr%typ	 /= KW_BOOL) then
 				call getkw_typerr(ptr)
 			else
@@ -611,6 +657,10 @@ contains
 
 		ok=findkw(sect, ' ', ptr)
 		if (ok) then
+            if (.not.ptr%key%set) then
+				call getkw_errundef(ptr%id)
+				return
+			end if
 			if (ptr%typ	 /= KW_INT) then
 				call getkw_typerr(ptr)
 			else
@@ -634,6 +684,10 @@ contains
 
 		ok=findkw(sect, ' ', ptr)
 		if (ok) then
+            if (.not.ptr%key%set) then
+				call getkw_errundef(ptr%id)
+				return
+			end if
 			if (ptr%typ	 /= KW_IVEC) then
 				call getkw_typerr(ptr)
 			else
@@ -656,6 +710,10 @@ contains
 
 		ok=findkw(sect, ' ', ptr)
 		if (ok) then
+            if (.not.ptr%key%set) then
+				call getkw_errundef(ptr%id)
+				return
+			end if
 			if (ptr%typ	 /= KW_DVEC) then
 				call getkw_typerr(ptr)
 			else
@@ -678,6 +736,10 @@ contains
 
 		ok=findkw(sect, ' ', ptr)
 		if (ok) then
+            if (.not.ptr%key%set) then
+				call getkw_errundef(ptr%id)
+				return
+			end if
 			if (ptr%typ	 /= KW_LVEC) then
 				call getkw_typerr(ptr)
 			else
@@ -700,6 +762,10 @@ contains
 
 		ok=findkw(sect, ' ', ptr)
 		if (ok) then
+            if (.not.ptr%key%set) then
+				call getkw_errundef(ptr%id)
+				return
+			end if
 			if (ptr%typ	 /= KW_LVEC) then
 				call getkw_typerr(ptr)
 			else
@@ -722,6 +788,10 @@ contains
 
 		ok=findkw(sect, ' ', ptr)
 		if (ok) then
+            if (.not.ptr%key%set) then
+				call getkw_errundef(ptr%id)
+				return
+			end if
 			if (ptr%typ	 /= KW_DBL) then
 				call getkw_typerr(ptr)
 			else
@@ -744,6 +814,10 @@ contains
 
 		ok=findkw(sect, ' ', ptr)
 		if (ok) then
+            if (.not.ptr%key%set) then
+				call getkw_errundef(ptr%id)
+				return
+			end if
 			if (ptr%typ	 /= KW_BOOL) then
 				call getkw_typerr(ptr)
 			else
@@ -1479,23 +1553,53 @@ contains
 		select case(typ)
 			case('INT')
 				kw%typ=KW_INT
-				if (n > 1) kw%typ=KW_IVEC
-				if (n > 0) call read_int_kw(kw%key,n)
+				if (n > 0) then
+					call read_int_kw(kw%key,n)
+					kw%key%set=.true.
+				end if
+			case('INT_ARRAY')
+				kw%typ=KW_IVEC
+				if (n > 0) then
+					call read_int_kw(kw%key,n)
+					kw%key%set=.true.
+				end if
 			case('DBL')
 				kw%typ=KW_DBL
-				if (n > 1) kw%typ=KW_DVEC
-				if (n > 0) call read_dbl_kw(kw%key,n)
-			case('STR')
-				kw%typ=KW_STR
 				if (n > 0) then
-					call read_str_kw(kw%key,n)
-				else
-					nullify(kw%key%str)
+					call read_dbl_kw(kw%key,n)
+					kw%key%set=.true.
+				end if
+			case('DBL_ARRAY')
+				kw%typ=KW_DVEC
+				if (n > 0) then
+					call read_dbl_kw(kw%key,n)
+					kw%key%set=.true.
 				end if
 			case('BOOL')
 				kw%typ=KW_BOOL
-				if (n > 1) kw%typ=KW_LVEC
-				if (n > 0) call read_bool_kw(kw%key,n)
+				if (n > 0) then 
+					call read_bool_kw(kw%key,n)
+					kw%key%set=.true.
+				end if
+			case('BOOL_ARRAY')
+				kw%typ=KW_LVEC
+				if (n > 0) then 
+					call read_bool_kw(kw%key,n)
+					kw%key%set=.true.
+				end if
+			case('STR')
+				kw%typ=KW_STR
+				if (n == -1) then ! empty string
+					allocate(kw%key%str(1))
+					memtrack=memtrack+1
+					kw%key%str(1)=''
+					kw%key%set=.true.
+				else if (n > 0) then
+					call read_str_kw(kw%key,n)
+					kw%key%set=.true.
+				else
+					nullify(kw%key%str)
+				end if
 			case default
 				call perror('invalid type: ' // trim(kw%id) // ' -> ' // typ)
 				stop
@@ -1600,6 +1704,10 @@ contains
 
 		integer :: i
 
+		if (.not.kw%set) then
+			print *, trim(kw%id), 'not set.'
+			return
+		end if
 		select case (kw%typ)
 			case(KW_INT)
 				print *, trim(kw%id), kw%key%ival
@@ -1696,7 +1804,22 @@ contains
 
 		ok=findkw(self%active, key, ptr)
 		if (.not.ok) then
-			call pwarn('no such key!' // trim(key))
+			call pwarn('no such key: ' // trim(key))
+		else
+			ok=ptr%set
+		end if
+	end function 
+
+	function section_is_set(self, key) result(ok)
+		type(getkw_t) :: self
+		character(*), intent(in) :: key
+		logical :: ok
+
+		type(section_t), pointer :: ptr
+
+		ok=find_sect(self%active, key, ptr)
+		if (.not.ok) then
+			call pwarn('no such section: ' // trim(key))
 		else
 			ok=ptr%set
 		end if
@@ -1774,6 +1897,16 @@ contains
 	subroutine set_strict(s)
 		logical, intent(in) :: s
 		strict=s
+	end subroutine
+
+	subroutine print_tree(t)
+		type(getkw_t) :: t
+
+		type(section_t), pointer :: s
+
+		s=>t%main
+		call print_section(s)
+
 	end subroutine
 
 end module

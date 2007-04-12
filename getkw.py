@@ -256,6 +256,7 @@ class Keyword:
 			self.nargs=len(arg)
 		self.setkw(arg)
 		self.set=False
+#        print self
 
 	def __cmp__(self, other):
 		return cmp(self.name,other.name)
@@ -318,20 +319,20 @@ class Keyword:
 	def sanity(self):
 		if self.arg[0] == 'None':
 			return True
-		if (self.type == 'INT'):
+		if (self.type == 'INT' or self.type == 'INT_ARRAY'):
 			for i in self.arg:
 				if not self.ival.match(i):
-					print 'not integer', i
+					print 'getkw: not an integer: ', self.name, '=',i
 					raise TypeError
-		elif (self.type == 'DBL'):
+		elif (self.type == 'DBL' or self.type == 'DBL_ARRAY'):
 			for i in self.arg:
 				if not self.dval.match(i):
-					print 'not a real', i
+					print 'not a real: ', self.name, '=',i
 					raise TypeError
-		elif (self.type == 'BOOL'):
+		elif (self.type == 'BOOL' or self.type == 'BOOL_ARRAY'):
 			for i in range(len(self.arg)):
 				if not self.lval.match(self.arg[i]):
-					print 'not a bool', self.arg[i]
+					print 'not a bool: ', self.name, '=',self.arg[i]
 					raise TypeError
 				if self.yes.match(self.arg[i]):
 					self.arg[i]='True'
@@ -345,7 +346,7 @@ class Keyword:
 					self.arg.append(i)
 			return True
 		else:
-			print 'unknown type', self.type
+			print 'unknown type: ', self.name, '=', self.type
 			raise TypeError
 		return True
 
@@ -365,7 +366,11 @@ class Keyword:
 			self.set=False
 
 	def __str__(self):
-		s="%s %s %d %s\n" % (self.type, self.name, len(self.arg), self.set)
+		if self.type == 'STR' and self.arg == []: # empty string
+			nargs=-1 # flags as empty for Fortran code
+		else:
+			nargs=len(self.arg)
+		s="%s %s %d %s\n" % (self.type, self.name, nargs, self.set)
 		if self.arg != []:
 			for i in self.arg:
 				s=s+str(i)+'\n'
@@ -384,8 +389,6 @@ class GetkwParser:
 		self.top=Section('start')
 		self.stack=[self.top]
 		self.cur=self.stack[0]
-#        self.cur=self.top
-#        self.prev=self.top
 		if GetkwParser.bnf == None:
 			GetkwParser.bnf=self.getkw_bnf()
 		self.parseString=self.bnf.parseString
@@ -407,7 +410,24 @@ class GetkwParser:
 			name=name.lower()
 		if q[1] != []:
 			arg=q[1]
-			argt=self.argtype(arg[0])
+			argt=self.argtype(arg)
+			kw=Keyword(name, argt, arg)
+		else:
+			kw=None
+		k=Section(name)
+		if kw is not None:
+			k.set_kwarg(kw, set=True)
+		self.cur.add_sect(k, set=True)  
+		self.pushSect(k)
+
+	def new_aSect(self,s,l,t):
+		q=t.asList()
+		name=q[0]
+		if self.caseless:
+			name=name.lower()
+		if q[1] != []:
+			arg=q[1]
+			argt=self.array_type(arg)  #should check consistency of all elms
 			kw=Keyword(name, argt, arg)
 		else:
 			kw=None
@@ -431,10 +451,30 @@ class GetkwParser:
 		arg=q[1]
 		if self.caseless:
 			name=name.lower()
-		argt=self.argtype(arg[0])
+		argt=self.argtype(arg)
+		k=Keyword(name,argt,arg)
+		self.cur.add_kwkw(k,set=True)
+
+	def store_array(self,s,l,t):
+		q=t.asList()
+		name=q[0]
+		arg=q[1]
+		if self.caseless:
+			name=name.lower()
+		argt=self.array_type(arg[0])
 		k=Keyword(name,argt,arg)
 		self.cur.add_kwkw(k,set=True)
 	
+	def array_type(self,arg):
+		if self.ival.match(arg):
+			return 'INT_ARRAY'
+		if self.dval.match(arg):
+			return 'DBL_ARRAY'
+		if self.lval.match(arg):
+			return 'BOOL_ARRAY'
+		return 'STR' #maybe introduce STR_ARRAY for consistency...
+
+#bug! wrong type can easily be returned!
 	def argtype(self,arg):
 		if self.ival.match(arg):
 			return 'INT'
@@ -474,18 +514,25 @@ class GetkwParser:
 		
 		vec=lsb+delimitedList(Word(prtable) ^ Literal("\n").suppress() ^\
 				quotedString.setParseAction(removeQuotes))+rsb
-		key=str ^ vec
-		keyword = name + eql + Group(key)
+#        key=str ^ vec
+#        keyword = name + eql + Group(key)
+		simple_keyword = name + eql + str
+		array_keyword = name + eql + vec
 		data=Combine(dmark+name)+SkipTo(end_data)+end_data
 		data.setParseAction(self.store_data)
-		bsect=name+Group(Optional(lps+key+rps))+lcb
-		bsect.setParseAction(self.newSect)
+		s_bsect=name+Optional(Group(lps+str+rps))+lcb
+		a_bsect=name+Group(lps+vec+rps)+lcb
+		s_bsect.setParseAction(self.newSect)
+		a_bsect.setParseAction(self.new_aSect)
 		end_sect.setParseAction(self.popSect)
 
-		keyword.setParseAction(self.store_key)
+		bsect=Group(s_bsect ^ a_bsect)
+
+		simple_keyword.setParseAction(self.store_key)
+		array_keyword.setParseAction(self.store_array)
 
 		section=Forward()
-		input=section ^ data ^ keyword 
+		input=section ^ data ^ Group(simple_keyword ^ array_keyword)
 
 		section << bsect+ZeroOrMore(input)+rcb
 		

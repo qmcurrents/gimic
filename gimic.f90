@@ -1,5 +1,3 @@
-!
-! $Id$
 ! 
 ! GIMIC - a pretty advanced 'Hello World!' program.
 !
@@ -11,15 +9,19 @@ program gimic
 	use basis_m
 	use timer_m
     implicit none 
-	character(BUFLEN) :: inpfile
+	character(BUFLEN) :: buf
 	type(molecule_t) :: mol
 	
 	call set_debug_level(3)
 
-	call cmdline(inpfile)
+	call new_getkw(input)
+
+	call getenv('MPIRUN', buf)
+	if ( trim(buf) == '1' ) mpirun_p=.true.
+	call getkw(input,'mpirun', mpirun_p)
 	if (.not.mpirun_p) call program_header
 
-	call initialize(inpfile)
+	call initialize()
 	call cdens()
 	call finalize()
 
@@ -34,6 +36,7 @@ program gimic
 
 contains
 
+	! this routine is deprecated. everything is handled by getkw now
 	subroutine cmdline(inpfile)
 		use parallel_m
 		character(*), intent(out) :: inpfile
@@ -126,18 +129,16 @@ contains
 		end do
 		close(BASFD)
 
-
 	end subroutine
 
-	subroutine initialize(inpfile)
+	subroutine initialize()
 		use parallel_m
-		character(*) :: inpfile
 
 		external fdate, hostnm
 		integer(I4) :: i, hostnm, rank, ierr
 		character(BUFLEN) :: title, fdate, sys
 		real(DP), dimension(3) :: center
-		character, dimension(:), pointer :: inpbuf
+!        character, dimension(:), pointer :: inpbuf
 		character(MAX_LINE_LEN), dimension(:), pointer :: molbuf
 
 		if (mpirun_p) then
@@ -147,12 +148,12 @@ contains
 			rank=0
 		end if
 
-		nullify(inpbuf)
+!        nullify(inpbuf)
 		nullify(molbuf)
 
 		ierr=hostnm(sys)
+!        call read_inpbuf('standard input', inpbuf)
 		if (master_p) then
-			call read_inpbuf(inpfile, inpbuf)
 			write(str_g, '(a,i3,a,a)') 'I''m master', rank,' on ', trim(sys)
 			call msg_debug(str_g,2)
 		else
@@ -161,7 +162,7 @@ contains
 			call msg_debug(str_g,2)
 		end if
 
-		if (mpirun_p) call bcast_inpbuf(inpbuf)
+!        if (mpirun_p) call bcast_inpbuf(inpbuf)
 
 !        call init_parse_buf(inpbuf, ierr)
 		if (ierr == 2) then
@@ -185,15 +186,14 @@ contains
 		spherical=.false.
 		call getkw(input, 'spherical', spherical)
 		
-		if (master_p) then
+!        if (master_p) then
 			call read_molbuf(molbuf)
-		end if
-		if (mpirun_p) call bcast_molbuf(molbuf)
+!        end if
+!        if (mpirun_p) call bcast_molbuf(molbuf)
 
 		call init_basis(mol, molbuf)
 
-
-		deallocate(inpbuf)
+!        deallocate(inpbuf)
 		deallocate(molbuf)
 
 	end subroutine
@@ -232,14 +232,21 @@ contains
 !                call proper_coordsys(grid)
 			case(DIVJ_TAG)
 				i=0
-				p=keyword_is_set(input, 'divj.grid')
+				if (.not.section_is_set(input, 'divj')) then
+					call msg_error('Divergence calculation requested, '//& 
+					& 'but ''divj'' is undefined in input!')
+					cycle
+				end if
+			
+				p=section_is_set(input, 'divj.grid')
 				if (p) then
-					call push_section(input, 'CDENS.divj')
+					call push_section(input, 'divj')
 					call init_grid(dgrid)
 					call grid_center(dgrid,center)
 					call getkw(input, 'grid.gridplot', i)
 					call pop_section(input)
 				else
+					call msg_info('Using default grid for divergence calucaltion')
 					call init_grid(dgrid)
 				end if
 				if (master_p) then
@@ -252,7 +259,7 @@ contains
 				i=0
 				p=keyword_is_set(input, 'integral.grid')
 				if (p) then
-					call push_section(input, 'CDENS.integral')
+					call push_section(input, 'integral')
 					call init_grid(igrid)
 					call grid_center(igrid,center)
 					call getkw(input, 'grid.gridplot', i)
@@ -270,7 +277,7 @@ contains
 				i=0
 				p=keyword_is_set(input, 'edens.grid')
 				if (p) then
-					call push_section(input, 'CDENS.edens')
+					call push_section(input, 'edens')
 					call init_grid(egrid)
 					call grid_center(egrid,center)
 					call getkw(input, 'grid.gridplot', i)

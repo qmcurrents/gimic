@@ -36,7 +36,7 @@ module jtensor_m
 	real(DP), dimension(:), pointer :: bfvec
 	real(DP), dimension(:,:), pointer :: dbvec, drvec, d2fvec
 	real(DP), dimension(:,:), pointer :: aodens, pdens
-	integer(I4) :: diamag_p, paramag_p
+	logical :: diamag_p, paramag_p
 	integer(I4), parameter :: NOTIFICATION=1000
 
 contains
@@ -58,8 +58,8 @@ contains
 		call init_dfdr(jt%dfr, jt%mol)
 		call init_d2fdrdb(jt%d2f, jt%mol, jt%dop, jt%dfr, jt%bfv)
 
-		diamag_p=1
-		paramag_p=1
+		diamag_p=.true.
+		paramag_p=.true.
 		call getkw(input, 'cdens.diamag', diamag_p)
 		call getkw(input, 'cdens.paramag', paramag_p)
 
