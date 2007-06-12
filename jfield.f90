@@ -219,7 +219,7 @@ contains
 		if (keyword_is_set(input, 'cdens.plot.plots')) then
 !            call get_kw_size('cdens.plot.plots', i)
 !            allocate(z(i))
-			call getkw(input, 'cdens.plot.plots', z)
+			call getkw_ptr(input, 'cdens.plot.plots', z)
 		else
 			return
 !            allocate(z(1))

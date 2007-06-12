@@ -26,7 +26,7 @@ module getkw_class
 	use pprinter
     implicit none
 	
-	public new_getkw, del_getkw, getkw, getkw_ref, setkw, save_keys
+	public new_getkw, del_getkw, getkw, getkw_ptr, setkw, save_keys
 	public push_section, pop_section, has_keyword
 	public keyword_is_set, section_is_set
 	public addkw, add_section, delkw, del_section
@@ -55,7 +55,7 @@ module getkw_class
 		module procedure getkw_str_ptr
 	end interface
 
-	interface getkw_ref
+	interface getkw_ptr
 		module procedure getkw_str_ref
 		module procedure getkw_lvec_ref
 		module procedure getkw_dvec_ref
@@ -422,7 +422,7 @@ contains
 		ok=findkw(self%active, path, ptr)
 		if (ok) then
             if (.not.ptr%key%set) then
-				call getkw_errundef(ptr%id)
+!                call getkw_errundef(ptr%id)
 				return
 			end if
 			if (ptr%typ	 /= KW_INT) then
@@ -459,7 +459,7 @@ contains
 		ok=findkw(self%active, path, ptr)
 		if (ok) then
             if (.not.ptr%key%set) then
-				call getkw_errundef(ptr%id)
+!                call getkw_errundef(ptr%id)
 				return
 			end if
 			if (ptr%typ	 /= KW_IVEC) then
@@ -485,7 +485,7 @@ contains
 		ok=findkw(self%active, path, ptr)
 		if (ok) then
             if (.not.ptr%key%set) then
-				call getkw_errundef(ptr%id)
+!                call getkw_errundef(ptr%id)
 				return
 			end if
 			if (ptr%typ	 /= KW_DVEC) then
@@ -522,7 +522,7 @@ contains
 		ok=findkw(self%active, path, ptr)
 		if (ok) then
             if (.not.ptr%key%set) then
-				call getkw_errundef(ptr%id)
+!                call getkw_errundef(ptr%id)
 				return
 			end if
 			if (ptr%typ	 /= KW_LVEC) then
@@ -559,7 +559,7 @@ contains
 		ok=findkw(self%active, path, ptr)
 		if (ok) then
             if (.not.ptr%key%set) then
-				call getkw_errundef(ptr%id)
+!                call getkw_errundef(ptr%id)
 				return
 			end if
 			if (ptr%typ	 /= KW_STR) then
@@ -604,7 +604,7 @@ contains
 		ok=findkw(self%active, path, ptr)
 		if (ok) then
             if (.not.ptr%key%set) then
-				call getkw_errundef(ptr%id)
+!                call getkw_errundef(ptr%id)
 				return
 			end if
 			if (ptr%typ	 /= KW_DBL) then
@@ -630,7 +630,7 @@ contains
 		ok=findkw(self%active, path, ptr)
 		if (ok) then
             if (.not.ptr%key%set) then
-				call getkw_errundef(ptr%id)
+!                call getkw_errundef(ptr%id)
 				return
 			end if
 			if (ptr%typ	 /= KW_BOOL) then
@@ -658,7 +658,7 @@ contains
 		ok=findkw(sect, ' ', ptr)
 		if (ok) then
             if (.not.ptr%key%set) then
-				call getkw_errundef(ptr%id)
+!                call getkw_errundef(ptr%id)
 				return
 			end if
 			if (ptr%typ	 /= KW_INT) then
@@ -685,7 +685,7 @@ contains
 		ok=findkw(sect, ' ', ptr)
 		if (ok) then
             if (.not.ptr%key%set) then
-				call getkw_errundef(ptr%id)
+!                call getkw_errundef(ptr%id)
 				return
 			end if
 			if (ptr%typ	 /= KW_IVEC) then
@@ -711,7 +711,7 @@ contains
 		ok=findkw(sect, ' ', ptr)
 		if (ok) then
             if (.not.ptr%key%set) then
-				call getkw_errundef(ptr%id)
+!                call getkw_errundef(ptr%id)
 				return
 			end if
 			if (ptr%typ	 /= KW_DVEC) then
@@ -737,7 +737,7 @@ contains
 		ok=findkw(sect, ' ', ptr)
 		if (ok) then
             if (.not.ptr%key%set) then
-				call getkw_errundef(ptr%id)
+!                call getkw_errundef(ptr%id)
 				return
 			end if
 			if (ptr%typ	 /= KW_LVEC) then
@@ -763,7 +763,7 @@ contains
 		ok=findkw(sect, ' ', ptr)
 		if (ok) then
             if (.not.ptr%key%set) then
-				call getkw_errundef(ptr%id)
+!                call getkw_errundef(ptr%id)
 				return
 			end if
 			if (ptr%typ	 /= KW_LVEC) then
@@ -789,7 +789,7 @@ contains
 		ok=findkw(sect, ' ', ptr)
 		if (ok) then
             if (.not.ptr%key%set) then
-				call getkw_errundef(ptr%id)
+!                call getkw_errundef(ptr%id)
 				return
 			end if
 			if (ptr%typ	 /= KW_DBL) then
@@ -815,7 +815,7 @@ contains
 		ok=findkw(sect, ' ', ptr)
 		if (ok) then
             if (.not.ptr%key%set) then
-				call getkw_errundef(ptr%id)
+!                call getkw_errundef(ptr%id)
 				return
 			end if
 			if (ptr%typ	 /= KW_BOOL) then
@@ -1554,7 +1554,8 @@ contains
 			case('INT')
 				kw%typ=KW_INT
 				if (n > 0) then
-					call read_int_kw(kw%key,n)
+!                    call read_int_kw(kw%key,n)
+					read(lun,*) kw%key%ival
 					kw%key%set=.true.
 				end if
 			case('INT_ARRAY')
@@ -1566,7 +1567,8 @@ contains
 			case('DBL')
 				kw%typ=KW_DBL
 				if (n > 0) then
-					call read_dbl_kw(kw%key,n)
+!                    call read_dbl_kw(kw%key,n)
+					read(lun,*) kw%key%dval
 					kw%key%set=.true.
 				end if
 			case('DBL_ARRAY')
@@ -1578,7 +1580,8 @@ contains
 			case('BOOL')
 				kw%typ=KW_BOOL
 				if (n > 0) then 
-					call read_bool_kw(kw%key,n)
+!                    call read_bool_kw(kw%key,n)
+					read(lun,*) kw%key%bool
 					kw%key%set=.true.
 				end if
 			case('BOOL_ARRAY')
@@ -1611,13 +1614,13 @@ contains
 		type(kword_t) :: kw
 		integer(SP) :: n
 
-		if (n > 1) then
+!        if (n > 1) then
 			allocate(kw%ivec(n))
 			memtrack=memtrack+1
 			read(lun,*) kw%ivec
-		else
-			read(lun,*) kw%ival
-		end if
+!        else
+!            read(lun,*) kw%ival
+!        end if
 		
 	end subroutine
 
@@ -1625,13 +1628,13 @@ contains
 		type(kword_t) :: kw
 		integer(SP) :: n
 
-		if (n > 1) then
+!        if (n > 1) then
 			allocate(kw%dvec(n))
 			memtrack=memtrack+1
 			read(lun,*) kw%dvec
-		else
-			read(lun,*) kw%dval
-		end if
+!        else
+!            read(lun,*) kw%dval
+!        end if
 	end subroutine
 
 	subroutine read_str_kw(kw,n)
@@ -1650,13 +1653,13 @@ contains
 		type(kword_t) :: kw
 		integer(SP) :: n
 
-		if (n > 1) then
+!        if (n > 1) then
 			allocate(kw%lvec(n))
 			memtrack=memtrack+1
 			read(lun,*) kw%lvec
-		else
+!        else
 			read(lun,*) kw%bool
-		end if
+!        end if
 	end subroutine
 
 	function sane(str1, str2) result(err)

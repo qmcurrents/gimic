@@ -88,7 +88,7 @@ contains
 		if (keyword_is_set(input, 'divj.plots')) then
 !            call get_kw_size('divj.plots', i)
 !            allocate(z(i))
-			call getkw(input, 'divj.plots', z)
+			call getkw_ptr(input, 'divj.plots', z)
 		else
 !            allocate(z(1))
 !            z=1

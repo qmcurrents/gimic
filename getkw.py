@@ -8,20 +8,27 @@
 # University of Tromsø, 2006
 #
 # TODO: syntax callbacks
+#       general cleanup
 #
 
+import pdb
 import sys,os,inspect
-import re, string
+import re, string, copy
 from copy import deepcopy
 from pyparsing import \
 	Literal, Word, ZeroOrMore, Group, Dict, Optional, removeQuotes, \
 	printables, ParseException, restOfLine, alphas, alphanums, nums, \
 	pythonStyleComment, oneOf, quotedString, SkipTo, Forward, \
 	commaSeparatedList, OneOrMore, Combine, srange, delimitedList, \
-    downcaseTokens
+	downcaseTokens, line, lineno
 
 verbose=True
 strict=True
+
+ival=re.compile(r'[-]?\d+$')
+dval=re.compile(r'-?\d+\.\d*([dDeE][+-]?\d+)?',re.I)
+lval=re.compile(r'(0|1|yes|no|true|false|on|off)$',re.I)
+
 
 class Section:
 	def __init__(self,name,arg=None,req=False,multi=False):
@@ -94,6 +101,7 @@ class Section:
 		kw=Keyword(name,typ,arg,req,multi)
 		kw.set=set
 		self.kw[name].append(kw)
+
 
 	def set_kwarg(self, kw, set=False):
 		if isinstance(kw,Keyword):
@@ -233,11 +241,8 @@ class Section:
 		return s
 		
 class Keyword:
-	ival=re.compile(r'[-]?\d+$')
-	dval=re.compile(r'-?\d+\.\d*([dDeE][+-]?\d+)?',re.I)
-	lval=re.compile(r'(0|1|yes|no|true|false|on|off)',re.I)
-	yes=re.compile(r'(1|yes|true|on)',re.I)
-	no=re.compile(r'(0|no|false|off)',re.I)
+	yes=re.compile(r'(1|yes|true|on)$',re.I)
+	no=re.compile(r'(0|no|false|off)$',re.I)
 
 	def __init__(self, name, typ, arg, req=False, multi=False):
 		self.name=name
@@ -246,6 +251,7 @@ class Keyword:
 		self.multi=multi
 		self.nargs=None
 		self.arg=[]
+
 		if arg is None: # unlimited arg length
 			self.nargs=-1
 			arg=None
@@ -255,7 +261,7 @@ class Keyword:
 		if isinstance(arg,tuple) or isinstance(arg,list):
 			self.nargs=len(arg)
 		self.setkw(arg)
-		self.set=False
+		self.set=False # reset the self.set flag
 
 	def __cmp__(self, other):
 		return cmp(self.name,other.name)
@@ -318,20 +324,22 @@ class Keyword:
 	def sanity(self):
 		if self.arg[0] == 'None':
 			return True
-		if (self.type == 'INT'):
+		if self.type == None:
+			return True
+		if (self.type == 'INT' or self.type == 'INT_ARRAY'):
 			for i in self.arg:
-				if not self.ival.match(i):
-					print 'not integer', i
+				if not ival.match(i):
+					print 'getkw: Not an integer: ', self.name, '=',i
 					raise TypeError
-		elif (self.type == 'DBL'):
+		elif (self.type == 'DBL' or self.type == 'DBL_ARRAY'):
 			for i in self.arg:
-				if not self.dval.match(i):
-					print 'not a real', i
+				if not dval.match(i):
+					print 'getkw: Not a real: ', self.name, '=',i
 					raise TypeError
-		elif (self.type == 'BOOL'):
+		elif (self.type == 'BOOL' or self.type == 'BOOL_ARRAY'):
 			for i in range(len(self.arg)):
-				if not self.lval.match(self.arg[i]):
-					print 'not a bool', self.arg[i]
+				if not lval.match(self.arg[i]):
+					print 'getkw: Not a bool: ', self.name, '=',self.arg[i]
 					raise TypeError
 				if self.yes.match(self.arg[i]):
 					self.arg[i]='True'
@@ -345,7 +353,7 @@ class Keyword:
 					self.arg.append(i)
 			return True
 		else:
-			print 'unknown type', self.type
+			print 'getkw: Unknown type: ', self.name, '=', self.type
 			raise TypeError
 		return True
 
@@ -365,27 +373,31 @@ class Keyword:
 			self.set=False
 
 	def __str__(self):
-		s="%s %s %d %s\n" % (self.type, self.name, len(self.arg), self.set)
+		if self.type == 'STR' and self.arg == []: # empty string
+			nargs=-1 # flags as empty for Fortran code
+		else:
+			nargs=len(self.arg)
+		s="%s %s %d %s\n" % (self.type, self.name, nargs, self.set)
 		if self.arg != []:
 			for i in self.arg:
 				s=s+str(i)+'\n'
 		return s
 
 class GetkwParser:
-	ival=re.compile(r'[-]?\d+$')
-	dval=re.compile(r'-?\d+\.\d*([dDeE][+-]?\d+)?',re.I)
-	lval=re.compile(r'(0|1|yes|no|true|false|on|off)',re.I)
-	yes=re.compile(r'(1|yes|true|on)',re.I)
-	no=re.compile(r'(0|no|false|off)',re.I)
 	bnf=None
 	caseless=False
 
-	def __init__(self):
-		self.top=Section('start')
+	def __init__(self,templ=None):
+		self.top=Section('top')
 		self.stack=[self.top]
 		self.cur=self.stack[0]
-#        self.cur=self.top
-#        self.prev=self.top
+		self.templ=templ
+		self.strg=None
+		self.loc=None
+		if templ is not None:
+			self.path=[self.templ]
+		else:
+			self.path=None
 		if GetkwParser.bnf == None:
 			GetkwParser.bnf=self.getkw_bnf()
 		self.parseString=self.bnf.parseString
@@ -399,53 +411,111 @@ class GetkwParser:
 	def parseFile(self,fil):
 		self.bnf.parseFile(fil)
 		return self.top
-	
-	def newSect(self,s,l,t):
+
+	def add_sect(self,s,l,t):
 		q=t.asList()
+		self.strg=s
+		self.loc=l
 		name=q[0]
+		arg=None
+		if len(q) > 1:
+			if len(q[1]) > 0:
+				arg=q[1][0]
 		if self.caseless:
 			name=name.lower()
-		if q[1] != []:
-			arg=q[1]
-			argt=self.argtype(arg[0])
+		k=Section(name)
+		self.cur.add_sect(k, set=True)  
+		self.push_sect(k)
+
+		if arg is not None:
+			if self.templ is None:
+				argt=self.guess_type(arg) 
+			else:
+				argt=self.check_type(arg, self.path[-1].arg.type)
 			kw=Keyword(name, argt, arg)
 		else:
 			kw=None
-		k=Section(name)
 		if kw is not None:
 			k.set_kwarg(kw, set=True)
+
+	def add_vecsect(self,s,l,t):
+		q=t.asList()
+		self.strg=s
+		self.loc=l
+		name=q[0]
+		arg=None
+		if len(q) > 1:
+			if len(q[1]) > 0:
+				arg=q[1][0]
+		if self.caseless:
+			name=name.lower()
+		k=Section(name)
 		self.cur.add_sect(k, set=True)  
-		self.pushSect(k)
-	
-	def pushSect(self,k):
+		self.push_sect(k)
+		if arg is not None:
+			if self.templ is None:
+				argt=self.guess_type(arg) 
+			else:
+				argt=self.check_vectype(arg, self.path[-1].arg.type)
+			kw=Keyword(name, argt, arg)
+		else:
+			kw=None
+		if kw is not None:
+			k.set_kwarg(kw, set=True)
+
+	def push_sect(self,k):
 		self.stack.append(k)
 		self.cur=self.stack[-1]
+		if self.templ is not None:
+			x=self.path[-1].findsect(k.name)
+			if x is None:
+				print "Invalid section on line %d: \n%s" % (
+						lineno(self.loc,self.strg), line(self.loc,self.strg))
+				sys.exit(1)
+			self.path.append(x)
 
-	def popSect(self,s,l,t):
+	def pop_sect(self,s,l,t):
 		del self.stack[-1]
+		if self.templ is not None:
+			del self.path[-1]
 		self.cur=self.stack[-1]
 	
 	def store_key(self,s,l,t):
 		q=t.asList()
+		self.strg=s
+		self.loc=l
 		name=q[0]
 		arg=q[1]
 		if self.caseless:
 			name=name.lower()
-		argt=self.argtype(arg[0])
+		if self.templ is None:
+			argt=self.guess_type(arg)
+		else:
+			k=self.path[-1].findkw(name)
+			argt=self.check_type(arg,k.type)
 		k=Keyword(name,argt,arg)
 		self.cur.add_kwkw(k,set=True)
-	
-	def argtype(self,arg):
-		if self.ival.match(arg):
-			return 'INT'
-		if self.dval.match(arg):
-			return 'DBL'
-		if self.lval.match(arg):
-			return 'BOOL'
-		return 'STR'
+
+	def store_vector(self,s,l,t):
+		q=t.asList()
+		self.strg=s
+		self.loc=l
+		name=q[0]
+		arg=q[1:]
+		if self.caseless:
+			name=name.lower()
+		if self.templ is None:
+			argt=self.guess_vectype(arg)
+		else:
+			k=self.path[-1].findkw(name)
+			argt=self.check_type(arg,k.type)
+		k=Keyword(name,argt,arg)
+		self.cur.add_kwkw(k,set=True)
 
 	def store_data(self,s,l,t):
 		name=t[0]
+		self.strg=s
+		self.loc=l
 		if self.caseless:
 			name=name.lower()
 		dat=t[1].split('\n')
@@ -454,6 +524,85 @@ class GetkwParser:
 			arg.append(i.strip())
 		k=Keyword(name,'STR',arg)
 		self.cur.add_kwkw(k,set=True)
+
+	def check_vectype(self, arg, argt):
+		if argt == 'INT_ARRAY':
+			for i in arg:
+				if not ival.match(i):
+					print 'Invalid type on line %d: Not an integer: \n%s' % (
+							lineno(self.loc,self.strg), line(self.loc,
+								self.strg))
+					sys.exit(1)
+		elif argt == 'DBL_ARRAY':
+			for i in arg:
+				if not dval.match(i):
+					print 'Invalid type on line %d: Not a float: \n%s' % (
+							lineno(self.loc,self.strg), line(self.loc,
+								self.strg))
+					sys.exit(1)
+		elif argt == 'BOOL_ARRAY':
+			for i in arg:
+				if not lval.match(i):
+					print 'Invalid type on line %d: Not a bool: \n%s' % (
+							lineno(self.loc,self.strg), line(self.loc,
+								self.strg))
+					sys.exit(1)
+		else:
+			type='STR'
+		return type
+
+	def check_type(self, arg, argt):
+		if argt == 'INT':
+			if not ival.match(arg):
+				print 'Invalid type on line %d: Not an integer: \n%s' % (
+						lineno(self.loc,self.strg), line(self.loc,
+							self.strg))
+				sys.exit(1)
+		elif argt == 'DBL':
+			if not dval.match(arg):
+				print 'Invalid type on line %d: Not a float: \n%s' % (
+						lineno(self.loc,self.strg), line(self.loc,
+							self.strg))
+				sys.exit(1)
+		elif argt == 'BOOL':
+			if not lval.match(arg):
+				print 'Invalid type on line %d: Not a bool: \n%s' % (
+						lineno(self.loc,self.strg), line(self.loc,
+							self.strg))
+				sys.exit(1)
+		return argt
+
+	def guess_vectype(self,arg):
+		if ival.match(arg[0]):
+			type='INT_ARRAY'
+			for i in arg:
+				if not ival.match(i):
+					print 'invalid ', type
+					sys.exit(1)
+		elif dval.match(arg[0]):
+			type='DBL_ARRAY'
+			for i in arg:
+				if not dval.match(i):
+					print 'invalid ', type
+					sys.exit(1)
+		elif lval.match(arg[0]):
+			type='BOOL_ARRAY'
+			for i in arg:
+				if not lval.match(i):
+					print 'invalid ', type
+					sys.exit(1)
+		else:
+			type='STR'
+		return type
+	
+	def guess_type(self,arg):
+		if ival.match(arg):
+			return 'INT'
+		if dval.match(arg):
+			return 'DBL'
+		if lval.match(arg):
+			return 'BOOL'
+		return 'STR'
 
 	def getkw_bnf(self):
 		lcb  = Literal("{").suppress()
@@ -468,26 +617,33 @@ class GetkwParser:
 		end_data=Literal('$end').suppress()
 		prtable = srange("[0-9a-zA-Z]")+'!$%&*+-./<>?@^_|~'
 
-		str=Word(prtable) ^ quotedString.setParseAction(removeQuotes)
+		kstr=Word(prtable) ^ quotedString.setParseAction(removeQuotes)
 
 		name = Word(alphas+"_",alphanums+"_")
 		
 		vec=lsb+delimitedList(Word(prtable) ^ Literal("\n").suppress() ^\
 				quotedString.setParseAction(removeQuotes))+rsb
-		key=str ^ vec
-		keyword = name + eql + Group(key)
+		key=kstr ^ vec
+		keyword = name + eql + kstr
+		vector = name + eql + vec
 		data=Combine(dmark+name)+SkipTo(end_data)+end_data
 		data.setParseAction(self.store_data)
-		bsect=name+Group(Optional(lps+key+rps))+lcb
-		bsect.setParseAction(self.newSect)
-		end_sect.setParseAction(self.popSect)
+		sect=name+lcb
+		sect.setParseAction(self.add_sect)
+		key_sect=name+Group(lps+kstr+rps)+lcb
+		key_sect.setParseAction(self.add_sect)
+		vec_sect=name+Group(lps+vec+rps)+lcb
+		vec_sect.setParseAction(self.add_vecsect)
+		end_sect.setParseAction(self.pop_sect)
 
 		keyword.setParseAction(self.store_key)
+		vector.setParseAction(self.store_vector)
 
 		section=Forward()
-		input=section ^ data ^ keyword 
+		input=section ^ data ^ keyword ^ vector
 
-		section << bsect+ZeroOrMore(input)+rcb
+		sectdef=sect ^ key_sect ^ vec_sect
+		section << sectdef+ZeroOrMore(input)+rcb
 		
 		bnf=ZeroOrMore(input)
 		bnf.ignore( pythonStyleComment )

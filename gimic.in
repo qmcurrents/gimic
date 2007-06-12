@@ -69,7 +69,7 @@ def main():
 	plot.add_kw('nvector','STR', ('',))
 	plot.add_kw('gopenmol','STR', ('',))
 
-	cdens=getkw.Section('cdens')
+	cdens=getkw.Section('cdens', req=True)
 	cdens.add_kw('jtensor', 'STR', ('JTENSOR',))
 	cdens.add_kw('jvector', 'STR', ('JVECTOR',))
 	cdens.add_kw('diamag', 'BOOL', (True,))
@@ -105,7 +105,7 @@ def main():
 	intgrid.add_kw("map", 'DBL_ARRAY', 2)
 	intgrid.add_kw("height", 'DBL_ARRAY', 2)
 	intgrid.add_kw("width", 'DBL_ARRAY', 2)
-	intgrid.add_kw("l3", 'DBL_ARRAY', 1)
+	intgrid.add_kw("l3", 'DBL', 1)
 	intgrid.add_kw("radius", 'DBL', 1)
 	intgrid.add_kw("gridplot", 'INT', 1)
 	intgrid.add_kw("grid_points", 'INT_ARRAY', 3)
@@ -130,6 +130,7 @@ def main():
 	integral=getkw.Section('integral')
 	integral.add_kw('lip_order', 'INT', (10,))
 	integral.add_kw('interpolate', 'BOOL', (False,))
+	integral.add_kw('radius', 'DBL', 1)
 	integral.add_sect(intgrid)
 
 	divj=getkw.Section('divj')
@@ -143,7 +144,7 @@ def main():
 	top.add_sect(divj)
 	
 	if inpfil is not None:
-		input=getkw.GetkwParser()
+		input=getkw.GetkwParser(top)
 		inkw=input.parseFile(inpfil)
 		inkw.equalize(top)
 	else:
@@ -163,12 +164,10 @@ def main():
 	if density is not None:
 		inkw.setkw('density', density)
 
-	print inkw
-	print '----------------------------------------'
 	inkw.xvalidate(top)
 #    inkw.validate()
 
-	infile='GIMIC.' + str(os.getpid())
+	infile='GIMIC.in' + str(os.getpid())
 	fd=open(infile,'w')
 	print >>fd, inkw
 	fd.close()
