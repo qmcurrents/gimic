@@ -251,7 +251,7 @@ class Keyword:
 		self.multi=multi
 		self.nargs=None
 		self.arg=[]
-
+		
 		if arg is None: # unlimited arg length
 			self.nargs=-1
 			arg=None
@@ -305,7 +305,7 @@ class Keyword:
 				sys.exit(1)
 
 	def xvalidate(self,templ,path=None):
-		if path is None:
+		if path is None or path == '':
 			path=self.name
 		else:
 			path=path+'.'+self.name
@@ -316,6 +316,7 @@ class Keyword:
 			print '>>> Invalid data type in: %s \n' % (path)
 			sys.exit(1)
 		if self.nargs < 0:  #  < 0 == unlimited arg length
+#            print self.nargs, self.arg
 			if len(templ.arg) != len(self.arg):
 				print '>>> Invalid data length in: %s \n' % (path)
 				sys.exit(1)
@@ -493,7 +494,7 @@ class GetkwParser:
 		else:
 			k=self.path[-1].findkw(name)
 			argt=self.check_type(arg,k.type)
-		k=Keyword(name,argt,arg)
+		k=Keyword(name,argt,(arg,))
 		self.cur.add_kwkw(k,set=True)
 
 	def store_vector(self,s,l,t):

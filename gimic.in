@@ -167,12 +167,12 @@ def main():
 	inkw.xvalidate(top)
 #    inkw.validate()
 
-	infile='GIMIC.in' + str(os.getpid())
+	infile='GIMIC.in' #+ str(os.getpid())
 	fd=open(infile,'w')
 	print >>fd, inkw
 	fd.close()
 	os.system('gimic.x < ' + infile)
-	os.unlink(infile)
+#    os.unlink(infile)
 
 
 if __name__ == '__main__':
