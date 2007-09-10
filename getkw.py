@@ -509,7 +509,7 @@ class GetkwParser:
 			argt=self.guess_vectype(arg)
 		else:
 			k=self.path[-1].findkw(name)
-			argt=self.check_type(arg,k.type)
+			argt=self.check_vectype(arg,k.type)
 		k=Keyword(name,argt,arg)
 		self.cur.add_kwkw(k,set=True)
 
@@ -548,9 +548,10 @@ class GetkwParser:
 							lineno(self.loc,self.strg), line(self.loc,
 								self.strg))
 					sys.exit(1)
-		else:
-			type='STR'
-		return type
+		elif argt != 'STR':
+			print "getkw: Unknown type: ", argt
+			sys.exit(1)
+		return argt
 
 	def check_type(self, arg, argt):
 		if argt == 'INT':
@@ -571,6 +572,9 @@ class GetkwParser:
 						lineno(self.loc,self.strg), line(self.loc,
 							self.strg))
 				sys.exit(1)
+		elif argt != 'STR':
+			print "getkw: Unknown type: ", argt
+			sys.exit(1)
 		return argt
 
 	def guess_vectype(self,arg):
