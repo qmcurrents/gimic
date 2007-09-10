@@ -1,6 +1,8 @@
 !
 ! $Id$
 !
+! This module is a mess...
+! 
 
 module grid_m
 	use globals_m
@@ -21,120 +23,73 @@ module grid_m
 		type(gdata_t), dimension(3) :: gdata
 		character(BUFLEN) :: mode, gtype
 		real(DP), dimension(:,:), pointer :: xdata
-		integer(I2) :: typecode
 	end type grid_t
 	
 	public init_grid, del_grid, gridpoint, gridmap, get_grid_normal
 	public grid_t, get_grid_size, get_weight, write_grid, read_grid
 	public get_grid_length, is_lobo_grid, realpoint, copy_grid
-	public grid_center, plot_grid_xyz, proper_coordsys
+	public grid_center, plot_grid_xyz
 
 	private
 	real(DP), parameter :: DPTOL=1.d-10
-	integer(I2), parameter :: EXTERNAL_GRID=1
 contains
 
 	subroutine init_grid(g)
 		type(grid_t) :: g
 
 		real(DP) :: ll 
-		real(DP), dimension(3) :: normv
 		integer(I4), dimension(3) :: ngp
 		integer(I4) :: i, j
 		
 		g%step=1.d0
 		g%gtype='even'
 		g%map=0.0
-!        if (.not.section_is_set(input, 'grid')) print *, 'FUCK!'
+		g%basv=0.0
+		g%l=0.0
 		call getkw(input, 'grid', g%mode)
 
+		! first figure out where and how to place the grid
 		i=len(trim(g%gtype))
-		if (g%mode(1:i) == 'file') then
-			if (mpirun_p) then
-				call msg_error('grid type ''file'' does not work with the &
-				&parallel version (yet)!')
-				call exit(1)
-			end if
-			g%typecode=EXTERNAL_GRID
-			call extgrid(g)
-			write(str_g, '(2x,a,i10)') 'Total number of grid points  :', &
-				product(g%npts)
-			call msg_out(str_g)
-			call nl
-			return
-		end if
-			
-		call getkw(input, 'grid.origin', g%origin)
-		call getkw(input, 'grid.v1', g%basv(:,1))
-		call getkw(input, 'grid.v2', g%basv(:,2))
-		if (g%mode == 'std') then
-			call getkw(input, 'grid.step', g%step)
-			call getkw(input, 'grid.type', g%gtype)
-		end if
+		select case (g%mode(1:i))
+			case ('file')
+				call extgrid(g)
+				return
+			case ('std','base')
+				call setup_std_grid(g)
+			case ('bond')
+				call setup_bond_grid(g)
+				call hcsmbd(g)
+			case default
+				call msg_error('Unknown grid type: ' // trim(g%mode))
+				stop
+		end select
+
+		call msg_out('Grid mode = ' // trim(g%mode))
 
 		if (keyword_is_set(input, 'grid.map')) then
 			call getkw(input, 'grid.map', g%map)
 		end if
 
-		call msg_out('Grid mode = ' // trim(g%mode))
-		if ( g%mode(1:3) /= 'std' ) then 
-			call hcsmbd(g)
+		call ortho_coordsys(g)
+		call check_handedness(g)
+		
+		! rotate basis vectors if needed
+		if (keyword_is_set(input, 'grid.angle')) then
+			call rotate(g)
 		end if
 
-		g%basv(:,1)=g%basv(:,1)-g%origin
-		g%basv(:,2)=g%basv(:,2)-g%origin
-		g%basv(:,3)=cross_product(g%basv(:,1),g%basv(:,2)) 
-
-		do i=1,3
-			normv(i)=sqrt(sum(g%basv(:,i)**2))
-			if (normv(i) > 0.d0) g%basv(:,i)=g%basv(:,i)/normv(i)
-			g%l(i)=normv(i)
-		end do
-		! k vector is special...
-		call getkw(input, 'grid.l3', g%l(3))
-		if (g%l(3) < 0.d0) then
-			g%l(3)=-g%l(3)
-			g%basv(:,3)=-g%basv(:,3)
-		end if
-
-!        call proper_coordsys(g)
-		call sane_coordsys(g)
-
+		! calculate distibution of grid points
 		i=len(trim(g%gtype))
-		if (g%gtype(1:i) == 'gauss') then
-			call msg_info('Integration grid selected, "step" keyword&
-			& ignored.')
-			call nl
-			call getkw(input, 'grid.gauss_points', ngp)
-			call getkw(input, 'grid.grid_points', g%npts)
+		select case (g%gtype(1:i))
+			case ('even')
+				call setup_even_gdata(g)
+			case ('gauss')
+				call setup_gauss_gdata(g)
+			case default
+				call msg_error('Unknown grid type: ' // trim(g%gtype))
+				stop
+		end select
 
-			g%lobato=.true.
-			do i=1,3
-				if (g%npts(i) > 0) then
-					allocate(g%gdata(i)%pts(g%npts(i)))
-					allocate(g%gdata(i)%wgt(g%npts(i)))
-				else
-					ngp(i)=1
-					g%npts(i)=1
-					allocate(g%gdata(i)%pts(1))
-					allocate(g%gdata(i)%wgt(1))
-				end if
-				call setup_lobby(0.d0, g%l(i), ngp(i), g%gdata(i))
-			end do
-		else if (g%gtype(1:i) == 'even') then
-			g%lobato=.false.
-			g%npts(1)=nint(normv(1)/g%step(1))+1
-			g%npts(2)=nint(normv(2)/g%step(2))+1
-			if (g%l(3) == 0.d0 .or. g%step(3) == 0.d0) then
-				g%npts(3)=1
-			else
-				g%npts(3)=nint(g%l(3)/g%step(3))+1
-			end if
-			call setup_gdata(g)
-		else
-			call msg_error('Unknown grid type: ' // trim(g%gtype))
-			call exit(1)
-		end if 
 		write(str_g, '(2x,a,3i5)') 'Number of grid points <v1,v2>:', &
 			g%npts(1), g%npts(2), g%npts(3)
 		call msg_out(str_g)
@@ -145,13 +100,96 @@ contains
 
 	end subroutine
 
-	subroutine proper_coordsys(g) 
+	subroutine setup_std_grid(g)
+		type(grid_t) :: g
+
+		integer(I4) :: i
+		real(DP), dimension(3) :: normv
+
+		call getkw(input, 'grid.origin', g%origin)
+		call getkw(input, 'grid.ivec', g%basv(:,1))
+		call getkw(input, 'grid.jvec', g%basv(:,2))
+!        call getkw(input, 'grid.kvec', g%basv(:,3))
+		call getkw(input, 'grid.spacing', g%step)
+		call getkw(input, 'grid.type', g%gtype)
+		call getkw(input, 'grid.lenghts', g%l)
+
+		g%basv(:,1)=g%basv(:,1)-g%origin
+		g%basv(:,2)=g%basv(:,2)-g%origin
+		g%basv(:,3)=cross_product(g%basv(:,1),g%basv(:,2)) 
+
+		do i=1,3
+			normv(i)=sqrt(sum(g%basv(:,i)**2))
+			if (normv(i) > 0.d0) g%basv(:,i)=g%basv(:,i)/normv(i)
+!            g%l(i)=normv(i)
+		end do
+		! k vector is special...
+!        call getkw(input, 'grid.l3', g%l(3))
+!        if (g%l(3) < 0.d0) then
+!            g%l(3)=-g%l(3)
+!            g%basv(:,3)=-g%basv(:,3)
+!        end if
+	end subroutine
+
+	subroutine setup_gauss_gdata(g)
+		type(grid_t) :: g
+
+		integer(I4), dimension(3) :: ngp
+		integer(I4) :: i
+
+		call msg_info('Integration grid selected.')
+		if (keyword_is_set(input, 'grid.step')) then
+			call msg_info('   "step" keyword ignored.')
+		end if
+		call nl
+		call getkw(input, 'grid.gauss_points', ngp)
+		call getkw(input, 'grid.grid_points', g%npts)
+
+		g%lobato=.true.
+		do i=1,3
+			if (g%npts(i) > 0) then
+				allocate(g%gdata(i)%pts(g%npts(i)))
+				allocate(g%gdata(i)%wgt(g%npts(i)))
+			else
+				ngp(i)=1
+				g%npts(i)=1
+				allocate(g%gdata(i)%pts(1))
+				allocate(g%gdata(i)%wgt(1))
+			end if
+			call setup_lobby(0.d0, g%l(i), ngp(i), g%gdata(i))
+		end do
+	end subroutine
+
+	! get rid of hcbadsfasdf...
+	subroutine setup_bond_grid(g)
+		type(grid_t) :: g
+
+		integer(I4) :: i
+		real(DP), dimension(3) :: normv
+		integer(I4) :: atom1, atom2
+
+		call getkw(input, 'grid.origin', g%origin)
+		if (keyword_is_set(input, 'grid.atoms')) then
+			call getkw(input, 'grid.atom1', atom1)
+			call getkw(input, 'grid.atom2', atom2)
+			!lookup coords...
+		else
+			call getkw(input, 'grid.coord1', g%basv(:,1))
+			call getkw(input, 'grid.coord2', g%basv(:,2))
+		end if
+ 		!defaults, etc.
+		call getkw(input, 'grid.spacing', g%step)
+		call getkw(input, 'grid.type', g%gtype)
+	end subroutine
+
+	subroutine check_handedness(g) 
 		type(grid_t) :: g
 
 		real(DP), dimension(3) :: magnet
 		real(DP) :: x
 
-		call getkw(input, 'cdens.magnet', magnet) !bugger... can be in "wrong" sect.
+		!bugger... can be in "wrong" sect.
+		call getkw(input, 'cdens.magnet', magnet) 
 		! need to implement push/pop active section
 		x=dot_product(g%basv(:,3), magnet)
 		if (x < 0.d0) then
@@ -255,10 +293,20 @@ contains
 
 	end subroutine
 
-	subroutine setup_gdata(g)
+	subroutine setup_even_gdata(g)
 		type(grid_t), intent(inout) :: g
 
 		integer(I4) :: i, n
+		real(DP), dimension(3) :: normv
+
+		g%lobato=.false.
+		g%npts(1)=nint(normv(1)/g%step(1))+1
+		g%npts(2)=nint(normv(2)/g%step(2))+1
+		if (g%l(3) == 0.d0 .or. g%step(3) == 0.d0) then
+			g%npts(3)=1
+		else
+			g%npts(3)=nint(g%l(3)/g%step(3))+1
+		end if
 
 		do n=1,3
 			allocate(g%gdata(n)%pts(g%npts(n)))
@@ -298,7 +346,7 @@ contains
 		deallocate(g%wgt)
 	end subroutine
 
-	subroutine sane_coordsys(g)
+	subroutine ortho_coordsys(g)
 		type(grid_t), intent(inout) :: g
 
 		integer(I4) :: i
@@ -340,7 +388,7 @@ contains
 	subroutine del_grid(g)
 		type(grid_t) :: g
 
-		if (g%typecode == EXTERNAL_GRID) then
+		if (g%gtype == 'file') then
 			deallocate(g%xdata)
 		else
 			call del_gdata(g%gdata(1))
@@ -379,7 +427,7 @@ contains
 		
 		real(DP) :: q1, q2, q3
 
-		if (g%typecode == EXTERNAL_GRID) then
+		if (g%gtype == 'file') then
 			r=g%xdata(:,i)
 		else
 			r=g%origin+&
@@ -405,7 +453,7 @@ contains
 		real(DP), dimension(2) :: m1, m2
 		real(DP) :: q1, q2, w1, w2
 
-		if (g%typecode == EXTERNAL_GRID) then
+		if (g%gtype == 'file') then
 			r=0.d0
 			return
 		end if
@@ -450,14 +498,30 @@ contains
 		g%origin=0.d0
 		g%step=0.d0
 		g%map=0.d0
-		g%gtype='even'
+		g%gtype='file'
 
-		open(GRIDFD, file='GRIDDATA')
+		if (mpirun_p) then
+			call msg_error('grid type ''file'' does not work with the &
+			&parallel version (yet)!')
+			call exit(1)
+		end if
+
+		if (keyword_is_set(input,'grid.file')) then
+			call getkw(input, 'grid.file', str_g)
+			open(GRIDFD, file=trim(str_g))
+		else
+			open(GRIDFD, file='GRIDDATA')
+		end if
+
 		nlines=getnlines(GRIDFD)
 		allocate(g%xdata(3,nlines))
 		g%npts=(/nlines,1,1/)
 		read(GRIDFD,*) g%xdata
 		close(GRIDFD)
+		write(str_g, '(2x,a,i10)') 'Total number of grid points  :', &
+			product(g%npts)
+		call msg_out(str_g)
+		call nl
 	end subroutine
 
 	subroutine bondage(g)
@@ -727,6 +791,25 @@ contains
 			product(g%npts)
 		call msg_out(str_g)
 		call nl
+	end subroutine
+	
+	! rotate basis vectors (prior to grid setup)
+	subroutine rotate(g)
+		type(grid_t) :: g
+
+		real(DP) :: angle
+		real(DP), dimension(3,3) :: euler
+
+		call getkw(input, 'grid.angle', angle)
+
+		euler=0.d0
+		euler(1,1)=sin(angle)
+		euler(2,2)=cos(angle)
+		euler(3,3)=1
+		euler(1,2)=cos(angle)
+		euler(2,1)=-cos(angle)
+
+		g%basv=matmul(euler,g%basv)
 	end subroutine
 end module
 

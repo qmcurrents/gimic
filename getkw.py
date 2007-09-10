@@ -31,7 +31,7 @@ lval=re.compile(r'(0|1|yes|no|true|false|on|off)$',re.I)
 
 
 class Section:
-	def __init__(self,name,arg=None,req=False,multi=False):
+	def __init__(self,name,arg=None,req=False,multi=False, callback=None):
 		self.name=name
 		self.sect={}
 		self.kw={}
@@ -39,6 +39,7 @@ class Section:
 		self.req=req
 		self.multi=multi
 		self.set=False
+		self.callback=callback
 		if arg is not None:
 			self.set_kwarg(arg)
 
@@ -71,6 +72,15 @@ class Section:
 
 	def __cmp__(self, other):
 		return cmp(self.name,other.name)
+
+	def __getitem__(self, key):
+		if self.sect.has_key(key):
+			foo=self.sect
+		elif self.kw.has_key(key):
+			foo=self.kw
+		else:
+			return None
+		return foo[key]
 
 	def required(self):
 		return self.req
@@ -158,7 +168,7 @@ class Section:
 		self.equalize(templ)
 		self.xvalidate(templ)
 
-	# add missing keys.
+	# add missing keys
 	def equalize(self, templ):
 		for i in templ.kw:
 			if not self.kw.has_key(i):
@@ -168,6 +178,18 @@ class Section:
 				self.sect[i]=templ.sect[i]
 			for j in self.sect[i]:
 				j.equalize(templ.sect[i][0])
+
+	def run_callbacks(self, templ):
+		for i in templ.kw:
+			cb=templ.kw[i][0]
+			if cb.callback is not None:
+				cb.callback(self.kw[i])
+		for i in templ.sect:
+			cb=templ.sect[i][0]
+			if cb.callback is not None:
+				cb.callback(self.sect[i])
+			for j in self.sect[i]:
+				j.run_callbacks(templ.sect[i][0])
 
 	#cross-validate against a template
 	def xvalidate(self,templ,path=None):
@@ -244,13 +266,14 @@ class Keyword:
 	yes=re.compile(r'(1|yes|true|on)$',re.I)
 	no=re.compile(r'(0|no|false|off)$',re.I)
 
-	def __init__(self, name, typ, arg, req=False, multi=False):
+	def __init__(self, name, typ, arg, req=False, multi=False, callback=None):
 		self.name=name
 		self.type=typ
 		self.req=req
 		self.multi=multi
 		self.nargs=None
 		self.arg=[]
+		self.callback=callback
 		
 		if arg is None: # unlimited arg length
 			self.nargs=-1
@@ -293,6 +316,9 @@ class Keyword:
 			print 'Invalid argument:', arg
 			sys.exit(1)
 		self.set=True
+	
+	def is_set(self):
+		return self.set
 
 	def validate(self,path):
 		if path is None:
@@ -476,9 +502,11 @@ class GetkwParser:
 			self.path.append(x)
 
 	def pop_sect(self,s,l,t):
-		del self.stack[-1]
-		if self.templ is not None:
+		if self.templ is not None:  
+#            if self.path[-1].callback is not none:
+#                self.path[-1].callback(self.stack[-1])
 			del self.path[-1]
+		del self.stack[-1]
 		self.cur=self.stack[-1]
 	
 	def store_key(self,s,l,t):
@@ -493,7 +521,14 @@ class GetkwParser:
 			argt=self.guess_type(arg)
 		else:
 			k=self.path[-1].findkw(name)
-			argt=self.check_type(arg,k.type)
+			if k is None:
+				print "Unknown keyword '%s' line: %d" % (name, 
+						lineno(self.loc,self.strg))
+				if strict:
+					sys.exit(1)
+				argt=None
+			else:
+				argt=self.check_type(arg,k.type)
 		k=Keyword(name,argt,(arg,))
 		self.cur.add_kwkw(k,set=True)
 
@@ -509,7 +544,14 @@ class GetkwParser:
 			argt=self.guess_vectype(arg)
 		else:
 			k=self.path[-1].findkw(name)
-			argt=self.check_vectype(arg,k.type)
+			if k is None:
+				print "Unknown keyword '%s' line: %d" % (name, 
+						lineno(self.loc,self.strg))
+				if strict:
+					sys.exit(1)
+				argt=None
+			else:
+				argt=self.check_vectype(arg,k.type)
 		k=Keyword(name,argt,arg)
 		self.cur.add_kwkw(k,set=True)
 

@@ -18,3 +18,5 @@ config.h
 config.log
 config.status
 deps.mk
+gimic
+xcpdens
