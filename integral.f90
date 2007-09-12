@@ -1,5 +1,6 @@
+! Integrate the current density using quadrature.
 !
-! $Id$
+! Written by Jonas Juselius, University of Helsinki, 2003 (I think).
 !
 
 module integral_m

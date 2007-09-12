@@ -221,7 +221,7 @@ contains
 			select case(calc(k))
 			case(CDENS_TAG)
 				i=0
-				call init_grid(grid)
+				call init_grid(grid, mol)
 				call grid_center(grid,center)
 				call getkw(input, 'grid.gridplot', i)
 				if (master_p) then
@@ -241,13 +241,13 @@ contains
 				p=section_is_set(input, 'divj.grid')
 				if (p) then
 					call push_section(input, 'divj')
-					call init_grid(dgrid)
+					call init_grid(dgrid, mol)
 					call grid_center(dgrid,center)
 					call getkw(input, 'grid.gridplot', i)
 					call pop_section(input)
 				else
 					call msg_info('Using default grid for divergence calucaltion')
-					call init_grid(dgrid)
+					call init_grid(dgrid, mol)
 				end if
 				if (master_p) then
 					if (i > 0) then
@@ -260,12 +260,12 @@ contains
 				p=keyword_is_set(input, 'integral.grid')
 				if (p) then
 					call push_section(input, 'integral')
-					call init_grid(igrid)
+					call init_grid(igrid, mol)
 					call grid_center(igrid,center)
 					call getkw(input, 'grid.gridplot', i)
 					call pop_section(input)
 				else
-					call init_grid(igrid)
+					call init_grid(igrid, mol)
 				end if
 				if (master_p) then
 					if (i > 0) then
@@ -278,12 +278,12 @@ contains
 				p=keyword_is_set(input, 'edens.grid')
 				if (p) then
 					call push_section(input, 'edens')
-					call init_grid(egrid)
+					call init_grid(egrid, mol)
 					call grid_center(egrid,center)
 					call getkw(input, 'grid.gridplot', i)
 					call pop_section(input)
 				else
-					call init_grid(egrid)
+					call init_grid(egrid, mol)
 				end if
 				if (master_p) then
 					if (i > 0) then
@@ -408,6 +408,8 @@ contains
 					if (nike_p) then
 !                        call int_t_direct(it)
 						call int_s_direct(it)
+						call nl
+						call msg_info('Integrating |J|')
 						call int_mod_direct(it)
 					end if
 !                    call write_integral(it)

@@ -7,7 +7,7 @@
 # Written by Jonas Juselius <jonas.juselius@chem.uit.no> 
 # University of Tromsø, 2006
 #
-# TODO: syntax callbacks
+# TODO: optional sections can contain required keys in that realm
 #       general cleanup
 #
 
@@ -82,6 +82,14 @@ class Section:
 			return None
 		return foo[key]
 
+	def is_set(self, key=None):
+		if key is None:
+			return self.set
+		if self.kw.has_key(key):
+			return self.kw[key][0].is_set()
+		if self.sect.has_key(key):
+			return self.sect[key][0].is_set()
+
 	def required(self):
 		return self.req
 
@@ -105,13 +113,13 @@ class Section:
 		kw.set=set
 		self.kw[kw.name].append(kw)
 
-	def add_kw(self, name, typ, arg, req=False, multi=False, set=False):
+	def add_kw(self, name, typ, arg, req=False, multi=False, 
+			set=False, callback=None):
 		if not self.kw.has_key(name):
 			self.kw[name]=[]
-		kw=Keyword(name,typ,arg,req,multi)
+		kw=Keyword(name,typ,arg,req,multi,callback)
 		kw.set=set
 		self.kw[name].append(kw)
-
 
 	def set_kwarg(self, kw, set=False):
 		if isinstance(kw,Keyword):
@@ -130,11 +138,16 @@ class Section:
 			return self.kw[name][0]
 		return None
 
+	def getkw(self, name):
+		if self.kw.has_key(name):
+			return self.kw[name][0].arg
+		return None
+
 	def setkw(self, name, arg):
 		if self.kw.has_key(name):
 			self.kw[name][0].setkw(arg)
 		else:
-			print 'invalid kw: ', name
+			print 'Error: invalid kw: ', name
 
 	def findsect(self, name):
 		if self.sect.has_key(name):
@@ -180,14 +193,13 @@ class Section:
 				j.equalize(templ.sect[i][0])
 
 	def run_callbacks(self, templ):
+		if templ.callback is not None:
+			templ.callback(self)
 		for i in templ.kw:
 			cb=templ.kw[i][0]
 			if cb.callback is not None:
 				cb.callback(self.kw[i])
 		for i in templ.sect:
-			cb=templ.sect[i][0]
-			if cb.callback is not None:
-				cb.callback(self.sect[i])
 			for j in self.sect[i]:
 				j.run_callbacks(templ.sect[i][0])
 
@@ -572,50 +584,54 @@ class GetkwParser:
 		if argt == 'INT_ARRAY':
 			for i in arg:
 				if not ival.match(i):
-					print 'Invalid type on line %d: Not an integer: \n%s' % (
+					print 'Invalid type on line %d: Not an int: \n -> %s' % (
 							lineno(self.loc,self.strg), line(self.loc,
-								self.strg))
+								self.strg).strip())
 					sys.exit(1)
 		elif argt == 'DBL_ARRAY':
 			for i in arg:
 				if not dval.match(i):
-					print 'Invalid type on line %d: Not a float: \n%s' % (
+					print 'Invalid type on line %d: Not a float: \n -> %s' % (
 							lineno(self.loc,self.strg), line(self.loc,
-								self.strg))
+								self.strg).strip())
 					sys.exit(1)
 		elif argt == 'BOOL_ARRAY':
 			for i in arg:
 				if not lval.match(i):
-					print 'Invalid type on line %d: Not a bool: \n%s' % (
+					print 'Invalid type on line %d: Not a bool: \n -> %s' % (
 							lineno(self.loc,self.strg), line(self.loc,
-								self.strg))
+								self.strg.strip()))
 					sys.exit(1)
 		elif argt != 'STR':
-			print "getkw: Unknown type: ", argt
+			print 'Invalid type on line %d: Not a %s: \n -> %s' % (
+					lineno(self.loc,self.strg), argt, line(self.loc,
+						self.strg).strip())
 			sys.exit(1)
 		return argt
 
 	def check_type(self, arg, argt):
 		if argt == 'INT':
 			if not ival.match(arg):
-				print 'Invalid type on line %d: Not an integer: \n%s' % (
+				print 'Invalid type on line %d: Not an int: \n -> %s' % (
 						lineno(self.loc,self.strg), line(self.loc,
-							self.strg))
+							self.strg).strip())
 				sys.exit(1)
 		elif argt == 'DBL':
 			if not dval.match(arg):
-				print 'Invalid type on line %d: Not a float: \n%s' % (
+				print 'Invalid type on line %d: Not a float: \n -> %s' % (
 						lineno(self.loc,self.strg), line(self.loc,
-							self.strg))
+							self.strg).strip())
 				sys.exit(1)
 		elif argt == 'BOOL':
 			if not lval.match(arg):
-				print 'Invalid type on line %d: Not a bool: \n%s' % (
+				print 'Invalid type on line %d: Not a bool: \n -> %s' % (
 						lineno(self.loc,self.strg), line(self.loc,
-							self.strg))
+							self.strg).strip())
 				sys.exit(1)
 		elif argt != 'STR':
-			print "getkw: Unknown type: ", argt
+			print 'Invalid type on line %d: Not a %s: \n -> %s' % (
+					lineno(self.loc,self.strg), argt, line(self.loc,
+						self.strg).strip())
 			sys.exit(1)
 		return argt
 

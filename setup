@@ -28,8 +28,8 @@ esac
 }
 
 case `hostname` in 
-	compute-0-6.*) snykov ;;
-	snowflake*) snowflake ;;
+	compute-0-6.*) snykov $* ;;
+	snowflake*) snowflake $* ;;
 	*) echo "unknown machine..."; exit 0 ;;
 esac
 

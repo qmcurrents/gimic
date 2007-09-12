@@ -1,7 +1,7 @@
+! Setup grids for all possible purposes.
+! Written by Barnabas Plomlund.
 !
-! $Id$
-!
-! This module is a mess...
+! This module is bit of a mess...
 ! 
 
 module grid_m
@@ -15,7 +15,7 @@ module grid_m
 	type grid_t
 		logical :: lobato  ! integration grid, 1,2 or 3-D
 		real(DP), dimension(3,3) :: basv   ! grid basis vectors
-		real(DP), dimension(3) :: l        ! |k|
+		real(DP), dimension(3) :: l        ! |v|
 		real(DP), dimension(3) :: origin
 		real(DP), dimension(3) :: step
 		real(DP), dimension(2) :: map
@@ -34,8 +34,9 @@ module grid_m
 	real(DP), parameter :: DPTOL=1.d-10
 contains
 
-	subroutine init_grid(g)
+	subroutine init_grid(g, mol)
 		type(grid_t) :: g
+		type(molecule_t) :: mol
 
 		real(DP) :: ll 
 		integer(I4), dimension(3) :: ngp
@@ -49,16 +50,14 @@ contains
 		call getkw(input, 'grid', g%mode)
 
 		! first figure out where and how to place the grid
-		i=len(trim(g%gtype))
-		select case (g%mode(1:i))
+		select case (trim(g%mode))
 			case ('file')
 				call extgrid(g)
 				return
 			case ('std','base')
 				call setup_std_grid(g)
 			case ('bond')
-				call setup_bond_grid(g)
-				call hcsmbd(g)
+				call setup_bond_grid(g,mol)
 			case default
 				call msg_error('Unknown grid type: ' // trim(g%mode))
 				stop
@@ -70,6 +69,7 @@ contains
 			call getkw(input, 'grid.map', g%map)
 		end if
 
+		call normalise(g%basv)
 		call ortho_coordsys(g)
 		call check_handedness(g)
 		
@@ -79,6 +79,7 @@ contains
 		end if
 
 		! calculate distibution of grid points
+		call getkw(input, 'grid.type', g%gtype)
 		i=len(trim(g%gtype))
 		select case (g%gtype(1:i))
 			case ('even')
@@ -109,26 +110,101 @@ contains
 		call getkw(input, 'grid.origin', g%origin)
 		call getkw(input, 'grid.ivec', g%basv(:,1))
 		call getkw(input, 'grid.jvec', g%basv(:,2))
-!        call getkw(input, 'grid.kvec', g%basv(:,3))
+		call getkw(input, 'grid.kvec', g%basv(:,3))
 		call getkw(input, 'grid.spacing', g%step)
-		call getkw(input, 'grid.type', g%gtype)
-		call getkw(input, 'grid.lenghts', g%l)
+		call getkw(input, 'grid.lengths', g%l)
 
-		g%basv(:,1)=g%basv(:,1)-g%origin
-		g%basv(:,2)=g%basv(:,2)-g%origin
+		g%basv(:,1)=g%basv(:,1)
+		g%basv(:,2)=g%basv(:,2)
 		g%basv(:,3)=cross_product(g%basv(:,1),g%basv(:,2)) 
+	end subroutine
+
+	subroutine setup_bond_grid(g,mol)
+		type(grid_t) :: g
+		type(molecule_t) :: mol
+
+		type(atom_t), pointer :: atom
+
+		integer(I4) :: i
+		real(DP), dimension(3) :: normv
+		integer(I4), dimension(2) :: atoms
+		real(DP), dimension(3) :: v1, v2, v3, oo
+		real(DP), dimension(2) :: lh, ht
+		real(DP) :: l3
+
+		call getkw(input, 'grid.origin', g%origin)
+
+		if (keyword_is_set(input, 'grid.atoms')) then
+			call getkw(input, 'grid.atoms', atoms)
+			call get_atom(mol, atoms(1), atom)
+			call get_coord(atom, g%basv(:,1))
+			call get_atom(mol, atoms(2), atom)
+			call get_coord(atom, g%basv(:,2))
+		else
+			call getkw(input, 'grid.coord1', g%basv(:,1))
+			call getkw(input, 'grid.coord2', g%basv(:,2))
+		end if
+ 		!defaults, etc.
+		call getkw(input, 'grid.spacing', g%step)
+
+		l3=-1.d0
+		lh=-1.d0
+		ht=-1.d0
+		call getkw(input, 'grid.distance', l3)
+		call getkw(input, 'grid.width', lh)
+		call getkw(input, 'grid.height', ht)
+		g%l=(/sum(lh), sum(ht), 0.d0/)
+
+		if ( l3 < 0.d0 ) then
+			call msg_critical('grid.distance < 0!')
+			stop 
+		end if
+		if ( sum(lh) < 0.d0 ) then
+			call msg_critical('grid.width < 0!')
+			stop 
+		end if
+		if ( sum(ht) < 0.d0 ) then
+			call msg_critical('grid.heigth < 0!')
+			stop 
+		end if
+
+		v1=norm(g%basv(:,1)-g%basv(:,2))
+		oo=g%basv(:,1)-l3*v1
+		v3=norm(cross_product(v1, g%origin-oo))
+		v2=cross_product(v1, v3)
+		g%origin=oo-lh(1)*v2-ht(2)*v3
+
+        g%basv(:,1)=v2
+        g%basv(:,2)=v3
+		g%basv(:,3)=cross_product(v2,v3) 
+
+		call nl
+		call msg_out('Grid data')
+		call msg_out('------------------------------------------------')
+		call msg_out(str_g)
+		write(str_g, '(a,3f12.6)') 'center ', oo
+		call msg_out(str_g)
+		write(str_g, '(a,3f12.6)') 'origin ', g%origin
+		call msg_out(str_g)
+		write(str_g, '(a,3f12.6)') 'basv1  ', g%basv(:,1)
+		call msg_out(str_g)
+		write(str_g, '(a,3f12.6)') 'basv2  ', g%basv(:,2)
+		call msg_out(str_g)
+		write(str_g, '(a,3f12.6)') 'basv3  ', g%basv(:,3)
+		call msg_out(str_g)
+		call nl
+	end subroutine
+	
+	subroutine normalise(v)
+		real(DP), dimension(:,:), intent(inout) :: v
+
+		integer :: i
+		real(DP) :: norm
 
 		do i=1,3
-			normv(i)=sqrt(sum(g%basv(:,i)**2))
-			if (normv(i) > 0.d0) g%basv(:,i)=g%basv(:,i)/normv(i)
-!            g%l(i)=normv(i)
+			norm=sqrt(sum(v(:,i)**2))
+			if (norm > 0.d0) v(:,i)=v(:,i)/norm
 		end do
-		! k vector is special...
-!        call getkw(input, 'grid.l3', g%l(3))
-!        if (g%l(3) < 0.d0) then
-!            g%l(3)=-g%l(3)
-!            g%basv(:,3)=-g%basv(:,3)
-!        end if
 	end subroutine
 
 	subroutine setup_gauss_gdata(g)
@@ -138,9 +214,6 @@ contains
 		integer(I4) :: i
 
 		call msg_info('Integration grid selected.')
-		if (keyword_is_set(input, 'grid.step')) then
-			call msg_info('   "step" keyword ignored.')
-		end if
 		call nl
 		call getkw(input, 'grid.gauss_points', ngp)
 		call getkw(input, 'grid.grid_points', g%npts)
@@ -160,37 +233,18 @@ contains
 		end do
 	end subroutine
 
-	! get rid of hcbadsfasdf...
-	subroutine setup_bond_grid(g)
-		type(grid_t) :: g
-
-		integer(I4) :: i
-		real(DP), dimension(3) :: normv
-		integer(I4) :: atom1, atom2
-
-		call getkw(input, 'grid.origin', g%origin)
-		if (keyword_is_set(input, 'grid.atoms')) then
-			call getkw(input, 'grid.atom1', atom1)
-			call getkw(input, 'grid.atom2', atom2)
-			!lookup coords...
-		else
-			call getkw(input, 'grid.coord1', g%basv(:,1))
-			call getkw(input, 'grid.coord2', g%basv(:,2))
-		end if
- 		!defaults, etc.
-		call getkw(input, 'grid.spacing', g%step)
-		call getkw(input, 'grid.type', g%gtype)
-	end subroutine
-
 	subroutine check_handedness(g) 
 		type(grid_t) :: g
 
 		real(DP), dimension(3) :: magnet
 		real(DP) :: x
 
-		!bugger... can be in "wrong" sect.
+		! bugger... we can be in "wrong" sect, so we need to ensure we are at
+		! the top
+		call push_section(input, '.')
 		call getkw(input, 'cdens.magnet', magnet) 
-		! need to implement push/pop active section
+		call pop_section(input)
+
 		x=dot_product(g%basv(:,3), magnet)
 		if (x < 0.d0) then
 			call nl
@@ -206,102 +260,14 @@ contains
 		end if
 	end subroutine
 
-	subroutine hcsmbd(g)
-		type(grid_t), intent(inout) :: g
-
-		integer(I4) :: i
-		real(DP), dimension(3) :: v1, v2, v3, oo
-		real(DP), dimension(2) :: lh, ht
-		real(DP) :: l3, r1, r2
-
-		l3=-1.d0
-		lh=-1.d0
-		ht=-1.d0
-		call getkw(input, 'grid.l3', l3)
-		call getkw(input, 'grid.width', lh)
-		call getkw(input, 'grid.height', ht)
-		if ( l3 < 0.d0 ) then
-			call msg_critical('grid.l3 < 0!')
-			stop 
-		end if
-		if ( sum(lh) < 0.d0 ) then
-			call msg_critical('grid.lh < 0!')
-			stop 
-		end if
-		if ( sum(ht) < 0.d0 ) then
-			call msg_critical('grid.ht < 0!')
-			stop 
-		end if
-
-		i=len(trim(g%mode))
-		if (g%mode(1:i) == 'foo') then
-			v1=norm(g%basv(:,1)-g%basv(:,2))
-			oo=g%basv(:,1)-l3*v1
-			v2=norm(oo-g%origin)
-			v3=norm(cross_product(v1, v2))
-			v1=cross_product(v2, v3)
-			g%origin=oo-lh(1)*v2+ht(2)*v3
-		else if (g%mode(1:i) == 'bond') then
-			v1=norm(g%basv(:,1)-g%basv(:,2))
-			oo=g%basv(:,1)-l3*v1
-			v3=norm(cross_product(v1, g%origin-oo))
-			v2=cross_product(v1, v3)
-			g%origin=oo-lh(1)*v2+ht(2)*v3
-		else if (g%mode(1:i) == 'bar') then
-			v3=norm(g%basv(:,1)-g%basv(:,2))
-			oo=g%basv(:,1)-sqrt(sum((g%basv(:,1)-&
-			g%basv(:,2))**2))*v3*0.5d0
-			v1=norm(cross_product(v3, g%origin-oo))
-			v2=norm(cross_product(v1, v3))
-			oo=oo+2.d0*v2 !uhh...
-			g%origin=oo-lh(1)*v2+ht(2)*v3+l3*v1
-		else
-			call msg_error('Unknown grid mode: ' // trim(g%mode))
-			call exit(1)
-		end if
-
-        g%basv(:,1)=g%origin+sum(lh)*v2
-        g%basv(:,2)=g%origin-sum(ht)*v3
-
-		r1=sqrt(sum((g%origin+v2)**2))
-		r2=sqrt(sum((g%origin-v2)**2))
-
-		call nl
-		call msg_out('Grid data')
-		call msg_out('------------------------------------------------')
-		write(str_g, '(a,3f12.6)') 'v1     ', v1
-		call msg_out(str_g)
-		write(str_g, '(a,3f12.6)') 'v2     ', v2 
-		call msg_out(str_g)
-		write(str_g, '(a,3f12.6)') 'v3     ', v3
-		call msg_out(str_g)
-		write(str_g, '(a,3f12.6)') 'center ', oo
-		call msg_out(str_g)
-		write(str_g, '(a,3f12.6)') 'origin ', g%origin
-		call msg_out(str_g)
-		write(str_g, '(a,3f12.6)') 'basv1  ', g%basv(:,1)
-		call msg_out(str_g)
-		write(str_g, '(a,3f12.6)') 'basv2  ', g%basv(:,2)
-		call msg_out(str_g)
-		write(str_g, '(a,3f12.6)') '|basv1|', &
-			sqrt(sum((g%basv(:,1)-g%origin)**2))
-		call msg_out(str_g)
-		write(str_g, '(a,3f12.6)') '|basv2|', &
-			sqrt(sum((g%basv(:,2)-g%origin)**2))
-		call msg_out(str_g)
-		call nl
-
-	end subroutine
-
 	subroutine setup_even_gdata(g)
 		type(grid_t), intent(inout) :: g
 
 		integer(I4) :: i, n
-		real(DP), dimension(3) :: normv
 
 		g%lobato=.false.
-		g%npts(1)=nint(normv(1)/g%step(1))+1
-		g%npts(2)=nint(normv(2)/g%step(2))+1
+		g%npts(1)=nint(g%l(1)/g%step(1))+1
+		g%npts(2)=nint(g%l(2)/g%step(2))+1
 		if (g%l(3) == 0.d0 .or. g%step(3) == 0.d0) then
 			g%npts(3)=1
 		else
@@ -358,6 +324,7 @@ contains
 			tvec=cross_product(g%basv(:,1), g%basv(:,3))
 			tvec=tvec/sqrt(sum(tvec**2))
 			g%basv(:,2)=tvec
+			call normalise(g%basv)
 			call msg_info( 'init_grid():&
 				& You specified a nonorthogonal coordinate system.' )
 			call nl
@@ -483,9 +450,9 @@ contains
 		v1=gridpoint(grid, grid%npts(1), 1, 1)
 		v2=gridpoint(grid, 1, grid%npts(2), 1)
 		center=(v1+v2)*0.5d0
-		write(str_g, '(a,3f10.5)') 'Grid center:', center
-		call msg_note(str_g)
-		call nl
+!        write(str_g, '(a,3f10.5)') 'Grid center:', center
+!        call msg_note(str_g)
+!        call nl
 	end subroutine
 
 	subroutine extgrid(g)
@@ -524,41 +491,6 @@ contains
 		call nl
 	end subroutine
 
-	subroutine bondage(g)
-		type(grid_t), intent(inout) :: g
-
-		real(DP), dimension(3) :: v1, v2, v3, oo
-		real(DP) :: l3, r
-
-		l3=-1.d0
-		r=-1.d0
-		call getkw(input, 'grid.l3', l3)
-		call getkw(input, 'grid.radius', r)
-		if ( l3 < 0.d0 ) stop 'grid.l3 < 0!'
-		if ( r < 0.d0 ) stop 'grid.radius < 0!'
-
-		v1=norm(g%basv(:,2)-g%basv(:,1))
-		v2(1)=-v1(2)-v1(3)
-		v2(2)=v1(1)-v1(3)
-		v2(3)=v1(1)+v1(2)
-		v2=norm(v2)
-		v3=cross_product(v1, v2)
-
-		oo=g%basv(:,1)+l3*v1
-		g%origin=oo+r*(v2+v3)
-        g%basv(:,1)=oo-r*(v2-v3)
-        g%basv(:,2)=oo-r*(-v2+v3)
-!        print *
-!        print *, 'center', oo
-!        print *, 'origin', g%origin
-!        print *, 'basv1', g%basv(:,1)
-!        print *, 'basv2', g%basv(:,2)
-!        print *, '|basv1|', sqrt(sum((g%basv(:,1)-g%origin)**2))
-!        print *, '|basv2|', sqrt(sum((g%basv(:,2)-g%origin)**2))
-!        print *
-		
-	end subroutine
-
 	function norm(v) result(n)
 		real(DP), dimension(3), intent(in) :: v
 		real(DP), dimension(3) :: n
@@ -586,7 +518,6 @@ contains
 		p3=0
 		if (np > 0) then
 			call get_grid_size(g,p1,p2,p3)
-			print *, p1, p2, p3
 		end if
 
 		write(str_g, '(2a)') 'Grid plot in ', trim(fname)
@@ -801,6 +732,7 @@ contains
 		real(DP), dimension(3,3) :: euler
 
 		call getkw(input, 'grid.angle', angle)
+		stop 'Sorry dude! This does not quite work yet...'
 
 		euler=0.d0
 		euler(1,1)=sin(angle)
@@ -810,6 +742,131 @@ contains
 		euler(2,1)=-cos(angle)
 
 		g%basv=matmul(euler,g%basv)
+	end subroutine
+
+!
+! Obsolete stuff
+! 
+	subroutine hcsmbd(g)
+		type(grid_t), intent(inout) :: g
+
+		integer(I4) :: i
+		real(DP), dimension(3) :: v1, v2, v3, oo
+		real(DP), dimension(2) :: lh, ht
+		real(DP) :: l3, r1, r2
+
+		l3=-1.d0
+		lh=-1.d0
+		ht=-1.d0
+		call getkw(input, 'grid.distance', l3)
+		call getkw(input, 'grid.width', lh)
+		call getkw(input, 'grid.height', ht)
+		if ( l3 < 0.d0 ) then
+			call msg_critical('grid.distace < 0!')
+			stop 
+		end if
+		if ( sum(lh) < 0.d0 ) then
+			call msg_critical('grid.width < 0!')
+			stop 
+		end if
+		if ( sum(ht) < 0.d0 ) then
+			call msg_critical('grid.height < 0!')
+			stop 
+		end if
+
+		i=len(trim(g%mode))
+		if (g%mode(1:i) == 'foo') then
+			v1=norm(g%basv(:,1)-g%basv(:,2))
+			oo=g%basv(:,1)-l3*v1
+			v2=norm(oo-g%origin)
+			v3=norm(cross_product(v1, v2))
+			v1=cross_product(v2, v3)
+			g%origin=oo-lh(1)*v2+ht(2)*v3
+		else if (g%mode(1:i) == 'bond') then
+			v1=norm(g%basv(:,1)-g%basv(:,2))
+			oo=g%basv(:,1)-l3*v1
+			v3=norm(cross_product(v1, g%origin-oo))
+			v2=cross_product(v1, v3)
+			g%origin=oo-lh(1)*v2+ht(2)*v3
+		else if (g%mode(1:i) == 'bar') then
+			v3=norm(g%basv(:,1)-g%basv(:,2))
+			oo=g%basv(:,1)-sqrt(sum((g%basv(:,1)-&
+			g%basv(:,2))**2))*v3*0.5d0
+			v1=norm(cross_product(v3, g%origin-oo))
+			v2=norm(cross_product(v1, v3))
+			oo=oo+2.d0*v2 !uhh...
+			g%origin=oo-lh(1)*v2+ht(2)*v3+l3*v1
+		else
+			call msg_error('Unknown grid mode: ' // trim(g%mode))
+			call exit(1)
+		end if
+
+        g%basv(:,1)=g%origin+sum(lh)*v2
+        g%basv(:,2)=g%origin-sum(ht)*v3
+
+		r1=sqrt(sum((g%origin+v2)**2))
+		r2=sqrt(sum((g%origin-v2)**2))
+
+		call nl
+		call msg_out('Grid data')
+		call msg_out('------------------------------------------------')
+		write(str_g, '(a,3f12.6)') 'v1     ', v1
+		call msg_out(str_g)
+		write(str_g, '(a,3f12.6)') 'v2     ', v2 
+		call msg_out(str_g)
+		write(str_g, '(a,3f12.6)') 'v3     ', v3
+		call msg_out(str_g)
+		write(str_g, '(a,3f12.6)') 'center ', oo
+		call msg_out(str_g)
+		write(str_g, '(a,3f12.6)') 'origin ', g%origin
+		call msg_out(str_g)
+		write(str_g, '(a,3f12.6)') 'basv1  ', g%basv(:,1)
+		call msg_out(str_g)
+		write(str_g, '(a,3f12.6)') 'basv2  ', g%basv(:,2)
+		call msg_out(str_g)
+		write(str_g, '(a,3f12.6)') '|basv1|', &
+			sqrt(sum((g%basv(:,1)-g%origin)**2))
+		call msg_out(str_g)
+		write(str_g, '(a,3f12.6)') '|basv2|', &
+			sqrt(sum((g%basv(:,2)-g%origin)**2))
+		call msg_out(str_g)
+		call nl
+
+	end subroutine
+
+	subroutine bondage(g)
+		type(grid_t), intent(inout) :: g
+
+		real(DP), dimension(3) :: v1, v2, v3, oo
+		real(DP) :: l3, r
+
+		l3=-1.d0
+		r=-1.d0
+		call getkw(input, 'grid.l3', l3)
+		call getkw(input, 'grid.radius', r)
+		if ( l3 < 0.d0 ) stop 'grid.l3 < 0!'
+		if ( r < 0.d0 ) stop 'grid.radius < 0!'
+
+		v1=norm(g%basv(:,2)-g%basv(:,1))
+		v2(1)=-v1(2)-v1(3)
+		v2(2)=v1(1)-v1(3)
+		v2(3)=v1(1)+v1(2)
+		v2=norm(v2)
+		v3=cross_product(v1, v2)
+
+		oo=g%basv(:,1)+l3*v1
+		g%origin=oo+r*(v2+v3)
+        g%basv(:,1)=oo-r*(v2-v3)
+        g%basv(:,2)=oo-r*(-v2+v3)
+!        print *
+!        print *, 'center', oo
+!        print *, 'origin', g%origin
+!        print *, 'basv1', g%basv(:,1)
+!        print *, 'basv2', g%basv(:,2)
+!        print *, '|basv1|', sqrt(sum((g%basv(:,1)-g%origin)**2))
+!        print *, '|basv2|', sqrt(sum((g%basv(:,2)-g%origin)**2))
+!        print *
+		
 	end subroutine
 end module
 

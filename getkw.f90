@@ -1746,6 +1746,10 @@ contains
 		if (self%stidx < MAX_STACK) then
 			self%stidx=self%stidx+1
 			self%stack(self%stidx)%sect=>self%active
+			if (sect == '.') then
+				self%active=>self%stack(1)%sect
+				return
+			end if
 			ok=find_sect(self%active, sect, ptr)
 			if ( .not.ok ) then
 				call perror('Invalid section: ' // sect)
@@ -1807,7 +1811,7 @@ contains
 
 		ok=findkw(self%active, key, ptr)
 		if (.not.ok) then
-			call pwarn('no such key: ' // trim(key))
+			call pwarn('getkw: no such key: ' // trim(key))
 		else
 			ok=ptr%set
 		end if
