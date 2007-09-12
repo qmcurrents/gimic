@@ -7,7 +7,7 @@
 # Written by Jonas Juselius <jonas.juselius@chem.uit.no> 
 # University of Tromsø, 2006
 #
-# TODO: optional sections can contain required keys in that realm
+# TODO: 
 #       general cleanup
 #
 

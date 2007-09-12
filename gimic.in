@@ -209,6 +209,8 @@ def check_opt(sect,key):
 def check_grid(grid):
 	warn="Warning: The '%s' option incompatible with '%s' type grids"
 	err="Error: Required option '%s' not set for grid(%s)!"
+	if not grid.is_set():
+		return
 	arg=grid.get_arg().arg[0]
 	if (arg == 'std' or arg == 'base'):
 		required=('origin', 'ivec', 'jvec', 'lengths', 'spacing')

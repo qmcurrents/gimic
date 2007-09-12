@@ -67,18 +67,18 @@
 		}
 	}
 
-	divj {
-		plots=[1]
-		gopenmol=divj.plt
-		grid(base) { 
-			type=even
-			origin=[-4.0, 0.0, -4.0]
-			ivec=[1.0, 0.0, 0.0]
-			jvec=[ 0.0, 0.0, 1.0]
-			kvec=[0.0,1.0,0.0] # optional, deduced from i x j
-			lengths=[10.0, 10.0, 0.0]
-			spacing=[0.5, 0.5, 0.5]
-#             angle=0.0
-			gridplot=15 # wht?
-		}
-	}
+#     divj {
+#         plots=[1]
+#         gopenmol=divj.plt
+#         grid(base) { 
+#             type=even
+#             origin=[-4.0, 0.0, -4.0]
+#             ivec=[1.0, 0.0, 0.0]
+#             jvec=[ 0.0, 0.0, 1.0]
+#             kvec=[0.0,1.0,0.0] # optional, deduced from i x j
+#             lengths=[10.0, 10.0, 0.0]
+#             spacing=[0.5, 0.5, 0.5]
+# #             angle=0.0
+#             gridplot=15 # wht?
+#         }
+#     }
