@@ -1,4 +1,399 @@
-program jonas
+module aces2_m
+	use kinds
+	implicit double precision (a-h,o-z)
+	integer, parameter :: ABEL=8
+
+	public
+
+contains
+
+	subroutine matexp(irrep,num,a,b,ianti)
+	!
+	! THIS ROUTINE EXPANDS THE A COMPRESSED MATRIX A(P,Q)
+	! P >= Q TO AN ARRAY A(PQ) WITH P,Q. NOTE THIS ROUTINE 
+	! EXPECTS THAT THE ARRAY A IS SYMMETRY PACKED.
+	!
+	!  INPUT : IRREP  ...  THE IRREP OF THE CORRESPONDING PART OF A
+	!          NUM ......  POPULATION VECTOR FOR I AND J
+	!          DISSIZE ..  DISTRIBUTION SIZE OF A
+	!          A     ....  THE MATRIX A
+	!          IANTI ..... 0 FOR SYMMETRIC AND 1 FOR ANTISYMMETRIC
+	!                      MATRICES
+	!
+	!  OUTPUT : B .......  THE EXPANDED MATRIX A
+	!
+	!END
+	!
+	! CODED JG JAN/91
+	!
+		real(DP), dimension(:) :: a, b
+		real(DP), dimension(ABEL) :: num
+		dimension ipold(ABEL),ipnew(ABEL)
+		common /syminf/nstart,nirrep,irrepa(255),irrepb(255), dirprd(ABEL,ABEL)
+
+		integer :: dirprd
+
+		ind(j,i)=(j*(j-1))/2+i
+
+		data zero /0.0d0/
+	!
+	! TAKE HERE CARE, IF WE ARE HANDLING IRREP=1 (TOTAL SYMMETRIC)
+	! OR IRREP=1 (OTHERWISE)
+	!
+		if(irrep.eq.1) then
+	!
+	! GET FIRST POINTERS FOR OLD AND NEW INDICES
+	!
+			ipold(1)=0
+			ipnew(1)=0
+			do irrepj=1,(nirrep-1)
+				ipold(irrepj+1)=ipold(irrepj)+(num(irrepj)*(num(irrepj)+1))/2
+				ipnew(irrepj+1)=ipnew(irrepj)+num(irrepj)**2
+			end do
+	!
+	! NOW LOOP OVER ALL IRREPS
+	!
+			do  irrepj=1,nirrep
+				numj=num(irrepj)
+				ipo=ipold(irrepj)
+				ipn=ipnew(irrepj)
+	!
+	! LOOP OVER ORBITALS, BUT ALSO IN BACKWARD ORDER
+	!
+				if(ianti.eq.0) then
+					do  j=1,numj
+						do i=1,j
+							ind1=ind(j,i)+ipo
+							ind2=(j-1)*numj+i+ipn
+							ind3=(i-1)*numj+j+ipn
+							b(ind2)=a(ind1)
+							b(ind3)=a(ind1)
+						end do
+					end do
+				else
+					do j=1,numj
+						do i=1,j
+							ind1=ind(j,i)+ipo
+							ind2=(j-1)*numj+i+ipn
+							ind3=(i-1)*numj+j+ipn 
+							b(ind2)=a(ind1)
+							b(ind3)=-a(ind1)
+						end do
+					end do
+				endif
+			end do
+		else
+	!
+	! FILL THE POINTERS OF THE OLD AND NEW ARRAY
+	!
+			ipold(1)=0
+			ipnew(1)=0
+			do irrepj=1,nirrep-1
+				irrepi=dirprd(irrep,irrepj)
+				numj=num(irrepj)
+				numi=num(irrepi)
+				ipnew(irrepj+1)=ipnew(irrepj)+numj*numi
+				if(irrepi.lt.irrepj) then
+					ipold(irrepj+1)=ipold(irrepj)+numj*numi
+				else
+					ipold(irrepj+1)=ipold(irrepj)
+				endif
+			end do
+	!
+	! NOW COPY OLD ARRAYS TO NEW LOCATION
+	!
+			do irrepj=1,nirrep
+				irrepi=dirprd(irrep,irrepj)
+				numj=num(irrepj)
+				numi=num(irrepi)
+				if(irrepj.gt.irrepi) then
+					ipn=ipnew(irrepj)
+					ipo=ipold(irrepj)
+					do ij=1,numj*numi
+						ipnn=ipn+ij
+						ipoo=ipo+ij
+						b(ipnn)=a(ipoo)
+					end do
+				else
+					if(ianti.eq.0) then
+						ipn=ipnew(irrepj)
+						ipo=ipold(irrepi)
+						do j=1,numj
+							do i=1,numi
+								ind1=(i-1)*numj+j+ipo
+								ind2=(j-1)*numi+i+ipn
+								b(ind2)=a(ind1)
+							end do
+						end do
+					else
+						ipn=ipnew(irrepj)
+						ipo=ipold(irrepi)
+						do j=1,numj
+							do i=1,numi
+								ind1=(i-1)*numj+j+ipo
+								ind2=(j-1)*numi+i+ipn
+								b(ind2)=-a(ind1)
+							end do
+						end do
+					endif
+				endif
+			end do
+		endif
+	end subroutine
+
+	subroutine readpd(ddens,scr,noca,nvrta,nbas,inumber,ib,irrepx, ispin)
+!
+! read the correlation contribution to the perturbed density from JOBARC
+!
+		integer pop,vrt,dirprd
+		dimension ddens(*),scr(*),ioffo(8),ioffv(8)
+
+		common/machsp/iintln,ifltln,iintfp,ialone,ibitwd
+		common/sympop/irpdpd(8,22),isytyp(2,500),njunk(18)
+		common/syminf/nstart,nirrep,irreps(255,2),dirprd(8,8)
+		common/sym/pop(8,2),vrt(8,2),nt(2),nf1(2),nf2(2)
+
+		nlength=irpdpd(irrepx,21)+irpdpd(irrepx,19)+irpdpd(irrepx,9)
+
+		ioff=0
+		do irrep=1,nirrep
+			ioffo(irrep)=ioff
+			ioff=ioff+pop(irrep,ispin)
+		end do
+		do irrep=1,nirrep
+			ioffv(irrep)=ioff
+			ioff=ioff+vrt(irrep,ispin)
+		end do
+
+		if(inumber.eq.1) then
+			if(ib.eq.1) call getrec(20,'JOBARC','PDENSC1X',nlength*iintfp,scr)
+			if(ib.eq.2) call getrec(20,'JOBARC','PDENSC1Y',nlength*iintfp,scr)
+			if(ib.eq.3) call getrec(20,'JOBARC','PDENSC1Z',nlength*iintfp,scr)
+		else if(inumber.eq.2) then
+			if(ib.eq.1) call getrec(20,'JOBARC','PDENSC2X',nlength*iintfp,scr)
+			if(ib.eq.2) call getrec(20,'JOBARC','PDENSC2Y',nlength*iintfp,scr)
+			if(ib.eq.3) call getrec(20,'JOBARC','PDENSC2Z',nlength*iintfp,scr)
+		else if(inumber.eq.3) then
+			if(ib.eq.1) call getrec(20,'JOBARC','PDENSC3X',nlength*iintfp,scr)
+			if(ib.eq.2) call getrec(20,'JOBARC','PDENSC3Y',nlength*iintfp,scr)
+			if(ib.eq.3) call getrec(20,'JOBARC','PDENSC3Z',nlength*iintfp,scr)
+		endif
+		!
+		! DEAL WITH OCCUPIED-OCCUPIED BLOCK 
+		!
+		ioff=0
+		do irrepr=1,nirrep
+			irrepl=dirprd(irrepx,irrepr)
+			nocr=pop(irrepr,ispin)
+			nocl=pop(irrepl,ispin)
+			do i=1,nocr
+				do j=1,nocl
+					ioff=ioff+1
+					index2=j+ioffo(irrepl)+(i+ioffo(irrepr)-1)*nbas
+					ddens(index2)=ddens(index2)+scr(ioff)
+				end do
+			end do
+		end do
+		!
+		! DEAL WITH VIRTUAL-VIRTUAL BLOCK 
+		!
+		do irrepr=1,nirrep
+			irrepl=dirprd(irrepx,irrepr)
+			nvrtr=vrt(irrepr,ispin)
+			nvrtl=vrt(irrepl,ispin)
+			do i=1,nvrtr
+				do j=1,nvrtl
+					ioff=ioff+1
+					index2=j+ioffv(irrepl)+(i+ioffv(irrepr)-1)*nbas
+					ddens(index2)=ddens(index2)+scr(ioff)
+				end do
+			end do
+		end do
+		!
+		! DEAL WITH VIRTUAL-OCCUPIED BLOCK 
+		!
+		do irrepr=1,nirrep
+			irrepl=dirprd(irrepx,irrepr)
+			nocr=pop(irrepr,ispin)
+			nvrtl=vrt(irrepl,ispin)
+			do i=1,nocr
+				do j=1,nvrtl
+					ioff=ioff+1
+					index2=j+ioffv(irrepl)+(i+ioffo(irrepr)-1)*nbas
+					index3=i+ioffo(irrepr)+(j+ioffv(irrepl)-1)*nbas
+					ddens(index2)=ddens(index2)+scr(ioff)
+					ddens(index3)=ddens(index3)-scr(ioff)
+				end do
+			end do
+		end do
+	end subroutine
+
+	subroutine reordc(a,scr,nbast,pop,vrt,nbas)
+!
+!   THIS SUBROUTINE REORDERS A GIVEN MATRIX IN SUCH A WAY THAT
+!   ABACUS (CALCULATOR AND IN THE FUTURE CRAY) CAN HANDLE THE
+!   BACK TRANSFORMATION OF THE ONE-ELECTRON DENSITY MATRIX
+!
+!   A ... .... INPUT ARRAY
+!   SCR ...... OUTPUT ARRAY
+!   NBAST .... TOTAL NUMBER OF BASIS FUNCTIONS
+!   POP ...... NUMBER OF OCCUPIED ORBITALS PER IRREP
+!   VRT ...... NUMBER OF VIRTUAL ORBITALS PER IRREP
+!   NBAS ..... NUMBER OF BASIS FUNCTIONS PER IRREP
+!
+!END
+!
+! CODED OCT/90 JG
+!
+		implicit double precision(a-h,o-z)
+		integer dirprd,pop,vrt
+		dimension a(nbast*nbast),scr(nbast*nbast)
+		dimension pop(8),vrt(8),nbas(8)
+
+		common/machsp/iintln,ifltln,iintfp,ialone,ibitwd
+		common/syminf/nstart,nirrep,irrepa(255,2),dirprd(8,8)
+		!
+		! COPY FIRT CFULL TO SCRATCH
+		!
+		call myicopy(a,scr,nbast*nbast*iintfp)
+		!
+		!  OFFSET FOR OCCUPIED AND VIRTUAL BLOCK
+		!
+		ioffo=1
+		ioffv=1
+		do irrep=1,nirrep
+			ioffv=ioffv+pop(irrep)*nbast
+		end do
+		!
+		!  OFFSET FOR TARGET ARRAY
+		!
+		iofft=1
+		!
+		!  LOOP OVER ALL IRREPS
+		!
+		do  irrep=1,nirrep
+			!
+			! FILL FIRST WITH OCCUPIED ORBITALS OF THIS BLOCK
+			!
+			call myicopy(scr(ioffo),a(iofft),iintfp*pop(irrep)*nbast)
+
+			ioffo=ioffo+nbast*pop(irrep)
+			iofft=iofft+nbast*pop(irrep)
+			!
+			! FILL NOW WITH VIRTUAL ORBITALS OF THIS BLOCK
+			!
+			call myicopy(scr(ioffv),a(iofft),iintfp*vrt(irrep)*nbast)
+
+			ioffv=ioffv+nbast*vrt(irrep)
+			iofft=iofft+nbast*vrt(irrep)
+		end do
+	end subroutine
+
+	subroutine symc(cfull,csym,nbast,nbas,scf,ispin)
+!
+!  THIS SUBROUTINE RETURNS THE SYMMETRY PACKED LIST OF THE INPUT
+!  MATRIX CFULL. IT IS USED IN THE INTEGRAL DERIVATIVE CODE TO
+!  SYMMETYRY PACK THE EIGEN VECTOR MATRIX.
+!
+!
+!  CFULL ..... INPUT MATRIX ( SIZE NBAST*NBAST)
+!  CSYM ...... SYMMETRY PACKED OUTPUT MATRIX (SQUARE MATRICES WITHIN
+!                                             EACH IRREP)
+!  NBAST ..... TOTAL NUMBER OF BASIS FUNCTION
+!  NBAS ...... NUMBER OF BASIS FUNCTION PER IRREP( ARRAY OF DIM 8)
+!  SCF ....... FLAG WHICH TELLS IF THE EIGENVECTORS HAVE BEEN REORDERED
+!              OR NOT.
+!              SCF = .TRUE.   NO REORDERING REQUIRED HERE
+!                  = .FALSE.  REORDERING IS REQUIRED
+!  ISPIN ..... SPIN CASE (AS USUAL)
+!
+!END
+!
+!   CODED OCT/90   JG
+!
+		implicit double precision(a-h,o-z)
+		integer dirprd,pop,popfull,vrt
+		logical scf
+		dimension cfull(nbast,nbast),csym(*),nbas(8),popfull(8)
+
+		common/flags/iflags(100)
+		common/syminf/nstart,nirrep,irrepa(255,2),dirprd(8,8)
+		common/sym/pop(8,2),vrt(8,2),nt(2),nf1(2),nf2(2)
+		!
+		!  FOR CORRELATION METHODS REORDER C SO THAT WE HAVE ALL EIGENVECTORS
+		!  OF THE SAME IRREP TOGETHER
+		!
+		!print *, '!!!!check line 327'
+		call reordc(cfull,csym,nbast,pop(1,ispin),vrt(1,ispin),nbas)
+
+		ioffr=1
+		ioffc=0
+		ioffp=1
+
+		do irrep=1,nirrep
+			do imo=1,nbas(irrep)
+				ioffc=ioffc+1
+				length=nbas(irrep)
+				call scopy(length,cfull(ioffr,ioffc),1,csym(ioffp),1)
+				ioffp=ioffp+length
+			end do
+			ioffr=ioffr+nbas(irrep)
+		end do
+	end subroutine
+
+	subroutine symc2(cfull,csym,nbast,nbas,scf,ispin,irrepx)
+!
+!  THIS SUBROUTINE RETURNS THE SYMMETRY PACKED LIST OF THE INPUT
+!  MATRIX CFULL. IT IS USED IN THE INTEGRAL DERIVATIVE CODE TO
+!  SYMMETYRY PACK THE EIGEN VECTOR MATRIX.
+!
+!
+!  CFULL ..... OUTPUT MATRIX ( SIZE NBAST*NBAST)
+!  CSYM ...... SYMMETRY PACKED INPUT MATRIX (SQUARE MATRICES WITHIN
+!                                             EACH IRREP)
+!  NBAST ..... TOTAL NUMBER OF BASIS FUNCTION
+!  NBAS ...... NUMBER OF BASIS FUNCTION PER IRREP( ARRAY OF DIM 8)
+!  SCF ....... FLAG WHICH TELLS IF THE EIGENVECTORS HAVE BEEN REORDERED
+!              OR NOT.
+!              SCF = .TRUE.   NO REORDERING REQUIRED HERE
+!                  = .FALSE.  REORDERING IS REQUIRED
+!  ISPIN ..... SPIN CASE (AS USUAL)
+!  IRREPX .... IRREP OF ARRAY TO BE UNPACKED
+!END
+!
+!   CODED OCT/90   JG
+!
+		implicit double precision(a-h,o-z)
+		integer dirprd,pop,popfull,vrt
+		logical scf
+		dimension cfull(nbast,nbast),csym(*),nbas(8),popfull(8)
+
+		common/flags/iflags(100)
+		common/syminf/nstart,nirrep,irrepa(255,2),dirprd(8,8)
+		common/sym/pop(8,2),vrt(8,2),nt(2),nf1(2),nf2(2)
+
+		ioffr=1
+		ioffc=0
+		ioffp=1
+
+		call zero(cfull,nbast*nbast)
+		do irrep=1,nirrep
+			do imo=1,nbas(irrep)
+				ioffc=ioffc+1
+				irrep2=dirprd(irrep,irrepx)
+				length=nbas(irrep2)
+				ioffr=1
+				do irrep1=1,irrep2-1
+					ioffr=ioffr+nbas(irrep1)
+				end do
+				call scopy(length,csym(ioffp),1,cfull(ioffr,ioffc),1)
+				ioffp=ioffp+length
+			end do
+		end do
+	end subroutine
+end module
+
+program xcpdens_sym
 !
 ! QUICK AND DIRTY PROGRAM TO GET DENSITY MATRIX AND PERTURBED
 ! DENSITY MATRICES
@@ -8,13 +403,13 @@ program jonas
 !
 !END
 !
-! J. GAUSS UNIVERSITY OF MAINZ, 2002
+! J. GAUSS, UNIVERSITY OF MAINZ, 2002
 !
+! Open-shells and F90 version 
+! J. Juselius, University of Tromsø, 2007
+!
+	use aces2_m
 
-!
-! Checklist: getlst, symc* readpd calls
-! all calls actually ;)
-!
 	implicit double precision(a-h,o-z)
 	integer, parameter :: maxcor=2000000, alpha=1, beta=2
 	logical :: debug
@@ -39,25 +434,25 @@ program jonas
 
 	integer :: uhf, ispin
 
-	! INIT MODULE
+	! INIT ACES2 MODULE
 	call crapsi(scr,iuhf,0)
 	debug=.true.
 
 	if (iuhf == 0) then
 		ispin=1
 		open(42, file='XDENS', status='unknown')
-		call kusse(ispin)
+		call gendens(ispin)
 		close(42)
 	else
-		do ispin=1,2
+		do ispin=1,iuhf+1
 			select case(ispin)
 				case(1)
 					open(42, file='XDENSA', status='unknown')
-					call kusse(ispin)
+					call gendens(ispin)
 					close(42)
 				case(2)
 					open(42, file='XDENSB', status='unknown')
-					call kusse(ispin)
+					call gendens(ispin)
 					close(42)
 			end select
 		end do
@@ -66,7 +461,7 @@ program jonas
 	! ALL DONE, CALL CRAPSO
 	call crapso()
 contains
-	subroutine kusse(ispin)
+	subroutine gendens(ispin)
 		integer, intent(in) :: ispin
 !
 ! NBAS NUMBER OF BASIS FUNCTIONS
@@ -239,7 +634,7 @@ contains
 !
 ! REFORMAT MO COEFFICIENTS
 !
-		call symc(scr(istart),scr(imo),nbas,nbasi,.false.,1)
+		call symc(scr(istart),scr(imo),nbas,nbasi,.false.,ispin)
 		if(debug) then
 			write(*,*) ' MO coefficients c(mu,p)'
 			!         CALL OUTPUT(SCR(IMO),1,NBAS,1,NBAS,NBAS,NBAS,1)
@@ -285,11 +680,21 @@ contains
 ! 
 ! READ IN U(A*,I)^x FROM MOINTS FILE
 !     
-			call getlst(scr(iuai),ip(irrepx),1,1,irrepx,182)
+!            print *, '!!! check getlst() 182'
+			if (ispin == 1) then
+				call getlst(scr(iuai),ip(irrepx),1,1,irrepx,182)
+			else
+				call getlst(scr(iuai),ip(irrepx),1,1,irrepx,183)
+			end if
 !
 ! READ IN S(I*,J)^x FROM MOINTS FILE
 !
-			call getlst(scr(isij),ip(irrepx),1,1,irrepx,170)
+!            print *, '!!! check getlst() 170'
+			if (ispin == 1) then
+				call getlst(scr(isij),ip(irrepx),1,1,irrepx,170)
+			else
+				call getlst(scr(isij),ip(irrepx),1,1,irrepx,171)
+			end if
 !
 ! CONVERT S(I,J)^x TO U(I,J)^x (FACTOR -1/2) (NOT FOR PERTURBED 
 ! CANONICAL ORBITALS, IFLAGS(64).NE.0)
@@ -390,7 +795,7 @@ contains
 !
 ! SAO --> CAO TRANSFORMATION; TWO XGEMM CALLS
 !
-			call symc2(scr(istart),scr(iddens),nbas,nbasi,.false.,1,irrepx)
+			call symc2(scr(istart),scr(iddens),nbas,nbasi,.false.,ispin,irrepx)
 
 			call scopy(nbas*nbas,scr(istart),1,scr(iddens),1)
 
@@ -432,20 +837,20 @@ contains
 				iscr2=iscr1+nbasc*nbasc
 				call zero(scr(iscr1),nbas*nbas)
 
-				print *, '!!!!check all call readpd()'
-				print *, '!!!!check line 438'
-				call readpd(scr(iscr1),scr(iscr2),noca,nvrta,nbas,1,ib,irrepx)
+				call readpd(scr(iscr1),scr(iscr2),noca,nvrta,nbas,1,&
+				ib,irrepx, ispin)
 !
 ! READ CONTRIBUTION FROM DDXDF1 ... DDOO (PERTURBED CANONICAL ORBITALS ONLY) 
 !
 				if(iflags(64).ne.0) then
 					call readpd(scr(iscr1),scr(iscr2),noca,nvrta,nbas,2,ib,&
-					irrepx)
+					irrepx, ispin)
 				endif
 !
 ! READ CONTRIBUTION FROM DDXDF2 ... DDVO 
 !
-				call readpd(scr(iscr1),scr(iscr2),noca,nvrta,nbas,3,ib,irrepx)
+				call readpd(scr(iscr1),scr(iscr2),noca,nvrta,nbas,3,ib,&
+				irrepx, ispin)
 !
 !  TRANSFORM FROM MO TO AO BASIS: TWO XGEMM CALLS
 !
@@ -519,389 +924,3 @@ contains
 		end do
 	end subroutine
 end program
-       
-subroutine matexp(irrep,num,a,b,ianti)
-!
-! THIS ROUTINE EXPANDS THE A COMPRESSED MATRIX A(P,Q)
-! P >= Q TO AN ARRAY A(PQ) WITH P,Q. NOTE THIS ROUTINE 
-! EXPECTS THAT THE ARRAY A IS SYMMETRY PACKED.
-!
-!  INPUT : IRREP  ...  THE IRREP OF THE CORRESPONDING PART OF A
-!          NUM ......  POPULATION VECTOR FOR I AND J
-!          DISSIZE ..  DISTRIBUTION SIZE OF A
-!          A     ....  THE MATRIX A
-!          IANTI ..... 0 FOR SYMMETRIC AND 1 FOR ANTISYMMETRIC
-!                      MATRICES
-!
-!  OUTPUT : B .......  THE EXPANDED MATRIX A
-!
-!END
-!
-! CODED JG JAN/91
-!
-	implicit double precision (a-h,o-z)
-	integer dirprd
-	dimension a(*),b(*),num(8)
-	dimension ipold(8),ipnew(8)
-
-	common /syminf/nstart,nirrep,irrepa(255),irrepb(255),&
-	dirprd(8,8)
-
-	ind(j,i)=(j*(j-1))/2+i
-
-	data zero /0.0d0/
-!
-! TAKE HERE CARE, IF WE ARE HANDLING IRREP=1 (TOTAL SYMMETRIC)
-! OR IRREP=1 (OTHERWISE)
-!
-	if(irrep.eq.1) then
-!
-! GET FIRST POINTERS FOR OLD AND NEW INDICES
-!
-		ipold(1)=0
-		ipnew(1)=0
-		do irrepj=1,(nirrep-1)
-			ipold(irrepj+1)=ipold(irrepj)+(num(irrepj)*(num(irrepj)+1))/2
-			ipnew(irrepj+1)=ipnew(irrepj)+num(irrepj)**2
-		end do
-!
-! NOW LOOP OVER ALL IRREPS
-!
-		do  irrepj=1,nirrep
-			numj=num(irrepj)
-			ipo=ipold(irrepj)
-			ipn=ipnew(irrepj)
-!
-! LOOP OVER ORBITALS, BUT ALSO IN BACKWARD ORDER
-!
-			if(ianti.eq.0) then
-				do  j=1,numj
-					do i=1,j
-						ind1=ind(j,i)+ipo
-						ind2=(j-1)*numj+i+ipn
-						ind3=(i-1)*numj+j+ipn
-						b(ind2)=a(ind1)
-						b(ind3)=a(ind1)
-					end do
-				end do
-			else
-				do j=1,numj
-					do i=1,j
-						ind1=ind(j,i)+ipo
-						ind2=(j-1)*numj+i+ipn
-						ind3=(i-1)*numj+j+ipn 
-						b(ind2)=a(ind1)
-						b(ind3)=-a(ind1)
-					end do
-				end do
-			endif
-		end do
-	else
-!
-! FILL THE POINTERS OF THE OLD AND NEW ARRAY
-!
-		ipold(1)=0
-		ipnew(1)=0
-		do irrepj=1,nirrep-1
-			irrepi=dirprd(irrep,irrepj)
-			numj=num(irrepj)
-			numi=num(irrepi)
-			ipnew(irrepj+1)=ipnew(irrepj)+numj*numi
-			if(irrepi.lt.irrepj) then
-				ipold(irrepj+1)=ipold(irrepj)+numj*numi
-			else
-				ipold(irrepj+1)=ipold(irrepj)
-			endif
-		end do
-!
-! NOW COPY OLD ARRAYS TO NEW LOCATION
-!
-		do irrepj=1,nirrep
-			irrepi=dirprd(irrep,irrepj)
-			numj=num(irrepj)
-			numi=num(irrepi)
-			if(irrepj.gt.irrepi) then
-				ipn=ipnew(irrepj)
-				ipo=ipold(irrepj)
-				do ij=1,numj*numi
-					ipnn=ipn+ij
-					ipoo=ipo+ij
-					b(ipnn)=a(ipoo)
-				end do
-			else
-				if(ianti.eq.0) then
-					ipn=ipnew(irrepj)
-					ipo=ipold(irrepi)
-					do j=1,numj
-						do i=1,numi
-							ind1=(i-1)*numj+j+ipo
-							ind2=(j-1)*numi+i+ipn
-							b(ind2)=a(ind1)
-						end do
-					end do
-				else
-					ipn=ipnew(irrepj)
-					ipo=ipold(irrepi)
-					do j=1,numj
-						do i=1,numi
-							ind1=(i-1)*numj+j+ipo
-							ind2=(j-1)*numi+i+ipn
-							b(ind2)=-a(ind1)
-						end do
-					end do
-				endif
-			endif
-		end do
-	endif
-end subroutine
-
-  subroutine readpd(ddens,scr,noca,nvrta,nbas,inumber,ib,irrepx)
-
-	  implicit double precision(a-h,o-z)
-	  integer pop,vrt,dirprd
-	  dimension ddens(*),scr(*),ioffo(8),ioffv(8)
-
-	  common/machsp/iintln,ifltln,iintfp,ialone,ibitwd
-	  common/sympop/irpdpd(8,22),isytyp(2,500),njunk(18)
-	  common/syminf/nstart,nirrep,irreps(255,2),dirprd(8,8)
-	  common/sym/pop(8,2),vrt(8,2),nt(2),nf1(2),nf2(2)
-
-	  nlength=irpdpd(irrepx,21)+irpdpd(irrepx,19)+irpdpd(irrepx,9)
-
-	  ioff=0
-	  do irrep=1,nirrep
-		  ioffo(irrep)=ioff
-		  ioff=ioff+pop(irrep,ispin)
-	  end do
-	  do irrep=1,nirrep
-		  ioffv(irrep)=ioff
-		  ioff=ioff+vrt(irrep,ispin)
-	  end do
-
-	  if(inumber.eq.1) then
-		  if(ib.eq.1) call getrec(20,'JOBARC','PDENSC1X',nlength*iintfp,scr)
-		  if(ib.eq.2) call getrec(20,'JOBARC','PDENSC1Y',nlength*iintfp,scr)
-		  if(ib.eq.3) call getrec(20,'JOBARC','PDENSC1Z',nlength*iintfp,scr)
-	  else if(inumber.eq.2) then
-		  if(ib.eq.1) call getrec(20,'JOBARC','PDENSC2X',nlength*iintfp,scr)
-		  if(ib.eq.2) call getrec(20,'JOBARC','PDENSC2Y',nlength*iintfp,scr)
-		  if(ib.eq.3) call getrec(20,'JOBARC','PDENSC2Z',nlength*iintfp,scr)
-	  else if(inumber.eq.3) then
-		  if(ib.eq.1) call getrec(20,'JOBARC','PDENSC3X',nlength*iintfp,scr)
-		  if(ib.eq.2) call getrec(20,'JOBARC','PDENSC3Y',nlength*iintfp,scr)
-		  if(ib.eq.3) call getrec(20,'JOBARC','PDENSC3Z',nlength*iintfp,scr)
-	  endif
-!
-! DEAL WITH OCCUPIED-OCCUPIED BLOCK 
-!
-	  ioff=0
-	  do irrepr=1,nirrep
-		  irrepl=dirprd(irrepx,irrepr)
-		  nocr=pop(irrepr,ispin)
-		  nocl=pop(irrepl,ispin)
-		  do i=1,nocr
-			  do j=1,nocl
-				  ioff=ioff+1
-				  index2=j+ioffo(irrepl)+(i+ioffo(irrepr)-1)*nbas
-				  ddens(index2)=ddens(index2)+scr(ioff)
-			  end do
-		  end do
-	  end do
-!
-! DEAL WITH VIRTUAL-VIRTUAL BLOCK 
-!
-	  do irrepr=1,nirrep
-		  irrepl=dirprd(irrepx,irrepr)
-		  nvrtr=vrt(irrepr,ispin)
-		  nvrtl=vrt(irrepl,ispin)
-		  do i=1,nvrtr
-			  do j=1,nvrtl
-				  ioff=ioff+1
-				  index2=j+ioffv(irrepl)+(i+ioffv(irrepr)-1)*nbas
-				  ddens(index2)=ddens(index2)+scr(ioff)
-			  end do
-		  end do
-	  end do
-!
-! DEAL WITH VIRTUAL-OCCUPIED BLOCK 
-!
-	  do irrepr=1,nirrep
-		  irrepl=dirprd(irrepx,irrepr)
-		  nocr=pop(irrepr,ispin)
-		  nvrtl=vrt(irrepl,ispin)
-		  do i=1,nocr
-			  do j=1,nvrtl
-				  ioff=ioff+1
-				  index2=j+ioffv(irrepl)+(i+ioffo(irrepr)-1)*nbas
-				  index3=i+ioffo(irrepr)+(j+ioffv(irrepl)-1)*nbas
-				  ddens(index2)=ddens(index2)+scr(ioff)
-				  ddens(index3)=ddens(index3)-scr(ioff)
-			  end do
-		  end do
-	  end do
-end subroutine
-
-subroutine reordc(a,scr,nbast,pop,vrt,nbas)
-!
-!   THIS SUBROUTINE REORDERS A GIVEN MATRIX IN SUCH A WAY THAT
-!   ABACUS (CALCULATOR AND IN THE FUTURE CRAY) CAN HANDLE THE
-!   BACK TRANSFORMATION OF THE ONE-ELECTRON DENSITY MATRIX
-!
-!   A ... .... INPUT ARRAY
-!   SCR ...... OUTPUT ARRAY
-!   NBAST .... TOTAL NUMBER OF BASIS FUNCTIONS
-!   POP ...... NUMBER OF OCCUPIED ORBITALS PER IRREP
-!   VRT ...... NUMBER OF VIRTUAL ORBITALS PER IRREP
-!   NBAS ..... NUMBER OF BASIS FUNCTIONS PER IRREP
-!
-!END
-!
-! CODED OCT/90 JG
-!
-	implicit double precision(a-h,o-z)
-	integer dirprd,pop,vrt
-	dimension a(nbast*nbast),scr(nbast*nbast)
-	dimension pop(8),vrt(8),nbas(8)
-
-	common/machsp/iintln,ifltln,iintfp,ialone,ibitwd
-	common/syminf/nstart,nirrep,irrepa(255,2),dirprd(8,8)
-!
-! COPY FIRT CFULL TO SCRATCH
-!
-	call myicopy(a,scr,nbast*nbast*iintfp)
-!
-!  OFFSET FOR OCCUPIED AND VIRTUAL BLOCK
-!
-	ioffo=1
-	ioffv=1
-	do irrep=1,nirrep
-		ioffv=ioffv+pop(irrep)*nbast
-	end do
-!
-!  OFFSET FOR TARGET ARRAY
-!
-	iofft=1
-!
-!  LOOP OVER ALL IRREPS
-!
-	do  irrep=1,nirrep
-!
-! FILL FIRST WITH OCCUPIED ORBITALS OF THIS BLOCK
-!
-		call myicopy(scr(ioffo),a(iofft),iintfp*pop(irrep)*nbast)
-
-		ioffo=ioffo+nbast*pop(irrep)
-		iofft=iofft+nbast*pop(irrep)
-!
-! FILL NOW WITH VIRTUAL ORBITALS OF THIS BLOCK
-!
-		call myicopy(scr(ioffv),a(iofft),iintfp*vrt(irrep)*nbast)
-
-		ioffv=ioffv+nbast*vrt(irrep)
-		iofft=iofft+nbast*vrt(irrep)
-	end do
-end subroutine
-
-subroutine symc(cfull,csym,nbast,nbas,scf,ispin)
-!
-!  THIS SUBROUTINE RETURNS THE SYMMETRY PACKED LIST OF THE INPUT
-!  MATRIX CFULL. IT IS USED IN THE INTEGRAL DERIVATIVE CODE TO
-!  SYMMETYRY PACK THE EIGEN VECTOR MATRIX.
-!
-!
-!  CFULL ..... INPUT MATRIX ( SIZE NBAST*NBAST)
-!  CSYM ...... SYMMETRY PACKED OUTPUT MATRIX (SQUARE MATRICES WITHIN
-!                                             EACH IRREP)
-!  NBAST ..... TOTAL NUMBER OF BASIS FUNCTION
-!  NBAS ...... NUMBER OF BASIS FUNCTION PER IRREP( ARRAY OF DIM 8)
-!  SCF ....... FLAG WHICH TELLS IF THE EIGENVECTORS HAVE BEEN REORDERED
-!              OR NOT.
-!              SCF = .TRUE.   NO REORDERING REQUIRED HERE
-!                  = .FALSE.  REORDERING IS REQUIRED
-!  ISPIN ..... SPIN CASE (AS USUAL)
-!
-!END
-!
-!   CODED OCT/90   JG
-!
-	implicit double precision(a-h,o-z)
-	integer dirprd,pop,popfull,vrt
-	logical scf
-	dimension cfull(nbast,nbast),csym(*),nbas(8),popfull(8)
-
-	common/flags/iflags(100)
-	common/syminf/nstart,nirrep,irrepa(255,2),dirprd(8,8)
-	common/sym/pop(8,2),vrt(8,2),nt(2),nf1(2),nf2(2)
-!
-!  FOR CORRELATION METHODS REORDER C SO THAT WE HAVE ALL EIGENVECTORS
-!  OF THE SAME IRREP TOGETHER
-!
-	print *, '!!!!check line 850'
-	call reordc(cfull,csym,nbast,pop(1,1),vrt(1,1),nbas)
-
-	ioffr=1
-	ioffc=0
-	ioffp=1
-
-	do irrep=1,nirrep
-		do imo=1,nbas(irrep)
-			ioffc=ioffc+1
-			length=nbas(irrep)
-			call scopy(length,cfull(ioffr,ioffc),1,csym(ioffp),1)
-			ioffp=ioffp+length
-		end do
-		ioffr=ioffr+nbas(irrep)
-	end do
-end subroutine
-
-subroutine symc2(cfull,csym,nbast,nbas,scf,ispin,irrepx)
-!
-!  THIS SUBROUTINE RETURNS THE SYMMETRY PACKED LIST OF THE INPUT
-!  MATRIX CFULL. IT IS USED IN THE INTEGRAL DERIVATIVE CODE TO
-!  SYMMETYRY PACK THE EIGEN VECTOR MATRIX.
-!
-!
-!  CFULL ..... OUTPUT MATRIX ( SIZE NBAST*NBAST)
-!  CSYM ...... SYMMETRY PACKED INPUT MATRIX (SQUARE MATRICES WITHIN
-!                                             EACH IRREP)
-!  NBAST ..... TOTAL NUMBER OF BASIS FUNCTION
-!  NBAS ...... NUMBER OF BASIS FUNCTION PER IRREP( ARRAY OF DIM 8)
-!  SCF ....... FLAG WHICH TELLS IF THE EIGENVECTORS HAVE BEEN REORDERED
-!              OR NOT.
-!              SCF = .TRUE.   NO REORDERING REQUIRED HERE
-!                  = .FALSE.  REORDERING IS REQUIRED
-!  ISPIN ..... SPIN CASE (AS USUAL)
-!  IRREPX .... IRREP OF ARRAY TO BE UNPACKED
-!END
-!
-!   CODED OCT/90   JG
-!
-	implicit double precision(a-h,o-z)
-	integer dirprd,pop,popfull,vrt
-	logical scf
-	dimension cfull(nbast,nbast),csym(*),nbas(8),popfull(8)
-
-	common/flags/iflags(100)
-	common/syminf/nstart,nirrep,irrepa(255,2),dirprd(8,8)
-	common/sym/pop(8,2),vrt(8,2),nt(2),nf1(2),nf2(2)
-
-	ioffr=1
-	ioffc=0
-	ioffp=1
-
-	call zero(cfull,nbast*nbast)
-	do irrep=1,nirrep
-		do imo=1,nbas(irrep)
-			ioffc=ioffc+1
-			irrep2=dirprd(irrep,irrepx)
-			length=nbas(irrep2)
-			ioffr=1
-			do irrep1=1,irrep2-1
-				ioffr=ioffr+nbas(irrep1)
-			end do
-			call scopy(length,csym(ioffp),1,cfull(ioffr,ioffc),1)
-			ioffp=ioffp+length
-		end do
-	end do
-end subroutine
-
