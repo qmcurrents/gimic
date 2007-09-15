@@ -36,48 +36,6 @@ program gimic
 
 contains
 
-	! this routine is deprecated. everything is handled by getkw now
-	subroutine cmdline(inpfile)
-		use parallel_m
-		character(*), intent(out) :: inpfile
-		external getarg, iargc, getenv
-
-		integer(I4) :: iargc, fgetc 
-		character(BUFLEN) :: fdate
-		integer(I4) :: argc
-		character(BUFLEN) :: mpienv
-
-	! figure out command line...
-		argc=iargc()
-		select case(argc)
-			case(0) ! open default file
-				inpfile=DEFAULT_INPUT
-			case(1)
-				call getarg(1, inpfile)
-				if (inpfile(1:1) == '-') then
-					if (trim(inpfile) /= '--mpi') call usage
-					mpirun_p=.true.
-				else
-					call usage
-				end if
-				inpfile=DEFAULT_INPUT
-			case (2) 
-				call getarg(1, inpfile)
-				if (trim(inpfile) /= '--mpi') call usage
-				mpirun_p=.true.
-				call getarg(2,inpfile)
-			case default 
-				call usage
-		end select
-		call getenv('MPIRUN', mpienv)
-		if ( trim(mpienv) == '1' ) mpirun_p=.true.
-	end subroutine
-
-	subroutine usage()
-		call msg_out('usage: gimic [--mpi] [file]')
-		call exit(1)
-	end subroutine
-
 	subroutine read_inpbuf(inpfile, inpbuf)
 		character(*), intent(in) :: inpfile
 		character, dimension(:), pointer :: inpbuf
@@ -170,8 +128,6 @@ contains
 			call msg_error('cdens(): parse error')
 			call exit(1)
 		end if
-		
-!        call set_active_section('CDENS') 
 		
 		i=0
 		call getkw(input, 'debug', i)
@@ -500,6 +456,48 @@ call nl
 		call nl
 		call msg_out(raboof(nint(rnd*6.d0)))
 		call nl
+	end subroutine
+
+	! this routine is deprecated. everything is handled by getkw now
+	subroutine cmdline(inpfile)
+		use parallel_m
+		character(*), intent(out) :: inpfile
+		external getarg, iargc, getenv
+
+		integer(I4) :: iargc, fgetc 
+		character(BUFLEN) :: fdate
+		integer(I4) :: argc
+		character(BUFLEN) :: mpienv
+
+	! figure out command line...
+		argc=iargc()
+		select case(argc)
+			case(0) ! open default file
+				inpfile=DEFAULT_INPUT
+			case(1)
+				call getarg(1, inpfile)
+				if (inpfile(1:1) == '-') then
+					if (trim(inpfile) /= '--mpi') call usage
+					mpirun_p=.true.
+				else
+					call usage
+				end if
+				inpfile=DEFAULT_INPUT
+			case (2) 
+				call getarg(1, inpfile)
+				if (trim(inpfile) /= '--mpi') call usage
+				mpirun_p=.true.
+				call getarg(2,inpfile)
+			case default 
+				call usage
+		end select
+		call getenv('MPIRUN', mpienv)
+		if ( trim(mpienv) == '1' ) mpirun_p=.true.
+	end subroutine
+
+	subroutine usage()
+		call msg_out('usage: gimic [--mpi] [file]')
+		call exit(1)
 	end subroutine
 
 end program 

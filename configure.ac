@@ -14,7 +14,7 @@ AC_CANONICAL_HOST
 
 AC_ARG_ENABLE([mpi], AS_HELP_STRING(--enable-mpi,Enable the parallel version))
 
-#AC_ARG_WITH([aces2], AS_HELP_STRING(--with-aces2=/usr/local/aces2/lib,path to the ACES2 libraries))
+#AC_ARG_WITH([aces2], AS_HELP_STRING(--with-aces2=DIR,path to the ACES2 libraries))
 
 # Check for programs.
 
@@ -103,9 +103,6 @@ AC_LANG_PUSH([Fortran])
 AC_FC_SRCEXT([f90])
 AC_LANG_POP([Fortran])
 
-AX_FC_SEARCH_PATH
-AC_FC_LIBRARY_LDFLAGS
-AC_FC_WRAPPERS
 AX_F90_MODULE_FLAG
 AX_F90_MODULE_EXTENSION
 
@@ -117,13 +114,13 @@ AC_CACHE_SAVE
 AC_LANG_PUSH([Fortran])
 ACX_BLAS(,AC_MSG_WARN([No working blas library found!]))
 ACX_LAPACK(,AC_MSG_WARN([No working lapack library found!]))
-AC_LANG_POP([Fortran])
 ACX_BLAS95(,AC_MSG_WARN([No working lapack95 library found!]))
 ACX_LAPACK95(,AC_MSG_WARN([No working lapack95 library found!]))
+AC_LANG_POP([Fortran])
 
 ax_save_LIBS="$LIBS"
 AC_MSG_NOTICE([Checking if ACES2 libraries are available])
-AX_F90_LIBRARY_SETUP([aces2],[],[],[liblibr.a],[call crapsi], [$FC_SEARCH_PATH])
+AX_F90_LIBRARY_SETUP([aces2],[],[],[liblibr.a],[call crapsi],[$FC_SEARCH_PATH])
 LIBS="$ax_save_LIBS"
 
 if test "x$enable_mpi" = "xyes"; then
@@ -141,7 +138,7 @@ AX_PYTHON
 AC_CACHE_SAVE
 
 ACX_SUBST_BUILD_FLAGS 
-#AC_SUBST(ACES2_LIBS, $ACES2_LIBS)
+AC_SUBST(ACES2LIBS, $ACES2LIBS)
 AC_SUBST(top_bindir,['$(topdir)'])
 AC_SUBST(top_includedir,['$(topdir)/include'])
 AC_SUBST(top_libdir,['$(topdir)/lib'])

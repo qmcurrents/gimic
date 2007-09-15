@@ -5,11 +5,13 @@ BLASDIR=/opt/intel/cmkl/8.0/lib/64
 INSTDIR=$HOME/gimic
 case $* in 
 	--mpi) 
-	MPIFC=scampif90 ./configure --prefix=${INSTDIR}.par \
-	--with-blas-dir=$BLASDIR --enable-mpi
+	MPIFC=scampif90 ./configure --prefix=${INSTDIR} \
+	--with-fc-search-path=$HOME/flibs --with-blas-dir=$BLASDIR \
+	--with-aces2=$HOME/aces2/lib --enable-mpi
 	;;
 	*)
-	./configure --prefix=${INSTDIR}.07 --with-blas-dir=$BLASDIR
+	./configure --prefix=${INSTDIR} --with-blas-dir=$BLASDIR \
+	--with-fc-search-path=$HOME/flibs --with-aces2=$HOME/aces2/lib
 	;;
 esac
 }
@@ -22,7 +24,8 @@ case $* in
 	./configure --prefix=${INSTDIR}.par --with-blas-dir=$BLASDIR --enable-mpi
 	;;
 	*)
-	./configure --prefix=${INSTDIR} --with-blas-dir=$BLASDIR --with-aces2=$HOME/software/mainz/aces2/lib
+	./configure --prefix=${INSTDIR} --with-blas-dir=$BLASDIR \
+	--with-aces2=$HOME/software/mainz/aces2/lib
 	;;
 esac
 }

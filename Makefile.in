@@ -18,8 +18,9 @@ INST_DATA:=
 # module names are listed in smallcaps and wihtout any .mod
 INST_MODULES:=
 
-ifneq ($(LIBACES2),)
-INST_PROGS+=xcpdens_sym.x xcpdens
+ACES2LIBS=@F90_LIBS_aces2@
+ifneq ($(ACES2LIBS),)
+INST_PROGS+=xcpdens 
 endif
 
 include $(topdir)/make.rules
@@ -33,14 +34,6 @@ gimic_objs=getkw.o precision.o globals.o teletype.o intgrl.o factorial.o \
 gimic_src=$(wildcard *.f90 *.c)
 gimic_libs:=$(LIBS) 
 
-pdens_objs=pdens.o
-pdens_src=pdens.f
-pdens_libs=$(LIBACES2)
-
-cpdens_objs=cpdens.o
-cpdens_src=cpdens.f90
-cpdens_libs=$(LIBACES2)
-
 all: $(INST_PROGS)
 
 gimic: gimic.in
@@ -50,14 +43,8 @@ gimic: gimic.in
 gimic.x: $(gimic_objs) 
 	$(FC) $(FLDFLAGS) -o $@ $+ $(gimic_libs) 
 
-xpdens: $(pdens_objs) 
-	$(FC) $(FLDFLAGS) -o $@ $+ $(pdens_libs) 
-
-xcpdens: $(cpdens_objs) 
-	$(FC) $(FLDFLAGS) -o $@ $+ $(cpdens_libs) 
-
-xcpdens_sym.x: xcpdens_sym.o
-	$(FC) $(FLDFLAGS) -o $@ $+ $(cpdens_libs) $(BLAS_LIBS)
+xcpdens: xcpdens.o
+	$(FC) $(FLDFLAGS) -o $@ $+ $(ACES2LIBS) $(BLAS_LIBS)
 
 .PHONY: dep deps
 dep deps:

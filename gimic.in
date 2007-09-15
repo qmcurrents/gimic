@@ -59,6 +59,7 @@ def main():
 	top.add_kw('spherical', 'BOOL', (True,))
 	top.add_kw('rerun', 'BOOL', (False,))
 	top.add_kw('calc', 'STR', None)
+	top.add_kw('open-shell', 'BOOL', (False,))
 
 	plot=getkw.Section('plot')
 	plot.set_arg('BOOL', (True, ))

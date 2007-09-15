@@ -14,18 +14,18 @@ dnl @license AllPermissive
 AC_DEFUN([AX_FC_SEARCH_PATH],[
 AC_PREREQ(2.59)
 
-AC_ARG_WITH([fc_path], AC_HELP_STRING([--with-fc-path=PATH],
+AC_ARG_WITH([fc_search_path], AC_HELP_STRING([--with-fc-search-path=DIR],
 	[Base path to installed Fortran libraries]))
 
-case $with_fc_path in
+case $with_fc_search_path in
 	  yes | no | "") ;;
-	  *) LDFLAGS="$LDFLAGS -L$with_fc_path/lib" 
-		 FCFLAGS="$FCFLAGS -I$with_fc_path/include"
-		 CFLAGS="$CFLAGS -I$with_fc_path/include"
+	  *) LDFLAGS="$LDFLAGS -L$with_fc_search_path/lib" 
+		 FCFLAGS="$FCFLAGS -I$with_fc_search_path/include"
+		 CFLAGS="$CFLAGS -I$with_fc_search_path/include"
 		 if test "x$FC_SEARCH_PATH" = x; then
-		    FC_SEARCH_PATH="$with_fc_path"
+		    FC_SEARCH_PATH="$with_fc_search_path"
 		 else
-		    FC_SEARCH_PATH="$FC_SEARCH_PATH:$with_fc_path"
+		    FC_SEARCH_PATH="$FC_SEARCH_PATH:$with_fc_search_path"
 		 fi
 	  ;;
 esac
