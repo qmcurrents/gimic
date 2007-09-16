@@ -35,13 +35,13 @@ module basis_m
 	private
 contains
 	subroutine init_basis(bt, mbuf)
-		character(MAX_LINE_LEN), dimension(:) :: mbuf
 		type(molecule_t) :: bt
+		character(MAX_LINE_LEN), dimension(:) :: mbuf
 
 		integer(I4) :: i, natoms
         type(atom_t), dimension(:), pointer :: atoms
 
-		call read_intgrl(mbuf, bt%atoms, natoms)
+		call read_intgrl(bt%atoms, natoms)
 		call setup_gtos()
 		bt%natoms=natoms
 		call calc_basdim(bt)

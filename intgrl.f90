@@ -20,7 +20,7 @@ contains
 !
 ! Read in all atom and basis set info
 !
-	subroutine read_intgrl(mbuf, atoms, natoms)
+	subroutine read_intgrl_mbuf(mbuf, atoms, natoms)
 		character(MAX_LINE_LEN), dimension(:), target :: mbuf
 		type(atom_t), dimension(:), pointer :: atoms
 		integer(I4), intent(out) :: natoms

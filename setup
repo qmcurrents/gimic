@@ -18,13 +18,14 @@ esac
 
 snowflake() {
 BLASDIR=/opt/lib
-INSTDIR=/opt/gimic
+INSTDIR=/opt/aces2
 case $* in
 	--mpi) 
 	./configure --prefix=${INSTDIR}.par --with-blas-dir=$BLASDIR --enable-mpi
 	;;
 	*)
 	./configure --prefix=${INSTDIR} --with-blas-dir=$BLASDIR \
+	--with-fc-search-path=/opt/flibs \
 	--with-aces2=$HOME/software/mainz/aces2/lib
 	;;
 esac

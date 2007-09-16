@@ -12,7 +12,7 @@ srcdir:=@srcdir@
 include $(topdir)/make.config
 
 INST_PROGS:=gimic.x gimic
-INST_LIBS:=
+INST_LIBS:=getkw.py pyparsing.py
 INST_INCLUDES:=
 INST_DATA:=
 # module names are listed in smallcaps and wihtout any .mod
@@ -37,7 +37,7 @@ gimic_libs:=$(LIBS)
 all: $(INST_PROGS)
 
 gimic: gimic.in
-	sed 's/@inst_bindir@/$(subst /,\/,$(inst_bindir))/; s/@inst_libexecdir@/$(subst /,\/,$(inst_libexecdir))/; s/@PYTHON@/$(PYTHON_BIN)/' $< > $@
+	sed 's/@inst_bindir@/$(subst /,\/,$(inst_bindir))/; s/@inst_libdir@/$(subst /,\/,$(inst_libdir))/; s/@PYTHON@/$(PYTHON_BIN)/' $< > $@
 	chmod 755 $@
 
 gimic.x: $(gimic_objs) 

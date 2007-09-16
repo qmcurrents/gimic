@@ -439,7 +439,7 @@ program xcpdens_sym
 	debug=.true.
 
 	if (debug) print *, '/machsp/', iintfp, iintln
-	iintfp=1
+!    iintfp=1
 	if (iuhf == 0) then
 		ispin=1
 		open(42, file='XDENS', status='unknown')
@@ -645,7 +645,7 @@ contains
 !
 ! GET MAGNETIC FIELD INFORMATION                    
 !
-		print *, '/kusse/', ntpert
+!        print *, '/kusse/', ntpert
 		CALL GETREC(20,'JOBARC','NSYMPERT',27,NTPERT)                             
 !
 ! IRREPS OF B-FIELD COMPONENTS

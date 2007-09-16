@@ -9,8 +9,8 @@
 	density="XDENS"
 	spherical=off
 	debug=5
-#     calc=[cdens]
-	calc=[cdens, integral, divj]
+	calc=[cdens, integral]
+#     calc=[cdens, integral, divj]
 
 	cdens {
 		jtensor="JTENSOR"

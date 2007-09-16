@@ -65,6 +65,9 @@ contains
 	end subroutine
 
 	subroutine read_molbuf(molbuf)
+!
+! read in the MOL file into a buffer which can be broadcast 
+!
 		character(MAX_LINE_LEN), dimension(:), pointer :: molbuf
 		integer(I4) :: i, n, ios
 		character(BUFLEN) :: basfile
@@ -97,7 +100,7 @@ contains
 		character(BUFLEN) :: title, fdate, sys
 		real(DP), dimension(3) :: center
 !        character, dimension(:), pointer :: inpbuf
-		character(MAX_LINE_LEN), dimension(:), pointer :: molbuf
+!        character(MAX_LINE_LEN), dimension(:), pointer :: molbuf
 
 		if (mpirun_p) then
 			rank=start_mpi()
@@ -107,7 +110,7 @@ contains
 		end if
 
 !        nullify(inpbuf)
-		nullify(molbuf)
+!        nullify(molbuf)
 
 		ierr=hostnm(sys)
 !        call read_inpbuf('standard input', inpbuf)
@@ -143,14 +146,15 @@ contains
 		call getkw(input, 'spherical', spherical)
 		
 !        if (master_p) then
-			call read_molbuf(molbuf)
+!            call read_molbuf(molbuf)
 !        end if
 !        if (mpirun_p) call bcast_molbuf(molbuf)
 
-		call init_basis(mol, molbuf)
+!        call init_basis(mol, molbuf)
+        call init_basis(mol)
 
 !        deallocate(inpbuf)
-		deallocate(molbuf)
+!        deallocate(molbuf)
 
 	end subroutine
 

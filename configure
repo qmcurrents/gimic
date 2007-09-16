@@ -8866,7 +8866,7 @@ top_bindir='$(topdir)'
 
 top_includedir='$(topdir)/include'
 
-top_libdir='$(topdir)/lib'
+top_libdir='$(topdir)'
 
 
 ac_config_files="$ac_config_files Makefile make.config make.rules gimic"
