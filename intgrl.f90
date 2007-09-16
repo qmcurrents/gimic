@@ -1,6 +1,4 @@
 !
-! $Id$
-!
 ! Now you are surprised! This file has nothing to do with integral
 ! processing. Here are the routines to parse the 'INTGRL' file containing
 ! atom and basis set info, used by ACES2, Dalton...
@@ -13,15 +11,13 @@ module intgrl_m
 	
 	public read_intgrl
 
-	integer(I4) :: line
-	character(MAX_LINE_LEN), dimension(:), pointer :: molbuf
 	private
 contains
 !
 ! Read in all atom and basis set info
 !
-	subroutine read_intgrl_mbuf(mbuf, atoms, natoms)
-		character(MAX_LINE_LEN), dimension(:), target :: mbuf
+	subroutine read_intgrl(fname, atoms, natoms)
+		character(*) :: fname
 		type(atom_t), dimension(:), pointer :: atoms
 		integer(I4), intent(out) :: natoms
 		
@@ -32,11 +28,15 @@ contains
 		type(basis_t), pointer :: b  ! short hand...
 		integer(I4), dimension(:), allocatable :: bdim
 
-		molbuf=>mbuf
-		line=1
+		open(BASFD, file=trim(fname), status='old', action='read', &
+			 form='formatted', iostat=ios)
 
-		read(molbuf(line), '(a6)') intgrlkw
-		line=line+1
+		if (ios /= 0 ) then
+			call msg_error('read_intgrl(): open failed.')
+			stop
+		end if
+
+		read(BASFD, '(a6)') intgrlkw
 		if ( intgrlkw /= 'INTGRL' ) then
 			call nl
 			call msg_error('  Hmm... this doesn''t look like a ''INTGRL''&
@@ -44,24 +44,22 @@ contains
 			call nl
 			stop
 		end if
-		read(molbuf(line), '(a9)') turbokw
-		line=line+1
+		read(BASFD, '(a9)') turbokw
 		if ( turbokw == 'TURBOMOLE' ) then
 			call msg_info('Detected TURBOMOLE input')
 			call nl
 			turbomole_p=.true.
 		end if
 		
-		line=line+1
+		read(BASFD, *) 
 
-		read(molbuf(line), *) natoms 
-		line=line+1
+		read(BASFD, *) natoms 
 		write(str_g, '(a,i4)') 'Number of atoms =', natoms
 		call msg_out(str_g)
 		call nl
 		allocate(atoms(natoms))
 
-		line=line+1
+		read(BASFD, *) 
 
 		! ok, this is a bit complicated, as we are transforming a (possibly)
 		! generally contracted basis into a segmented basis. 
@@ -91,11 +89,11 @@ contains
 		type(atom_t), intent(inout) :: atm
 
 		integer(I4) :: i, n, ios
+		character(80) :: tmp
 
 		! i is (am) a dummy..
-		read(molbuf(line), *) atm%charge, i, atm%basis%nshells, &
+		read(BASFD, *) atm%charge, i, atm%basis%nshells, &
 			atm%basis%nctrps(1:atm%basis%nshells)
-		line=line+1
 		atm%basis%lmax=atm%basis%nshells-1
 
 		if (atm%basis%lmax > MAX_L) then
@@ -107,10 +105,10 @@ contains
 		
 		atm%basis%nctr=sum(atm%basis%nctrps(1:atm%basis%nshells))
 
-		atm%symbol=molbuf(line)(1:2)
-		atm%id=molbuf(line)(3:4)
-		read(molbuf(line)(5:), *) atm%coord
-		line=line+1
+		read(BASFD, '(a)') tmp
+		atm%symbol=tmp(1:2)
+		atm%id=tmp(3:4)
+		read(tmp(5:), *) atm%coord 
 		
 	end subroutine 
 
@@ -153,8 +151,7 @@ contains
 
 		integer(I4) :: i, j, ios
 		
-		read(molbuf(line), *) ctr%npf, i
-		line=line+1
+		read(BASFD, *) ctr%npf, i
 
 		if (i > 1) then
 			call msg_error('General contractions not supported!!!')
@@ -166,8 +163,7 @@ contains
 		allocate(ctr%ncc(ctr%npf))
 		
 		do i=1,ctr%npf
-			read(molbuf(line), *) ctr%xp(i), ctr%cc(i)
-		line=line+1
+			read(BASFD, *) ctr%xp(i), ctr%cc(i)
 		end do
 	end subroutine 
 
@@ -176,13 +172,12 @@ contains
 		integer(I4), intent(in) :: idx
 		integer(I4), intent(out) :: ncf
 
-		integer(I4) :: i, j, l, ncomp, nccomp, npf, nlines, nncf
+		integer(I4) :: i, j, l, ncomp, nccomp, npf, nncf
 		real(DP) :: xp
 		real(DP), dimension(:), allocatable :: cc
 		type(contraction_t), pointer :: ctr
 		
-		read(molbuf(line), *) npf, ncf
-		line=line+1
+		read(BASFD, *) npf, ncf
 		allocate(cc(ncf))
 
 		do i=1,ncf
@@ -207,27 +202,8 @@ contains
 
 		b%ctr(idx)%ncf=ncf ! needed for degeneralization...
 		
-		! this is hell... 
-		nlines=get_nctr_lines(ncf)-1
 		do i=1,npf
-			if (ncf > 3) then
-				read(molbuf(line), *) xp, cc(1:3)
-			else
-				read(molbuf(line), *) xp, cc(1:ncf)
-			end if
-			line=line+1
-			l=0
-			nncf=ncf-3
-			do j=1,nlines
-				l=l+4
-				if (nncf > 4) then
-					read(molbuf(line), *) cc(l:l+3) 
-				else
-					read(molbuf(line), *) cc(l:l+nncf-1) 
-				end if
-				line=line+1
-				nncf=nncf-4
-			end do
+			read(BASFD, *) xp, cc(1:ncf)
 			do j=1,ncf
 				ctr=>b%ctr(idx+j-1)
 				ctr%xp(i)=xp
@@ -257,30 +233,33 @@ contains
 	subroutine get_basdim(bdim)
 		integer(I4), dimension(:), intent(out) :: bdim
 		
-		integer(I4) :: i, j, k, n, nlines
+		integer(I4) :: i, j, k, n
 		integer(I4) :: ncf, npf, nsh
 		integer(I4), dimension(MAX_L+1) :: nctrps
-		real(DP) :: rx, ix
+		real(DP) :: rx
+		real(DP), dimension(100) :: slask
+		integer(I4) :: ix
 
 		bdim=0
 		do n=1,size(bdim) !natoms
-			read(molbuf(line), *) rx, ix, nsh, nctrps(1:nsh)
-			line=line+1
-			line=line+1
+			read(BASFD, *) rx, ix, nsh, nctrps(1:nsh)
+			print *, rx, ix, nsh
+			read(BASFD, *)
 			do i=1,nsh
 				do j=1,nctrps(i)
-					read(molbuf(line), *) npf, ncf 
-					line=line+1
-					nlines=get_nctr_lines(ncf)
+					read(BASFD, *) npf, ncf 
 					bdim(n)=bdim(n)+ncf
 					do k=1,npf
-						line=line+nlines
+						read(BASFD,*) rx, slask(1:ncf)
 					end do
 				end do
 			end do
 		end do
 		
-		line=6       ! get back to were we were called
+		rewind(BASFD)
+		do n=1,5
+			read(BASFD,*)
+		end do
 	end subroutine
 
 end module

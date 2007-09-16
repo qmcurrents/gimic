@@ -439,7 +439,6 @@ program xcpdens_sym
 	debug=.true.
 
 	if (debug) print *, '/machsp/', iintfp, iintln
-!    iintfp=1
 	if (iuhf == 0) then
 		ispin=1
 		open(42, file='XDENS', status='unknown')

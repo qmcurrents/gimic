@@ -1,6 +1,3 @@
-!
-! $Id$
-! 
 
 module dens_m
 	use globals_m
@@ -14,7 +11,7 @@ module dens_m
 	
 	type dens_t
 		type(molecule_t), pointer :: mol
-        real(DP), dimension(:,:,:), pointer :: d
+        real(DP), dimension(:,:,:), pointer :: da, db
 		logical :: pdens_p=.true.
 	end type
 	
@@ -45,20 +42,12 @@ contains
 
 	end subroutine
 
-	subroutine read_dens(dd)
+	subroutine read_dens(dd,xdens_file)
 		type(dens_t), intent(inout) :: dd
+		character(*) :: xdens_file
 
 		integer(I4) :: b, mo
-		character(BUFLEN) :: xdens_file
 		type(reorder_t) :: bofh
-
-		xdens_file=''
-		call getkw(input, 'density', xdens_file)
-		if (xdens_file == '') then
-			xdens_file=DEFAULT_DENSFILE
-		else
-			xdens_file=trim(xdens_file)
-		end if
 
 		if ( .not.associated(dd%d) ) then
 			call msg_error('read_dens(): not allocated!')
@@ -193,8 +182,9 @@ contains
 		dd%d(:,:,0)=dd%d(:,:,0)*2.d0
 	end subroutine
 
-	subroutine read_modens(dd)
+	subroutine read_modens(dd, xdens_file)
 		type(dens_t) :: dd
+		character(*) :: xdens_file
 		
 		integer(4) :: n, i,j
 		real(DP), dimension(:,:), allocatable :: mos
@@ -202,14 +192,14 @@ contains
 		character(BUFLEN) :: mofile
 
 		if (.not.turbomole_p) then
-			call read_dens(dd)
+			call read_dens(dd,xdens_file)
 			return
 		end if
 
 		dd%d(:,:,0)=D0
 		call getkw(input, 'edens.mofile', mofile)
 		if (trim(mofile) == '') then
-			call read_dens(dd)
+			call read_dens(dd, xdens_file)
 		end if
 		open(XDFD, file=trim(mofile), status='old', err=42)
 		read(XDFD, *) 
