@@ -10,6 +10,8 @@
 # TODO: 
 #       general cleanup
 #
+# Known bugs: names with '-' mess things up, either in py or f90...
+#
 
 import pdb
 import sys,os,inspect

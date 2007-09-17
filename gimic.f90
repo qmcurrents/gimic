@@ -97,7 +97,7 @@ contains
 
 		external fdate, hostnm
 		integer(I4) :: i, hostnm, rank, ierr
-		character(BUFLEN) :: title, fdate, sys
+		character(BUFLEN) :: title, fdate, sys, molfil
 		real(DP), dimension(3) :: center
 !        character, dimension(:), pointer :: inpbuf
 !        character(MAX_LINE_LEN), dimension(:), pointer :: molbuf
@@ -151,7 +151,8 @@ contains
 !        if (mpirun_p) call bcast_molbuf(molbuf)
 
 !        call init_basis(mol, molbuf)
-        call init_basis(mol)
+		call getkw(input, 'basis', molfil)
+        call init_basis(mol,molfil)
 
 !        deallocate(inpbuf)
 !        deallocate(molbuf)
@@ -304,24 +305,18 @@ contains
 		call getkw(input, 'calc', cstr)
 		ncalc=size(cstr)
 		do i=1,ncalc
-!            j=size(cstr(i))+1
-!            write(str_g, *) cstr(i)
-!            if (str_g(2:j) == 'cdens') then 
 			if (cstr(i)(1:5) == 'cdens') then 
 				calc(i)=CDENS_TAG
 				cdens_p=.true.
 				xdens_p=.true.
-!            else if (str_g(2:j) == 'integral') then 
 			else if (cstr(i)(1:8) == 'integral') then 
 				calc(i)=INTGRL_TAG
 				int_p=.true.
 				xdens_p=.true.
-!            else if (str_g(2:j) == 'divj') then 
 			else if (cstr(i)(1:4) == 'divj') then 
 				calc(i)=DIVJ_TAG
 				divj_p=.true.
 				xdens_p=.true.
-!            else if (str_g(2:j) == 'edens') then 
 			else if (cstr(i)(1:5) == 'edens') then 
 				calc(i)=EDENS_TAG
 				edens_p=.true.
@@ -329,6 +324,13 @@ contains
 			end if
 		end do
 		if (mpirun_p .or. rerun_p) nike_p=.false.
+
+		call getkw(input, 'openshell', uhf_p)
+		if (uhf_p) then
+			call msg_info('Open-shell calculation')
+		else
+			call msg_info('Closed-shell calculation')
+		end if
 
 		if (xdens_p) call init_dens(xdens, mol)
 		if (modens_p) call init_dens(modens, mol, modens_p)

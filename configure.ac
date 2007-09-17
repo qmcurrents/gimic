@@ -141,7 +141,7 @@ ACX_SUBST_BUILD_FLAGS
 AC_SUBST(ACES2LIBS, $ACES2LIBS)
 AC_SUBST(top_bindir,['$(topdir)'])
 AC_SUBST(top_includedir,['$(topdir)/include'])
-AC_SUBST(top_libdir,['$(topdir)'])
+AC_SUBST(top_libdir,['$(topdir)/lib'])
 
 AC_CONFIG_FILES([Makefile make.config make.rules gimic])
 AC_OUTPUT

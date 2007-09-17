@@ -243,7 +243,6 @@ contains
 		bdim=0
 		do n=1,size(bdim) !natoms
 			read(BASFD, *) rx, ix, nsh, nctrps(1:nsh)
-			print *, rx, ix, nsh
 			read(BASFD, *)
 			do i=1,nsh
 				do j=1,nctrps(i)

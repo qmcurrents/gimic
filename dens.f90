@@ -13,10 +13,12 @@ module dens_m
 		type(molecule_t), pointer :: mol
         real(DP), dimension(:,:,:), pointer :: da, db
 		logical :: pdens_p=.true.
+		integer(I4) :: spin
 	end type
 	
 	private
 	
+	real(DP), dimension(:,:,:), pointer :: dens
 contains
 	subroutine init_dens(dd, mol, modens_p)
 		type(dens_t) :: dd
@@ -34,33 +36,57 @@ contains
 			end if
 		end if
 
-		if (dd%pdens_p) then
-			allocate(dd%d(ncgto,ncgto,0:3))
+		if (uhf_p) then
+			dd%spin=2
 		else
-			allocate(dd%d(ncgto,ncgto,0:0))
+			dd%spin=1
+		end if
+
+		if (dd%pdens_p) then
+			allocate(dd%da(ncgto,ncgto,0:3))
+			if (uhf_p) allocate(dd%db(ncgto,ncgto,0:3))
+		else
+			allocate(dd%da(ncgto,ncgto,0:0))
+			if (uhf_p) allocate(dd%db(ncgto,ncgto,0:0))
 		end if
 
 	end subroutine
 
-	subroutine read_dens(dd,xdens_file)
+	subroutine read_dens(dd)
 		type(dens_t), intent(inout) :: dd
-		character(*) :: xdens_file
+		character(80) :: xdens_file
 
-		integer(I4) :: b, mo
+		integer(I4) :: b, mo, ispin
 		type(reorder_t) :: bofh
 
-		if ( .not.associated(dd%d) ) then
-			call msg_error('read_dens(): not allocated!')
+		if ( .not.associated(dd%da) ) then
+			call msg_error('read_dens(): dens not allocated!')
+			call exit(1)
+		end if
+		if ( uhf_p.and..not.associated(dd%db) ) then
+			call msg_error('read_dens(): beta dens not allocated!')
 			call exit(1)
 		end if
 
-        open(XDFD, file=xdens_file, status='old', err=42)
-		if (dd%pdens_p) then
-			do b=0,3
-				read(XDFD,*) dd%d(:,:,b)
-			end do
-		else
-			read(XDFD,*) dd%d(:,:,0)
+		call getkw(input, 'density', xdens_file)
+
+		open(XDFD, file=xdens_file, status='old', err=42)
+
+		dens=>dd%da
+		do ispin=1,dd%spin
+			if (ispin == 2) dens=>dd%db
+			if (dd%pdens_p) then
+				do b=0,3
+					read(XDFD,*) dens(:,:,b)
+				end do
+			else
+				read(XDFD,*) dens(:,:,0)
+			end if
+		end do
+		if (uhf_p) then
+			call  msg_info('scaling perturbed densities by 0.d5')
+			dd%da(:,:,1:3)= dd%da(:,:,1:3)/2.d0
+			dd%db(:,:,1:3)= dd%db(:,:,1:3)/2.d0
 		end if
 
 		if (turbomole_p) then
@@ -77,57 +103,88 @@ contains
 42      bert_is_evil=.true. 
         call msg_error('Density file not found, all densities set to 1')
 		call nl
-		do b=0,3
-			dd%d(:,:,b)=1.d0
+		dens=>dd%da
+		do ispin=1,dd%spin
+			if (ispin == 2) dens=>dd%db
+			do b=0,3
+				dens(:,:,b)=1.d0
+			end do
 		end do
 	end subroutine
 
 	subroutine del_dens(dd)
 		type(dens_t) :: dd
 
-		if (associated(dd%d)) then
-			deallocate(dd%d)
+		if (associated(dd%da)) then
+			deallocate(dd%da)
+		else
+			call msg_warn('del_dens(): not allocated!')
+		end if
+		
+		if (uhf_p.and.associated(dd%db)) then
+			deallocate(dd%db)
 		else
 			call msg_warn('del_dens(): not allocated!')
 		end if
 		
 	end subroutine
 
-	subroutine get_dens(dd,a)
+	subroutine get_dens(dd,a, spin)
 		type(dens_t) :: dd
 		real(DP), dimension(:,:), pointer :: a
+		integer(I4), optional :: spin
+
+		dens=>dd%da
+		if (present(spin)) then
+			if (spin == spin_b) dens=>dd%db
+		end if
 		
-		a=>dd%d(:,:,0)
+		a=>dens(:,:,0)
 	end subroutine  
 
-	subroutine set_dens(dd,a)
+	subroutine set_dens(dd,a,spin)
 		type(dens_t) :: dd
 		real(DP), dimension(:,:) :: a
+		integer(I4), optional :: spin
 		
-		dd%d(:,:,0)=a
+		dens=>dd%da
+		if (present(spin)) then
+			if (spin == spin_b) dens=>dd%db
+		end if
+		dens(:,:,0)=a
 	end subroutine  
 
-	subroutine  get_pdens(dd,b,a)
+	subroutine  get_pdens(dd,b,a,spin)
 		type(dens_t) :: dd
 		integer(I4), intent(in) :: b
 		real(DP), dimension(:,:), pointer :: a
+		integer(I4), optional :: spin
 
-		a=>dd%d(:,:,b)
+		dens=>dd%da
+		if (present(spin)) then
+			if (spin == spin_b) dens=>dd%db
+		end if
+		a=>dens(:,:,b)
 	end subroutine  
 
-	subroutine  set_pdens(dd,b,a)
+	subroutine  set_pdens(dd,b,a,spin)
 		type(dens_t) :: dd
 		integer(I4), intent(in) :: b
 		real(DP), dimension(:,:) :: a
+		integer(I4), optional :: spin
 
-		dd%d(:,:,b)=a
+		dens=>dd%da
+		if (present(spin)) then
+			if (spin == spin_b) dens=>dd%db
+		end if
+		dens(:,:,b)=a
 	end subroutine  
 
 	subroutine reorder_dens(bofh, dd)
 		type(reorder_t) :: bofh
 		type(dens_t) :: dd
 
-		integer(I4) :: i,b,p,ncgto
+		integer(I4) :: i,b,p,ncgto,  ispin
 
 		ncgto=get_ncgto(dd%mol)
 		p=0
@@ -135,25 +192,39 @@ contains
 			p=3
 		end if
 
-		do b=0,p
-			call reorder_cols(bofh, dd%d(:,:,b))
-		end do
-		do i=1,ncgto
+		dens=>dd%da
+		do ispin=1,dd%spin
+			if (ispin == 2) dens=>dd%db
 			do b=0,p
-!                print *, i, b
-				call reorder_vec(bofh, dd%d(:,i,b))
+				call reorder_cols(bofh, dens(:,:,b))
+			end do
+			do i=1,ncgto
+				do b=0,p
+					call reorder_vec(bofh, dens(:,i,b))
+				end do
 			end do
 		end do
-
 	end subroutine
 
-	subroutine moco(dd, mos)
+	subroutine moco(dd, mos, spin)
 		type(dens_t) :: dd
 		real(DP), dimension(:,:) :: mos
+		integer(I4), optional :: spin
 
 		integer(I4), dimension(2) :: moran
 		integer(I4) :: ncgto, i, a, b
 
+		dens=>dd%da
+		if (present(spin)) then
+			if (spin == spin_b) then
+				if (.not.uhf_p) then
+					call msg_error('gimic: moco(): &
+					&invalid spin for closed shell')
+					stop
+				end if
+				dens=>dd%db
+			end if
+		end if
 		ncgto=get_ncgto(dd%mol)
 		moran=0
 		call getkw(input, 'edens.mos', moran)
@@ -175,16 +246,15 @@ contains
 		do a=1,ncgto
 			do b=1,ncgto
 				do i=moran(1),moran(2)
-					dd%d(a,b,0)=dd%d(a,b,0)+mos(a,i)*mos(b,i)
+					dens(a,b,0)=dens(a,b,0)+mos(a,i)*mos(b,i)
 				end do
 			end do
 		end do
-		dd%d(:,:,0)=dd%d(:,:,0)*2.d0
+		dens(:,:,0)=dens(:,:,0)*2.d0
 	end subroutine
 
-	subroutine read_modens(dd, xdens_file)
+	subroutine read_modens(dd)
 		type(dens_t) :: dd
-		character(*) :: xdens_file
 		
 		integer(4) :: n, i,j
 		real(DP), dimension(:,:), allocatable :: mos
@@ -192,14 +262,15 @@ contains
 		character(BUFLEN) :: mofile
 
 		if (.not.turbomole_p) then
-			call read_dens(dd,xdens_file)
+			call read_dens(dd)
 			return
 		end if
 
-		dd%d(:,:,0)=D0
+		dens=>dd%da
+		dens(:,:,0)=D0
 		call getkw(input, 'edens.mofile', mofile)
 		if (trim(mofile) == '') then
-			call read_dens(dd, xdens_file)
+			call read_dens(dd)
 		end if
 		open(XDFD, file=trim(mofile), status='old', err=42)
 		read(XDFD, *) 
@@ -228,6 +299,6 @@ contains
 
 42      bert_is_evil=.true. 
 		call msg_error('MO file not found, densitiy set to 1.d0')
-		dd%d(:,:,0)=1.d0
+		dens(:,:,0)=1.d0
 	end subroutine
 end module 

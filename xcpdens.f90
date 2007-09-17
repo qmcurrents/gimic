@@ -282,6 +282,8 @@ contains
 			!
 			! FILL NOW WITH VIRTUAL ORBITALS OF THIS BLOCK
 			!
+			print *, iofft,iintfp*vrt(irrep)*nbast,&
+			iofft+iintfp*vrt(irrep)*nbast 
 			call myicopy(scr(ioffv),a(iofft),iintfp*vrt(irrep)*nbast)
 
 			ioffv=ioffv+nbast*vrt(irrep)
@@ -439,25 +441,13 @@ program xcpdens_sym
 	debug=.true.
 
 	if (debug) print *, '/machsp/', iintfp, iintln
-	if (iuhf == 0) then
-		ispin=1
-		open(42, file='XDENS', status='unknown')
+
+    open(42, file='XDENS', status='unknown')
+
+	do ispin=1,iuhf+1
 		call gendens(ispin)
-		close(42)
-	else
-		do ispin=1,iuhf+1
-			select case(ispin)
-				case(1)
-					open(42, file='XDENSA', status='unknown')
-					call gendens(ispin)
-					close(42)
-				case(2)
-					open(42, file='XDENSB', status='unknown')
-					call gendens(ispin)
-					close(42)
-			end select
-		end do
-	end if
+	end do
+	close(42)
 
 	! ALL DONE, CALL CRAPSO
 	call crapso()
@@ -649,9 +639,9 @@ contains
 !
 ! IRREPS OF B-FIELD COMPONENTS
 !
-		IRREPB(1)=IYZPERT
-		IRREPB(2)=IXZPERT
-		IRREPB(3)=IXYPERT
+		irrepb(1)=iyzpert
+		irrepb(2)=ixzpert
+		irrepb(3)=ixypert
 !
 ! COUNTER FOR B-FIELD PERTURBATION IN EACH IRREP
 !

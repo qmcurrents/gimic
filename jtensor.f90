@@ -1,7 +1,6 @@
 !
-! $Id$
-!
-
+! This is the actual work horse, calculates the current tensor
+! 
 module jtensor_m
 	use globals_m
 	use basis_m
@@ -24,6 +23,7 @@ module jtensor_m
 		type(dfdr_t) :: dfr
 		type(bfeval_t) :: bfv
 		real(DP), dimension(:), pointer :: pdbf, denbf, dendb
+		integer(I4) :: spin
 	end type
 
 	public init_jtensor, del_jtensor, jtensor, jtensor2, jvector
@@ -32,11 +32,12 @@ module jtensor_m
 	private
 	
 	real(DP), dimension(3) :: rho
+	real(DP), dimension(3,3,2)  :: jt1, jt2
 
 	real(DP), dimension(:), pointer :: bfvec
 	real(DP), dimension(:,:), pointer :: dbvec, drvec, d2fvec
 	real(DP), dimension(:,:), pointer :: aodens, pdens
-	logical :: diamag_p, paramag_p
+	logical :: diamag_p, paramag_p, spin_density
 	integer(I4), parameter :: NOTIFICATION=1000
 
 contains
@@ -60,8 +61,13 @@ contains
 
 		diamag_p=.true.
 		paramag_p=.true.
+		spin_density=.false.
 		call getkw(input, 'cdens.diamag', diamag_p)
 		call getkw(input, 'cdens.paramag', paramag_p)
+		if (uhf_p) call getkw(input, 'cdens.spin_density', spin_density)
+
+		jt%spin=1
+		if (uhf_p) jt%spin=2 
 
 		if (diamag_p == 0) then
 			call msg_info( 'Diamagnetic contributions not calculated!')
@@ -84,12 +90,12 @@ contains
 		allocate(jt%pdbf(ncgto))
 	end subroutine
 
-	subroutine jtensor(jt, r, j)
+	subroutine jtensor(jt, r, j, j2)
 		type(jtensor_t) :: jt
 		real(DP), dimension(3), intent(in) :: r
 		type(tensor_t), intent(inout) :: j
+		type(tensor_t), optional :: j2
 
-		real(DP), dimension(:,:), pointer :: dbop
 		integer(I4) :: i, b
 		integer(I4), save :: notify=1
 
@@ -100,7 +106,25 @@ contains
 		call dfdr(jt%dfr, r, drvec)
 		call d2fdrdb(jt%d2f, r, d2fvec)
 
-		call contract(jt, j%t)
+		do i=1,jt%spin
+			call contract(jt, jt1(:,:,i), i)
+		end do
+
+		if (uhf_p) then
+			if (spin_density) then
+				j%t=jt1(:,:,spin_a)
+				j2%t=jt1(:,:,spin_b)
+			else
+				j%t=jt1(:,:,spin_a)+jt1(:,:,spin_b)
+			end if
+		else
+			j%t=jt1(:,:,spin_a)
+		end if
+!        write(75,*) jt1(:,:,1)
+!        write(76,*) jt1(:,:,2)
+!        write(77,*) j%t
+!        write(78,*) j%t/2.d0
+
 
 !		if (mod(notify,NOTIFICATION) == 0) then
 !			print '(a, i6)', '* points done:', notify
@@ -110,10 +134,11 @@ contains
 		
 	end subroutine
 
-	subroutine jtensor2(jt, r, pj, dj)
+	subroutine jtensor2(jt, r, pj1, dj1, pj2, dj2)
 		type(jtensor_t) :: jt
 		real(DP), dimension(3), intent(in) :: r
-		type(tensor_t), intent(inout) :: pj, dj
+		type(tensor_t), intent(inout) :: pj1, dj1
+		type(tensor_t), optional :: pj2, dj2
 
 		real(DP), dimension(:,:), pointer :: dbop
 		integer(I4) :: i, b
@@ -126,7 +151,24 @@ contains
 		call dfdr(jt%dfr, r, drvec)
 		call d2fdrdb(jt%d2f, r, d2fvec)
 
-		call contract2(jt, pj%t, dj%t)
+		do i=1,jt%spin
+			call contract2(jt, jt1(:,:,i), jt2(:,:,i), i)
+		end do
+
+		if (uhf_p) then
+			if (spin_density) then
+				pj1%t=jt1(:,:,spin_a)
+				dj1%t=jt2(:,:,spin_a)
+				pj2%t=jt1(:,:,spin_b)
+				dj2%t=jt2(:,:,spin_b)
+			else
+				pj1%t=jt1(:,:,spin_a)+jt1(:,:,spin_b)
+				dj1%t=jt2(:,:,spin_a)+jt2(:,:,spin_b)
+			end if
+		else
+			pj1%t=jt1(:,:,spin_a)
+			dj1%t=jt2(:,:,spin_a)
+		end if
 		
 	end subroutine
 
@@ -138,9 +180,10 @@ contains
 		jv=matmul(pj+dj, bb)
 	end subroutine
 
-	subroutine contract2(jt, ctp, ctd)
+	subroutine contract2(jt, ctp, ctd, spin)
 		type(jtensor_t) :: jt
 		real(DP), dimension(3,3), intent(out) :: ctp, ctd
+		integer(I4), intent(in) :: spin
 
 		integer(I4) :: i, j, k, ii,jj
 		real(DP) :: prsp1, prsp2       ! paramagnetic wavefunction response
@@ -148,13 +191,14 @@ contains
 		real(DP), dimension(3) :: dpd  ! diamagnetic probability density
 		real(DP) :: diapam
 
-		call get_dens(jt%xdens, aodens)  
+		call get_dens(jt%xdens, aodens, spin)  
 		jt%denbf=matmul(bfvec, aodens)
 
 		k=1
 		diapam=dot_product(jt%denbf, bfvec)
 		do i=1,3! dB <x,y,z>
-			call get_pdens(jt%xdens, i, pdens) ! get perturbed densities: x,y,z
+			! get perturbed densities: x,y,z
+			call get_pdens(jt%xdens, i, pdens,spin) 
 			jt%pdbf=matmul(bfvec, pdens)
 			jt%dendb=matmul(dbvec(:,i), aodens)
 			dpd(i)=diapam*rho(i) ! diamag. contr. to J
@@ -184,9 +228,10 @@ contains
 !
 ! Contract all contributions to J. This is where all the actual work is done.
 !
-	subroutine contract(jt, ct)
+	subroutine contract(jt, ct, spin)
 		type(jtensor_t) :: jt
 		real(DP), dimension(3,3), intent(out) :: ct
+		integer(I4), intent(in) :: spin
 
 		integer(I4) :: b, m, k, ii,jj
 		real(DP) :: prsp1, prsp2       ! paramagnetic wavefunction response
@@ -194,13 +239,15 @@ contains
 		real(DP), dimension(3) :: dpd  ! diamagnetic probability density
 		real(DP) :: diapam
 
-		call get_dens(jt%xdens, aodens)  
+		call get_dens(jt%xdens, aodens, spin)  
+		
 		jt%denbf=matmul(bfvec, aodens)
 
 		k=1
 		diapam=dot_product(jt%denbf, bfvec)
 		do b=1,3! dB <x,y,z>
-			call get_pdens(jt%xdens, b, pdens) ! get perturbed densities: x,y,z
+			! get perturbed densities: x,y,z
+			call get_pdens(jt%xdens, b, pdens, spin) 
 			jt%pdbf=matmul(bfvec, pdens)
 			jt%dendb=matmul(dbvec(:,b), aodens)
 			dpd(b)=diapam*rho(b) ! diamag. contr. to J

@@ -1,7 +1,3 @@
-!
-! $Id$
-!
-
 module reorder_m
 	use globals_m
 	use basis_m

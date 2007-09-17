@@ -37,6 +37,8 @@ module globals_m
 	integer(I4), parameter :: DIVJ_TAG=12
 	integer(I4), parameter :: EDENS_TAG=13
 
+	integer(I4), parameter :: SPIN_A=1, SPIN_B=2
+
 	real(DP), parameter :: PI=3.141592653589793D0
 	!real(DP), parameter :: PI=atan(1.d0)*4.d0
 	real(DP), parameter :: PI_FAC=6.349363593424098D-002 ! (0.5/PI)**0.75
@@ -68,6 +70,7 @@ module globals_m
     logical :: bert_is_evil=.false.
 	logical :: mpirun_p=.false.
 	logical :: master_p=.false.
+	logical :: uhf_p=.false.
 
 	type(getkw_t) :: input
 

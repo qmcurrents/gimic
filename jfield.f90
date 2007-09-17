@@ -1,6 +1,3 @@
-!
-! $Id$
-!
 
 module jfield_m
 	use globals_m

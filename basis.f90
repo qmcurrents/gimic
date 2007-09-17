@@ -34,14 +34,14 @@ module basis_m
 
 	private
 contains
-	subroutine init_basis(bt, mbuf)
+	subroutine init_basis(bt, molfil)
 		type(molecule_t) :: bt
-		character(MAX_LINE_LEN), dimension(:) :: mbuf
+		character(*) :: molfil
 
 		integer(I4) :: i, natoms
         type(atom_t), dimension(:), pointer :: atoms
 
-		call read_intgrl(bt%atoms, natoms)
+		call read_intgrl(molfil,bt%atoms, natoms)
 		call setup_gtos()
 		bt%natoms=natoms
 		call calc_basdim(bt)

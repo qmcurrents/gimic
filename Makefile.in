@@ -46,6 +46,9 @@ gimic.x: $(gimic_objs)
 xcpdens: xcpdens.o
 	$(FC) $(FLDFLAGS) -o $@ $+ $(ACES2LIBS) $(BLAS_LIBS)
 
+$(libdir)/%.py: %.py
+	cp -f $< $@
+
 .PHONY: dep deps
 dep deps:
 	$(topdir)/config/mkdep90.py $(gimic_src) >deps.mk
