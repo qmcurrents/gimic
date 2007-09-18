@@ -1,5 +1,7 @@
 !
-! $Id$
+!  Calculate the divergence of a vector field.
+!  Useful for checking the convergce of the actual gauge invariance,
+!  in contrast to the basis set convergence and gauge independence.
 !
 
 module divj_m
@@ -208,9 +210,9 @@ contains
 
 		jx=D0; jy=D0; jz=D0
 		do q=-2,2
-			call jtensor2(dj%jt, rr+(/step*real(q),D0,D0/), jtxp,jtxd)
-			call jtensor2(dj%jt, rr+(/D0,step*real(q),D0/), jtyp,jtyd)
-			call jtensor2(dj%jt, rr+(/D0,D0,step*real(q)/), jtzp,jtzd)
+			call ctensor2(dj%jt, rr+(/step*real(q),D0,D0/), jtxp,jtxd, 'total')
+			call ctensor2(dj%jt, rr+(/D0,step*real(q),D0/), jtyp,jtyd, 'total')
+			call ctensor2(dj%jt, rr+(/D0,D0,step*real(q)/), jtzp,jtzd, 'total')
 			call jvector(jtxp%t, jtxd%t, dj%bb, tvec)
 			jx(q+3)=tvec(1)
 			call jvector(jtyp%t, jtyd%t, dj%bb, tvec)
@@ -238,9 +240,9 @@ contains
 		jx=D0; jy=D0; jz=D0
 		do q=-2,2
 			if ( q == 0 ) cycle
-			call jtensor(dj%jt, rr+(/step*real(q),D0,D0/), jtx)
-			call jtensor(dj%jt, rr+(/D0,step*real(q),D0/), jty)
-			call jtensor(dj%jt, rr+(/D0,D0,step*real(q)/), jtz)
+			call ctensor(dj%jt, rr+(/step*real(q),D0,D0/), jtx, 'total')
+			call ctensor(dj%jt, rr+(/D0,step*real(q),D0/), jty, 'total')
+			call ctensor(dj%jt, rr+(/D0,D0,step*real(q)/), jtz, 'total')
 			tvec=matmul(jtx%t, dj%bb)
 			jx(q+3)=tvec(1)
 			tvec=matmul(jty%t, dj%bb)

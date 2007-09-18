@@ -7,7 +7,7 @@
 	title="CO2"
 	basis="mol"
 	density="XDENS"
-	spherical=off
+	spherical=off #don't touch, unless you know what you are doing
 	debug=5
 	openshell=false
 	calc=[cdens]

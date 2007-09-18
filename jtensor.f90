@@ -1,5 +1,7 @@
 !
 ! This is the actual work horse, calculates the current tensor
+! for a particular spin case. The cost of calling jtensor twice is 
+! very small, since no exponentials have to be calculated.
 ! 
 module jtensor_m
 	use globals_m
@@ -23,16 +25,16 @@ module jtensor_m
 		type(dfdr_t) :: dfr
 		type(bfeval_t) :: bfv
 		real(DP), dimension(:), pointer :: pdbf, denbf, dendb
-		integer(I4) :: spin
 	end type
 
 	public init_jtensor, del_jtensor, jtensor, jtensor2, jvector
+	public ctensor, ctensor2
+	public qtensor, qtensor2
 	public jtensor_t, jdebug, eta
 	
 	private
 	
 	real(DP), dimension(3) :: rho
-	real(DP), dimension(3,3,2)  :: jt1, jt2
 
 	real(DP), dimension(:), pointer :: bfvec
 	real(DP), dimension(:,:), pointer :: dbvec, drvec, d2fvec
@@ -66,9 +68,6 @@ contains
 		call getkw(input, 'cdens.paramag', paramag_p)
 		if (uhf_p) call getkw(input, 'cdens.spin_density', spin_density)
 
-		jt%spin=1
-		if (uhf_p) jt%spin=2 
-
 		if (diamag_p == 0) then
 			call msg_info( 'Diamagnetic contributions not calculated!')
 			call nl
@@ -90,11 +89,135 @@ contains
 		allocate(jt%pdbf(ncgto))
 	end subroutine
 
-	subroutine jtensor(jt, r, j, j2)
+	subroutine qtensor(jt, r)
+		type(jtensor_t) :: jt
+		real(DP), dimension(3), intent(in) :: r
+
+		type(tensor_t) :: jt1, jt2
+
+		if (uhf_p) then
+			call jtensor(jt, r, jt1, spin_a)
+			call jtensor(jt, r, jt2, spin_b)
+			write(81, *) jt1%t
+			write(82, *) jt2%t
+			write(83, *) jt1%t+jt2%t
+			write(84, *) jt1%t-jt2%t
+		else
+			call jtensor(jt, r, jt1, spin_a)
+			write(85, *) jt1%t
+		end if 
+	end subroutine
+
+	subroutine qtensor2(jt, r)
+		type(jtensor_t) :: jt
+		real(DP), dimension(3), intent(in) :: r
+
+		type(tensor_t) :: pjt1, pjt2
+		type(tensor_t) :: djt1, djt2
+
+		if (uhf_p) then
+			call jtensor2(jt, r, pjt1, djt1, spin_a)
+			call jtensor2(jt, r, pjt2, djt2, spin_b)
+			write(90, *) pjt1%t
+			write(91, *) pjt2%t
+			write(92, *) djt1%t
+			write(93, *) djt2%t
+			write(94, *) pjt1%t+pjt2%t
+			write(95, *) djt1%t+djt2%t
+			write(96, *) pjt1%t-djt1%t
+			write(97, *) pjt2%t-djt2%t
+		else
+			call jtensor2(jt, r, pjt1, djt1, spin_a)
+			write(98, *) pjt1%t
+			write(99, *) djt1%t
+		end if 
+	end subroutine
+
+	subroutine ctensor(jt, r, j, op)
 		type(jtensor_t) :: jt
 		real(DP), dimension(3), intent(in) :: r
 		type(tensor_t), intent(inout) :: j
-		type(tensor_t), optional :: j2
+		character(*) :: op
+
+		type(tensor_t) :: jt1, jt2
+
+		select case (op)
+			case ('alpha')
+				call jtensor(jt, r, j, spin_a)
+			case ('beta')
+				if (uhf_p) then
+					call jtensor(jt, r, j, spin_b)
+				else
+					call msg_error('ctensor(): &
+					&beta current requested, but not open-shell system!')
+					stop
+				end if
+			case ('total')
+				if (uhf_p) then
+					call jtensor(jt, r, jt1, spin_a)
+					call jtensor(jt, r, jt2, spin_b)
+					j%t=jt1%t+jt2%t
+				else
+					call jtensor(jt, r, j, spin_a)
+				end if
+			case ('spindens')
+				if (.not.uhf_p) then
+					call msg_error('ctensor(): &
+					&spindens requested, but not open-shell system!')
+					stop
+				end if
+				call jtensor(jt, r, jt1, spin_a)
+				call jtensor(jt, r, jt2, spin_b)
+				j%t=jt1%t-jt2%t
+		end select
+	end subroutine
+
+	subroutine ctensor2(jt, r, pj, dj, op)
+		type(jtensor_t) :: jt
+		real(DP), dimension(3), intent(in) :: r
+		type(tensor_t), intent(inout) :: pj, dj
+		character(*) :: op
+
+		type(tensor_t) :: pj1, pj2, dj1, dj2
+
+		select case (op)
+			case ('alpha')
+				call jtensor2(jt, r, pj, dj, spin_a)
+			case ('beta')
+				if (uhf_p) then
+					call jtensor2(jt, r, pj, dj, spin_b)
+				else
+					call msg_error('ctensor(): &
+					&beta current requested, but not open-shell system!')
+					stop
+				end if
+			case ('total')
+				if (uhf_p) then
+					call jtensor2(jt, r, pj1, dj1, spin_a)
+					call jtensor2(jt, r, pj2, dj2, spin_b)
+					pj%t=pj1%t+pj2%t
+					dj%t=dj1%t+dj2%t
+				else
+					call jtensor2(jt, r, pj, dj, spin_a)
+				end if
+			case ('spindens')
+				if (.not.uhf_p) then
+					call msg_error('ctensor(): &
+					&spindens requested, but not open-shell system!')
+					stop
+				end if
+				call jtensor2(jt, r, pj1, dj1, spin_a)
+				call jtensor2(jt, r, pj2, dj2, spin_b)
+				pj%t=pj1%t-dj1%t
+				dj%t=pj2%t-dj2%t
+		end select
+	end subroutine
+
+	subroutine jtensor(jt, r, j, spin)
+		type(jtensor_t) :: jt
+		real(DP), dimension(3), intent(in) :: r
+		type(tensor_t), intent(inout) :: j
+		integer(I4) :: spin
 
 		integer(I4) :: i, b
 		integer(I4), save :: notify=1
@@ -106,20 +229,8 @@ contains
 		call dfdr(jt%dfr, r, drvec)
 		call d2fdrdb(jt%d2f, r, d2fvec)
 
-		do i=1,jt%spin
-			call contract(jt, jt1(:,:,i), i)
-		end do
+		call contract(jt, j%t, spin)
 
-		if (uhf_p) then
-			if (spin_density) then
-				j%t=jt1(:,:,spin_a)
-				j2%t=jt1(:,:,spin_b)
-			else
-				j%t=jt1(:,:,spin_a)+jt1(:,:,spin_b)
-			end if
-		else
-			j%t=jt1(:,:,spin_a)
-		end if
 !        write(75,*) jt1(:,:,1)
 !        write(76,*) jt1(:,:,2)
 !        write(77,*) j%t
@@ -129,16 +240,16 @@ contains
 !		if (mod(notify,NOTIFICATION) == 0) then
 !			print '(a, i6)', '* points done:', notify
 !			call flush(6)
-!		end if
+!		end i
 !		notify=notify+1
 		
 	end subroutine
 
-	subroutine jtensor2(jt, r, pj1, dj1, pj2, dj2)
+	subroutine jtensor2(jt, r, pj, dj, spin)
 		type(jtensor_t) :: jt
 		real(DP), dimension(3), intent(in) :: r
-		type(tensor_t), intent(inout) :: pj1, dj1
-		type(tensor_t), optional :: pj2, dj2
+		type(tensor_t), intent(inout) :: pj, dj
+		integer(I4) :: spin
 
 		real(DP), dimension(:,:), pointer :: dbop
 		integer(I4) :: i, b
@@ -151,25 +262,8 @@ contains
 		call dfdr(jt%dfr, r, drvec)
 		call d2fdrdb(jt%d2f, r, d2fvec)
 
-		do i=1,jt%spin
-			call contract2(jt, jt1(:,:,i), jt2(:,:,i), i)
-		end do
+		call contract2(jt, pj%t, dj%t, spin)
 
-		if (uhf_p) then
-			if (spin_density) then
-				pj1%t=jt1(:,:,spin_a)
-				dj1%t=jt2(:,:,spin_a)
-				pj2%t=jt1(:,:,spin_b)
-				dj2%t=jt2(:,:,spin_b)
-			else
-				pj1%t=jt1(:,:,spin_a)+jt1(:,:,spin_b)
-				dj1%t=jt2(:,:,spin_a)+jt2(:,:,spin_b)
-			end if
-		else
-			pj1%t=jt1(:,:,spin_a)
-			dj1%t=jt2(:,:,spin_a)
-		end if
-		
 	end subroutine
 
 	subroutine jvector(pj, dj, bb, jv)
@@ -317,7 +411,7 @@ contains
 		
 		delta_t=dtime(times)
 		do i=1,100
-			call jtensor(jj, (/i*SC, i*SC, i*SC/), foo)
+			call jtensor(jj, (/i*SC, i*SC, i*SC/), foo, spin_a)
 			foobar=matmul(bar,foo%t)
 		end do
 		delta_t=dtime(times)

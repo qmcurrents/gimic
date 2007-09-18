@@ -1,3 +1,10 @@
+! This module calulates the current field by looping over gridpoints and 
+! calling the appropriate routines in jtensor_m
+!
+! Ok, this is really a mess...
+! This modules needs a seriuos clean up. I have been adding, and adding, and
+! adding stuff and it's not pretty.
+!
 
 module jfield_m
 	use globals_m
@@ -10,8 +17,8 @@ module jfield_m
 	type jfield_t
 		type(jtensor_t), pointer :: jt
 		real(DP), dimension(3) :: b
-		type(tensor_t), dimension(:,:), pointer :: jj
-		type(vector_t), dimension(:,:), pointer :: vv
+		type(tensor_t), dimension(:,:), pointer :: jj, jja, jjb, jsd
+		type(vector_t), dimension(:,:), pointer :: vv, vva, vvb, vsd
 		integer(I4) :: zpos_j, zpos_v
 		type(grid_t), pointer :: grid
 	end type
@@ -23,6 +30,7 @@ module jfield_m
 	private
 
 	real(DP) :: vec_scale=D1
+	integer(I4) :: spin
 	character(BUFLEN) :: jtensor_file, jvec_file
 	character(BUFLEN) :: jmod_plt, jvec_plt, njvec_plt, jprj_plt
 contains
@@ -45,6 +53,14 @@ contains
 		call get_grid_size(g,i,j,k)
 		allocate(f%jj(i,j))
 		allocate(f%vv(i,j))
+		if (uhf_p) then
+			allocate(f%jja(i,j))
+			allocate(f%jjb(i,j))
+			allocate(f%jsd(i,j))
+			allocate(f%vva(i,j))
+			allocate(f%vvb(i,j))
+			allocate(f%vsd(i,j))
+		end if
 
 		call getkw(input, 'scale_vectors', vec_scale)
 		if ( vec_scale /= D1 ) then
@@ -92,6 +108,20 @@ contains
         end if
         open(JTFD, file=jtensor_file, access='direct', recl=jtrecl)
 		open(JVECFD, file=jvec_file, access='direct', recl=jvrecl)
+		if (uhf_p) then
+			open(JTFD+1, file=trim(jtensor_file) // '_A', &
+			access='direct', recl=jtrecl)
+			open(JTFD+2, file=trim(jtensor_file) // '_B', &
+			access='direct', recl=jtrecl)
+			open(JTFD+3, file=trim(jtensor_file) // '_SD', &
+			access='direct', recl=jtrecl)
+			open(JVECFD+1, file=trim(jvec_file) // '_A', &
+			access='direct', recl=jvrecl)
+			open(JVECFD+2, file=trim(jvec_file) // '_B', &
+			access='direct', recl=jvrecl)
+			open(JVECFD+3, file=trim(jvec_file) // '_SD', &
+			access='direct', recl=jvrecl)
+		end if
 
 		plot_p=.false.
 		jvec_file =''
@@ -116,10 +146,26 @@ contains
 		deallocate(f%vv)
 		nullify(f%jj)
 		nullify(f%vv)
+		if (uhf_p) then
+			deallocate(f%jja)
+			deallocate(f%jjb)
+			deallocate(f%jsd)
+			deallocate(f%vva)
+			deallocate(f%vvb)
+			deallocate(f%vsd)
+		end if
 		
 		if (master_p) then
 			close(JTFD)
 			close(JVECFD)
+			if (uhf_p) then
+			close(JTFD+1)
+			close(JTFD+2)
+			close(JTFD+3)
+			close(JVECFD+1)
+			close(JVECFD+2)
+			close(JVECFD+3)
+			end if
 		end if
 	end subroutine
 	
@@ -140,6 +186,11 @@ contains
 			do j=1,p2
 				do i=1,p1
 					jf%vv(i,j)%v=matmul(jf%jj(i,j)%t, jf%b)
+					if (uhf_p) then
+						jf%vva(i,j)%v=matmul(jf%jja(i,j)%t, jf%b)
+						jf%vvb(i,j)%v=matmul(jf%jjb(i,j)%t, jf%b)
+						jf%vsd(i,j)%v=matmul(jf%jsd(i,j)%t, jf%b)
+					end if
 				end do
 			end do
 			call jvec_io(jf, k, 'w')
@@ -163,8 +214,18 @@ contains
 				select case(op)
 				case('r')
 					read(JTFD, rec=k) jf%jj(i,j)%t
+					if (uhf_p) then
+						read(JTFD+1, rec=k) jf%jja(i,j)%t
+						read(JTFD+2, rec=k) jf%jjb(i,j)%t
+						read(JTFD+3, rec=k) jf%jsd(i,j)%t
+					end if
 				case('w')
 					write(JTFD, rec=k) jf%jj(i,j)%t
+					if (uhf_p) then
+						write(JTFD+1, rec=k) jf%jja(i,j)%t
+						write(JTFD+2, rec=k) jf%jjb(i,j)%t
+						write(JTFD+3, rec=k) jf%jsd(i,j)%t
+					end if
 				case default
 					call msg_error('jtens_io(): Invalid operation: ' // op)
 					call exit(1)
@@ -189,8 +250,18 @@ contains
 				select case(op)
 				case('r')
 					read(JVECFD, rec=k) jf%vv(i,j)%v
+					if (uhf_p) then
+						read(JVECFD+1, rec=k) jf%vva(i,j)%v
+						read(JVECFD+2, rec=k) jf%vvb(i,j)%v
+						read(JVECFD+3, rec=k) jf%vsd(i,j)%v
+					end if
 				case('w')
 					write(JVECFD, rec=k) jf%vv(i,j)%v
+					if (uhf_p) then
+						write(JVECFD+1, rec=k) jf%vva(i,j)%v
+						write(JVECFD+2, rec=k) jf%vvb(i,j)%v
+						write(JVECFD+3, rec=k) jf%vsd(i,j)%v
+					end if
 				case default
 					call msg_error('jvec_io(): Invalid operation: ' // op)
 					call exit(1)
@@ -203,12 +274,13 @@ contains
 	subroutine jvector_plot(jf)
 		type(jfield_t), intent(inout) :: jf
 
-		integer(I4) :: i, j, k, p1, p2, p3
+		integer(I4) :: i, j, k, p1, p2, p3, spin, ispin
 		integer(I4), dimension(:), pointer :: z
 		real(DP), dimension(3) :: foo, norm, rr
 		real(DP), dimension(2) :: mr
 		real(DP) :: jmod, jprj, nfac
 		character(BUFLEN+20+5) :: tfil
+		character(2) :: scase
 
 		call get_grid_size(jf%grid, p1, p2, p3)
 		norm=get_grid_normal(jf%grid)
@@ -222,6 +294,21 @@ contains
 !            allocate(z(1))
 !            z=1
 		end if
+		if (uhf_p) then
+			spin=4
+		end if
+
+		do ispin=1,spin
+		select case(ispin)
+			case(1)
+				scase=''
+			case(2)
+				scase='a'
+			case(3)
+				scase='b'
+			case(4)
+				scase='sd'
+		end select
 		do k=1,size(z)
 			if (z(k) < 1 .or. z(k) > p3 ) then
 				write(str_g, '(a,i6)') 'jvector_plot(): &
@@ -230,7 +317,8 @@ contains
 				cycle
 			end if
 			if (jvec_plt /= '') then
-				tfil=trim(jvec_plt)//'.'//trim(xchar(k))//'.txt' 
+				tfil=trim(jvec_plt)//'.'//trim(xchar(k))//&
+				trim(scase)//'.txt' 
 				call msg_note('Writing j in        : '//trim(tfil))
 				open(JVPFD, file=trim(tfil))
 				write(JVPFD, *) '#********************************************#'
@@ -240,17 +328,20 @@ contains
 				write(JVPFD, *) '#********************************************#'
 			end if
 			if (jmod_plt /= '') then
-				tfil=trim(jmod_plt)//'.'//trim(xchar(k))//'.txt'
+				tfil=trim(jmod_plt)//'.'//trim(xchar(k))//&
+				trim(scase)//'.txt'
 				call msg_note('Writing |j| in      : '//trim(tfil))
 				open(MODFD, file=trim(tfil))
 			end if
 			if (njvec_plt /= '') then
-				tfil=trim(njvec_plt)//'.'//trim(xchar(k))//'.txt'
+				tfil=trim(njvec_plt)//'.'//trim(xchar(k))//&
+				trim(scase)//'.txt'
 				call msg_note('Writing j/|j| in    : ' //trim(tfil))
 				open(NJVFD, file=trim(tfil))
 			end if
 			if (jprj_plt /= '') then
-				tfil=trim(jprj_plt)//'.'//trim(xchar(k))//'.txt'
+				tfil=trim(jprj_plt)//'.'//trim(xchar(k))//&
+				trim(scase)//'.txt'
 				call msg_note('Writing (j;n) in    : '//trim(tfil))
 				open(JPRJFD, file=trim(tfil))
 			end if
@@ -261,7 +352,16 @@ contains
 				do i=1,p1
 					mr=gridmap(jf%grid,i,j)
 					rr=gridpoint(jf%grid, i,j,z(k))
-					foo=jf%vv(i,j)%v
+					select case(ispin)
+						case(1)
+							foo=jf%vv(i,j)%v
+						case(2)
+							foo=jf%vva(i,j)%v
+						case(3)
+							foo=jf%vvb(i,j)%v
+						case(4)
+							foo=jf%vsd(i,j)%v
+					end select
 					nfac=sqrt(sum(foo(:)**2))
 					jmod=sqrt(sum(foo**2))
 					jprj=dot_product(norm,foo)
@@ -296,6 +396,7 @@ contains
 			if (njvec_plt /= '') close(NJVFD)
 			if (jprj_plt /= '')  close(JPRJFD)
 		end do
+		end do
 		call jmod_gopenmol(jf)
 !        if (allocated(z)) deallocate(z)
 	end subroutine
@@ -305,7 +406,8 @@ contains
 
 		integer(I4) :: i, j, k, p1, p2, p3
 		real(DP), dimension(3) :: rr
-		
+		character(10) :: op
+
 		call eta(jf%jt,jf%grid)
 		call get_grid_size(jf%grid, p1, p2, p3)
 	
@@ -313,7 +415,12 @@ contains
 			do j=1,p2
 				do i=1,p1
 					rr=gridpoint(jf%grid, i, j, k)
-					call jtensor(jf%jt, rr, jf%jj(i,j))
+					call ctensor(jf%jt, rr, jf%jj(i,j), 'total')
+					if (uhf_p) then
+						call ctensor(jf%jt, rr, jf%jja(i,j), 'alpha')
+						call ctensor(jf%jt, rr, jf%jjb(i,j), 'beta')
+						call ctensor(jf%jt, rr, jf%jsd(i,j), 'spindens')
+					end if
 				end do
 			end do
 			call jtens_io(jf, k, 'w')
@@ -331,11 +438,16 @@ contains
 		
 		call get_grid_size(jf%grid, p1, p2)
 		jj=>jf%jj
-	
+
 		do j=1,p2
 			do i=1,p1
 				rr=gridpoint(jf%grid, i, j, k)
-				call jtensor(jf%jt, rr, jj(i,j))
+				call ctensor(jf%jt, rr, jf%jj(i,j), 'total')
+				if (uhf_p) then
+					call ctensor(jf%jt, rr, jf%jja(i,j), 'alpha')
+					call ctensor(jf%jt, rr, jf%jjb(i,j), 'beta')
+					call ctensor(jf%jt, rr, jf%jsd(i,j), 'spindens')
+				end if
 			end do
 		end do
 	end subroutine 

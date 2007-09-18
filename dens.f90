@@ -56,8 +56,9 @@ contains
 		type(dens_t), intent(inout) :: dd
 		character(80) :: xdens_file
 
-		integer(I4) :: b, mo, ispin
+		integer(I4) :: b, mo, ispin, s
 		type(reorder_t) :: bofh
+		real(DP), dimension(:,:), allocatable :: kusse
 
 		if ( .not.associated(dd%da) ) then
 			call msg_error('read_dens(): dens not allocated!')
@@ -73,16 +74,24 @@ contains
 		open(XDFD, file=xdens_file, status='old', err=42)
 
 		dens=>dd%da
+		s=size(dd%da(:,1,1))
+		allocate(kusse(s,s))
+
 		do ispin=1,dd%spin
 			if (ispin == 2) dens=>dd%db
 			if (dd%pdens_p) then
 				do b=0,3
-					read(XDFD,*) dens(:,:,b)
+					read(XDFD,*) kusse
+					dens(:,:,b)=kusse
 				end do
 			else
-				read(XDFD,*) dens(:,:,0)
+				read(XDFD,*) kusse
+				dens(:,:,0)=kusse
 			end if
 		end do
+
+		deallocate(kusse)
+
 		if (uhf_p) then
 			call  msg_info('scaling perturbed densities by 0.d5')
 			dd%da(:,:,1:3)= dd%da(:,:,1:3)/2.d0
@@ -123,8 +132,6 @@ contains
 		
 		if (uhf_p.and.associated(dd%db)) then
 			deallocate(dd%db)
-		else
-			call msg_warn('del_dens(): not allocated!')
 		end if
 		
 	end subroutine

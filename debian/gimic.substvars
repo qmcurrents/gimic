@@ -1,1 +1,1 @@
-shlibs:Depends=intel-ifort8, libc6 (>= 2.3.2.ds1-4)
+shlibs:Depends=libc6 (>= 2.6-1)

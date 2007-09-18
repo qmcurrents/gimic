@@ -368,7 +368,7 @@ contains
 					call jvector_plot(jf)
 				case(INTGRL_TAG)
 					if (nike_p) then
-!                        call int_t_direct(it)
+!                        call int_t_direct(it)  ! tensor integral
 						call int_s_direct(it)
 						call nl
 						call msg_info('Integrating |J|')

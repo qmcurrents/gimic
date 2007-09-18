@@ -27,8 +27,9 @@ endif
 config.status: configure
 	dh_testdir
 	# Add here commands to configure the package.
-	CFLAGS="$(CFLAGS)" ./configure --host=$(DEB_HOST_GNU_TYPE) --build=$(DEB_BUILD_GNU_TYPE) --prefix=/usr --mandir=\$${prefix}/share/man --infodir=\$${prefix}/share/info $(DEB_CONFIG_OPTS)
-
+	./configure --prefix=/opt --with-blas-dir=/opt/lib \
+	--with-fc-search-path=/opt/flibs --with-aces2=/opt/aces2/lib
+#     CFLAGS="$(CFLAGS)" ./configure --host=$(DEB_HOST_GNU_TYPE) --build=$(DEB_BUILD_GNU_TYPE) --prefix=/opt --mandir=\$${prefix}/share/man --infodir=\$${prefix}/share/info $(DEB_CONFIG_OPTS)
 
 build: build-stamp
 
@@ -65,7 +66,7 @@ install: build
 	dh_installdirs
 
 	# Add here commands to install the package into debian/gimic.
-	$(MAKE) install prefix=$(CURDIR)/debian/gimic/usr
+	$(MAKE) install prefix=$(CURDIR)/debian/gimic/opt
 
 
 # Build architecture-independent files here.

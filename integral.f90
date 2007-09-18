@@ -80,7 +80,7 @@ contains
 			do j=1,p2
 				do i=1,p1
 					rr=gridpoint(it%grid, i, j, k)
-					call jtensor(it%jt, rr, jt1(i))
+					call ctensor(it%jt, rr, jt1(i), 'total')
 				end do
 				jt2(j)%t=int_t_1d(jt1,it%grid,1)
 			end do
@@ -88,7 +88,7 @@ contains
 		end do
 		xsum=int_t_1d(jt3,it%grid,3)
 
-!        call print_t_int(xsum)
+		call print_t_int(xsum)
 		deallocate(jt1, jt2, jt3)
 	end subroutine
 
@@ -127,7 +127,7 @@ contains
 				do i=1,p1
 					rr=gridpoint(it%grid, i, j, k)
 					r=sqrt(sum((rr-center)**2))
-					call jtensor(it%jt, rr, jt)
+					call ctensor(it%jt, rr, jt, 'total')
 					jvec%v=matmul(jt%t,bb)
 					if ( r > bound ) then
 						w=0.d0
@@ -208,7 +208,7 @@ contains
 				do i=1,p1
 					rr=gridpoint(it%grid, i, j, k)
 					r=sqrt(sum((rr-center)**2))
-					call jtensor(it%jt, rr, jt)
+					call ctensor(it%jt, rr, jt, 'total')
 					jvec%v=matmul(jt%t,bb)
 					if ( r > bound ) then
 						w=0.d0
@@ -279,7 +279,7 @@ contains
 		do j=1,p2
 			do i=1,p1
 				rr=gridpoint(it%grid, i, j, k)
-				call jtensor(it%jt, rr, jt1(i))
+				call ctensor(it%jt, rr, jt1(i), 'total')
 				r3=sqrt(sum(rr**2))**3
 
 				if (r3 < 1.d-15) then
@@ -324,7 +324,7 @@ contains
 		do j=1,p2
 			do i=1,p1
 				rr=gridpoint(it%grid, i, j, k)
-				call jtensor(it%jt, rr, jt1(i))
+				call ctensor(it%jt, rr, jt1(i), 'total')
 			end do
 			jt2(j)%t=int_t_1d(jt1,it%grid,1)
 		end do

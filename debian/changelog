@@ -1,3 +1,9 @@
+gimic (1.2.1) gutsy; urgency=low
+
+  * New getkw implementation and totally new grid definitions in gimic.inp
+
+ -- Jonas Juselius <jonas@localhost>  Tue, 18 Sep 2007 13:37:03 +0200
+
 gimic (1.0-1) unstable; urgency=low
 
   * Initial Release.

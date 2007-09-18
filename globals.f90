@@ -12,11 +12,9 @@ module globals_m
 	! file descriptors
 	integer, parameter :: BASFD=42
 	integer, parameter :: XDFD=43
-	integer, parameter :: JTFD=44
 	integer, parameter :: MODFD=45
 	integer, parameter :: JVPFD=46
 	integer, parameter :: NJVFD=47
-	integer, parameter :: JVECFD=48
 	integer, parameter :: JPRJFD=49
 	integer, parameter :: DIVJFD=50
 	integer, parameter :: DJPFD=51
@@ -26,6 +24,8 @@ module globals_m
 	integer, parameter :: GOPFD=55
 	integer, parameter :: GOPFD2=56
 	integer, parameter :: GRIDFD=57
+	integer, parameter :: JTFD=70
+	integer, parameter :: JVECFD=80
 
 	
 	integer, parameter :: MAX_L=5 ! Max angular momentum in basis (h)
