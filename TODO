@@ -1,7 +1,15 @@
-- fix configure / paths
-- install tools
-- documentation
-- debian pack
-- parallel magnetic field
-- normalize magnetic field
+o fix configure / paths
+o install tools
+o documentation
+o debian pack
+o parallel magnetic field
+o normalize magnetic field
+o fix turbo2mol.py two letter atoms
+o add magnet direction to xyz files
+o add para- diamag check
+o clean up
+o move basis set out of molecule_t
+o jfield should not be a class
+o "classify" proper classes
+
 
