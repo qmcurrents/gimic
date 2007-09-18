@@ -18,8 +18,6 @@
 !
 ! Wrapper module for the parser. Uses the wonderful f90 overloading caps.
 ! 
-! $Id:$
-!
 
 module getkw_class
     use kinds

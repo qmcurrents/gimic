@@ -680,7 +680,7 @@ class GetkwParser:
 		dmark=Literal('$').suppress()
 		end_sect=rcb
 		end_data=Literal('$end').suppress()
-		prtable = srange("[0-9a-zA-Z]")+'!$%&*+-./<>?@^_|~'
+		prtable = srange("[0-9a-zA-Z]")+r'!$%&*+-./<>?@^_|~'
 
 		kstr=Word(prtable) ^ quotedString.setParseAction(removeQuotes)
 

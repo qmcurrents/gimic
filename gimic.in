@@ -59,7 +59,6 @@ def main():
 	top.add_kw('spherical', 'BOOL', (True,))
 	top.add_kw('rerun', 'BOOL', (False,))
 	top.add_kw('openshell', 'BOOL', (False,))
-	top.add_kw('spin_density', 'BOOL', (False,))
 	top.add_kw('calc', 'STR', None)
 
 	plot=getkw.Section('plot')
@@ -79,6 +78,7 @@ def main():
 	cdens.add_kw('orthogonal_magnet', 'BOOL', (False,))
 	cdens.add_kw('scale_vectors', 'DBL', (1.0,))
 	cdens.add_kw('magnet', 'DBL_ARRAY', 3, req=True)
+	cdens.add_kw('spin_density', 'BOOL', (False,))
 	cdens.add_sect(plot)
 
 	grid=getkw.Section('grid', callback=check_grid)
@@ -169,7 +169,7 @@ def main():
 	if inpfil is not None:
 		input=getkw.GetkwParser(top)
 		inkw=input.parseFile(inpfil)
-		inkw.equalize(top)
+		inkw.sanitize(top)
 	else:
 		inkw=top
 

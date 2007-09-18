@@ -9,7 +9,9 @@
 	density="XDENS"
 	spherical=off
 	debug=5
-	calc=[cdens, integral]
+	openshell=false
+	calc=[cdens]
+#     calc=[cdens, integral]
 #     calc=[cdens, integral, divj]
 
 	cdens {
@@ -18,6 +20,7 @@
 		orthogonal_magnet=off
 		magnet=[0.0, -1.0, 0.0]
 		scale_vectors=1.0
+        spin_density=off
 		diamag=on
 		paramag=on
 		plot(on) {
@@ -45,6 +48,7 @@
 
 #     grid(file) {
 #         file=myspecialgrid.grd
+#         gridplot=10 # wht?
 #     }
 
 
@@ -63,22 +67,23 @@
 			height=[3.0, 3.0]
 			width=[6.0, 6.0]
 			gridplot=15
+#             radius=3.0
 #             angle=0.0
 		}
 	}
 
-#     divj {
-#         plots=[1]
-#         gopenmol=divj.plt
-#         grid(base) { 
-#             type=even
-#             origin=[-4.0, 0.0, -4.0]
-#             ivec=[1.0, 0.0, 0.0]
-#             jvec=[ 0.0, 0.0, 1.0]
-#             kvec=[0.0,1.0,0.0] # optional, deduced from i x j
-#             lengths=[10.0, 10.0, 0.0]
-#             spacing=[0.5, 0.5, 0.5]
-# #             angle=0.0
-#             gridplot=15 # wht?
-#         }
-#     }
+	divj {
+		plots=[1]
+		gopenmol=divj.plt
+		grid(base) { 
+			type=even
+			origin=[-4.0, 0.0, -4.0]
+			ivec=[1.0, 0.0, 0.0]
+			jvec=[ 0.0, 0.0, 1.0]
+			kvec=[0.0,1.0,0.0] # optional, deduced from i x j
+			lengths=[10.0, 10.0, 0.0]
+			spacing=[0.5, 0.5, 0.5]
+#             angle=0.0
+			gridplot=15 # wht?
+		}
+	}
