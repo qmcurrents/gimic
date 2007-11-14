@@ -8,7 +8,8 @@
 # University of Tromsø, 2006
 #
 # TODO: 
-#       general cleanup
+#       o general cleanup
+#       o python interface
 #
 # Known bugs: names with '-' mess things up, either in py or f90...
 #
@@ -449,6 +450,9 @@ class GetkwParser:
 		else:
 			self.caseless=False
 	
+	def getkw(self, path):
+		pass
+
 	def parseFile(self,fil):
 		self.bnf.parseFile(fil)
 		return self.top
@@ -714,6 +718,7 @@ class GetkwParser:
 		bnf.ignore( pythonStyleComment )
 
 		return bnf
+
 
 def test( strng ):
 	bnf = GetkwParser()

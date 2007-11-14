@@ -294,6 +294,8 @@ contains
 !            allocate(z(1))
 !            z=1
 		end if
+
+		spin=1
 		if (uhf_p) then
 			spin=4
 		end if

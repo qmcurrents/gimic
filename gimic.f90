@@ -2,7 +2,6 @@
 ! GIMIC - a pretty advanced 'Hello World!' program.
 !
 
-! keeping the global stuff to a bare minimum... :)
 program gimic
 	use globals_m  
 	use teletype_m

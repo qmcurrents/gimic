@@ -1,5 +1,5 @@
 !
-! $Id$
+! 
 !
 
 module gaussint_m
