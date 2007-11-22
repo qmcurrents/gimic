@@ -10,6 +10,7 @@
 *.pyo
 tags
 examples/*
+lib/*
 autom4te.cache/*
 Makefile
 make.config
@@ -20,3 +21,4 @@ config.status
 deps.mk
 gimic
 xcpdens
+build-stamp

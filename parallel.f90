@@ -1,6 +1,4 @@
 !
-! $Id$
-!
 ! This module contains routines to handle communication between MPI nodes.
 !
 
@@ -16,6 +14,7 @@ module parallel_m
 	use teletype_m
 	implicit none
 
+	! deprecated
 	type parallel_t
 		logical :: it_p, dj_p, jf_p, ed_p
 		type(divj_t), pointer :: dj
@@ -27,9 +26,9 @@ module parallel_m
 	end type
 
 	public start_mpi, stop_mpi, get_mpi_rank
-	public init_parallel, del_parallel, parallel_t
-	public bcast_dens, bcast_molbuf 
-	public bcast_inpbuf, scheduler, ceo
+!    public init_parallel, del_parallel, parallel_t
+!    public bcast_dens, bcast_molbuf 
+!    public bcast_inpbuf, scheduler, ceo
 	private
 
 	integer(I4) :: ierr
@@ -37,37 +36,12 @@ module parallel_m
 	character(80) :: sys
 
 contains
-	function start_mpi() result(mpirank)
-		integer(I4) :: mpirank
-		external hostnm
-		integer(I4) :: hostnm
-		
-		if (mpi_compiled == 0) then
-			rank=-1
-			mpirank=-1
-			return
-		end if
-#ifdef HAVE_MPI
-		ierr=hostnm(sys)
-		call msg_note('Initializing MPI on ' // trim(sys))
-		call nl
-		call mpi_init(ierr)
-		call mpi_comm_rank(MPI_COMM_WORLD, rank, ierr)
-		if (rank == 0) then
-			master_p=.true.
-		end if
-		mpirank=rank
-#endif
-	end function
-		
-	subroutine stop_mpi()
-#ifdef HAVE_MPI
-		if ( mpirun_p ) then
-			call mpi_finalize(ierr)
-		end if
-#endif
-	end subroutine
 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!
+! Deprecated routines
+!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	subroutine init_parallel(pt, calc, jf, it, dj, ed)
 		type(parallel_t) :: pt
 		integer(I4), dimension(:), intent(in) :: calc
@@ -368,8 +342,4 @@ contains
 #endif
 	end subroutine
 
-	function get_mpi_rank() result(r)
-		integer(I4) :: r
-		r=rank
-	end function
 end module

@@ -45,6 +45,26 @@ contains
 		bfv%r=INITRV
 	end subroutine
 
+	subroutine setup_screening(bfv)
+		type(bfeval_t) :: bfv
+
+		natoms=get_natoms(bfv%mol)
+		
+		idx=1
+		do i=1,natoms
+			call get_atom(bfv%mol,i,atom)
+			call get_coord(atom, coord)
+			call get_basis(atom, basis)
+			nctr=get_nctr(basis)
+			do j=1,nctr 
+				call get_contraction(atom, j, ctr)
+				nccomp=get_nccomp(ctr)
+				call cgto(rr, ctr, foo)
+				idx=idx+nccomp
+			end do
+		end do
+	end subroutine
+
 	subroutine del_bfeval(bfv)
 		type(bfeval_t) :: bfv
 		if (associated(bfv%bf)) then

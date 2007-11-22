@@ -19,7 +19,7 @@ module basis_m
 	public get_natoms, get_ngto, get_ncgto, set_c2sop, get_c2sop
 	public get_coord, get_symbol, get_basis, get_atom, get_nctr
 	public get_contraction, get_ncomp, get_nccomp, get_nccgto
-	public molecule_t
+	public molecule_t, basis_t
 	
 	interface get_ncgto
 		module procedure get_ncgto_mol, get_ncgto_bas

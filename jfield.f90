@@ -12,6 +12,7 @@ module jfield_m
 	use grid_m
 	use basis_m
 	use teletype_m
+	use mpi_m
 	implicit none
 
 	type jfield_t

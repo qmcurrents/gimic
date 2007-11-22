@@ -3,8 +3,8 @@ EXCEPT = ( Makefile make.config make.rules config.h config.status config.log
 xcpdens gimic autom4te.cache )
 EXPAT = ( \\.o\$ \\.mod\$ \\.d\$ \\.swp\$ \\.git/.* lib/.* bin/.* \\.x\$ ) 
 
-snowstorm:
-${FILES} -> snowstorm.uit.no
+snykov:
+${FILES} -> snykov.uit.no
         install ~/src/gimic ;
         except ${FILES}/${EXCEPT} ;
         except_pat ${EXPAT} ;

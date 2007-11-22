@@ -7,6 +7,7 @@ program gimic
 	use teletype_m
 	use basis_m
 	use timer_m
+	use mpi_m
     implicit none 
 	character(BUFLEN) :: buf
 	type(molecule_t) :: mol
@@ -34,102 +35,44 @@ program gimic
 	end if
 
 contains
-
-	subroutine read_inpbuf(inpfile, inpbuf)
-		character(*), intent(in) :: inpfile
-		character, dimension(:), pointer :: inpbuf
-
-		external fgetc
-		integer(I4) :: i, n, err
-		integer(I4) :: fgetc 
-
-		write(str_g, 100) "Reading input from '", trim(inpfile),"'"
-		call msg_info(str_g)
-		open(99, file=trim(inpfile), status='old', action='read', iostat=err)
-
-		if (err /= 0 ) then
-			write(str_g, 100) "read_inpbuf(): open failed for '",&
-				trim(inpfile),"'"
-			call msg_error(str_g)
-			stop
-		end if
-
-		n=getfsize(99)
-		allocate(inpbuf(n))
-		do i=1,n
-			err=fgetc(99, inpbuf(i))
-		end do
-		close(99)
-100 format(a,a,a)
-	end subroutine
-
-	subroutine read_molbuf(molbuf)
-!
-! read in the MOL file into a buffer which can be broadcast 
-!
-		character(MAX_LINE_LEN), dimension(:), pointer :: molbuf
-		integer(I4) :: i, n, ios
-		character(BUFLEN) :: basfile
-		call getkw(input, 'basis', basfile)
-		call msg_note('Basis sets read from file: ' // trim(basfile))
-		call nl
-
-		open(BASFD, file=basfile, status='old', action='read', &
-			 form='formatted', iostat=ios)
-
-		if (ios /= 0 ) then
-			call msg_error('read_intgrl(): open failed.')
-			stop
-		end if
-
-		n=getnlines(BASFD)
-		allocate(molbuf(n))
-		do i=1,n
-			read(BASFD, '(200a)') molbuf(i) ! MAX_LINE_LEN
-		end do
-		close(BASFD)
-
-	end subroutine
-
 	subroutine initialize()
-		use parallel_m
-
 		external fdate, hostnm
 		integer(I4) :: i, hostnm, rank, ierr
-		character(BUFLEN) :: title, fdate, sys, molfil
+		integer(I4) :: chdir, system
+		character(BUFLEN) :: title, fdate, sys, molfil, denfil
+		character(4) :: rankdir
 		real(DP), dimension(3) :: center
-!        character, dimension(:), pointer :: inpbuf
-!        character(MAX_LINE_LEN), dimension(:), pointer :: molbuf
+
+		spherical=.false.
+		call getkw(input, 'spherical', spherical)
+		call getkw(input, 'basis', molfil)
+		call getkw(input, 'density', denfil)
 
 		if (mpirun_p) then
+			stop 'The parallell code is out of order currently. Sorry.'
 			rank=start_mpi()
+			call rankname(rankdir)
+			if (rank /= 0) then
+				ierr=system('mkdir ' // rankdir)
+				ierr=chdir(rankdir)
+				ierr=system('ln -s ../' // trim(molfil) // ' .' )
+				ierr=system('ln -s ../' // trim(denfil) // ' .' )
+			end if
 		else
 			master_p=.true.
 			rank=0
 		end if
 
-!        nullify(inpbuf)
-!        nullify(molbuf)
-
 		ierr=hostnm(sys)
-!        call read_inpbuf('standard input', inpbuf)
 		if (master_p) then
-			write(str_g, '(a,i3,a,a)') 'I''m master', rank,' on ', trim(sys)
+			write(str_g, '(a,i3,a,a)') 'MPI master', rank,' on ', trim(sys)
 			call msg_debug(str_g,2)
 		else
             call set_teletype_unit(DEVNULL)
-			write(str_g, '(a,i3,a,a)') 'I''m puppet', rank,' on ', trim(sys)
+			write(str_g, '(a,i3,a,a)') 'MPI slave', rank,' on ', trim(sys)
 			call msg_debug(str_g,2)
 		end if
 
-!        if (mpirun_p) call bcast_inpbuf(inpbuf)
-
-!        call init_parse_buf(inpbuf, ierr)
-		if (ierr == 2) then
-			call del_getkw(input)
-			call msg_error('cdens(): parse error')
-			call exit(1)
-		end if
 		
 		i=0
 		call getkw(input, 'debug', i)
@@ -140,29 +83,150 @@ contains
 		call getkw(input, 'title', title)
 		call msg_out(' TITLE: '// trim(title))
 		call nl
-
-		spherical=.false.
-		call getkw(input, 'spherical', spherical)
 		
-!        if (master_p) then
-!            call read_molbuf(molbuf)
-!        end if
-!        if (mpirun_p) call bcast_molbuf(molbuf)
-
-!        call init_basis(mol, molbuf)
-		call getkw(input, 'basis', molfil)
         call init_basis(mol,molfil)
-
-!        deallocate(inpbuf)
-!        deallocate(molbuf)
 
 	end subroutine
 
 	subroutine finalize()
-		use parallel_m
 		call del_basis(mol)
 		call stop_mpi()
 		call del_getkw(input)
+	end subroutine
+
+	subroutine cdens
+		use globals_m
+		use basis_m
+		use cao2sao_m
+		use dens_m
+		use jtensor_m
+		use jfield_m
+		use caos_m
+		use grid_m
+		use gaussint_m
+		use integral_m
+		use divj_m
+		use edens_m
+
+		type(jfield_t) :: jf
+		type(grid_t) :: grid, igrid, dgrid, egrid
+		type(jtensor_t) :: jt
+		type(dens_t) :: xdens, modens
+		type(divj_t) :: dj
+		type(edens_t) :: ed
+		type(integral_t) :: it
+!        type(parallel_t) :: pt
+		type(cao2sao_t) :: c2s
+
+		integer(I4) :: i,j, ncalc
+		integer(I4), dimension(4) :: calc
+		logical :: divj_p, int_p, cdens_p, edens_p, rerun_p
+		logical :: nike_p, xdens_p, modens_p
+		character(LINELEN), dimension(:), pointer :: cstr
+
+		divj_p=.false.; int_p=.false.
+		cdens_p=.false.; edens_p=.false.
+		rerun_p=.false.; nike_p=.true.
+		xdens_p=.false.; modens_p=.false.
+
+		if (spherical) then
+			call init_c2sop(c2s,mol)
+			call set_c2sop(mol, c2s)
+		end if
+		call getkw(input, 'rerun', rerun_p)
+		
+		! figure out work order
+		nullify(cstr)
+		call getkw(input, 'calc', cstr)
+		ncalc=size(cstr)
+		do i=1,ncalc
+			if (cstr(i)(1:5) == 'cdens') then 
+				calc(i)=CDENS_TAG
+				cdens_p=.true.
+				xdens_p=.true.
+			else if (cstr(i)(1:8) == 'integral') then 
+				calc(i)=INTGRL_TAG
+				int_p=.true.
+				xdens_p=.true.
+			else if (cstr(i)(1:4) == 'divj') then 
+				calc(i)=DIVJ_TAG
+				divj_p=.true.
+				xdens_p=.true.
+			else if (cstr(i)(1:5) == 'edens') then 
+				calc(i)=EDENS_TAG
+				edens_p=.true.
+				modens_p=.true.
+			end if
+		end do
+		if (mpirun_p .or. rerun_p) nike_p=.false.
+
+		call getkw(input, 'openshell', uhf_p)
+		if (uhf_p) then
+			call msg_info('Open-shell calculation')
+		else
+			call msg_info('Closed-shell calculation')
+		end if
+
+		if (xdens_p) call init_dens(xdens, mol)
+		if (modens_p) call init_dens(modens, mol, modens_p)
+		if (xdens_p) call read_dens(xdens)
+		if (modens_p) call read_modens(modens)
+
+		call setup_grids(calc(1:ncalc), grid, igrid, dgrid, egrid)
+
+		call init_jtensor(jt,mol,xdens)
+
+		if (divj_p) call init_divj(dj, dgrid, jt)
+		if (cdens_p) call init_jfield(jf, jt, grid)
+		if (int_p) call init_integral(it, jt, jf, igrid)
+		if (edens_p) call init_edens(ed, mol, modens, egrid)
+
+		do i=1,ncalc
+			select case(calc(i))
+			case(CDENS_TAG)
+				if (nike_p) call jfield(jf)
+				! Contract the tensors with B
+				call jvectors(jf)
+				call jvector_plot(jf)
+			case(INTGRL_TAG)
+				if (nike_p) then
+!                        call int_t_direct(it)  ! tensor integral
+					call int_s_direct(it)
+					call nl
+					call msg_info('Integrating |J|')
+					call int_mod_direct(it)
+				end if
+!                    call write_integral(it)
+			case(DIVJ_TAG)
+				if (nike_p) call divj(dj)
+				call divj_plot(dj)
+			case(EDENS_TAG)
+				if (nike_p) call edens(ed)
+				call edens_plot(ed)
+			case default
+				call msg_error('gimic(): Unknown operation!')
+			end select
+		end do
+
+		if (int_p) then
+			call del_integral(it)
+			call del_grid(igrid)
+		end if
+		if (divj_p) then
+			call del_divj(dj)
+			call del_grid(dgrid)
+		end if
+		if (cdens_p) then
+			call del_jfield(jf)
+			call del_grid(grid)
+		end if
+		if (edens_p) then
+			call del_edens(ed)
+			call del_grid(egrid)
+		end if
+		if (xdens_p) call del_dens(xdens)
+		if (modens_p) call del_dens(modens)
+		if (spherical) call del_c2sop(c2s)
 	end subroutine
 
 	subroutine setup_grids(calc, grid, igrid, dgrid, egrid)
@@ -257,158 +321,6 @@ contains
 		
 	end subroutine
 
-	subroutine cdens
-		use globals_m
-		use basis_m
-		use cao2sao_m
-		use dens_m
-		use jtensor_m
-		use jfield_m
-		use caos_m
-		use grid_m
-		use gaussint_m
-		use integral_m
-		use divj_m
-		use edens_m
-		use parallel_m
-
-		type(jfield_t) :: jf
-		type(grid_t) :: grid, igrid, dgrid, egrid
-		type(jtensor_t) :: jt
-		type(dens_t) :: xdens, modens
-		type(divj_t) :: dj
-		type(edens_t) :: ed
-		type(integral_t) :: it
-		type(parallel_t) :: pt
-		type(cao2sao_t) :: c2s
-
-		integer(I4) :: i,j, ncalc
-		integer(I4), dimension(4) :: calc
-		logical :: divj_p, int_p, cdens_p, edens_p, rerun_p
-		logical :: nike_p, xdens_p, modens_p
-		character(LINELEN), dimension(:), pointer :: cstr
-
-		divj_p=.false.; int_p=.false.
-		cdens_p=.false.; edens_p=.false.
-		rerun_p=.false.; nike_p=.true.
-		xdens_p=.false.; modens_p=.false.
-
-		if (spherical) then
-			call init_c2sop(c2s,mol)
-			call set_c2sop(mol, c2s)
-		end if
-		call getkw(input, 'rerun', rerun_p)
-		
-		! figure out work order
-		nullify(cstr)
-		call getkw(input, 'calc', cstr)
-		ncalc=size(cstr)
-		do i=1,ncalc
-			if (cstr(i)(1:5) == 'cdens') then 
-				calc(i)=CDENS_TAG
-				cdens_p=.true.
-				xdens_p=.true.
-			else if (cstr(i)(1:8) == 'integral') then 
-				calc(i)=INTGRL_TAG
-				int_p=.true.
-				xdens_p=.true.
-			else if (cstr(i)(1:4) == 'divj') then 
-				calc(i)=DIVJ_TAG
-				divj_p=.true.
-				xdens_p=.true.
-			else if (cstr(i)(1:5) == 'edens') then 
-				calc(i)=EDENS_TAG
-				edens_p=.true.
-				modens_p=.true.
-			end if
-		end do
-		if (mpirun_p .or. rerun_p) nike_p=.false.
-
-		call getkw(input, 'openshell', uhf_p)
-		if (uhf_p) then
-			call msg_info('Open-shell calculation')
-		else
-			call msg_info('Closed-shell calculation')
-		end if
-
-		if (xdens_p) call init_dens(xdens, mol)
-		if (modens_p) call init_dens(modens, mol, modens_p)
-		if (master_p) then
-			if (xdens_p) call read_dens(xdens)
-			if (modens_p) call read_modens(modens)
-		end if
-		if (mpirun_p) then
-			if (xdens_p) call bcast_dens(xdens)
-			if (modens_p) call bcast_dens(modens)
-		end if
-
-		call setup_grids(calc(1:ncalc), grid, igrid, dgrid, egrid)
-
-		call init_jtensor(jt,mol,xdens)
-
-		if (divj_p) call init_divj(dj, dgrid, jt)
-		if (cdens_p) call init_jfield(jf, jt, grid)
-		if (int_p) call init_integral(it, jt, jf, igrid)
-		if (edens_p) call init_edens(ed, mol, modens, egrid)
-		if (.not.rerun_p .and. mpirun_p) then
-			call init_parallel(pt, calc, jf, it, dj, ed)
-		end if
-
-		if (master_p) then
-			if (mpirun_p .and. .not.rerun_p) then
-				call scheduler(pt)
-			end if
-			do i=1,ncalc
-				select case(calc(i))
-				case(CDENS_TAG)
-					if (nike_p) call jfield(jf)
-					! Contract the tensors with B
-					call jvectors(jf)
-					call jvector_plot(jf)
-				case(INTGRL_TAG)
-					if (nike_p) then
-!                        call int_t_direct(it)  ! tensor integral
-						call int_s_direct(it)
-						call nl
-						call msg_info('Integrating |J|')
-						call int_mod_direct(it)
-					end if
-!                    call write_integral(it)
-				case(DIVJ_TAG)
-					if (nike_p) call divj(dj)
-					call divj_plot(dj)
-				case(EDENS_TAG)
-					if (nike_p) call edens(ed)
-					call edens_plot(ed)
-				case default
-					call msg_error('gimic(): Unknown operation!')
-				end select
-			end do
-		else
-			call ceo(pt)
-		end if
-
-		if (mpirun_p .and. .not.rerun_p) call del_parallel(pt)
-		if (int_p) then
-			call del_integral(it)
-			call del_grid(igrid)
-		end if
-		if (divj_p) then
-			call del_divj(dj)
-			call del_grid(dgrid)
-		end if
-		if (cdens_p) then
-			call del_jfield(jf)
-			call del_grid(grid)
-		end if
-		if (edens_p) then
-			call del_edens(ed)
-			call del_grid(egrid)
-		end if
-		if (xdens_p) call del_dens(xdens)
-		if (modens_p) call del_dens(modens)
-		if (spherical) call del_c2sop(c2s)
-	end subroutine
 
 	subroutine program_header
 		integer(I4) :: i,j,sz
@@ -463,9 +375,14 @@ call nl
 		call nl
 	end subroutine
 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!
+! Deprecated routines
+!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
 	! this routine is deprecated. everything is handled by getkw now
 	subroutine cmdline(inpfile)
-		use parallel_m
 		character(*), intent(out) :: inpfile
 		external getarg, iargc, getenv
 
@@ -503,6 +420,66 @@ call nl
 	subroutine usage()
 		call msg_out('usage: gimic [--mpi] [file]')
 		call exit(1)
+	end subroutine
+
+!
+! read in the input file into a buffer which can be broadcast 
+!
+
+	subroutine read_inpbuf(inpfile, inpbuf)
+		character(*), intent(in) :: inpfile
+		character, dimension(:), pointer :: inpbuf
+
+		external fgetc
+		integer(I4) :: i, n, err
+		integer(I4) :: fgetc 
+
+		write(str_g, 100) "Reading input from '", trim(inpfile),"'"
+		call msg_info(str_g)
+		open(99, file=trim(inpfile), status='old', action='read', iostat=err)
+
+		if (err /= 0 ) then
+			write(str_g, 100) "read_inpbuf(): open failed for '",&
+				trim(inpfile),"'"
+			call msg_error(str_g)
+			stop
+		end if
+
+		n=getfsize(99)
+		allocate(inpbuf(n))
+		do i=1,n
+			err=fgetc(99, inpbuf(i))
+		end do
+		close(99)
+100 format(a,a,a)
+	end subroutine
+
+!
+! read in the MOL file into a buffer which can be broadcast 
+!
+	subroutine read_molbuf(molbuf)
+		character(MAX_LINE_LEN), dimension(:), pointer :: molbuf
+		integer(I4) :: i, n, ios
+		character(BUFLEN) :: basfile
+		call getkw(input, 'basis', basfile)
+		call msg_note('Basis sets read from file: ' // trim(basfile))
+		call nl
+
+		open(BASFD, file=basfile, status='old', action='read', &
+			 form='formatted', iostat=ios)
+
+		if (ios /= 0 ) then
+			call msg_error('read_intgrl(): open failed.')
+			stop
+		end if
+
+		n=getnlines(BASFD)
+		allocate(molbuf(n))
+		do i=1,n
+			read(BASFD, '(200a)') molbuf(i) ! MAX_LINE_LEN
+		end do
+		close(BASFD)
+
 	end subroutine
 
 end program 
