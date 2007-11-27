@@ -1,13 +1,11 @@
 !
-! $Id$
+! Global parameters, types and routines
 !
-!include 'string_m.h'
 module globals_m
 	use precision_m
 	use teletype_m
 	use getkw_class
 	implicit none 
-	!include 'getkwf.h'
 
 	! file descriptors
 	integer, parameter :: BASFD=42
@@ -56,6 +54,7 @@ module globals_m
 	real(DP), parameter :: PM2AU = 1.889725949e+3
 
 	real(DP), dimension(3), parameter :: INITRV = 123456789.d5
+	real(DP), dimension(3), parameter :: SCREEN_THRS = 1.d-6
 	
 	real(DP), parameter :: D0=0.0D0,D1=1.0D0,D2=2.0D0,D4=4.0D0,D5=5.0D0
 	real(DP), parameter :: DP25=0.25D0, DP50=0.50D0, DP75=0.75D0
@@ -92,6 +91,8 @@ module globals_m
 		integer(I4) :: lmax, nctr, nshells, ncgto, ngto
 		integer, dimension(MAX_L+1) :: nctrps ! contractions per shell
 		type(contraction_t), dimension(:), pointer :: ctr ! s_n, p_n...
+		real(DP), dimension(:), pointer :: thrs ! screening
+		integer(I4), dimension(:), pointer :: pos ! starting idx for n:th ctr
 	end type
 
 	type contraction_t
