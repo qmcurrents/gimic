@@ -96,6 +96,7 @@ contains
 			end do
 			basis%thrs(i)=dist
 		end do
+!        basis%thrs=100.d0
 	end subroutine 
 
 !

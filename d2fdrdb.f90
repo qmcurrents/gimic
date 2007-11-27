@@ -1,6 +1,3 @@
-!
-! $Id$
-!
 
 module d2fdrdb_m
 	use globals_m
@@ -70,6 +67,9 @@ contains
 		type(atom_t), pointer :: atom
 		type(basis_t), pointer :: basis
 		type(contraction_t), pointer :: ctr
+
+		integer(I4), dimension(99) :: posvec
+		integer(I4) :: l, idx1, idx2
 		
 		! Check if we already have the result
 		if (r(1)==d2f%r(1) .and. r(2)==d2f%r(2) .and. r(3)==d2f%r(3)) then 
@@ -84,6 +84,8 @@ contains
 		call dfdr(d2f%dfr, r, drvec)
 		
 		idx=1
+		idx2=0
+		d2f%d2=0.d0
 		do i=1,natoms
 			call get_atom(d2f%mol,i,atom)
 			dbov=dbop(:,i)
@@ -92,15 +94,18 @@ contains
 			ror2=coord(2)
 			ror3=coord(3)
 			call get_basis(atom, basis)
-			nctr=get_nctr(basis)
-			do j=1,nctr
+			call filter_screened(basis, coord, posvec, nctr)
+			do l=1,nctr
+				j=posvec(l)
 				call get_contraction(atom, j, ctr)
+				idx=idx2+get_ctridx(basis, j)
 				ncomp=get_ncomp(ctr)
 				do k=1,ncomp
 					call d2f_comp(d2f%d2, idx)
 					idx=idx+1
 				end do
 			end do
+			idx2=idx2+get_ncgto(basis)
 		end do
 		d2fv=>d2f%d2
 	end subroutine 

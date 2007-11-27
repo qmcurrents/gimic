@@ -1,6 +1,3 @@
-!
-! $Id$
-!
 
 module dboper_m
 	use globals_m

@@ -81,16 +81,12 @@ contains
 			call get_coord(atom, coord)
 			call get_basis(atom, basis)
 			rr=r-coord
-!            nctr=get_nctr(basis)
 			call filter_screened(basis, rr, posvec, nctr)
 			do k=1,nctr 
 				j=posvec(k)
 				call get_contraction(atom, j, ctr)
-!                nccomp=get_nccomp(ctr)
 				idx=idx2+get_ctridx(basis, j)
-!                print *, idx, idx1
 				call cgto(rr, ctr, bfv%bf(idx:))
-!                idx=idx+nccomp
 			end do
 			idx2=idx2+get_ncgto(basis)
 		end do
