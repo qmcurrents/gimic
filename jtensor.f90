@@ -3,16 +3,16 @@
 ! for a particular spin case. The cost of calling jtensor twice is 
 ! very small, since no exponentials have to be calculated.
 ! 
-module jtensor_m
+module jtensor_class
 	use globals_m
-	use basis_m
-	use bfeval_m
-	use dens_m
-	use dfdb_m
-	use dfdr_m
-	use d2fdrdb_m
-	use dboper_m
-	use grid_m
+	use basis_class
+	use bfeval_class
+	use dens_class
+	use dfdb_class
+	use dfdr_class
+	use d2fdrdb_class
+	use dbop_class
+	use grid_class
 	use teletype_m
 	implicit none
 	
@@ -21,7 +21,7 @@ module jtensor_m
 		type(dens_t), pointer :: xdens
 		type(dbop_t) :: dop
 		type(dfdb_t) :: dbt
-		type(d2f_t) :: 	d2f
+		type(d2fdrdb_t) :: 	d2f
 		type(dfdr_t) :: dfr
 		type(bfeval_t) :: bfv
 		real(DP), dimension(:), pointer :: pdbf, denbf, dendb

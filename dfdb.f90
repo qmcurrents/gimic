@@ -1,9 +1,9 @@
 
-module dfdb_m
+module dfdb_class
 	use globals_m
-	use basis_m
-	use dboper_m
-	use bfeval_m
+	use basis_class
+	use dbop_class
+	use bfeval_class
 	use teletype_m
 	implicit none
 	

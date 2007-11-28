@@ -1,8 +1,8 @@
 
-module dens_m
+module dens_class
 	use globals_m
-	use basis_m
-	use reorder_m
+	use basis_class
+	use reorder_class
 	implicit none
 
 	public init_dens, read_dens, set_dens, set_pdens

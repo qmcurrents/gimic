@@ -1,7 +1,3 @@
-!
-! $Id$
-!
-
 module teletype_m
 	use kinds_m
 	implicit none

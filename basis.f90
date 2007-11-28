@@ -7,7 +7,7 @@
 ! in one matrix, if need be.
 !
 
-module basis_m
+module basis_class
 	use globals_m
 	use intgrl_m
 	use gtodefs_m
@@ -18,18 +18,10 @@ module basis_m
 	public get_coord, get_symbol, get_basis, get_atom, get_nctr
 	public get_contraction, get_ncomp, get_nccomp, get_nccgto
 	public filter_screened, get_ctridx
-	public molecule_t, basis_t
 	
 	interface get_ncgto
 		module procedure get_ncgto_mol, get_ncgto_bas
 	end interface 
-
-	type molecule_t
-		integer(I4) :: natoms
-		type(atom_t), dimension(:), pointer :: atoms
-		integer(I4) :: ngto, ncgto, nccgto
-		type(cao2sao_t), pointer :: c2s
-	end type
 
 	private
 contains

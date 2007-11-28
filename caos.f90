@@ -5,8 +5,8 @@
 module caos_m
 	use globals_m
 	use gtodefs_m
-	use basis_m
-	use cao2sao_m
+	use basis_class
+	use cao2sao_class
 	implicit none
 	
 	public  cgto, dcgto

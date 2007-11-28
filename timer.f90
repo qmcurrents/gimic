@@ -1,7 +1,3 @@
-!
-! $Id$
-!
-
 module timer_m
 	use globals_m
 	use teletype_m

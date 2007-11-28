@@ -2,12 +2,12 @@
 ! Basis function evaluator
 !
 
-module bfeval_m
+module bfeval_class
 	use globals_m
-	use basis_m
+	use basis_class
 	use gtodefs_m
 	use caos_m
-	use cao2sao_m
+	use cao2sao_class
 	implicit none
 
 	public bfeval, init_bfeval, del_bfeval, bfeval_t

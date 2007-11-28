@@ -1,6 +1,6 @@
-module reorder_m
+module reorder_class
 	use globals_m
-	use basis_m
+	use basis_class
 	implicit none
 
 	type reorder_t

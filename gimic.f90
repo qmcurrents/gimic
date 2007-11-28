@@ -5,7 +5,7 @@
 program gimic
 	use globals_m  
 	use teletype_m
-	use basis_m
+	use basis_class
 	use timer_m
 	use mpi_m
     implicit none 
@@ -96,17 +96,17 @@ contains
 
 	subroutine cdens
 		use globals_m
-		use basis_m
-		use cao2sao_m
-		use dens_m
-		use jtensor_m
-		use jfield_m
+		use basis_class
+		use cao2sao_class
+		use dens_class
+		use jtensor_class
+		use jfield_class
 		use caos_m
-		use grid_m
+		use grid_class
 		use gaussint_m
-		use integral_m
-		use divj_m
-		use edens_m
+		use integral_class
+		use divj_class
+		use edens_class
 
 		type(jfield_t) :: jf
 		type(grid_t) :: grid, igrid, dgrid, egrid
@@ -230,7 +230,7 @@ contains
 	end subroutine
 
 	subroutine setup_grids(calc, grid, igrid, dgrid, egrid)
-		use grid_m
+		use grid_class
 		integer(I4), dimension(:) :: calc
 		type(grid_t) :: grid, igrid, dgrid, egrid
 		logical :: p, divj_p, int_p, cdens_p, edens_p

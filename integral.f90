@@ -3,11 +3,11 @@
 ! Written by Jonas Juselius, University of Helsinki, 2003 (I think).
 !
 
-module integral_m
+module integral_class
 	use globals_m
-	use grid_m
-	use jfield_m
-	use jtensor_m
+	use grid_class
+	use jfield_class
+	use jtensor_class
 	use gaussint_m
 	use lip_m
 	use teletype_m
@@ -22,7 +22,7 @@ module integral_m
 
 	public init_integral, del_integral, integral_t
 	public integrate, int_t_direct, int_s_direct, int_t_2d, lipton
-	public integral_master, integral_slave, write_integral, int_mod_direct
+	public integral_classaster, integral_slave, write_integral, int_mod_direct
 	
 	private 
 	
@@ -718,7 +718,7 @@ contains
 		return
 	end subroutine
 
-	subroutine integral_master(it, who)
+	subroutine integral_classaster(it, who)
 		use mpi_m
 		type(integral_t) :: it
 		integer(I4), intent(in) :: who

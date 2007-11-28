@@ -1,16 +1,16 @@
-o fix configure / paths
-o install tools
++ fix configure / paths
++ release and version control
++ install tools
 o documentation
-o debian pack
 o parallel magnetic field
 o normalize magnetic field
-o fix turbo2mol.py two letter atoms
++ fix turbo2mol.py two letter atoms
 o add magnet direction to xyz files
 o add para- diamag check
-o clean up
-o move basis set out of molecule_t
-o jfield should not be a class
-o "classify" proper classes
-o screening
 
+CLEAN UP:
+o debian pack
+- move basis set out of molecule_t
+o jfield should not be a class
++ "classify" proper classes
 

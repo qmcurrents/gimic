@@ -1,7 +1,7 @@
 
-module dboper_m
+module dbop_class
 	use globals_m
-	use basis_m
+	use basis_class
 	use teletype_m
 	implicit none
 	

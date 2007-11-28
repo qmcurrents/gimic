@@ -1,6 +1,3 @@
-!
-! $Id$
-!
 
 module tensor_m
 	use kinds_m

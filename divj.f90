@@ -4,11 +4,11 @@
 !  in contrast to the basis set convergence and gauge independence.
 !
 
-module divj_m
+module divj_class
 	use globals_m
-	use grid_m
-	use jfield_m
-	use jtensor_m
+	use grid_class
+	use jfield_class
+	use jtensor_class
 	use teletype_m
 	implicit none
 
@@ -21,7 +21,7 @@ module divj_m
 
 	public divj_direct, divj_direct_plt, init_divj, del_divj
 	public divj_plot, set_divj, divj_t, divj
-	public divj_master, divj_slave
+	public divj_classaster, divj_slave
 	private
 	
 	real(DP), dimension(5), parameter :: wgt=(/2.d0,-16.d0,0.d0,16.d0,-2.d0/)
@@ -256,7 +256,7 @@ contains
 		div=djx+djy+djz
 	end subroutine
 
-	subroutine divj_master(dj, who)
+	subroutine divj_classaster(dj, who)
 		use mpi_m
 		type(divj_t) :: dj
 		type(grid_t) :: grid

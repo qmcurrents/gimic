@@ -2,7 +2,7 @@
 ! Pretty printer module
 !
 
-module pprinter
+module pprinter_m
 	use kinds_m
 	implicit none
 

@@ -4,11 +4,11 @@
 ! This module is bit of a mess...
 ! 
 
-module grid_m
+module grid_class
 	use globals_m
 	use tensor_m
 	use gaussint_m
-	use basis_m
+	use basis_class
 	use teletype_m
 	implicit none
 

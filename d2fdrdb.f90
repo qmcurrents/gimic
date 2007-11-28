@@ -1,16 +1,16 @@
 
-module d2fdrdb_m
+module d2fdrdb_class
 	use globals_m
-	use basis_m
-	use dboper_m
-	use bfeval_m
-	use dfdr_m
+	use basis_class
+	use dbop_class
+	use bfeval_class
+	use dfdr_class
 	use teletype_m
 	implicit none
 
-	public init_d2fdrdb, del_d2fdrdb, d2fdrdb, d2f_t
+	public init_d2fdrdb, del_d2fdrdb, d2fdrdb, d2fdrdb_t
 
-	type d2f_t
+	type d2fdrdb_t
 		type(molecule_t), pointer :: mol
 		type(dbop_t), pointer :: dop
 		type(dfdr_t), pointer :: dfr
@@ -28,7 +28,7 @@ module d2fdrdb_m
 contains
 
 	subroutine init_d2fdrdb(d2f, mol, dop, dfr, bfv)
-		type(d2f_t) :: d2f
+		type(d2fdrdb_t) :: d2f
 		type(molecule_t), target :: mol
 		type(dbop_t), target :: dop
 		type(dfdr_t), target :: dfr
@@ -46,7 +46,7 @@ contains
 	end subroutine
 
 	subroutine del_d2fdrdb(d2f)
-		type(d2f_t) :: d2f
+		type(d2fdrdb_t) :: d2f
 		if (associated(d2f%d2)) then
 			deallocate(d2f%d2)
 			nullify(d2f%d2)
@@ -57,7 +57,7 @@ contains
 	end subroutine
 
 	subroutine d2fdrdb(d2f, r, d2fv)
-		type(d2f_t) :: d2f
+		type(d2fdrdb_t) :: d2f
 		real(DP), dimension(:), intent(in) :: r
 		real(DP), dimension(:,:), pointer :: d2fv
 	

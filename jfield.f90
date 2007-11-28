@@ -1,16 +1,16 @@
 ! This module calulates the current field by looping over gridpoints and 
-! calling the appropriate routines in jtensor_m
+! calling the appropriate routines in jtensor_class
 !
 ! Ok, this is really a mess...
 ! This modules needs a seriuos clean up. I have been adding, and adding, and
 ! adding stuff and it's not pretty.
 !
 
-module jfield_m
+module jfield_class
 	use globals_m
-	use jtensor_m
-	use grid_m
-	use basis_m
+	use jtensor_class
+	use grid_class
+	use basis_class
 	use teletype_m
 	use mpi_m
 	implicit none
@@ -26,7 +26,7 @@ module jfield_m
 
 	public init_jfield, del_jfield, jfield, jvectors, jfield_direct
 	public jfield_t, get_jvectors, get_jtensors, jvector_plot
-	public set_jtensors, jfield_master, jfield_slave
+	public set_jtensors, jfield_classaster, jfield_slave
 	
 	private
 
@@ -502,7 +502,7 @@ contains
 		print '(a,e)', ' Trace:', jt(1,1)+jt(2,2)+jt(3,3)
 	end subroutine
 
-	subroutine jfield_master(jf, who)
+	subroutine jfield_classaster(jf, who)
 		use mpi_m
 		type(jfield_t) :: jf
 		integer(I4), intent(in) ::  who

@@ -105,6 +105,13 @@ module globals_m
 		real(DP), dimension(:), pointer :: ncc ! norm cc:s
 	end type
 
+	type molecule_t
+		integer(I4) :: natoms
+		type(atom_t), dimension(:), pointer :: atoms
+		integer(I4) :: ngto, ncgto, nccgto
+		type(cao2sao_t), pointer :: c2s
+	end type
+
 	type cao2sao_t
 		real(DP), dimension(:,:), pointer :: po
 	end type

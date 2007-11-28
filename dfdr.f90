@@ -1,10 +1,10 @@
 
-module dfdr_m
+module dfdr_class
 	use globals_m
-	use basis_m
+	use basis_class
 	use caos_m
 	use gtodefs_m
-	use cao2sao_m
+	use cao2sao_class
 	implicit none
 
 	public init_dfdr, del_dfdr, dfdr, dfdr_t

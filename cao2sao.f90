@@ -1,6 +1,4 @@
 !
-! $Id$
-!
 ! Set up the projection operators for transforming from cartesian to 
 ! spherical angular basis as described in "Molecular Electronic-Structure
 ! Theory" by Helgaker et al. [Section 9.1.2].
@@ -10,11 +8,11 @@
 ! Sigh.
 !
 
-module cao2sao_m
+module cao2sao_class
 	use globals_m
 	use gtodefs_m
 	use factorial_m
-	use basis_m
+	use basis_class
 	implicit none
 	
 	public init_c2sop, del_c2sop, cao2sao

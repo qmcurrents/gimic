@@ -3,18 +3,18 @@
 ! Coded by Jonas Juselius <jonas@iki.fi> 2003
 ! 
 
-module edens_m
+module edens_class
 	use globals_m
-	use basis_m
-	use bfeval_m
-	use dens_m
-	use grid_m
+	use basis_class
+	use bfeval_class
+	use dens_class
+	use grid_class
 	use teletype_m
 	implicit none
 	
 	public init_edens, del_edens, edens_t
 	public edens_direct, edens, edens_plot
-	public edens_master, edens_slave
+	public edens_classaster, edens_slave
 	
 	type edens_t
 		real(DP), dimension(:), pointer :: tmp
@@ -163,7 +163,7 @@ contains
 		end do
 	end subroutine
 
-	subroutine edens_master(ed, who)
+	subroutine edens_classaster(ed, who)
 		use mpi_m
 		type(edens_t) :: ed
 		integer(I4), intent(in) :: who

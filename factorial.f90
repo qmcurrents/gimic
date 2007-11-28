@@ -1,6 +1,3 @@
-!
-! $Id$
-!
 
 module factorial_m
 	use kinds_m

@@ -20,8 +20,8 @@
 ! 
 
 module getkw_class
-    use kinds
-	use pprinter
+    use kinds_m
+	use pprinter_m
     implicit none
 	
 	public new_getkw, del_getkw, getkw, getkw_ptr, setkw, save_keys

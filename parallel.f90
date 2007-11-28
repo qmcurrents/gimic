@@ -2,15 +2,15 @@
 ! This module contains routines to handle communication between MPI nodes.
 !
 
-module parallel_m
+module parallel_class
 	use globals_m
 	use mpi_m
-	use grid_m 
-	use jfield_m 
-	use divj_m
-	use dens_m
-	use edens_m
-	use integral_m
+	use grid_class 
+	use jfield_class 
+	use divj_class
+	use dens_class
+	use edens_class
+	use integral_class
 	use teletype_m
 	implicit none
 
@@ -108,13 +108,13 @@ contains
 			gotit=gotit+1
 			select case(job)
 				case(INTGRL_TAG)
-					call integral_master(pt%it, who)
+					call integral_classaster(pt%it, who)
 				case(CDENS_TAG)
-					call jfield_master(pt%jf, who)
+					call jfield_classaster(pt%jf, who)
 				case(DIVJ_TAG)
-					call divj_master(pt%dj, who)
+					call divj_classaster(pt%dj, who)
 				case(EDENS_TAG)
-					call edens_master(pt%ed, who)
+					call edens_classaster(pt%ed, who)
 				case default
 					call msg_error('sheduler(): Unknown command')
 					call exit(1)

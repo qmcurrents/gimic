@@ -1,6 +1,3 @@
-!
-! $Id$
-!
 
 module lip_m
 	use globals_m
