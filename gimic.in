@@ -15,11 +15,10 @@ import re
 import optparse
 import getkw
 
-package_version=1.5.1
+package_version="1.5.1"
 
 def main():
-	usage="GIMIC %s\nusage: %prog [options] [config] density" %
-	(package_version)
+	usage="%prog [options] [config] density"
 	cmdln=optparse.OptionParser(usage=usage)
 	cmdln.add_option('-t', action='store', dest='title',
 			help='title of job')
