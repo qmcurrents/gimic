@@ -4,7 +4,7 @@
 # Written by Jonas Juselius <jonas@iki.fi>
 #
 
-AC_INIT([GIMIC],[1.0],[jonas@iki.fi])
+AC_INIT([GIMIC],[1.2],[jonas@iki.fi])
 AC_CONFIG_SRCDIR(gimic.f90)
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_AUX_DIR(config)
@@ -143,5 +143,5 @@ AC_SUBST(top_bindir,['$(topdir)'])
 AC_SUBST(top_includedir,['$(topdir)/include'])
 AC_SUBST(top_libdir,['$(topdir)/lib'])
 
-AC_CONFIG_FILES([Makefile make.config make.rules gimic])
+AC_CONFIG_FILES([Makefile make.config make.rules tools/Makefile])
 AC_OUTPUT

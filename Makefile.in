@@ -1,7 +1,6 @@
 #
-# $Id$
+# Written by Jonas Juselius <jonas@iki.fi>
 #
-
 #DEBUG=1
 #RANGE=1
 #PROF=1
@@ -37,7 +36,7 @@ gimic_libs:=$(LIBS)
 all: $(INST_PROGS)
 
 gimic: gimic.in
-	sed 's/@inst_bindir@/$(subst /,\/,$(inst_bindir))/; s/@inst_libdir@/$(subst /,\/,$(inst_libdir))/; s/@PYTHON@/$(PYTHON_BIN)/' $< > $@
+	sed 's/@inst_bindir@/$(subst /,\/,$(inst_bindir))/; s/@inst_libdir@/$(subst /,\/,$(inst_libdir))/; s/@python_bin@/$(PYTHON_BIN)/' $< > $@
 	chmod 755 $@
 
 gimic.x: $(gimic_objs) 

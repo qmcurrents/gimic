@@ -1,6 +1,6 @@
-#
-# Rules.mk
-# written by Jonas Juselius <jonas@iki.fi> Tue Dec  4 11:41:04 EET 2001
+# vim:filetype=make
+# make.rules
+# Written by Jonas Juselius <jonas@iki.fi> Tue Dec  4 11:41:04 EET 2001
 #
 
 .PHONY: all
@@ -17,7 +17,7 @@ tags: $(tag_src)
 
 .PHONY: dist
 dist: 
-	git-tar-tree HEAD $(DIST_NAME) |gzip -c > $(DIST_TARNAME).tgz
+	git-archive HEAD $(DIST_NAME) |gzip -c > $(DIST_TARNAME).tgz
 
 .PHONY: clean realclean distclean
 clean:
@@ -31,6 +31,10 @@ ifneq ($(FC_MODEXT),)
 endif
 ifneq ($(INST_PROGS),)
 	@set -e; for i in $(INST_PROGS); do \
+	echo "rm -f $$i"; rm -f $$i; done
+endif
+ifneq ($(INST_SCRIPTS),)
+	@set -e; for i in $(INST_SCRIPTS); do \
 	echo "rm -f $$i"; rm -f $$i; done
 endif
 ifneq ($(INST_LIBS),)
@@ -47,7 +51,7 @@ distclean: realclean
 	-rm -rf autom4te.cache
 
 .PHONY: install install_bin install_lib install_modules  install_data
-.PHONY: install_libexec
+.PHONY: install_libexec install_scripts
 
 inst_target:=
 ifneq ($(INST_LIBS),)
@@ -63,16 +67,20 @@ ifneq ($(INST_PROGS),)
 	inst_targets+=install_bin
 endif
 ifneq ($(INST_INCLUDES),)
-	INST_INCLUDES:=$(addprefix "$(includedir)/",$(INST_INCLUDES))
+	INST_INCLUDES:=$(addprefix $(includedir)/,$(INST_INCLUDES))
 	inst_targets+=install_includes
 endif
 ifneq ($(INST_MODULES),)
-	INST_MODULES:=$(addprefix "$(includedir)/",$(INST_MODULES))
+	INST_MODULES:=$(addprefix $(includedir)/,$(INST_MODULES))
 	inst_targets+=install_modules
 endif
 ifneq ($(INST_DATA),)
-	INST_DATA:=$(addprefix "$(datadir)/",$(INST_DATA))
+	INST_DATA:=$(addprefix $(datadir)/,$(INST_DATA))
 	inst_targets+=install_data
+endif
+ifneq ($(INST_SCRIPTS),)
+	INST_SCRIPTS:=$(addprefix $(scriptdir)/,$(INST_SCRIPTS))
+	inst_targets+=install_scripts
 endif
 
 install: $(inst_targets)
@@ -110,6 +118,15 @@ ifneq ($(INST_DATA),)
 	for i in $(INST_DATA); do \
 		$(INSTALL_DATA) $$i $(inst_datadir); \
 		echo "Installed $$i in $(inst_datadir)"; \
+	done
+endif
+
+install_scripts: $(INST_SCRIPTS) $(inst_bindir) 
+ifneq ($(INST_SCRIPTS),)
+	@set -e; \
+	for i in $(INST_SCRIPTS); do \
+		$(INSTALL_PROGRAM) $$i $(inst_bindir); \
+		echo "Installed $$i in $(inst_bindir)"; \
 	done
 endif
 

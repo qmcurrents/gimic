@@ -1,0 +1,28 @@
+#!/bin/sh
+
+ACES2=@inst_bindir@
+
+tmpdir="tmp.$$"
+mkdir $tmpdir
+cd $tmpdir
+
+cp ../ZMAT ZMAT.sym
+sed 's/SYMMETRY=ON/SYMMETRY=OFF/' ZMAT.sym >ZMAT
+
+if [ -d ../GENBAS ]; then 
+	ln -s ../GENBAS .
+else
+	cp $ACES/basis/GENBAS .
+fi
+
+if [ -d ../ECPDATA ]; then 
+	ln -s ../ECPDATA .
+else
+	cp $ACES/basis/ECPDATA .
+fi
+
+$ACES2/bin/xjoda
+cp MOL ../mol
+
+cd ..
+rm -rf $tmpdir

@@ -1,12 +1,11 @@
-#!/usr/bin/env python2.2
+#!/usr/bin/env @python_bin@
 #
 # This is a _HUGE_ mess... I'll clean it up when I feel like it.
 #
-# $Id$
 #
 
 import sys, string, re
-sys.path.append('/home/jonas/lib/python')
+sys.path.append('@inst_libdir@')
 import QCTools
 from Elements import PeriodicTable as PTab
 
@@ -31,7 +30,7 @@ def main():
 		sym=string.upper(a.element.symbol)
 		b=basis[sym]
 		print float(a.element.number),'  ', 1, b 
-		print "%2c%2i%20.12f%20.12f%20.12f" % \
+		print "%2s%2i%20.12f%20.12f%20.12f" % \
 			(sym, 1, a.coord[0], a.coord[1], a.coord[2])
 		for c in b.ctr_list:
 			print c,
