@@ -1,4 +1,4 @@
-#!/usr/bin/env @PYTHON@
+#!/usr/bin/env @python_bin@
 # -*- coding: utf-8 -*-
 # vim:filetype=python:
 #
