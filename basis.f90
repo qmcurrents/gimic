@@ -1,6 +1,4 @@
 !
-! $Id$
-!
 ! Handles both segmented and general contractions
 !
 ! Contractions are stored in individual arrays, which are "stored" in a
@@ -19,6 +17,7 @@ module basis_m
 	public get_natoms, get_ngto, get_ncgto, set_c2sop, get_c2sop
 	public get_coord, get_symbol, get_basis, get_atom, get_nctr
 	public get_contraction, get_ncomp, get_nccomp, get_nccgto
+	public filter_screened, get_ctridx
 	public molecule_t, basis_t
 	
 	interface get_ncgto
@@ -57,6 +56,10 @@ contains
 			call normalize(atoms(i)%basis)
 		end do
 		call nl
+		call msg_out('Calculating screening thresholds')
+		do i=1,natoms
+			call setup_screening(atoms(i)%basis)
+		end do
 
 		do i=1,natoms
 			call print_atom_data(atoms(i),i)
@@ -68,6 +71,56 @@ contains
 		call nl
 
 77		format(a,i4)
+	end subroutine
+!
+! Loop over ctr and set up screening thresholds
+! 
+	subroutine setup_screening(basis)
+		type(basis_t), intent(inout) :: basis
+
+		integer(I4) :: i,j,l
+		real(DP) :: xp, min_xp, x, dist
+
+		do i=1,basis%nctr
+			min_xp=1.d+15
+			x=1.d+15
+			l=basis%ctr(i)%l
+			do j=1,basis%ctr(i)%npf
+				xp=basis%ctr(i)%xp(j)
+				if ( xp < min_xp) min_xp=xp
+			end do
+			dist=0.d0
+			do while (x > SCREEN_THRS)
+				dist=dist+0.25
+				x=dist**l*exp(-min_xp*dist**2)
+			end do
+			basis%thrs(i)=dist
+		end do
+!        basis%thrs=100.d0
+	end subroutine 
+
+!
+! return an index vector with congtributing contractions after screening has
+! been applied
+!
+	subroutine filter_screened(basis, r, idxv, n) 
+		type(basis_t), intent(in) :: basis
+		real(DP), dimension(3), intent(in) :: r
+		integer(I4), dimension(:), intent(out) :: idxv
+		integer(I4), intent(out) :: n
+
+		real(DP) :: r2
+		integer(I4) :: i,j
+
+		r2=sqrt(sum(r**2))
+		j=1
+		do i=1,basis%nctr
+			if (r2 <= basis%thrs(i) ) then
+				idxv(j)=i
+				j=j+1
+			end if
+		end do
+		n=j-1
 	end subroutine
 
 !
@@ -166,13 +219,20 @@ contains
 			basis%ncgto=0
 			do k=1,basis%nctr
 				ctr=>basis%ctr(k)
-				basis%ngto=basis%ngto+ctr%npf*Ctr%ncomp
+
+				basis%ngto=basis%ngto+ctr%npf*ctr%ncomp
 				basis%ncgto=basis%ncgto+ctr%ncomp
 
-				bt%ngto=bt%ngto+ctr%npf*Ctr%ncomp
+				bt%ngto=bt%ngto+ctr%npf*ctr%ncomp
 				bt%ncgto=bt%ncgto+ctr%ncomp
 				bt%nccgto=bt%nccgto+ctr%nccomp
 			end do
+			basis%pos=1
+			do k=2,basis%nctr
+				basis%pos(k)=basis%pos(k-1)+basis%ctr(k-1)%nccomp
+			end do
+!            write(89,*) basis%pos
+!            write(89,*)
 		end do
 	end subroutine
 
@@ -251,6 +311,8 @@ contains
 				end if
 			end do
 			deallocate(abas%ctr)
+			deallocate(abas%thrs)
+			deallocate(abas%pos)
 			nullify(abas%ctr)
 		end if
 	end subroutine 
@@ -386,6 +448,14 @@ contains
 
 		n=mm%nctr
 	end function 
+
+	function get_ctridx(bas, idx) result(ctridx)
+		type(basis_t), intent(in) :: bas
+		integer(I4), intent(in) :: idx
+		integer(I4) :: ctridx
+
+		ctridx=bas%pos(idx)
+	end function
 
 	! integrate s-funcs for debugging purpouses...
 !	subroutine s_int(Ctr)

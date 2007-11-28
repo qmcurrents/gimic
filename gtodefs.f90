@@ -1,6 +1,4 @@
 !
-! $Id$
-!
 ! Definitions of the angular part for cartesian GTOs. 
 ! GTOMAP maps the set of {i,j,k} to the correspnding index in the GTx arrays.
 !

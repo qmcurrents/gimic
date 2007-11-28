@@ -1,6 +1,4 @@
 !
-! $Id$
-!
 ! Basis function evaluator
 !
 
@@ -23,7 +21,7 @@ module bfeval_m
 
 	private
 	
-	integer(I4) :: i, j, natoms, nctr, ncomp, nccomp, idx
+	integer(I4) :: i, j, k, natoms, nctr, ncomp, nccomp, idx
 	type(atom_t), pointer :: atom
 	type(basis_t), pointer :: basis
 	type(contraction_t), pointer :: ctr
@@ -45,26 +43,6 @@ contains
 		bfv%r=INITRV
 	end subroutine
 
-	subroutine setup_screening(bfv)
-		type(bfeval_t) :: bfv
-
-		natoms=get_natoms(bfv%mol)
-		
-		idx=1
-		do i=1,natoms
-			call get_atom(bfv%mol,i,atom)
-			call get_coord(atom, coord)
-			call get_basis(atom, basis)
-			nctr=get_nctr(basis)
-			do j=1,nctr 
-				call get_contraction(atom, j, ctr)
-				nccomp=get_nccomp(ctr)
-				call cgto(rr, ctr, foo)
-				idx=idx+nccomp
-			end do
-		end do
-	end subroutine
-
 	subroutine del_bfeval(bfv)
 		type(bfeval_t) :: bfv
 		if (associated(bfv%bf)) then
@@ -83,6 +61,9 @@ contains
 		real(DP), dimension(3), intent(in) :: r
 		real(DP), dimension(:), pointer :: ans
 
+		integer(I4), dimension(99) :: posvec
+		integer(I4) :: idx1, idx2
+
 		! Check if we already have the result
 		if (r(1)==bfv%r(1) .and. r(2)==bfv%r(2) .and. r(3)==bfv%r(3)) then 
 			ans=>bfv%bf
@@ -93,18 +74,21 @@ contains
 		natoms=get_natoms(bfv%mol)
 		
 		idx=1
+		idx2=0
+		bfv%bf=0.d0
 		do i=1,natoms
 			call get_atom(bfv%mol,i,atom)
 			call get_coord(atom, coord)
-			rr=r-coord
 			call get_basis(atom, basis)
-			nctr=get_nctr(basis)
-			do j=1,nctr 
+			rr=r-coord
+			call filter_screened(basis, rr, posvec, nctr)
+			do k=1,nctr 
+				j=posvec(k)
 				call get_contraction(atom, j, ctr)
-				nccomp=get_nccomp(ctr)
-				call cgto(rr, ctr, bfv%bf(idx:idx+nccomp-1))
-				idx=idx+nccomp
+				idx=idx2+get_ctridx(basis, j)
+				call cgto(rr, ctr, bfv%bf(idx:))
 			end do
+			idx2=idx2+get_ncgto(basis)
 		end do
 		if (spherical) then
 			call cao2sao(bfv%mol%c2s, bfv%bf, bfv%sbf)

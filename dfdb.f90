@@ -1,6 +1,3 @@
-!
-! $Id$
-!
 
 module dfdb_m
 	use globals_m
@@ -24,7 +21,7 @@ module dfdb_m
 	real(DP), dimension(:,:), allocatable, target, save :: xvec
 
 contains
-subroutine init_dfdb(dbt, mol, dop, bfv)
+	subroutine init_dfdb(dbt, mol, dop, bfv)
 		type(dfdb_t) :: dbt
 		type(molecule_t), target :: mol
 		type(dbop_t), target :: dop
