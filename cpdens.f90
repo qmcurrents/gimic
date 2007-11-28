@@ -4,7 +4,7 @@
 ! 
 !********************************************************************** 
 module cpdcom
-    use precision_m
+    use kinds_m
 	implicit none
 	
 	integer(I4), dimension(8,8) :: dirprd
@@ -62,7 +62,7 @@ end module
 !
 !********************************************************************** 
 module sympack
-    use precision_m
+    use kinds_m
 	use cpdcom
 	implicit none
 
@@ -221,7 +221,7 @@ end module
 ! 
 !********************************************************************** 
 module mocoef
-    use precision_m
+    use kinds_m
 	use cpdcom
 	use sympack
 	implicit none
@@ -268,7 +268,7 @@ end module
 !
 !********************************************************************** 
 module densmat
-    use precision_m
+    use kinds_m
 	use cpdcom
 	use mocoef
 	implicit none
@@ -345,7 +345,7 @@ end module
 !
 !********************************************************************** 
 module ccpdensmod
-    use precision_m
+    use kinds_m
 	use cpdcom
 	implicit none
 	
@@ -491,7 +491,7 @@ end module
 ! 
 !********************************************************************** 
 module pdensmat
-    use precision_m
+    use kinds_m
 	use cpdcom
 	use mocoef
 	use sympack
@@ -824,7 +824,7 @@ end module
 !********************************************************************** 
 
 program cpdens
-    use precision_m
+    use kinds_m
 	use cpdcom
 	use mocoef
 	use densmat

@@ -3,7 +3,7 @@
 !
 
 module teletype_m
-	use precision_m
+	use kinds_m
 	implicit none
 
 	integer(I4), parameter :: STDOUT=6

@@ -3,7 +3,7 @@
 !
 
 module factorial_m
-	use precision_m
+	use kinds_m
 	implicit none
 	public fact, fact2, binom
 	contains

@@ -1,5 +1,5 @@
 module aces2_m
-	use kinds
+	use kinds_m
 	implicit double precision (a-h,o-z)
 	integer, parameter :: ABEL=8
 

@@ -1,5 +1,5 @@
 module mpi_m
-	use precision_m
+	use kinds_m
 	implicit none
 #ifdef HAVE_MPI
 	include 'mpif.h'

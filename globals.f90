@@ -3,7 +3,7 @@
 !
 !include 'string_m.h'
 module globals_m
-	use precision_m
+	use kinds_m
 	use teletype_m
 	use getkw_class
 	implicit none 

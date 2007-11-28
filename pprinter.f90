@@ -1,10 +1,9 @@
 !
-! $Id$
-!
 ! Pretty printer module
+!
 
 module pprinter
-	use kinds
+	use kinds_m
 	implicit none
 
 	integer(SP), parameter :: STDOUT=6

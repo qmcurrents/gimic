@@ -3,7 +3,7 @@
 !
 
 module tensor_m
-	use precision_m
+	use kinds_m
 	implicit none
 	
 	interface operator(.tp.)
