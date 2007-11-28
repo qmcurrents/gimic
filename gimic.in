@@ -15,8 +15,11 @@ import re
 import optparse
 import getkw
 
+package_version=1.5.1
+
 def main():
-	usage="usage: %prog [options] [config] density"
+	usage="GIMIC %s\nusage: %prog [options] [config] density" %
+	(package_version)
 	cmdln=optparse.OptionParser(usage=usage)
 	cmdln.add_option('-t', action='store', dest='title',
 			help='title of job')
@@ -32,7 +35,13 @@ def main():
 		   help='be verbose')
 	cmdln.add_option('-q','--quiet', action='store_false', dest='verbose',
 		   help='be quiet')
+	cmdln.add_option('-V','--version', action='store_true', dest='version',
+		   help='print version number')
 	(opts, args)=cmdln.parse_args()
+
+	if opts.version:
+		print "GIMIC", package_version
+		sys.exit(0)
 
 	density=None
 	inpfil=None

@@ -15,9 +15,10 @@ TAGS: $(tag_src)
 tags: $(tag_src)
 	$(CTAGS) $(tag_src)
 
-.PHONY: dist
-dist: 
-	git-archive HEAD $(DIST_NAME) |gzip -c > $(DIST_TARNAME).tgz
+.PHONY: archive
+archive:
+	git-archive --format=tar --prefix=$(ARCHIVE_NAME)/ HEAD | gzip -c >\
+		$(ARCHIVE_TARNAME).tgz
 
 .PHONY: clean realclean distclean
 clean:

@@ -7,6 +7,8 @@ module globals_m
 	use getkw_class
 	implicit none 
 
+	character(16), parameter :: GIMIC_VERSION='1.5.1'
+
 	! file descriptors
 	integer, parameter :: BASFD=42
 	integer, parameter :: XDFD=43
@@ -58,6 +60,7 @@ module globals_m
 	
 	real(DP), parameter :: D0=0.0D0,D1=1.0D0,D2=2.0D0,D4=4.0D0,D5=5.0D0
 	real(DP), parameter :: DP25=0.25D0, DP50=0.50D0, DP75=0.75D0
+
 	
 	! default filenames
 	character(*), parameter :: DEFAULT_INPUT='gimic.inp'

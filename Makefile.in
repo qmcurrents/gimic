@@ -33,7 +33,7 @@ gimic_objs=getkw.o precision.o globals.o teletype.o intgrl.o factorial.o \
 gimic_src=$(wildcard *.f90 *.c)
 gimic_libs:=$(LIBS) 
 
-all: $(INST_PROGS)
+all: $(INST_PROGS) 
 
 gimic: gimic.in
 	sed 's/@inst_bindir@/$(subst /,\/,$(inst_bindir))/; s/@inst_libdir@/$(subst /,\/,$(inst_libdir))/; s/@python_bin@/$(PYTHON_BIN)/' $< > $@
