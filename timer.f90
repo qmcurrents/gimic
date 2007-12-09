@@ -2,7 +2,6 @@ module timer_m
 	use globals_m
 	use teletype_m
 	implicit none
-	external etime, dtime, fdate
 
 	real(4) :: etime, dtime
 	character(BUFLEN) :: fdate

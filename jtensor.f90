@@ -68,15 +68,15 @@ contains
 		call getkw(input, 'cdens.paramag', paramag_p)
 		if (uhf_p) call getkw(input, 'cdens.spin_density', spin_density)
 
-		if (diamag_p == 0) then
+		if (.not.diamag_p) then
 			call msg_info( 'Diamagnetic contributions not calculated!')
 			call nl
 		end if
-		if (paramag_p == 0) then
+		if (.not.paramag_p) then
 			call msg_info( 'Paramagnetic contributions not calculated!')
 			call nl
 		end if
-		if (diamag_p == 0 .and. paramag_p == 0) then
+		if ((.not.diamag_p).and.(.not.paramag_p)) then
 			call msg_out( '    ...this does not make sense...')
 			call nl
 			call msg_critical( '    PLEASE SEEK PROFESSIONAL HELP, ASAP!  ')
@@ -361,12 +361,12 @@ contains
 		! annihilate paramagnetic contribution
 		if (.not.paramag_p)	then
 			ct=D0
-			bert_is_evil=1
+			bert_is_evil=.true.
 		end if
 		! annihilate diamagnetic  contribution
 		if (.not.diamag_p) then
 			dpd=D0    
-			bert_is_evil=1
+			bert_is_evil=.true.
 		end if
 
 		ct(1,2)=ct(1,2)+dpd(3)

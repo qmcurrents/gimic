@@ -74,7 +74,7 @@ module globals_m
 	logical :: master_p=.false.
 	logical :: uhf_p=.false.
 
-	type(getkw_t) :: input
+	type(getkw_t), save :: input
 
 	character, dimension(0:7), parameter :: shell_names = &
     	& (/'s','p','d','f','g','h','i','j'/)
@@ -164,11 +164,10 @@ contains
 	function getfsize(fd) result(fs)
 		integer(I4) :: fd, fs
 
-		integer(I4) :: i, fseek, ftell
+		integer(I4) :: i, fstat, sarray(13)
 
-		i=fseek(fd,0,2)
-		fs=ftell(fd)
-		rewind(fd)
+		i=fstat(fd, sarray)
+		fs=sarray(8)
 	end function
 
 	function xchar_i(i) result(s)
@@ -189,7 +188,6 @@ contains
 
 	function hostname() result(hn)
 		character(BUFLEN) :: hn
-		external hostnm
 		integer(I4) :: hostnm, ierr
 
 		ierr=hostnm(hn)

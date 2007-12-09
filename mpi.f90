@@ -20,7 +20,6 @@ module mpi_m
 contains
 	function start_mpi() result(mpirank)
 		integer(I4) :: mpirank
-		external hostnm
 		integer(I4) :: hostnm
 		
 		if (mpi_compiled == 0) then

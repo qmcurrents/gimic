@@ -36,7 +36,7 @@ program gimic
 
 contains
 	subroutine initialize()
-		external fdate, hostnm
+!        external fdate, hostnm
 		integer(I4) :: i, hostnm, rank, ierr
 		integer(I4) :: chdir, system
 		character(BUFLEN) :: title, fdate, sys, molfil, denfil

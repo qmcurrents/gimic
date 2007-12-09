@@ -40,7 +40,7 @@ contains
 		type(jtensor_t), target :: jt
 		type(grid_t), target :: g
 
-		integer(I4) :: i, j, k
+		integer(I4) :: i, j, k, axis
 		logical :: foo_p 
 
 		f%jt=>jt
@@ -73,11 +73,16 @@ contains
 		foo_p=.false.
 		f%b=(/D0, D0, D1/)
 		call getkw(input, 'magnet', f%b)
-		call getkw(input, 'orthogonal_magnet', foo_p)
-		if (foo_p) then
-			call msg_note('Magnetic field defined to be orthogonal to &
-				&the grid')
-			f%b=get_grid_normal(g)
+		call getkw(input, 'align_magnet', axis)
+		if (axis /= 0) then
+			if ( axis == 3) then
+				call msg_note('init_divj(): &
+					&Magnetic field defined to be orthogonal to the grid')
+			else
+				call msg_note('init_divj(): &
+					&Magnetic field defined to be parallel to the grid')
+			end if
+!            dj%bb=get_grid_basis(dj%grid, axis)
 		end if
 
 		write(str_g, '(a,3f10.5)') '   Magnetic field <x,y,z> =', f%b

@@ -375,7 +375,7 @@ contains
 
 	function is_lobo_grid(g) result(r)
 		type(grid_t), intent(in) :: g
-		integer(I4) :: r
+		logical :: r
 		
 		r=g%lobato
 	end function
