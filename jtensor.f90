@@ -396,8 +396,6 @@ contains
 		type(grid_t) :: grid
 		real(DP), intent(in), optional :: fac
 
-		external dtime
-		real(4) :: dtime
 		integer(I4) :: i, j, p1, p2, p3
 		type(tensor_t) :: foo
 		real(4) :: delta_t
@@ -409,12 +407,12 @@ contains
 !        return
 		call get_grid_size(grid, p1, p2, p3)
 		
-		delta_t=dtime(times)
+		call dtime(times, delta_t)
 		do i=1,100
 			call jtensor(jj, (/i*SC, i*SC, i*SC/), foo, spin_a)
 			foobar=matmul(bar,foo%t)
 		end do
-		delta_t=dtime(times)
+		call dtime(times, delta_t)
 		if ( present(fac) ) times=times*fac
 		write(str_g, '(a,f9.2,a)') '[Under]Estimated wall time for &
 			&calculation: ', times(1)*real(p1*p2*p3)/100.d0, ' sec'
