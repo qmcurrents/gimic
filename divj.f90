@@ -106,17 +106,18 @@ contains
 				cycle
 			end if
 			read(DIVJFD, rec=z(k)) dj%buf
-			open(DJPFD, file='DIVJPLT' // '.' // trim(xchar(k)))
+			str_g=enumfile('DIVJPLT',k)
+			open(DJPFD, file=trim(str_g))
 			do j=1,p2
 				do i=1,p1
 					rr=gridpoint(dj%grid, i, j, z(k))
-					write(DJPFD, '(4f)') rr, buf(i,j)
+					write(DJPFD, '(4f19.8)') rr, buf(i,j)
 					if (abs(buf(i,j)) > amax) amax=abs(buf(i,j))
 				end do
 				write(DJPFD, *) 
 			end do
 			close(DJPFD)
-			write(str_g, '(a,f)') 'Max divergence:', amax
+			write(str_g, '(a,e19.12)') 'Max divergence:', amax
 			call msg_info(str_g)
 		end do
 		call divj_gopenmol(dj)
@@ -140,13 +141,13 @@ contains
 					rr=gridpoint(dj%grid, i, j, k)
 					call divergence(dj, rr, div)
 !                    call divergence2(dj, rr, div)
-					write(DJPFD, '(4f)') rr, div
+					write(DJPFD, '(4f19.8)') rr, div
 					if (abs(div) > amax) amax=abs(div)
 				end do
 				write(DJPFD, *) 
 			end do
 		end do
-		write(str_g, '(a,f)')'Max divergence:', amax
+		write(str_g, '(a,e19.12)')'Max divergence:', amax
 		call msg_note(str_g)
 		call nl
 		close(DJPFD)

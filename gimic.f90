@@ -9,6 +9,7 @@ program gimic
 	use timer_m
 	use mpi_m
     implicit none 
+
 	character(BUFLEN) :: buf
 	type(molecule_t) :: mol
 	
@@ -36,7 +37,6 @@ program gimic
 
 contains
 	subroutine initialize()
-		external fdate, hostnm
 		integer(I4) :: i, hostnm, rank, ierr
 		integer(I4) :: chdir, system
 		character(BUFLEN) :: title, fdate, sys, molfil, denfil
@@ -384,7 +384,6 @@ call nl
 	! this routine is deprecated. everything is handled by getkw now
 	subroutine cmdline(inpfile)
 		character(*), intent(out) :: inpfile
-		external getarg, iargc, getenv
 
 		integer(I4) :: iargc, fgetc 
 		character(BUFLEN) :: fdate
@@ -430,7 +429,6 @@ call nl
 		character(*), intent(in) :: inpfile
 		character, dimension(:), pointer :: inpbuf
 
-		external fgetc
 		integer(I4) :: i, n, err
 		integer(I4) :: fgetc 
 
@@ -445,7 +443,7 @@ call nl
 			stop
 		end if
 
-		n=getfsize(99)
+		n=getfsize(inpfile)
 		allocate(inpbuf(n))
 		do i=1,n
 			err=fgetc(99, inpbuf(i))

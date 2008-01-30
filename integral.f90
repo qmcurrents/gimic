@@ -650,7 +650,7 @@ contains
 		end do
 
         deallocate(tmp, gpts, z)
-        write(str_g, '(a,f)') 'Integrated current (LIP):', xsum
+        write(str_g, '(a,e19.12)') 'Integrated current (LIP):', xsum
 		call msg_out(str_g)
 		call del_grid(lgrid)
 	end subroutine

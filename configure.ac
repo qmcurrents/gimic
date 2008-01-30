@@ -42,6 +42,11 @@ case $host in
 		try_fort="ifort ifc pgf90"
 		build_type="i386_linux"
 		;;
+	*x86_64*-linux*)
+		try_cc="gcc cc"
+		try_fort="pgf90 pgf77 g95 gfortran"
+		build_type="x86_64-linux"
+		;;
 	*ia*64*-linux*)
 		try_cc="gcc icc cc"
 		try_fort="ifort ifc gfortran pgf90 f90"

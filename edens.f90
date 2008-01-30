@@ -99,17 +99,18 @@ contains
 				cycle
 			end if
 			read(EDFD, rec=z(k)) ed%buf
-			open(EDPFD, file='EDENSPLT' // '.' // trim(xchar(k)))
+			str_g=enumfile('EDENSPLT', k)
+			open(EDPFD, file=trim(str_g))
 			do j=1,p2
 				do i=1,p1
 					rr=gridpoint(ed%grid, i, j, z(k))
-					write(EDPFD, '(4f)') rr, buf(i,j)
+					write(EDPFD, '(4f19.8)') rr, buf(i,j)
 					if (abs(buf(i,j)) > amax) amax=abs(buf(i,j))
 				end do
 				write(EDPFD, *) 
 			end do
 			close(EDPFD)
-			write(str_g, '(a,f)') 'Max electronic density:', amax
+			write(str_g, '(a,e19.12)') 'Max electronic density:', amax
 			call msg_info(str_g)
 		end do
 		call edens_gopenmol(ed)

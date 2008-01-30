@@ -320,8 +320,7 @@ contains
 				cycle
 			end if
 			if (jvec_plt /= '') then
-				tfil=trim(jvec_plt)//'.'//trim(xchar(k))//&
-				trim(scase)//'.txt' 
+				tfil=trim(enumfile(jvec_plt,k))//trim(scase)//'.txt' 
 				call msg_note('Writing j in        : '//trim(tfil))
 				open(JVPFD, file=trim(tfil))
 				write(JVPFD, *) '#********************************************#'
@@ -331,20 +330,17 @@ contains
 				write(JVPFD, *) '#********************************************#'
 			end if
 			if (jmod_plt /= '') then
-				tfil=trim(jmod_plt)//'.'//trim(xchar(k))//&
-				trim(scase)//'.txt'
+				tfil=trim(enumfile(jmod_plt,k))//trim(scase)//'.txt'
 				call msg_note('Writing |j| in      : '//trim(tfil))
 				open(MODFD, file=trim(tfil))
 			end if
 			if (njvec_plt /= '') then
-				tfil=trim(njvec_plt)//'.'//trim(xchar(k))//&
-				trim(scase)//'.txt'
+				tfil=trim(enumfile(njvec_plt,k))//trim(scase)//'.txt'
 				call msg_note('Writing j/|j| in    : ' //trim(tfil))
 				open(NJVFD, file=trim(tfil))
 			end if
 			if (jprj_plt /= '') then
-				tfil=trim(jprj_plt)//'.'//trim(xchar(k))//&
-				trim(scase)//'.txt'
+				tfil=trim(enumfile(jprj_plt,k))//trim(scase)//'.txt'
 				call msg_note('Writing (j;n) in    : '//trim(tfil))
 				open(JPRJFD, file=trim(tfil))
 			end if
@@ -369,17 +365,17 @@ contains
 					jmod=sqrt(sum(foo**2))
 					jprj=dot_product(norm,foo)
 					if (jmod_plt /= '') then
-						write(MODFD, '(3e)') mr, jmod
+						write(MODFD, '(3e19.12)') mr, jmod
 					end if
 					if (jvec_plt /= '') then
 						write(JVPFD, '(6f11.7)')  rr*AU2A, foo*AU2A
 !                        write(JVPFD, '(6f12.7)')  rr, foo
 					end if
 					if (njvec_plt /= '') then
-						write(NJVFD, '(5e)') mr, foo/nfac*0.15d0
+						write(NJVFD, '(5e19.12)') mr, foo/nfac*0.15d0
 					end if
 					if (jprj_plt /= '') then
-						write(JPRJFD, '(3e)') mr, jprj
+						write(JPRJFD, '(3e19.12)') mr, jprj
 					end if
 !                    write(99, '(3f)') jf%jj(i,j)%t(1,:)
 !                    write(99, '(3f)') jf%jj(i,j)%t(2,:)
@@ -497,9 +493,9 @@ contains
 		print *
 		print '(a,3f12.8)', 'Current tensor at ', rr
 		print *, '======================================='
-		print '(3e)', (jt(l,:), l=1,3)
+		print '(3e19.12)', (jt(l,:), l=1,3)
 		print *
-		print '(a,e)', ' Trace:', jt(1,1)+jt(2,2)+jt(3,3)
+		print '(a,e19.12)', ' Trace:', jt(1,1)+jt(2,2)+jt(3,3)
 	end subroutine
 
 	subroutine jfield_classaster(jf, who)

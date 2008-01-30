@@ -15,6 +15,8 @@ module jtensor_class
 	use grid_class
 	use teletype_m
 	implicit none
+
+	intrinsic dtime
 	
 	type jtensor_t
 		type(molecule_t), pointer :: mol
@@ -68,15 +70,15 @@ contains
 		call getkw(input, 'cdens.paramag', paramag_p)
 		if (uhf_p) call getkw(input, 'cdens.spin_density', spin_density)
 
-		if (diamag_p == 0) then
+		if (.not.diamag_p) then
 			call msg_info( 'Diamagnetic contributions not calculated!')
 			call nl
 		end if
-		if (paramag_p == 0) then
+		if (.not.paramag_p) then
 			call msg_info( 'Paramagnetic contributions not calculated!')
 			call nl
 		end if
-		if (diamag_p == 0 .and. paramag_p == 0) then
+		if (.not.diamag_p .and. .not.paramag_p) then
 			call msg_out( '    ...this does not make sense...')
 			call nl
 			call msg_critical( '    PLEASE SEEK PROFESSIONAL HELP, ASAP!  ')
@@ -361,12 +363,12 @@ contains
 		! annihilate paramagnetic contribution
 		if (.not.paramag_p)	then
 			ct=D0
-			bert_is_evil=1
+			bert_is_evil=.true.
 		end if
 		! annihilate diamagnetic  contribution
 		if (.not.diamag_p) then
 			dpd=D0    
-			bert_is_evil=1
+			bert_is_evil=.true.
 		end if
 
 		ct(1,2)=ct(1,2)+dpd(3)
@@ -396,7 +398,6 @@ contains
 		type(grid_t) :: grid
 		real(DP), intent(in), optional :: fac
 
-		external dtime
 		real(4) :: dtime
 		integer(I4) :: i, j, p1, p2, p3
 		type(tensor_t) :: foo
@@ -406,7 +407,6 @@ contains
 		real(DP), dimension(3) :: foobar
 		real(DP), parameter :: SC=1.d-2
 		
-!        return
 		call get_grid_size(grid, p1, p2, p3)
 		
 		delta_t=dtime(times)

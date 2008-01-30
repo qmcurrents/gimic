@@ -7,9 +7,9 @@
 	spherical=off #don't touch, unless you know what you are doing
 	debug=5
 	openshell=false
-	calc=[cdens]
+#     calc=[cdens]
 #     calc=[cdens, integral]
-#     calc=[cdens, integral, divj]
+	calc=[cdens, integral, divj]
 
 	cdens {
 		jtensor="JTENSOR"

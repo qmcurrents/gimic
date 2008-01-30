@@ -1,5 +1,4 @@
 !
-! 
 !
 
 module gaussint_m
@@ -120,7 +119,7 @@ contains
 		integer(I4) :: i
 
 		if ( n < 0 .or. abs(x) > 1.0 ) then
-			write(str_g,'(a,i3,f)') 'legendrep(): bad argument:', n, x
+			write(str_g,'(a,i3,d19.12)') 'legendrep(): bad argument:', n, x
 			call msg_error(str_g)
 		end if
 

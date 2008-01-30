@@ -7,6 +7,8 @@ module globals_m
 	use getkw_class
 	implicit none 
 
+	intrinsic hostnm
+
 	character(16), parameter :: GIMIC_VERSION='1.5.1'
 
 	! file descriptors
@@ -74,7 +76,7 @@ module globals_m
 	logical :: master_p=.false.
 	logical :: uhf_p=.false.
 
-	type(getkw_t) :: input
+	type(getkw_t), save :: input
 
 	character, dimension(0:7), parameter :: shell_names = &
     	& (/'s','p','d','f','g','h','i','j'/)
@@ -124,10 +126,6 @@ module globals_m
 		real(DP), dimension(3) :: v
 	end type
 
-	interface xchar
-		module procedure xchar_i, xchar_d
-	end interface
-
 contains
     function xtrim(str) result(r)
         character(BUFLEN), intent(in) :: str
@@ -161,37 +159,21 @@ contains
 100		rewind(fd)
 	end function
 
-	function getfsize(fd) result(fs)
-		integer(I4) :: fd, fs
+	function getfsize(fil) result(fs)
+		character(*), intent(in) :: fil
+		integer(I4) :: fs
+		integer, dimension(13) :: buf
 
-		integer(I4) :: i, fseek, ftell
-
-		i=fseek(fd,0,2)
-		fs=ftell(fd)
-		rewind(fd)
+		call stat(fil, buf)
+		fs=buf(8)
 	end function
 
-	function xchar_i(i) result(s)
-		integer(I4) :: i
-		character(20) :: s
+	function enumfile(string, rank) result(fname)
+		character(*), intent(in) :: string
+		integer(4), intent(in) :: rank
+		character(100) :: fname
 
-		write(s, '(i)') i
-		s=adjustl(s)
+		write(fname,'(a,i0)') trim(string) // '.', rank
 	end function
 
-	function xchar_d(d) result(s)
-		real(DP) :: d
-		character(20) :: s
-
-		write(s, '(f)') d
-		s=adjustl(s)
-	end function
-
-	function hostname() result(hn)
-		character(BUFLEN) :: hn
-		external hostnm
-		integer(I4) :: hostnm, ierr
-
-		ierr=hostnm(hn)
-	end function
 end module

@@ -202,11 +202,11 @@ contains
 		character(*), intent(in) :: path
 
 		logical :: ok
-		integer(SP) :: idx, rindex
+		integer(SP) :: idx
 		type(section_t), pointer :: sect
 		type(keyword_t), pointer :: kw, kw2
 
-		idx=rindex(path, '.')
+		idx=index(path, '.', back=.true.)
 		if (idx > 0) then
 			ok=find_sect(self%active, path(:idx-1), sect)
 			if (.not.ok) then
@@ -236,10 +236,10 @@ contains
 		character(*), intent(in) :: path
 
 		logical :: ok
-		integer(SP) :: idx, rindex
+		integer(SP) :: idx
 		type(section_t), pointer :: ptr, sect, sect2
 
-		idx=rindex(path, '.')
+		idx=index(path, '.', back=.true.)
 		if (idx > 0) then
 			ok=find_sect(self%active, path(:idx-1), ptr)
 			if (.not.ok) then
@@ -844,12 +844,12 @@ contains
 		type(keyword_t), pointer :: kw
 
 		logical :: ok, arg
-		integer(SP) :: rindex, idx
+		integer(SP) :: idx
 		type(section_t), pointer :: ptr
 
 		ok=.false.
 		arg=.false.
-		idx=rindex(path, '.')
+		idx=index(path, '.', back=.true.)
 		if (idx > 0) then
 			ok=find_sect(sect, path(:idx-1), ptr)
 		else
@@ -1069,11 +1069,11 @@ contains
 		type(section_t), pointer :: new
 
 		logical :: ok
-		integer(SP) :: rindex, idx
+		integer(SP) :: idx
 		type(section_t), pointer :: ptr
 
 		ok=.false.
-		idx=rindex(path, '.')
+		idx=index(path, '.', back=.true.)
 		if (idx > 0) then
 			ok=find_sect(sect, path(:idx-1), ptr)
 		else
