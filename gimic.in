@@ -64,6 +64,7 @@ def main():
 	top.add_kw('basis', 'STR', ('mol',))
 	top.add_kw('density', 'STR', 1)
 	top.add_kw('mpirun', 'BOOL', (False,))
+	top.add_kw('screening', 'BOOL', (True,))
 	top.add_kw('spherical', 'BOOL', (True,))
 	top.add_kw('rerun', 'BOOL', (False,))
 	top.add_kw('openshell', 'BOOL', (False,))
@@ -78,12 +79,13 @@ def main():
 	plot.add_kw('nvector','STR', ('',))
 	plot.add_kw('gopenmol','STR', ('',))
 
-	cdens=getkw.Section('cdens', req=True)
+	cdens=getkw.Section('cdens', req=True, callback=check_cdens)
 	cdens.add_kw('jtensor', 'STR', ('JTENSOR',))
 	cdens.add_kw('jvector', 'STR', ('JVECTOR',))
 	cdens.add_kw('diamag', 'BOOL', (True,))
 	cdens.add_kw('paramag', 'BOOL', (True,))
 	cdens.add_kw('orthogonal_magnet', 'BOOL', (False,))
+	cdens.add_kw('parallel_magnet', 'BOOL', (False,))
 	cdens.add_kw('scale_vectors', 'DBL', (1.0,))
 	cdens.add_kw('magnet', 'DBL_ARRAY', 3, req=True)
 	cdens.add_kw('spin_density', 'BOOL', (False,))
@@ -304,6 +306,13 @@ def check_calc(top):
 				print 'Error: calc = %s requested, but section %s not set!'\
 						% (i,i)
 				sys.exit(1)
+
+def check_cdens(cdens):
+	omagn=cdens.getkw('orthogonal_magnet')[0]
+	pmagn=cdens.getkw('parallel_magnet')[0]
+	if omagn == 'True' and pmagn == 'True':
+		print 'Error: Both orthogonal and parallel magnets set simultaneously!'
+		sys.exit(1)
 
 if __name__ == '__main__':
 	main()

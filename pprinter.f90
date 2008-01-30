@@ -41,7 +41,7 @@ contains
 		if (pplun == DEVNULL) return
 		
 		write(pplun, 100) trim(str)
-100 format(x,a)	
+100 format(1x,a)	
 	end subroutine
 
 	subroutine pnote(str)
@@ -92,7 +92,7 @@ contains
 		write(STDERR, 102) ' <<<  ERROR: ', trim(str), ' >>>'
 
 100 format(a)	
-101 format(x,a)	
+101 format(1x,a)	
 102 format(a,a,a)	
 	end subroutine
 
@@ -106,7 +106,7 @@ contains
 		write(STDERR, 101) repeat('>', 70)
 
 100 format(a)	
-101 format(x,a)	
+101 format(1x,a)	
 102 format(a,a)	
 	end subroutine
 

@@ -54,7 +54,7 @@ distclean: realclean
 .PHONY: install install_bin install_lib install_modules  install_data
 .PHONY: install_libexec install_scripts
 
-inst_target:=
+inst_targets:=
 ifneq ($(INST_LIBS),)
 	INST_LIBS:=$(addprefix $(libdir)/,$(INST_LIBS))
 	inst_targets+=install_lib

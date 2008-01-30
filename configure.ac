@@ -39,7 +39,7 @@ AC_CACHE_SAVE
 case $host in 
 	*i*86*-linux*)
 		try_cc="gcc icc cc"
-		try_fort="ifort ifc pgf90"
+		try_fort="ifort ifc pgf90 g95"
 		build_type="i386_linux"
 		;;
 	*x86_64*-linux*)

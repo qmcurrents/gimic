@@ -7,9 +7,10 @@
 	spherical=off #don't touch, unless you know what you are doing
 	debug=5
 	openshell=false
-#     calc=[cdens]
+    screening=true
+	calc=[cdens]
 #     calc=[cdens, integral]
-	calc=[cdens, integral, divj]
+#     calc=[cdens, integral, divj]
 
 	cdens {
 		jtensor="JTENSOR"
@@ -35,7 +36,6 @@
 		origin=[-4.0,  0.0, -4.0]
 		ivec=[1.0, 0.0, 0.0]
 		jvec=[ 0.0, 0.0, 1.0]
-		kvec=[0.0,1.0,0.0] # optional, deduced from i x j
 		lengths=[8.0, 8.0, 0.0]
 		spacing=[0.5, 0.5, 0.5]
 #         angle=0.0

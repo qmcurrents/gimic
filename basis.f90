@@ -72,6 +72,13 @@ contains
 
 		integer(I4) :: i,j,l
 		real(DP) :: xp, min_xp, x, dist
+		logical :: screen=.true.
+
+		call getkw(input, 'screening', screen)
+		if (.not.screen) then
+			basis%thrs=1.d10
+			return
+		end if
 
 		do i=1,basis%nctr
 			min_xp=1.d+15
@@ -88,7 +95,6 @@ contains
 			end do
 			basis%thrs(i)=dist
 		end do
-!        basis%thrs=100.d0
 	end subroutine 
 
 !

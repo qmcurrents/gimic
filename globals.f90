@@ -177,3 +177,42 @@ contains
 	end function
 
 end module
+		
+		n=0
+		rewind(fd)
+		do 
+			read(fd,*,end=100)
+			n=n+1
+		end do
+100		rewind(fd)
+	end function
+
+	function getfsize(fil) result(fs)
+		character(*), intent(in) :: fil
+		integer(I4) :: fs
+		integer, dimension(13) :: buf
+
+		call stat(fil, buf)
+		fs=buf(8)
+	end function
+
+	function enumfile(string, rank) result(fname)
+		character(*), intent(in) :: string
+		integer(4), intent(in) :: rank
+		character(100) :: fname
+
+		write(fname,'(a,i0)') trim(string) // '.', rank
+	end function
+
+end module
+	end function
+
+	function enumfile(string, rank) result(fname)
+		character(*), intent(in) :: string
+		integer(4), intent(in) :: rank
+		character(100) :: fname
+
+		write(fname,'(a,i0)') trim(string) // '.', rank
+	end function
+
+end module

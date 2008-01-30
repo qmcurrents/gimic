@@ -78,7 +78,7 @@ contains
 			call msg_info( 'Paramagnetic contributions not calculated!')
 			call nl
 		end if
-		if (.not.diamag_p .and. .not.paramag_p) then
+		if ((.not.diamag_p).and.(.not.paramag_p)) then
 			call msg_out( '    ...this does not make sense...')
 			call nl
 			call msg_critical( '    PLEASE SEEK PROFESSIONAL HELP, ASAP!  ')
