@@ -14,7 +14,7 @@ module edens_class
 	
 	public init_edens, del_edens, edens_t
 	public edens_direct, edens, edens_plot
-	public edens_classaster, edens_slave
+	public edens_master, edens_slave
 	
 	type edens_t
 		real(DP), dimension(:), pointer :: tmp
@@ -164,7 +164,7 @@ contains
 		end do
 	end subroutine
 
-	subroutine edens_classaster(ed, who)
+	subroutine edens_master(ed, who)
 		use mpi_m
 		type(edens_t) :: ed
 		integer(I4), intent(in) :: who

@@ -26,6 +26,9 @@ contains
 		type(molecule_t), target :: mol
 		type(dbop_t), target :: dop
 		type(bfeval_t), target :: bfv
+
+		nullify(dbt%db)
+
 		if (associated(dbt%db)) then
 			call msg_warn('init_dfdb(): already allocated!')
 		else

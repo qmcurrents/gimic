@@ -32,6 +32,8 @@ contains
 	subroutine init_bfeval(bfv, mol)
 		type(bfeval_t) :: bfv
 		type(molecule_t), target :: mol
+		
+		nullify(bfv%bf)
 
 		if (associated(bfv%bf)) then
 			call msg_warn('init_bfeval(): already allocated!')

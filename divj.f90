@@ -21,7 +21,7 @@ module divj_class
 
 	public divj_direct, divj_direct_plt, init_divj, del_divj
 	public divj_plot, set_divj, divj_t, divj
-	public divj_classaster, divj_slave
+	public divj_master, divj_slave
 	private
 	
 	real(DP), dimension(5), parameter :: wgt=(/2.d0,-16.d0,0.d0,16.d0,-2.d0/)
@@ -265,7 +265,7 @@ contains
 		div=djx+djy+djz
 	end subroutine
 
-	subroutine divj_classaster(dj, who)
+	subroutine divj_master(dj, who)
 		use mpi_m
 		type(divj_t) :: dj
 		type(grid_t) :: grid

@@ -30,6 +30,9 @@ contains
 	subroutine init_dfdr(dfr, mol)
 		type(dfdr_t) :: dfr
 		type(molecule_t), target :: mol
+
+		nullify(dfr%dr)
+
 		if (associated(dfr%dr)) then
 			call msg_warn('init_dfdr(): already allocated!')
 		else

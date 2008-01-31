@@ -34,6 +34,8 @@ def main():
 		   help='be verbose')
 	cmdln.add_option('-q','--quiet', action='store_false', dest='verbose',
 		   help='be quiet')
+	cmdln.add_option('-y','--dryrun', action='store_true', dest='dryrun',
+		   help='dryrun without actually calculating anything')
 	cmdln.add_option('-V','--version', action='store_true', dest='version',
 		   help='print version number')
 	(opts, args)=cmdln.parse_args()
@@ -66,7 +68,7 @@ def main():
 	top.add_kw('mpirun', 'BOOL', (False,))
 	top.add_kw('screening', 'BOOL', (True,))
 	top.add_kw('spherical', 'BOOL', (True,))
-	top.add_kw('rerun', 'BOOL', (False,))
+	top.add_kw('dryrun', 'BOOL', (False,))
 	top.add_kw('openshell', 'BOOL', (False,))
 	top.add_kw('calc', 'STR', None)
 
@@ -88,6 +90,7 @@ def main():
 	cdens.add_kw('parallel_magnet', 'BOOL', (False,))
 	cdens.add_kw('scale_vectors', 'DBL', (1.0,))
 	cdens.add_kw('magnet', 'DBL_ARRAY', 3, req=True)
+	cdens.add_kw('align_magnet', 'INT', (1,))
 	cdens.add_kw('spin_density', 'BOOL', (False,))
 	cdens.add_sect(plot)
 
@@ -104,7 +107,7 @@ def main():
 	grid.add_kw("coord1", 'DBL_ARRAY', 3)
 	grid.add_kw("coord2", 'DBL_ARRAY', 3)
 	grid.add_kw("distance", 'DBL', 1)
-	grid.add_kw("angle", 'DBL', 1)
+	grid.add_kw("angle", 'DBL_ARRAY', (0.0,0.0,0.0))
 	grid.add_kw("spacing", 'DBL_ARRAY', 3)
 	grid.add_kw("map", 'DBL_ARRAY', 2)
 	grid.add_kw("height", 'DBL_ARRAY', 2)
@@ -127,7 +130,7 @@ def main():
 	intgrid.add_kw("coord1", 'DBL_ARRAY', 3)
 	intgrid.add_kw("coord2", 'DBL_ARRAY', 3)
 	intgrid.add_kw("distance", 'DBL', 1)
-	intgrid.add_kw("angle", 'DBL', 1)
+	intgrid.add_kw("angle", 'DBL_ARRAY', (0.0,0.0,0.0))
 	intgrid.add_kw("spacing", 'DBL_ARRAY', 3)
 	intgrid.add_kw("map", 'DBL_ARRAY', 2)
 	intgrid.add_kw("height", 'DBL_ARRAY', 2)
@@ -150,7 +153,7 @@ def main():
 	divgrid.add_kw("coord1", 'DBL_ARRAY', 3)
 	divgrid.add_kw("coord2", 'DBL_ARRAY', 3)
 	divgrid.add_kw("distance", 'DBL', 1)
-	divgrid.add_kw("angle", 'DBL', 1)
+	divgrid.add_kw("angle", 'DBL_ARRAY', (0.0,0.0,0.0))
 	divgrid.add_kw("spacing", 'DBL_ARRAY', 3)
 	divgrid.add_kw("map", 'DBL_ARRAY', 2)
 	divgrid.add_kw("height", 'DBL_ARRAY', 2)
@@ -189,6 +192,8 @@ def main():
 		inkw.setkw('debug', opts.debug)
 	if opts.mpirun:
 		inkw.setkw('mpirun', opts.mpirun)
+	if opts.dryrun:
+		inkw.setkw('dryrun', opts.dryrun)
 	if opts.outfile:
 		inkw.setkw('outfile', opts.outfile)
 	if opts.debugf:

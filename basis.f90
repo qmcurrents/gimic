@@ -172,7 +172,7 @@ contains
 		do l=1, ctr%npf
 			c1=ctr%cc(l)
 			e1=ctr%xp(l)
-			ctr%ncc(l)=c1*n*(D4*e1)**(DP50*j+DP25)*(DP50/PI)**DP75
+			ctr%ncc(l)=c1*n*(D4*e1)**(DP50*j+DP25)*(DP50/PII)**DP75
 		end do
 	end subroutine 
 

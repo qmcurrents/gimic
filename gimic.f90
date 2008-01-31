@@ -120,20 +120,18 @@ contains
 
 		integer(I4) :: i,j, ncalc
 		integer(I4), dimension(4) :: calc
-		logical :: divj_p, int_p, cdens_p, edens_p, rerun_p
+		logical :: divj_p, int_p, cdens_p, edens_p
 		logical :: nike_p, xdens_p, modens_p
 		character(LINELEN), dimension(:), pointer :: cstr
 
 		divj_p=.false.; int_p=.false.
 		cdens_p=.false.; edens_p=.false.
-		rerun_p=.false.; nike_p=.true.
-		xdens_p=.false.; modens_p=.false.
+		nike_p=.true.;  xdens_p=.false.; modens_p=.false.
 
 		if (spherical) then
 			call init_c2sop(c2s,mol)
 			call set_c2sop(mol, c2s)
 		end if
-		call getkw(input, 'rerun', rerun_p)
 		
 		! figure out work order
 		nullify(cstr)
@@ -158,7 +156,7 @@ contains
 				modens_p=.true.
 			end if
 		end do
-		if (mpirun_p .or. rerun_p) nike_p=.false.
+		if (mpirun_p .or. dryrun_p) nike_p=.false.
 
 		call getkw(input, 'openshell', uhf_p)
 		if (uhf_p) then

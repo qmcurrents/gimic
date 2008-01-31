@@ -39,6 +39,7 @@ contains
 		type(molecule_t) :: mol
 
 		real(DP) :: ll 
+		real(DP), dimension(3) :: angle
 		integer(I4), dimension(3) :: ngp
 		integer(I4) :: i, j
 		
@@ -75,7 +76,8 @@ contains
 		
 		! rotate basis vectors if needed
 		if (keyword_is_set(input, 'grid.angle')) then
-			call rotate(g)
+			call getkw(input, 'grid.angle', angle)
+			call rotate(g, angle)
 		end if
 
 		! calculate distibution of grid points
@@ -725,23 +727,42 @@ contains
 	end subroutine
 	
 	! rotate basis vectors (prior to grid setup)
-	subroutine rotate(g)
+	subroutine rotate(g, angle)
 		type(grid_t) :: g
+		real(DP), dimension(3), intent(in) :: angle
 
-		real(DP) :: angle
-		real(DP), dimension(3,3) :: euler
+		real(DP), dimension(3) :: rad
+		real(DP), dimension(3,3) :: euler, rot
 
-		call getkw(input, 'grid.angle', angle)
-		stop 'Sorry dude! This does not quite work yet...'
+		rad=angle/180.d0*PII
+		write(str_g, '(a,3f9.5)') 'Rotation is: ', rad
+		call msg_info(str_g)
 
-		euler=0.d0
-		euler(1,1)=sin(angle)
-		euler(2,2)=cos(angle)
-		euler(3,3)=1
-		euler(1,2)=cos(angle)
-		euler(2,1)=-cos(angle)
+! z-mat
+		rot(1,1)=cos(rad(3))
+		rot(2,2)=cos(rad(3))
+		rot(3,3)=1
+		rot(1,2)=sin(rad(3))
+		rot(2,1)=-sin(rad(3))
+! y-mat
+		euler(1,1)=cos(rad(2))
+		euler(2,2)=1
+		euler(3,3)=cos(rad(2))
+		euler(1,3)=-sin(rad(2))
+		euler(3,1)=sin(rad(2))
+
+		euler=matmul(euler,rot)
+! x-mat
+		rot(1,1)=1
+		rot(2,2)=cos(rad(1))
+		rot(3,3)=cos(rad(1))
+		rot(1,2)=sin(rad(1))
+		rot(2,1)=-sin(rad(1))
+
+		euler=matmul(rot,euler)
 
 		g%basv=matmul(euler,g%basv)
+		g%origin=matmul(euler,g%origin)
 	end subroutine
 
 !

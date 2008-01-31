@@ -41,9 +41,9 @@ module globals_m
 
 	integer(I4), parameter :: SPIN_A=1, SPIN_B=2
 
-	real(DP), parameter :: PI=3.141592653589793D0
+	real(DP), parameter :: PII=3.141592653589793D0
 	!real(DP), parameter :: PI=atan(1.d0)*4.d0
-	real(DP), parameter :: PI_FAC=6.349363593424098D-002 ! (0.5/PI)**0.75
+	real(DP), parameter :: PII_FAC=6.349363593424098D-002 ! (0.5/PI)**0.75
 	real(DP), parameter :: C_AU=137.035987 !137.0359895
 	real(DP), parameter :: ALPHA=1.d0/C_AU !0.007297351
 	real(DP), parameter :: ALPHA2=ALPHA**2
@@ -177,42 +177,4 @@ contains
 	end function
 
 end module
-		
-		n=0
-		rewind(fd)
-		do 
-			read(fd,*,end=100)
-			n=n+1
-		end do
-100		rewind(fd)
-	end function
 
-	function getfsize(fil) result(fs)
-		character(*), intent(in) :: fil
-		integer(I4) :: fs
-		integer, dimension(13) :: buf
-
-		call stat(fil, buf)
-		fs=buf(8)
-	end function
-
-	function enumfile(string, rank) result(fname)
-		character(*), intent(in) :: string
-		integer(4), intent(in) :: rank
-		character(100) :: fname
-
-		write(fname,'(a,i0)') trim(string) // '.', rank
-	end function
-
-end module
-	end function
-
-	function enumfile(string, rank) result(fname)
-		character(*), intent(in) :: string
-		integer(4), intent(in) :: rank
-		character(100) :: fname
-
-		write(fname,'(a,i0)') trim(string) // '.', rank
-	end function
-
-end module

@@ -108,13 +108,13 @@ contains
 			gotit=gotit+1
 			select case(job)
 				case(INTGRL_TAG)
-					call integral_classaster(pt%it, who)
+					call integral_master(pt%it, who)
 				case(CDENS_TAG)
-					call jfield_classaster(pt%jf, who)
+					call jfield_master(pt%jf, who)
 				case(DIVJ_TAG)
-					call divj_classaster(pt%dj, who)
+					call divj_master(pt%dj, who)
 				case(EDENS_TAG)
-					call edens_classaster(pt%ed, who)
+					call edens_master(pt%ed, who)
 				case default
 					call msg_error('sheduler(): Unknown command')
 					call exit(1)

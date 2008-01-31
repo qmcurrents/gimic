@@ -31,7 +31,7 @@ contains
 		xl=(b-a)*0.5
 
 		do i=1,m
-			z=cos(PI*(i-0.25)/(n+0.5))
+			z=cos(PII*(i-0.25)/(n+0.5))
 			do iter=1,NEWTON_MAX_ITER
 				call legendrep(z,n,lp,dlp)
 				z1=z
@@ -81,7 +81,7 @@ contains
 
 		do i=2,n-1
 			! Better inital guess needed, this one is for P not P'
-			z=cos(PI*(i-0.25)/(n+0.5)) 
+			z=cos(PII*(i-0.25)/(n+0.5)) 
 			do iter=1,NEWTON_MAX_ITER
 				call legendrep(z,n-1,lp,dlp,d2lp)
 				z1=z

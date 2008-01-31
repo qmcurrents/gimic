@@ -22,7 +22,7 @@ module integral_class
 
 	public init_integral, del_integral, integral_t
 	public integrate, int_t_direct, int_s_direct, int_t_2d, lipton
-	public integral_classaster, integral_slave, write_integral, int_mod_direct
+	public integral_master, integral_slave, write_integral, int_mod_direct
 	
 	private 
 	
@@ -718,7 +718,7 @@ contains
 		return
 	end subroutine
 
-	subroutine integral_classaster(it, who)
+	subroutine integral_master(it, who)
 		use mpi_m
 		type(integral_t) :: it
 		integer(I4), intent(in) :: who

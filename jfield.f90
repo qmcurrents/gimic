@@ -26,7 +26,7 @@ module jfield_class
 
 	public init_jfield, del_jfield, jfield, jvectors, jfield_direct
 	public jfield_t, get_jvectors, get_jtensors, jvector_plot
-	public set_jtensors, jfield_classaster, jfield_slave
+	public set_jtensors, jfield_master, jfield_slave
 	
 	private
 
@@ -354,8 +354,8 @@ contains
 			jf%zpos_v=z(k)
 			do j=1,p2
 				do i=1,p1
-					mr=gridmap(jf%grid,i,j)
-					rr=gridpoint(jf%grid, i,j,z(k))
+!                    mr=gridmap(jf%grid,i,j)
+					rr=gridpoint(jf%grid, i,j,z(k))*AU2A
 					select case(ispin)
 						case(1)
 							foo=jf%vv(i,j)%v
@@ -370,17 +370,18 @@ contains
 					jmod=sqrt(sum(foo**2))
 					jprj=dot_product(norm,foo)
 					if (jmod_plt /= '') then
-						write(MODFD, '(3e19.12)') mr, jmod
+						write(MODFD, '(3e19.12)') rr, jmod
 					end if
 					if (jvec_plt /= '') then
-						write(JVPFD, '(6f11.7)')  rr*AU2A, foo*AU2A
-!                        write(JVPFD, '(6f12.7)')  rr, foo
+						write(JVPFD, '(6f11.7)')  rr, foo*AU2A
+!                        write(JVPFD, '(6f12.7)')  mr, foo
 					end if
 					if (njvec_plt /= '') then
-						write(NJVFD, '(5e19.12)') mr, foo/nfac*0.15d0
+						write(NJVFD, '(6f11.7)')  rr, foo/nfac*AU2A
+!                        write(NJVFD, '(5e19.12)') mr, foo/nfac*0.15d0
 					end if
 					if (jprj_plt /= '') then
-						write(JPRJFD, '(3e19.12)') mr, jprj
+						write(JPRJFD, '(3e19.12)') rr, jprj
 					end if
 !                    write(99, '(3f)') jf%jj(i,j)%t(1,:)
 !                    write(99, '(3f)') jf%jj(i,j)%t(2,:)
@@ -503,7 +504,7 @@ contains
 		print '(a,e19.12)', ' Trace:', jt(1,1)+jt(2,2)+jt(3,3)
 	end subroutine
 
-	subroutine jfield_classaster(jf, who)
+	subroutine jfield_master(jf, who)
 		use mpi_m
 		type(jfield_t) :: jf
 		integer(I4), intent(in) ::  who
