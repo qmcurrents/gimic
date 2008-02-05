@@ -24,11 +24,12 @@ module grid_class
 		character(BUFLEN) :: mode, gtype
 		real(DP), dimension(:,:), pointer :: xdata
 	end type grid_t
-	
+
+	public grid_t
 	public init_grid, del_grid, gridpoint, gridmap, get_grid_normal
-	public grid_t, get_grid_size, get_weight, write_grid, read_grid
+	public get_grid_size, get_weight, write_grid, read_grid
 	public get_grid_length, is_lobo_grid, realpoint, copy_grid
-	public grid_center, plot_grid_xyz
+	public grid_center, plot_grid_xyz, get_basv
 
 	private
 	real(DP), parameter :: DPTOL=1.d-10
@@ -72,7 +73,7 @@ contains
 
 		call normalise(g%basv)
 		call ortho_coordsys(g)
-		call check_handedness(g)
+!        call check_handedness(g)
 		
 		! rotate basis vectors if needed
 		if (keyword_is_set(input, 'grid.angle')) then
@@ -209,6 +210,7 @@ contains
 		end do
 	end subroutine
 
+
 	subroutine setup_gauss_gdata(g)
 		type(grid_t) :: g
 
@@ -233,33 +235,6 @@ contains
 			end if
 			call setup_lobby(0.d0, g%l(i), ngp(i), g%gdata(i))
 		end do
-	end subroutine
-
-	subroutine check_handedness(g) 
-		type(grid_t) :: g
-
-		real(DP), dimension(3) :: magnet
-		real(DP) :: x
-
-		! bugger... we can be in "wrong" sect, so we need to ensure we are at
-		! the top
-		call push_section(input, '.')
-		call getkw(input, 'cdens.magnet', magnet) 
-		call pop_section(input)
-
-		x=dot_product(g%basv(:,3), magnet)
-		if (x < 0.d0) then
-			call nl
-			call msg_warn('*****************************')
-			call msg_warn('Left handed coordinate system')
-			call msg_warn('*****************************')
-			call nl
-		end if
-		if (abs(x) /= 1.d0 .and. abs(x) > 1.d-10) then
-			call msg_info('Magnetic field not orthogonal to grid')
-			print *, x
-			call nl
-		end if
 	end subroutine
 
 	subroutine setup_even_gdata(g)
@@ -888,6 +863,14 @@ contains
 !        print *, '|basv2|', sqrt(sum((g%basv(:,2)-g%origin)**2))
 !        print *
 		
+	end subroutine
+
+	subroutine get_basv(g, i, j, k)
+		type(grid_t) :: g
+		real(DP), dimension(3) :: i, j, k
+		i=g%basv(:,1)
+		j=g%basv(:,2)
+		k=g%basv(:,3)
 	end subroutine
 end module
 

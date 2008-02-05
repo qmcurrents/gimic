@@ -176,5 +176,25 @@ contains
 		write(fname,'(a,i0)') trim(string) // '.', rank
 	end function
 
+	function vcmp(v1, v2) result(p)
+		real(DP), dimension(:), intent(in) :: v1, v2
+		logical :: p
+
+		real(DP), parameter :: thrs=1.d-12
+		integer(I4) :: i, s1, s2
+
+		p=.false.
+		s1=size(v1)
+		s2=size(v2)
+		if (s1 /= s2) then
+			call msg_error('Trying to compare vectors of different size!')
+			return
+		end if
+
+		do i=1,s1
+			if (v1(i)-v2(i) > thrs) return
+		end do
+		p=.true.
+	end function
 end module
 

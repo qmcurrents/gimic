@@ -7,11 +7,22 @@ module teletype_m
 	integer(I4), parameter :: DEVNULL=-1
 
 	character(160) :: str_g 
-	private ttunit, level
+	private ttunit, level, TTBUFSZ
 
+	integer(SP), parameter :: TTBUFSZ=8096
 	integer(I4), parameter :: NONSTDOUT=7
 	integer(I4) :: ttunit=6
 	integer(I4) :: level=0
+
+	public xstr
+	interface xstr
+		module procedure xstr_isp
+		module procedure xstr_rdp
+		module procedure xstr_isp_vec
+		module procedure xstr_rdp_vec
+		module procedure xstr_frm_isp
+		module procedure xstr_frm_rdp
+	end interface
 contains
 	subroutine msg_out(str)
 		character(*), intent(in) :: str
@@ -146,4 +157,48 @@ contains
 			ttunit=STDOUT
 		end if
 	end subroutine
+
+	function xstr_isp(arg) result(s)
+		integer(SP), intent(in) :: arg
+		character(TTBUFSZ) :: s
+
+		write(s, *) arg
+	end function
+
+	function xstr_rdp(arg) result(s)
+		real(DP), intent(in) :: arg
+		character(TTBUFSZ) :: s
+
+		write(s, *) arg
+	end function
+
+	function xstr_isp_vec(arg) result(s)
+		integer(SP), dimension(:), intent(in) :: arg
+		character(TTBUFSZ) :: s
+
+		write(s, *) arg
+	end function
+
+	function xstr_rdp_vec(arg) result(s)
+		real(DP), dimension(:), intent(in) :: arg
+		character(TTBUFSZ) :: s
+
+		write(s, *) arg
+	end function
+
+	function xstr_frm_isp(frm,arg) result(s)
+		character(*) :: frm
+		integer(SP), intent(in) :: arg
+		character(TTBUFSZ) :: s
+
+		write(s, frm) arg
+	end function
+
+	function xstr_frm_rdp(frm,arg) result(s)
+		character(*) :: frm
+		real(DP), intent(in) :: arg
+		character(TTBUFSZ) ::  s
+
+		write(s, frm) arg
+	end function
 end module

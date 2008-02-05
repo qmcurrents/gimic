@@ -10,6 +10,7 @@ module divj_class
 	use jfield_class
 	use jtensor_class
 	use teletype_m
+	use magnet_m
 	implicit none
 
 	type divj_t
@@ -42,19 +43,7 @@ contains
 		dj%bb=D0
 		p1=0
 		
-		call getkw(input, 'cdens.magnet', dj%bb)
-		call getkw(input, 'cdens.align_magnet', p1)
-		if (p1 /= 0) then
-			if ( p1 == 3) then
-				call msg_note('init_divj(): &
-					&Magnetic field defined to be orthogonal to the grid')
-!                dj%bb=get_grid_basis(dj%grid, 3)
-			else
-				call msg_note('init_divj(): &
-					&Magnetic field defined to be parallel to the grid')
-!                dj%bb=get_grid_basis(dj%grid, p1)
-			end if
-		end if
+		call get_magnet(grid, dj%bb)
 
 		call get_grid_size(grid, p1, p2)
 		djrl=p1*p2*DP

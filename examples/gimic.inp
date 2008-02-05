@@ -1,22 +1,22 @@
 # NEW INPUT
 
-	rerun=off
+	dryrun=off
 	title="CO2"
 	basis="mol"
 	density="XDENS"
 	spherical=off #don't touch, unless you know what you are doing
 	debug=5
 	openshell=false
-    screening=true
-	calc=[cdens]
+    screening=false
+#     calc=[cdens]
 #     calc=[cdens, integral]
-#      calc=[cdens, integral, divj]
+	 calc=[cdens, integral, divj]
 
 	cdens {
 		jtensor="JTENSOR"
 		jvector="JVECTOR"
-		orthogonal_magnet=off
-		magnet=[0.0, -1.0, 0.0]
+		magnet_axis=y #[-] i,j,k || x,y,z 
+#         magnet=[0.0, -1.0, 0.0]
 		scale_vectors=1.0
         spin_density=off
 		diamag=on
@@ -39,7 +39,7 @@
 		lengths=[8.0, 8.0, 0.0]
 		spacing=[0.5, 0.5, 0.5]
 # Euler angles in degrees; x-y-z convention
-		angle=[0.0,0.0,0.0]
+#         angle=[1.0,1.0,1.0]
 		gridplot=10 # wht?
 	}
 
@@ -53,6 +53,8 @@
 	integral {
 		interpolate=off
 		lip_order=5
+		modulus=off
+		tensor=off
 		grid(bond) {      
 			type=gauss
 			origin=[0.0, 1.0, 1.096]
@@ -67,6 +69,7 @@
 			gridplot=15
 #             radius=3.0
 #             angle=0.0
+#         angle=[0.0,0.0,0.0]
 		}
 	}
 
@@ -81,7 +84,7 @@
 			kvec=[0.0,1.0,0.0] # optional, deduced from i x j
 			lengths=[10.0, 10.0, 0.0]
 			spacing=[0.5, 0.5, 0.5]
-#             angle=0.0
+#         angle=[0.0,0.0,0.0]
 			gridplot=15 # wht?
 		}
 	}

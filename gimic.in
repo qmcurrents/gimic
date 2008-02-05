@@ -86,11 +86,9 @@ def main():
 	cdens.add_kw('jvector', 'STR', ('JVECTOR',))
 	cdens.add_kw('diamag', 'BOOL', (True,))
 	cdens.add_kw('paramag', 'BOOL', (True,))
-	cdens.add_kw('orthogonal_magnet', 'BOOL', (False,))
-	cdens.add_kw('parallel_magnet', 'BOOL', (False,))
+	cdens.add_kw('magnet_axis', 'STR', ('<>',))
 	cdens.add_kw('scale_vectors', 'DBL', (1.0,))
-	cdens.add_kw('magnet', 'DBL_ARRAY', 3, req=True)
-	cdens.add_kw('align_magnet', 'INT', (1,))
+	cdens.add_kw('magnet', 'DBL_ARRAY', (0.0, 0.0, 0.0))
 	cdens.add_kw('spin_density', 'BOOL', (False,))
 	cdens.add_sect(plot)
 
@@ -166,6 +164,8 @@ def main():
 	integral=getkw.Section('integral')
 	integral.add_kw('lip_order', 'INT', (10,))
 	integral.add_kw('interpolate', 'BOOL', (False,))
+	integral.add_kw('tensor', 'BOOL', (False,))
+	integral.add_kw('modulus', 'BOOL', (False,))
 	integral.add_kw('radius', 'DBL', 1)
 	integral.add_sect(intgrid)
 
@@ -313,10 +313,13 @@ def check_calc(top):
 				sys.exit(1)
 
 def check_cdens(cdens):
-	omagn=cdens.getkw('orthogonal_magnet')[0]
-	pmagn=cdens.getkw('parallel_magnet')[0]
+	omagn=cdens.getkw('magnet')[0]
+	pmagn=cdens.getkw('magnet_axis')[0]
 	if omagn == 'True' and pmagn == 'True':
-		print 'Error: Both orthogonal and parallel magnets set simultaneously!'
+		print 'Error: Both magnet vector and axis set simultaneously!'
+		sys.exit(1)
+	if omagn == 'False' and pmagn == 'False':
+		print 'Error: Direction of magnetic field must be set!'
 		sys.exit(1)
 
 if __name__ == '__main__':

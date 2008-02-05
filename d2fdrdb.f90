@@ -33,6 +33,9 @@ contains
 		type(dbop_t), target :: dop
 		type(dfdr_t), target :: dfr
 		type(bfeval_t), target :: bfv
+
+		nullify(d2f%d2)
+
 		if (associated(d2f%d2)) then
 			call msg_warn('init_d2fdrdb(): already allocated!')
 		else
@@ -47,6 +50,7 @@ contains
 
 	subroutine del_d2fdrdb(d2f)
 		type(d2fdrdb_t) :: d2f
+
 		if (associated(d2f%d2)) then
 			deallocate(d2f%d2)
 			nullify(d2f%d2)

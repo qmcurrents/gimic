@@ -7,6 +7,7 @@ program gimic
 	use teletype_m
 	use basis_class
 	use timer_m
+	use magnet_m
 	use mpi_m
     implicit none 
 
@@ -51,13 +52,13 @@ contains
 		if (mpirun_p) then
 			stop 'The parallell code is out of order currently. Sorry.'
 			rank=start_mpi()
-			call rankname(rankdir)
-			if (rank /= 0) then
-				ierr=system('mkdir ' // rankdir)
-				ierr=chdir(rankdir)
-				ierr=system('ln -s ../' // trim(molfil) // ' .' )
-				ierr=system('ln -s ../' // trim(denfil) // ' .' )
-			end if
+            call rankname(rankdir)
+!            if (rank /= 0) then
+!                ierr=system('mkdir ' // rankdir)
+!                ierr=chdir(rankdir)
+!                ierr=system('ln -s ../' // trim(molfil) // ' .' )
+!                ierr=system('ln -s ../' // trim(denfil) // ' .' )
+!            end if
 		else
 			master_p=.true.
 			rank=0
@@ -121,7 +122,7 @@ contains
 		integer(I4) :: i,j, ncalc
 		integer(I4), dimension(4) :: calc
 		logical :: divj_p, int_p, cdens_p, edens_p
-		logical :: nike_p, xdens_p, modens_p
+		logical :: nike_p, xdens_p, modens_p, dryrun_p, imod_p
 		character(LINELEN), dimension(:), pointer :: cstr
 
 		divj_p=.false.; int_p=.false.
@@ -188,11 +189,18 @@ contains
 				call jvector_plot(jf)
 			case(INTGRL_TAG)
 				if (nike_p) then
-!                        call int_t_direct(it)  ! tensor integral
 					call int_s_direct(it)
 					call nl
-					call msg_info('Integrating |J|')
-					call int_mod_direct(it)
+					call getkw(input, 'integral.modulus', imod_p)
+					if (imod_p) then
+						call msg_info('Integrating |J|')
+						call int_mod_direct(it)
+					end if
+					call getkw(input, 'integral.tensor', imod_p)
+					if (imod_p) then
+						call msg_info('Integrating current tensor')
+                        call int_t_direct(it)  ! tensor integral
+					end if
 				end if
 !                    call write_integral(it)
 			case(DIVJ_TAG)
@@ -251,7 +259,6 @@ contains
 						call plot_grid_xyz('grid.xyz', grid, mol, i)
 					end if
 				end if
-!                call proper_coordsys(grid)
 			case(DIVJ_TAG)
 				i=0
 				if (.not.section_is_set(input, 'divj')) then
@@ -276,7 +283,6 @@ contains
 						call plot_grid_xyz('divj.xyz', dgrid, mol, i)
 					end if
 				end if
-!                call proper_coordsys(grid)
 			case(INTGRL_TAG)
 				i=0
 				p=keyword_is_set(input, 'integral.grid')
@@ -294,7 +300,6 @@ contains
 						call plot_grid_xyz('integral.xyz', igrid, mol, i)
 					end if
 				end if
-!                call proper_coordsys(grid)
 			case(EDENS_TAG)
 				i=0
 				p=keyword_is_set(input, 'edens.grid')

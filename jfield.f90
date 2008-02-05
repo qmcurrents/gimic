@@ -13,6 +13,7 @@ module jfield_class
 	use basis_class
 	use teletype_m
 	use mpi_m
+	use magnet_m
 	implicit none
 
 	type jfield_t
@@ -40,8 +41,7 @@ contains
 		type(jtensor_t), target :: jt
 		type(grid_t), target :: g
 
-		integer(I4) :: i, j, k, axis
-		logical :: foo_p 
+		integer(I4) :: i, j, k
 
 		f%jt=>jt
 		f%grid=>g
@@ -69,27 +69,9 @@ contains
 			call msg_note(str_g)
 		end if
 		call nl
-		
-		foo_p=.false.
-		f%b=(/D0, D0, D1/)
-		call getkw(input, 'magnet', f%b)
-		call getkw(input, 'align_magnet', axis)
-		if (axis /= 0) then
-			if ( axis == 3) then
-				call msg_note('init_divj(): &
-					&Magnetic field defined to be orthogonal to the grid')
-			else
-				call msg_note('init_divj(): &
-					&Magnetic field defined to be parallel to the grid')
-			end if
-!            dj%bb=get_grid_basis(dj%grid, axis)
-		end if
-
-		write(str_g, '(a,3f10.5)') '   Magnetic field <x,y,z> =', f%b
-		call msg_out(str_g)
-		call nl
-		call flush(6)
 		call pop_section(input)
+
+        call get_magnet(g, f%b)
 	end subroutine
 
 	subroutine setup_files(jf)

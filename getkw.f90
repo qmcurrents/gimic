@@ -21,7 +21,7 @@
 
 module getkw_class
     use kinds_m
-	use pprinter_m
+	use teletype_m
     implicit none
 	
 	public new_getkw, del_getkw, getkw, getkw_ptr, setkw, save_keys
@@ -210,7 +210,7 @@ contains
 		if (idx > 0) then
 			ok=find_sect(self%active, path(:idx-1), sect)
 			if (.not.ok) then
-				call perror('delkw: no such key: ' // trim(path))
+				call msg_error('delkw: no such key: ' // trim(path))
 				return
 			end if
 		else
@@ -219,7 +219,7 @@ contains
 
 		ok=findkw(self%active, path, kw, kw2)
 		if (.not.ok) then
-			call perror('delkw: no such key: ' // trim(path))
+			call msg_error('delkw: no such key: ' // trim(path))
 			return
 		end if
 		kw=>del_keyword(kw)
@@ -243,7 +243,7 @@ contains
 		if (idx > 0) then
 			ok=find_sect(self%active, path(:idx-1), ptr)
 			if (.not.ok) then
-				call perror('delkw: no such section: ' // trim(path))
+				call msg_error('delkw: no such section: ' // trim(path))
 				return
 			end if
 		else
@@ -252,7 +252,7 @@ contains
 
 		ok=find_sect(ptr, path, sect, sect2)
 		if (.not.ok) then
-			call perror('delkw: no such key: ' // trim(path))
+			call msg_error('delkw: no such key: ' // trim(path))
 			return
 		end if
 		sect=>del_section_t(sect)
@@ -271,7 +271,7 @@ contains
 		if (associated(key%key))  then
 			call del_kword(key%key)
 		else
-			call pwarn('Cannot delete keyword: not associated!')
+			call msg_warn('Cannot delete keyword: not associated!')
 		end if
 
 		deallocate(key)
@@ -359,7 +359,7 @@ contains
 		type(section_t), pointer :: main
 
 		if (.not.associated(self%main)) then 
-			call perror('del_getkw: main section not associated!')
+			call msg_error('del_getkw: main section not associated!')
 			stop
 		end if
 		main=>self%main
@@ -375,10 +375,10 @@ contains
 		character(*), intent(in) :: str
 
 		if (strict) then
-			call perror('getkw: no such key: ' // trim(str))
+			call msg_error('getkw: no such key: ' // trim(str))
 			stop
 		else if (verbose) then
-			call pwarn('getkw: no such key: ' // trim(str))
+			call msg_warn('getkw: no such key: ' // trim(str))
 		end if
 	end subroutine
 
@@ -386,10 +386,10 @@ contains
 		character(*), intent(in) :: str
 
 		if (strict) then
-			call perror('getkw: key undefined: ' // trim(str))
+			call msg_error('getkw: key undefined: ' // trim(str))
 			stop
 		else if (verbose) then
-			call pwarn('getkw: key undefined: ' // trim(str))
+			call msg_warn('getkw: key undefined: ' // trim(str))
 		end if
 	end subroutine
 
@@ -397,11 +397,11 @@ contains
 		type(keyword_t) :: kw
 
 		if (strict) then
-			call perror('getkw: invalid kw type: '//trim(kw%id)// ' -> ' // &
+			call msg_error('getkw: invalid kw type: '//trim(kw%id)// ' -> ' // &
 			xstr(kw%typ))
 			stop
 		else if (verbose) then
-			call pwarn('getkw: invalid kw type: '//trim(kw%id)// ' -> ' // &
+			call msg_warn('getkw: invalid kw type: '//trim(kw%id)// ' -> ' // &
 			xstr(kw%typ))
 		end if
 	end subroutine
@@ -831,10 +831,10 @@ contains
 	subroutine addkw_err(str)
 		character(*), intent(in) :: str
 		if (strict) then
-			call perror('addkw: unknown section: ' // trim(str)) 
+			call msg_error('addkw: unknown section: ' // trim(str)) 
 			stop
 		else if (verbose) then
-			call pwarn('addkw: unknown section: ' // trim(str)) 
+			call msg_warn('addkw: unknown section: ' // trim(str)) 
 		end if
 	end subroutine
 
@@ -865,7 +865,7 @@ contains
 				ok=find_sect(sect, path, ptr)
 				arg=.true.
 			else
-				call perror('insert_keyword: key already defined: '// &
+				call msg_error('insert_keyword: key already defined: '// &
 				trim(path))
 				ok=.false.
 				stop  ! is this right???
@@ -1120,10 +1120,10 @@ contains
 	subroutine setkw_err(str)
 		character(*), intent(in) :: str
 		if (strict) then
-			call perror('setkw: unknown key: ' // trim(str)) 
+			call msg_error('setkw: unknown key: ' // trim(str)) 
 			stop
 		else if (verbose) then
-			call pwarn('setkw: unknown key: ' // trim(str)) 
+			call msg_warn('setkw: unknown key: ' // trim(str)) 
 		end if
 	end subroutine
 
@@ -1355,9 +1355,9 @@ contains
 					write(lun,*) 'STR ', trim(kw%id), 0, kw%set
 				end if
 			case(KW_NONE)
-				call pwarn('key undefined')
+				call msg_warn('key undefined')
 			case default
-				call pwarn('dang! no such key type' // xstr(kw%typ))
+				call msg_warn('dang! no such key type' // xstr(kw%typ))
 		end select
 	end subroutine
 
@@ -1434,7 +1434,7 @@ contains
 						ptr=>next%arg
 						ok=.true.
 					else
-						call pwarn('no argument for section: '//path)
+						call msg_warn('no argument for section: '//path)
 						ok=.false.
 					end if
 					return
@@ -1602,7 +1602,7 @@ contains
 					nullify(kw%key%str)
 				end if
 			case default
-				call perror('invalid type: ' // trim(kw%id) // ' -> ' // typ)
+				call msg_error('invalid type: ' // trim(kw%id) // ' -> ' // typ)
 				stop
 		end select
 !        call print_kw(kw)
@@ -1666,7 +1666,7 @@ contains
 
 		err=.false.
 		if (str1 /= str2) then
-			call perror('parse error: ' //trim(str2)// '!=' //trim(str1))
+			call msg_error('parse error: ' //trim(str2)// '!=' //trim(str1))
 			err=.true.
 		end if
 	end function
@@ -1728,9 +1728,9 @@ contains
 					print *, trim(kw%key%str(i))
 				end do
 			case(KW_NONE)
-				call pwarn('key undefined')
+				call msg_warn('key undefined')
 			case default
-				call pwarn('dang! no such key type' // xstr(kw%typ))
+				call msg_warn('dang! no such key type' // xstr(kw%typ))
 		end select
 	end subroutine
 
@@ -1750,15 +1750,15 @@ contains
 			end if
 			ok=find_sect(self%active, sect, ptr)
 			if ( .not.ok ) then
-				call perror('Invalid section: ' // sect)
+				call msg_error('Invalid section: ' // sect)
 				stop
 			end if
 			self%active=>ptr
 		else if (strict) then 
-			call perror('push_section: stack overflow!')
+			call msg_error('push_section: stack overflow!')
 			stop
 		else
-			call pwarn('push_section: stack overflow!')
+			call msg_warn('push_section: stack overflow!')
 		end if
 			
 	end subroutine 
@@ -1771,10 +1771,10 @@ contains
 			self%active=>self%stack(self%stidx)%sect
 			self%stidx=self%stidx-1
 		else if (strict) then
-			call perror('pop_section: stack underflow!')
+			call msg_error('pop_section: stack underflow!')
 			stop
 		else
-			call pwarn('pop_section: stack underflow!')
+			call msg_warn('pop_section: stack underflow!')
 		end if
 	end subroutine 
 
@@ -1809,7 +1809,7 @@ contains
 
 		ok=findkw(self%active, key, ptr)
 		if (.not.ok) then
-			call pwarn('getkw: no such key: ' // trim(key))
+			call msg_warn('getkw: no such key: ' // trim(key))
 		else
 			ok=ptr%set
 		end if
@@ -1824,7 +1824,7 @@ contains
 
 		ok=find_sect(self%active, key, ptr)
 		if (.not.ok) then
-			call pwarn('no such section: ' // trim(key))
+			call msg_warn('no such section: ' // trim(key))
 		else
 			ok=ptr%set
 		end if

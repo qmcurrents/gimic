@@ -6,9 +6,9 @@ module gaussint_m
 	type gdata_t
 		real(DP), dimension(:), pointer :: pts, wgt
 	end type 
-	
-	public gaussl, lobatomy, legendrep, lobogrid, gauscale
-	public gdata_t, setup_lobby
+
+	public gdata_t, gaussl, lobatomy, legendrep, lobogrid, gauscale
+	public setup_lobby
 	
 	private
 	real(DP), parameter :: EPS=3.0d-12

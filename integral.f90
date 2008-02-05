@@ -11,6 +11,7 @@ module integral_class
 	use gaussint_m
 	use lip_m
 	use teletype_m
+	use magnet_m
 	implicit none
 
 	type integral_t
@@ -105,7 +106,7 @@ contains
 		type(tensor_t) :: jt
 		
 		call get_grid_size(it%grid, p1, p2, p3)
-		call getkw(input, 'cdens.magnet', bb)
+		call get_magnet(it%grid, bb)
 
 		normal=get_grid_normal(it%grid)
 
