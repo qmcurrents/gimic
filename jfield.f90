@@ -27,7 +27,7 @@ module jfield_class
 
 	public init_jfield, del_jfield, jfield, jvectors, jfield_direct
 	public jfield_t, get_jvectors, get_jtensors, jvector_plot
-	public set_jtensors, jfield_master, jfield_slave
+	public set_jtensors
 	
 	private
 
@@ -394,12 +394,15 @@ contains
 		integer(I4) :: i, j, k, p1, p2, p3
 		real(DP), dimension(3) :: rr
 		character(10) :: op
+		integer(I4) :: lo, hi, npts
 
 		call eta(jf%jt,jf%grid)
 		call get_grid_size(jf%grid, p1, p2, p3)
+
+		call schedule(p2, lo, hi, npts)
 	
 		do k=1,p3
-			do j=1,p2
+			do j=lo,hi
 				do i=1,p1
 					rr=gridpoint(jf%grid, i, j, k)
 					call ctensor(jf%jt, rr, jf%jj(i,j), 'total')
@@ -410,6 +413,12 @@ contains
 					end if
 				end do
 			end do
+			call gather_data(jf%jj,jf%jj(:,lo:hi))
+			if (uhf_p) then
+				call gather_data(jf%jja,jf%jja(:,lo:hi))
+				call gather_data(jf%jjb,jf%jjb(:,lo:hi))
+				call gather_data(jf%jsd,jf%jsd(:,lo:hi))
+			end if
 			call jtens_io(jf, k, 'w')
 			jf%zpos_j=k
 		end do
@@ -420,13 +429,16 @@ contains
 		integer(I4), intent(in) :: k
 
 		integer(I4) :: i, j, p1, p2
+		integer(I4) :: lo, hi, npts
 		real(DP), dimension(3) :: rr
 		type(tensor_t), dimension(:,:), pointer :: jj
 		
 		call get_grid_size(jf%grid, p1, p2)
 		jj=>jf%jj
 
-		do j=1,p2
+		call schedule(p2, lo, hi, npts)
+
+		do j=lo,hi
 			do i=1,p1
 				rr=gridpoint(jf%grid, i, j, k)
 				call ctensor(jf%jt, rr, jf%jj(i,j), 'total')
@@ -437,6 +449,12 @@ contains
 				end if
 			end do
 		end do
+		call gather_data(jf%jj,jf%jj(:,lo:hi))
+		if (uhf_p) then
+			call gather_data(jf%jja,jf%jja(:,lo:hi))
+			call gather_data(jf%jjb,jf%jjb(:,lo:hi))
+			call gather_data(jf%jsd,jf%jsd(:,lo:hi))
+		end if
 	end subroutine 
 
 	subroutine get_jtensors(jf,z,jt)
@@ -484,55 +502,6 @@ contains
 		print '(3e19.12)', (jt(l,:), l=1,3)
 		print *
 		print '(a,e19.12)', ' Trace:', jt(1,1)+jt(2,2)+jt(3,3)
-	end subroutine
-
-	subroutine jfield_master(jf, who)
-		use mpi_m
-		type(jfield_t) :: jf
-		integer(I4), intent(in) ::  who
-
-#ifdef HAVE_MPI
-		integer(I4) :: p1, p2, jnum
-		integer(I4) :: bufsz, ierr
-		integer(I4), dimension(MPI_STATUS_SIZE) :: stat
-
-		call get_grid_size(jf%grid, p1, p2)
-
-		bufsz=p1*p2*9
-
-		call mpi_recv(jnum,1,MPI_INTEGER,who,CDENS_TAG, &
-			MPI_COMM_WORLD, stat, ierr)
-		call mpi_recv(jf%jj,bufsz,MPI_DOUBLE_PRECISION,who, &
-			CDENS_TAG, MPI_COMM_WORLD, stat, ierr)
-
-		call set_jtensors(jf, jnum, jf%jj)
-#endif
-	end subroutine
-
-	subroutine jfield_slave(jf, jnum)
-		use mpi_m
-		type(jfield_t) :: jf
-		integer(I4), intent(in) :: jnum
-
-#ifdef HAVE_MPI
-		integer(I4) :: p1, p2
-		integer(I4) :: bufsz, ierr
-		integer(I4), dimension(MPI_STATUS_SIZE) :: stat
-		type(tensor_t), dimension(:,:), allocatable :: buf
-
-		call get_grid_size(jf%grid, p1, p2)
-
-		bufsz=p1*p2*9
-
-		call jfield_direct(jf, jnum)
-
-		call mpi_send(CDENS_TAG, 1, MPI_INTEGER, 0, JOB_TAG,&
-			MPI_COMM_WORLD, ierr)
-		call mpi_send(jnum, 1, MPI_INTEGER, 0, CDENS_TAG,&
-			MPI_COMM_WORLD, ierr)
-		call mpi_send(jf%jj, bufsz, MPI_DOUBLE_PRECISION, 0, CDENS_TAG, &
-			MPI_COMM_WORLD, ierr)
-#endif
 	end subroutine
 
 	subroutine jmod_gopenmol(jf)

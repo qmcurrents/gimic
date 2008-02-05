@@ -405,7 +405,7 @@ contains
 		real(4), dimension(2) :: times
 		real(DP), dimension(3) :: bar=(/D1,D1,D1/)
 		real(DP), dimension(3) :: foobar
-		real(DP), parameter :: SC=1.d-2
+		real(DP), parameter :: SC=5.d-2
 		
 		call get_grid_size(grid, p1, p2, p3)
 		

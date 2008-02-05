@@ -119,12 +119,19 @@ module globals_m
 	end type
 
 	type tensor_t
+		sequence
 		real(DP), dimension(3,3) :: t
 	end type
 
 	type vector_t
 		real(DP), dimension(3) :: v
 	end type
+
+	interface copy_tensor
+		module procedure copy_tensor_s
+		module procedure copy_tensor_1d
+		module procedure copy_tensor_2d
+	end interface
 
 contains
     function xtrim(str) result(r)
@@ -196,5 +203,56 @@ contains
 		end do
 		p=.true.
 	end function
+
+	subroutine copy_tensor_s(src,dest)
+		type(tensor_t), intent(in) :: src
+		type(tensor_t), intent(out) :: dest
+
+		dest%t=src%t
+
+	end subroutine
+
+	subroutine copy_tensor_1d(src,dest)
+		type(tensor_t), dimension(:), intent(in) :: src
+		type(tensor_t), dimension(:), intent(out) :: dest
+
+		integer(I4) :: i
+		integer(I4) :: ni, nj
+
+		ni=size(src)
+		nj=size(dest)
+
+		if (ni /= nj) then
+			call msg_error('copy_tensor_1d(): dimesnion mismatch!')
+			stop
+		end if
+
+		do i=1,ni
+			dest(i)%t=src(i)%t
+		end do
+
+	end subroutine
+
+	subroutine copy_tensor_2d(src,dest)
+		type(tensor_t), dimension(:,:), intent(in) :: src
+		type(tensor_t), dimension(:,:), intent(out) :: dest
+
+		integer(I4) :: i, j
+		integer(I4), dimension(2) :: ni, nj
+		ni=shape(src)
+		nj=shape(dest)
+
+		if (ni(1) /= nj(1) .or. ni(2) /= nj(2)) then
+			call msg_error('copy_tensor_2d(): dimesnion mismatch!')
+			stop
+		end if
+
+		do i=1,ni(1)
+			do j=1,nj(2)
+				dest(i,j)%t=src(i,j)%t
+			end do
+		end do
+
+	end subroutine
 end module
 
