@@ -16,6 +16,19 @@ case $* in
 esac
 }
 
+stallo() {
+INSTDIR=$HOME/gimic
+case $* in 
+	--mpi) 
+	FC=ifort MPIFC=mpif90 ./configure --prefix=${INSTDIR} \
+	--enable-mpi --with-aces2=$HOME/aces2/lib
+	;;
+	*)
+	FC=ifort ./configure --prefix=${INSTDIR} --with-aces2=$HOME/aces2/lib
+	;;
+esac
+}
+
 snowflake() {
 BLASDIR=/opt/lib
 INSTDIR=/opt/aces2
@@ -33,6 +46,7 @@ esac
 
 case `hostname` in 
 	compute-0-6.*) snykov $* ;;
+	stallo-*) stallo $* ;;
 	snowflake*) snowflake $* ;;
 	*) echo "unknown machine..."; exit 0 ;;
 esac

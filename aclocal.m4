@@ -34,3 +34,14 @@ AC_SUBST(crange, $crange)
 AC_SUBST(cldflags, $cldflags)
 
 ]) #ACX_SUBST_BUILD_FLAGS
+
+AC_DEFUN([ACX_CHECK_DIR],[
+AC_MSG_CHECKING([for $1 directory])
+if test -d $1; then
+	AC_MSG_RESULT([yes])
+else
+	AC_MSG_RESULT([no])
+	AC_MSG_NOTICE([creating $1])
+	mkdir $1
+fi
+]) #ACX_CHECK_DIR

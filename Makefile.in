@@ -11,12 +11,14 @@ srcdir:=@srcdir@
 include $(topdir)/make.config
 
 vpath %.py tools
+vpath %.sh tools
 
-INST_PROGS:=gimic.x gimic tools/MOL2mol.sh tools/turbo2mol.py 
-INST_LIBS:=getkw.py pyparsing.py Atom.py Const.py Elements.py QCTools.py
+INST_PROGS:=gimic.x gimic tools/MOL2mol.sh tools/turbo2mol.py tools/qgimic
+INST_LIBS:=getkw.py pyparsing.py Atom.py Const.py Elements.py QCTools.py \
+	quesys.sh
 INST_INCLUDES:=
-INST_DATA:=
-# module names are listed in smallcaps and wihtout any .mod
+INST_DATA:=gimic.run 
+# module names are listed in smallcaps and wihtout any .mod extension
 INST_MODULES:=
 
 ACES2LIBS=@F90_LIBS_aces2@
@@ -55,7 +57,13 @@ tools/turbo2mol.py: tools/turbo2mol.py.in
 	sed 's/@inst_bindir@/$(subst /,\/,$(inst_bindir))/; s/@inst_libdir@/$(subst /,\/,$(inst_libdir))/; s/@python_bin@/$(PYTHON_BIN)/' $< > $@
 	chmod 755 $@
 
+$(datadir)/gimic.run: tools/gimic.run
+	cp -f $< $@
+
 $(libdir)/%.py: %.py
+	cp -f $< $@
+
+$(libdir)/%.sh: %.sh
 	cp -f $< $@
 
 .PHONY: dep deps

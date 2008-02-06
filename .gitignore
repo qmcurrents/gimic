@@ -11,6 +11,7 @@
 tags
 examples/*
 lib/*
+share/*
 autom4te.cache/*
 Makefile
 make.config
@@ -24,3 +25,5 @@ xcpdens
 build-stamp
 tools/MOL2mol.sh
 tools/turbo2mol.py
+tools/qgimic
+tools/quesys.sh

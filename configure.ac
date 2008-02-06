@@ -4,7 +4,7 @@
 # Written by Jonas Juselius <jonas@iki.fi>
 #
 
-AC_INIT([GIMIC],[1.5.1],[jonas@iki.fi])
+AC_INIT([GIMIC],[1.6.0],[jonas@iki.fi])
 
 AC_CONFIG_SRCDIR(gimic.f90)
 AC_CONFIG_HEADER(config.h)
@@ -99,8 +99,9 @@ FCFLAGS=""
 CFLAGS=""
 ACX_SUBST_BUILD_FLAGS([$build_type])
 
-MPI_TYPE="none"
+MPI_TYPE="serial"
 if test "x$enable_mpi" != "x"; then
+	MPI_TYPE="none"
 	test "$enable_mpi" != "yes" && MPI_TYPE="$enable_mpi"
 	AC_MSG_NOTICE([Checking if MPI is available])
 	AC_LANG_PUSH([Fortran])
@@ -114,7 +115,6 @@ if test "x$enable_mpi" != "x"; then
 		lam) ;;
 		mpich) ;;
 		scali|scampi) ;;
-		none) ;;
 		*) AC_MSG_WARN([Unknown MPI implementation: $MPI_TYPE])
 		;;
 	esac
@@ -170,6 +170,12 @@ AC_SUBST(ACES2LIBS, $ACES2LIBS)
 AC_SUBST(top_bindir,['$(topdir)'])
 AC_SUBST(top_includedir,['$(topdir)/include'])
 AC_SUBST(top_libdir,['$(topdir)/lib'])
+AC_SUBST(top_datadir,['$(topdir)/share'])
 
-AC_CONFIG_FILES([Makefile make.config make.rules tools/Makefile])
+#ACX_CHECK_DIR(bin)
+ACX_CHECK_DIR(share)
+ACX_CHECK_DIR(lib)
+
+AC_CONFIG_FILES([Makefile make.config make.rules tools/Makefile
+				 tools/qgimic tools/quesys.sh])
 AC_OUTPUT

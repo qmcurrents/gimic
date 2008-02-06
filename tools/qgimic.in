@@ -1,0 +1,219 @@
+#!/bin/sh
+#
+# Queue GIMIC jobs from the command line in a sensible way
+# Written by Jonas Juselius <jonas.juselius@chem.uit.no>, 2007
+#
+
+# defaults, these can be overriden in $HOME/.qgimic
+GIMIC="@prefix@"
+name="gimic.run"
+queue=""
+nodes="1"
+global="no"
+globaldisk=""
+notify=""
+workdir=""
+outdir=""
+qsub="qsub"
+
+# no modifications below this line
+paratype="@MPI_TYPE@" 
+jobtype="serial"
+
+usage () {
+	echo "usage: qgimic [-h|--help] [options] [workdir]"
+	if [ "x$1" = "x-long" ]; then
+	echo "
+   [-h|--help]        This message
+   [-n|--nodes N]     Reserve N nodes for parallel calculation
+   [-t|--time hh:mm]  Reserve hh:mm time for calculation
+   [-m|--mem N]       Memory in MB
+   [-g|--global]      Use global workdisk
+   [-q|--queue name]  Specify run queue
+   [-N|--name label]  Specify run queue
+   [-Q|--qopt string] Extra options to pass to the batch system
+   [-o|--out dir]     Set output directory
+   [-x|--run]         Generate run file and submit it
+   [-l|--local]       Run on local machine, bypassing all queues
+   [-v|--version]     Print program version
+   [-s|--silent]       Be quiet. Do not send mail.
+	"	
+	shift
+	fi
+	[ "x$1" != "x" ] && echo $1
+	exit 1
+}
+
+version () {
+	echo "GIMIC program system version $gimic_version"
+	exit 0
+}
+
+getopt () {
+	eval "$1"="$2"
+}
+
+subst () {
+	tmp=/tmp/gimic.$$
+	mv $runscript $tmp
+	v=`echo $2 |sed 's,\/,\\\/,g'`
+	sed "s/@$1@/$v/" $tmp > $runscript
+	rm $tmp
+}
+
+get_cmdline() {
+	while : ; do
+		[ "x$1" = "x" ] && break
+		i=$1
+		case $i in 
+			--queue|-q)
+			shift
+			getopt queue $1
+			shift
+			;;
+			--nodes|-n)
+			shift
+			getopt nodes $1
+			shift
+			case $nodes in 
+				[0-9]*) : ;;
+				*) usage "Invalid node count"
+			;;
+			esac
+			if [ $((nodes > 1)) ]; then
+				jobtype="parallel"
+			fi
+			;;
+			--global|-g)
+			global=yes
+			shift
+			;;
+			--time|-t)
+			shift
+			getopt time "$1"
+			verify_time
+			shift
+			;;
+			--mem*|-m)
+			shift
+			getopt mem "$1"
+			shift
+			;;
+			-name|-N)
+			shift
+			getopt name "$1"
+			shift
+			;;
+			--out*|-o)
+			shift
+			getopt outdir $1
+			shift
+			;;
+			--qopt|-Q)
+			shift
+			getopt tmp $1
+			qopts="$qopts $tmp"
+			shift
+			;;
+			--help|-\?|-h)
+			usage -long
+			;;
+			--run|-x)
+			shift
+			run=1
+			;;
+			--local|-l)
+			shift
+			qsub='/bin/sh'
+			batchjob=0
+			;;
+			--silent|-s)
+			notify=""
+			shift
+			;;
+			--version|-v)
+			version
+			;;
+			-*)
+			usage "Invalid option '$i'"
+			break
+			;;
+			*)
+			workdir="$1"
+			verify_path $workdir
+			break
+			;;
+		esac
+	done
+
+	if [ "x$1" != "x" ]; then
+		name="$1"
+		shift
+	fi
+}
+
+verify_path () {
+	echo "$1" | grep -q '^\(~\|/\)'
+	[ $? != 0 ] && usage "Not absolute path '$1'"
+}
+
+verify_time () {
+	echo "$time" | grep -q '[0-9]\+:[0-9]\+'
+	[ $? != 0 ] && usage "Invalid time spec '$time'"
+	time="$time:00"
+}
+
+[ -f $HOME/.qgimic ] && . $HOME/.qgimic
+
+gimic_version="@PACKAGE_VERSION@ ($paratype)"
+run=0
+batchjob=1
+qopts=""
+
+get_cmdline $*
+
+if [ $((nodes > 1)) ]; then
+	if [ "$paratype" = "serial" ]; then
+	echo "GIMIC not compiled for parallel calculations yet, please recompile GIMIC."
+	exit 0
+	fi
+fi
+
+case $global in
+	y*|Y*) workdir="$globaldisk" ;;
+esac
+
+[ "x$workdir" = "x" ] && usage "  No workdir defined"
+
+if [ "$batchjob" = 1 ]; then
+	[ "x$time" = "x" ] && usage "  No walltime specified."
+	[ "x$mem" = "x" ] &&  usage "  No memory specified."
+fi
+
+if [ "$nodes" = "1" ]; then
+	aces2="$GIMIC"
+else
+	aces2="$PARGIMIC"
+fi
+
+templ="$PROG/share/gimic.run"
+runscript="`pwd`/gimic.run"
+
+cp $templ $runscript 
+
+subst name     "$name"
+subst queue    "$queue"
+subst nodes    "$nodes"
+subst global   "$global"
+subst jobtype  "$jobtype"
+subst notify   "$notify"
+subst wall     "$time"
+subst mem      "$mem"
+subst workdir  "$workdir"
+subst outdir   "$outdir"
+subst qopts    "$qopts"
+
+chmod 755 $runscript
+
+[ $run = 1 ] && $qsub gimic.run
+
