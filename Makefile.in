@@ -10,8 +10,10 @@ srcdir:=@srcdir@
 
 include $(topdir)/make.config
 
-INST_PROGS:=gimic.x gimic
-INST_LIBS:=getkw.py pyparsing.py
+vpath %.py tools
+
+INST_PROGS:=gimic.x gimic tools/MOL2mol.sh tools/turbo2mol.py 
+INST_LIBS:=getkw.py pyparsing.py Atom.py Const.py Elements.py QCTools.py
 INST_INCLUDES:=
 INST_DATA:=
 # module names are listed in smallcaps and wihtout any .mod
@@ -26,7 +28,7 @@ include $(topdir)/make.rules
 
 gimic_objs=kinds.o getkw.o globals.o teletype.o intgrl.o  \
 	lip.o gtodefs.o cao2sao.o basis.o reorder.o caos.o dbop.o gaussint.o \
-    bfeval.o mpi.o grid.o tensor.o dens.o dfdb.o dfdr.o d2fdrdb.o  \
+    bfeval.o parallel.o grid.o tensor.o dens.o dfdb.o dfdr.o d2fdrdb.o  \
     jtensor.o timer.o jfield.o divj.o integral.o edens.o factorial.o \
 	gimic.o magnet.o
 
@@ -44,6 +46,14 @@ gimic.x: $(gimic_objs)
 
 xcpdens: xcpdens.o
 	$(FC) $(FLDFLAGS) -o $@ $+ $(ACES2LIBS) $(BLAS_LIBS)
+
+tools/MOL2mol.sh: tools/MOL2mol.sh.in
+	sed 's/@inst_bindir@/$(subst /,\/,$(inst_bindir))/' $< > $@
+	chmod 755 $@
+
+tools/turbo2mol.py: tools/turbo2mol.py.in
+	sed 's/@inst_bindir@/$(subst /,\/,$(inst_bindir))/; s/@inst_libdir@/$(subst /,\/,$(inst_libdir))/; s/@python_bin@/$(PYTHON_BIN)/' $< > $@
+	chmod 755 $@
 
 $(libdir)/%.py: %.py
 	cp -f $< $@

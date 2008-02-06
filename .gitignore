@@ -22,5 +22,3 @@ deps.mk
 gimic
 xcpdens
 build-stamp
-turbo2mol.py
-MOL2mol.sh

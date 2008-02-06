@@ -683,30 +683,6 @@ OBJEXT
 FC
 FCFLAGS
 ac_ct_FC
-FCLIBS
-FCFLAGS_f90
-FC_MODEXT
-FC_MODCASE
-BLAS_LIBS
-LAPACK_LIBS
-F90_MODULE_blas95
-F90_LDFLAGS_blas95
-F90_LIBS_blas95
-F90_MODULE_lapack95
-F90_LDFLAGS_lapack95
-F90_LIBS_lapack95
-F90_HEADER_aces2
-F90_MODULE_aces2
-F90_LDFLAGS_aces2
-F90_LIBS_aces2
-MPIFC
-MPILIBS
-PYTHON_BIN
-CPP
-GREP
-EGREP
-PYTHON_INCLUDE_DIR
-PYTHON_LIB
 fcflags
 fdebug
 fprof
@@ -717,6 +693,24 @@ cdebug
 cprof
 crange
 cldflags
+MPIFC
+MPILIBS
+pbsdsh
+MPI_TYPE
+FCLIBS
+FCFLAGS_f90
+FC_MODEXT
+FC_MODCASE
+F90_HEADER_aces2
+F90_MODULE_aces2
+F90_LDFLAGS_aces2
+F90_LIBS_aces2
+PYTHON_BIN
+CPP
+GREP
+EGREP
+PYTHON_INCLUDE_DIR
+PYTHON_LIB
 ACES2LIBS
 top_bindir
 top_includedir
@@ -1310,19 +1304,14 @@ if test -n "$ac_init_help"; then
 Optional Features:
   --disable-FEATURE       do not include FEATURE (same as --enable-FEATURE=no)
   --enable-FEATURE[=ARG]  include FEATURE [ARG=yes]
-  --enable-mpi            Enable the parallel version
+  --enable-mpi=vendor     enable parallel version using mpich, lam, openmpi or
+                          scali
 
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
   --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
   --with-fc-search-path=DIR
                           Base path to installed Fortran libraries
-  --with-blas=LIB         use BLAS library LIB
-  --with-blas-dir=DIR     look for BLAS library in DIR
-  --with-lapack=LIB       use LAPACK library LIB
-  --with-lapack-dir=DIR   look for LAPACK library in DIR
-  --with-blas95=DIR       specify search path form blas95 module and library
-  --with-lapack95=DIR     specify search path form lapack95 module and library
   --with-aces2=PATH       specify search path form aces2 module and library
 
 Some influential environment variables:
@@ -3477,12 +3466,318 @@ ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $
 ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
-# we build these from scratch, to avoid stupid defaults...
-CFLAGS=""
+# clear the default compiler flags. we don't want them!
 FCFLAGS=""
+CFLAGS=""
 
 . ./config/$build_type.conf
-cat >confcache <<\_ACEOF
+fcflags=$fcflags
+
+fdebug=$fdebug
+
+fprof=$fprof
+
+frange=$frange
+
+fldflags=$fldflags
+
+
+cflags=$cflags
+
+cdebug=$cdebug
+
+cprof=$cprof
+
+crange=$crange
+
+cldflags=$cldflags
+
+
+
+
+MPI_TYPE="none"
+if test "x$enable_mpi" != "x"; then
+	test "$enable_mpi" != "yes" && MPI_TYPE="$enable_mpi"
+	{ echo "$as_me:$LINENO: Checking if MPI is available" >&5
+echo "$as_me: Checking if MPI is available" >&6;}
+	ac_ext=${ac_fc_srcext-f}
+ac_compile='$FC -c $FCFLAGS $ac_fcflags_srcext conftest.$ac_ext >&5'
+ac_link='$FC -o conftest$ac_exeext $FCFLAGS $LDFLAGS $ac_fcflags_srcext conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_fc_compiler_gnu
+
+	save_FCFLAGS=$FCFLAGS
+	FCFLAGS=$fcflags
+
+
+
+
+
+
+	for ac_prog in mpif90 mpxlf90 mpxlf95 mpf90 mpif77 mpxlf hf77 mpf77 mpxlf_r
+do
+  # Extract the first word of "$ac_prog", so it can be a program name with args.
+set dummy $ac_prog; ac_word=$2
+{ echo "$as_me:$LINENO: checking for $ac_word" >&5
+echo $ECHO_N "checking for $ac_word... $ECHO_C" >&6; }
+if test "${ac_cv_prog_MPIFC+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  if test -n "$MPIFC"; then
+  ac_cv_prog_MPIFC="$MPIFC" # Let the user override the test.
+else
+as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $PATH
+do
+  IFS=$as_save_IFS
+  test -z "$as_dir" && as_dir=.
+  for ac_exec_ext in '' $ac_executable_extensions; do
+  if { test -f "$as_dir/$ac_word$ac_exec_ext" && $as_test_x "$as_dir/$ac_word$ac_exec_ext"; }; then
+    ac_cv_prog_MPIFC="$ac_prog"
+    echo "$as_me:$LINENO: found $as_dir/$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+done
+IFS=$as_save_IFS
+
+fi
+fi
+MPIFC=$ac_cv_prog_MPIFC
+if test -n "$MPIFC"; then
+  { echo "$as_me:$LINENO: result: $MPIFC" >&5
+echo "${ECHO_T}$MPIFC" >&6; }
+else
+  { echo "$as_me:$LINENO: result: no" >&5
+echo "${ECHO_T}no" >&6; }
+fi
+
+
+  test -n "$MPIFC" && break
+done
+test -n "$MPIFC" || MPIFC="$FC"
+
+	acx_mpi_save_FC="$FC"
+	FC="$MPIFC"
+
+
+
+if test x = x"$MPILIBS"; then
+	{ echo "$as_me:$LINENO: checking for MPI_Init" >&5
+echo $ECHO_N "checking for MPI_Init... $ECHO_C" >&6; }
+			cat >conftest.$ac_ext <<_ACEOF
+      program main
+      call MPI_Init
+      end
+_ACEOF
+rm -f conftest.$ac_objext conftest$ac_exeext
+if { (ac_try="$ac_link"
+case "(($ac_try" in
+  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
+  *) ac_try_echo=$ac_try;;
+esac
+eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
+  (eval "$ac_link") 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } && {
+	 test -z "$ac_fc_werror_flag" ||
+	 test ! -s conftest.err
+       } && test -s conftest$ac_exeext &&
+       $as_test_x conftest$ac_exeext; then
+  MPILIBS=" "
+				{ echo "$as_me:$LINENO: result: yes" >&5
+echo "${ECHO_T}yes" >&6; }
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+	{ echo "$as_me:$LINENO: result: no" >&5
+echo "${ECHO_T}no" >&6; }
+fi
+
+rm -f core conftest.err conftest.$ac_objext conftest_ipa8_conftest.oo \
+      conftest$ac_exeext conftest.$ac_ext
+fi
+if test x = x"$MPILIBS"; then
+	{ echo "$as_me:$LINENO: checking for MPI_Init in -lmpi" >&5
+echo $ECHO_N "checking for MPI_Init in -lmpi... $ECHO_C" >&6; }
+if test "${ac_cv_lib_mpi_MPI_Init+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lmpi  $LIBS"
+cat >conftest.$ac_ext <<_ACEOF
+      program main
+      call MPI_Init
+      end
+_ACEOF
+rm -f conftest.$ac_objext conftest$ac_exeext
+if { (ac_try="$ac_link"
+case "(($ac_try" in
+  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
+  *) ac_try_echo=$ac_try;;
+esac
+eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
+  (eval "$ac_link") 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } && {
+	 test -z "$ac_fc_werror_flag" ||
+	 test ! -s conftest.err
+       } && test -s conftest$ac_exeext &&
+       $as_test_x conftest$ac_exeext; then
+  ac_cv_lib_mpi_MPI_Init=yes
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+	ac_cv_lib_mpi_MPI_Init=no
+fi
+
+rm -f core conftest.err conftest.$ac_objext conftest_ipa8_conftest.oo \
+      conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ echo "$as_me:$LINENO: result: $ac_cv_lib_mpi_MPI_Init" >&5
+echo "${ECHO_T}$ac_cv_lib_mpi_MPI_Init" >&6; }
+if test $ac_cv_lib_mpi_MPI_Init = yes; then
+  MPILIBS="-lmpi"
+fi
+
+fi
+if test x = x"$MPILIBS"; then
+	{ echo "$as_me:$LINENO: checking for MPI_Init in -lmpich" >&5
+echo $ECHO_N "checking for MPI_Init in -lmpich... $ECHO_C" >&6; }
+if test "${ac_cv_lib_mpich_MPI_Init+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lmpich  $LIBS"
+cat >conftest.$ac_ext <<_ACEOF
+      program main
+      call MPI_Init
+      end
+_ACEOF
+rm -f conftest.$ac_objext conftest$ac_exeext
+if { (ac_try="$ac_link"
+case "(($ac_try" in
+  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
+  *) ac_try_echo=$ac_try;;
+esac
+eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
+  (eval "$ac_link") 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } && {
+	 test -z "$ac_fc_werror_flag" ||
+	 test ! -s conftest.err
+       } && test -s conftest$ac_exeext &&
+       $as_test_x conftest$ac_exeext; then
+  ac_cv_lib_mpich_MPI_Init=yes
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+	ac_cv_lib_mpich_MPI_Init=no
+fi
+
+rm -f core conftest.err conftest.$ac_objext conftest_ipa8_conftest.oo \
+      conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ echo "$as_me:$LINENO: result: $ac_cv_lib_mpich_MPI_Init" >&5
+echo "${ECHO_T}$ac_cv_lib_mpich_MPI_Init" >&6; }
+if test $ac_cv_lib_mpich_MPI_Init = yes; then
+  MPILIBS="-lmpich"
+fi
+
+fi
+
+if test x != x"$MPILIBS"; then
+	{ echo "$as_me:$LINENO: checking for mpif.h" >&5
+echo $ECHO_N "checking for mpif.h... $ECHO_C" >&6; }
+	cat >conftest.$ac_ext <<_ACEOF
+      program main
+      include 'mpif.h'
+      end
+_ACEOF
+rm -f conftest.$ac_objext
+if { (ac_try="$ac_compile"
+case "(($ac_try" in
+  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
+  *) ac_try_echo=$ac_try;;
+esac
+eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
+  (eval "$ac_compile") 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } && {
+	 test -z "$ac_fc_werror_flag" ||
+	 test ! -s conftest.err
+       } && test -s conftest.$ac_objext; then
+  { echo "$as_me:$LINENO: result: yes" >&5
+echo "${ECHO_T}yes" >&6; }
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+	MPILIBS=""
+		{ echo "$as_me:$LINENO: result: no" >&5
+echo "${ECHO_T}no" >&6; }
+fi
+
+rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+fi
+
+FC="$acx_mpi_save_FC"
+
+
+
+# Finally, execute ACTION-IF-FOUND/ACTION-IF-NOT-FOUND:
+if test x = x"$MPILIBS"; then
+        { { echo "$as_me:$LINENO: error: MPI not found: $MPI_TYPE" >&5
+echo "$as_me: error: MPI not found: $MPI_TYPE" >&2;}
+   { (exit 1); exit 1; }; }
+        :
+else
+
+cat >>confdefs.h <<\_ACEOF
+#define HAVE_MPI 1
+_ACEOF
+
+        :
+fi
+
+	FCFLAGS=$save_FCFLAGS
+	ac_ext=c
+ac_cpp='$CPP $CPPFLAGS'
+ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_c_compiler_gnu
+
+	case $enable_mpi in
+		openmpi) ;;
+		lam) ;;
+		mpich) ;;
+		scali|scampi) ;;
+		none) ;;
+		*) { echo "$as_me:$LINENO: WARNING: Unknown MPI implementation: $MPI_TYPE" >&5
+echo "$as_me: WARNING: Unknown MPI implementation: $MPI_TYPE" >&2;}
+		;;
+	esac
+	cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
 # tests run on this system so they can be shared between configure
 # scripts and configure runs, see configure's option --config-cache.
@@ -3555,6 +3850,21 @@ echo "$as_me: not updating unwritable cache $cache_file" >&6;}
   fi
 fi
 rm -f confcache
+fi
+
+pbsdsh=no
+if test "x$enable_pbsdsh" != "x"; then
+	pbsdsh=yes
+fi
+pbsdsh=$pbsdsh
+
+MPI_TYPE=$MPI_TYPE
+
+
+if test "x$enable_mpi" != "x"; then
+	FC=$MPIFC
+	fcflags="$fcflags -DHAVE_MPI"
+fi
 
 
 
@@ -3578,7 +3888,6 @@ case $with_fc_search_path in
 		 fi
 	  ;;
 esac
-
 
 
 
@@ -4690,2400 +4999,13 @@ echo "$as_me: error: unable to find f90 modules extension" >&2;}
    { (exit 1); exit 1; }; }
 fi
 
-cat >confcache <<\_ACEOF
-# This file is a shell script that caches the results of configure
-# tests run on this system so they can be shared between configure
-# scripts and configure runs, see configure's option --config-cache.
-# It is not useful on other systems.  If it contains results you don't
-# want to keep, you may remove or edit it.
-#
-# config.status only pays attention to the cache file if you give it
-# the --recheck option to rerun configure.
-#
-# `ac_cv_env_foo' variables (set or unset) will be overridden when
-# loading this file, other *unset* `ac_cv_foo' will be assigned the
-# following values.
-
-_ACEOF
-
-# The following way of writing the cache mishandles newlines in values,
-# but we know of no workaround that is simple, portable, and efficient.
-# So, we kill variables containing newlines.
-# Ultrix sh set writes to stderr and can't be redirected directly,
-# and sets the high bit in the cache file unless we assign to the vars.
-(
-  for ac_var in `(set) 2>&1 | sed -n 's/^\([a-zA-Z_][a-zA-Z0-9_]*\)=.*/\1/p'`; do
-    eval ac_val=\$$ac_var
-    case $ac_val in #(
-    *${as_nl}*)
-      case $ac_var in #(
-      *_cv_*) { echo "$as_me:$LINENO: WARNING: Cache variable $ac_var contains a newline." >&5
-echo "$as_me: WARNING: Cache variable $ac_var contains a newline." >&2;} ;;
-      esac
-      case $ac_var in #(
-      _ | IFS | as_nl) ;; #(
-      *) $as_unset $ac_var ;;
-      esac ;;
-    esac
-  done
-
-  (set) 2>&1 |
-    case $as_nl`(ac_space=' '; set) 2>&1` in #(
-    *${as_nl}ac_space=\ *)
-      # `set' does not quote correctly, so add quotes (double-quote
-      # substitution turns \\\\ into \\, and sed turns \\ into \).
-      sed -n \
-	"s/'/'\\\\''/g;
-	  s/^\\([_$as_cr_alnum]*_cv_[_$as_cr_alnum]*\\)=\\(.*\\)/\\1='\\2'/p"
-      ;; #(
-    *)
-      # `set' quotes correctly as required by POSIX, so do not add quotes.
-      sed -n "/^[_$as_cr_alnum]*_cv_[_$as_cr_alnum]*=/p"
-      ;;
-    esac |
-    sort
-) |
-  sed '
-     /^ac_cv_env_/b end
-     t clear
-     :clear
-     s/^\([^=]*\)=\(.*[{}].*\)$/test "${\1+set}" = set || &/
-     t end
-     s/^\([^=]*\)=\(.*\)$/\1=${\1=\2}/
-     :end' >>confcache
-if diff "$cache_file" confcache >/dev/null 2>&1; then :; else
-  if test -w "$cache_file"; then
-    test "x$cache_file" != "x/dev/null" &&
-      { echo "$as_me:$LINENO: updating cache $cache_file" >&5
-echo "$as_me: updating cache $cache_file" >&6;}
-    cat confcache >$cache_file
-  else
-    { echo "$as_me:$LINENO: not updating unwritable cache $cache_file" >&5
-echo "$as_me: not updating unwritable cache $cache_file" >&6;}
-  fi
-fi
-rm -f confcache
-ac_ext=${ac_fc_srcext-f}
-ac_compile='$FC -c $FCFLAGS $ac_fcflags_srcext conftest.$ac_ext >&5'
-ac_link='$FC -o conftest$ac_exeext $FCFLAGS $LDFLAGS $ac_fcflags_srcext conftest.$ac_ext $LIBS >&5'
-ac_compiler_gnu=$ac_cv_fc_compiler_gnu
-
-
-
-
-acx_blas_ok=no
-acx_blas_save_LIBS="$LIBS"
-acx_blas_save_LDFLAGS="$LDFLAGS"
-acx_blas_save_FFLAGS="$FFLAGS"
-acx_blas_libs=""
-acx_blas_dir=""
-
-
-# Check whether --with-blas was given.
-if test "${with_blas+set}" = set; then
-  withval=$with_blas;
-fi
-
-
-case $with_blas in
-	yes | "") ;;
-	no) acx_blas_ok=disable ;;
-	-l* | */* | *.a | *.so | *.so.* | *.o) acx_blas_libs="$with_blas" ;;
-	*) acx_blas_libs="-l$with_blas" ;;
-esac
-
-
-# Check whether --with-blas_dir was given.
-if test "${with_blas_dir+set}" = set; then
-  withval=$with_blas_dir;
-fi
-
-
-case $with_blas_dir in
-      yes | no | "") ;;
-     -L*) LDFLAGS="$LDFLAGS $with_blas_dir"
-	      acx_blas_dir="$with_blas_dir" ;;
-      *) LDFLAGS="$LDFLAGS -L$with_blas_dir"
-	      acx_blas_dir="-L$with_blas_dir" ;;
-esac
-
-# Are we linking from C?
-case "$ac_ext" in
-  f*|F*) sgemm="sgemm" ;;
-  *)
-   ac_ext=${ac_fc_srcext-f}
-ac_compile='$FC -c $FCFLAGS $ac_fcflags_srcext conftest.$ac_ext >&5'
-ac_link='$FC -o conftest$ac_exeext $FCFLAGS $LDFLAGS $ac_fcflags_srcext conftest.$ac_ext $LIBS >&5'
-ac_compiler_gnu=$ac_cv_fc_compiler_gnu
-case $ac_cv_fc_mangling in
-  upper*) ac_val="SGEMM" ;;
-  lower*) ac_val="sgemm" ;;
-  *)      ac_val="unknown" ;;
-esac
-case $ac_cv_fc_mangling in *," underscore"*) ac_val="$ac_val"_ ;; esac
-
-sgemm="$ac_val"
-
-ac_ext=${ac_fc_srcext-f}
-ac_compile='$FC -c $FCFLAGS $ac_fcflags_srcext conftest.$ac_ext >&5'
-ac_link='$FC -o conftest$ac_exeext $FCFLAGS $LDFLAGS $ac_fcflags_srcext conftest.$ac_ext $LIBS >&5'
-ac_compiler_gnu=$ac_cv_fc_compiler_gnu
-
-   LIBS="$LIBS $FCLIBS"
-   ;;
-esac
-
-# If --with-blas is defined, then look for THIS AND ONLY THIS blas lib
-if test $acx_blas_ok = no; then
-case $with_blas in
-    ""|yes) ;;
-	*) save_LIBS="$LIBS"; LIBS="$acx_blas_libs $LIBS"
-	{ echo "$as_me:$LINENO: checking for $sgemm in $acx_blas_libs" >&5
-echo $ECHO_N "checking for $sgemm in $acx_blas_libs... $ECHO_C" >&6; }
-	cat >conftest.$ac_ext <<_ACEOF
-      program main
-      call $sgemm
-      end
-_ACEOF
-rm -f conftest.$ac_objext conftest$ac_exeext
-if { (ac_try="$ac_link"
-case "(($ac_try" in
-  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
-  *) ac_try_echo=$ac_try;;
-esac
-eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
-  (eval "$ac_link") 2>conftest.er1
-  ac_status=$?
-  grep -v '^ *+' conftest.er1 >conftest.err
-  rm -f conftest.er1
-  cat conftest.err >&5
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); } && {
-	 test -z "$ac_fc_werror_flag" ||
-	 test ! -s conftest.err
-       } && test -s conftest$ac_exeext &&
-       $as_test_x conftest$ac_exeext; then
-  acx_blas_ok=yes
-else
-  echo "$as_me: failed program was:" >&5
-sed 's/^/| /' conftest.$ac_ext >&5
-
-
-fi
-
-rm -f core conftest.err conftest.$ac_objext conftest_ipa8_conftest.oo \
-      conftest$ac_exeext conftest.$ac_ext
-	{ echo "$as_me:$LINENO: result: $acx_blas_ok" >&5
-echo "${ECHO_T}$acx_blas_ok" >&6; }
-	LIBS="$save_LIBS"
-	acx_blas_ok=specific
-	;;
-esac
-fi
-
-# First, check BLAS_LIBS environment variable
-if test $acx_blas_ok = no; then
-if test "x$BLAS_LIBS" != x; then
-	save_LIBS="$LIBS"; LIBS="$BLAS_LIBS $LIBS"
-	{ echo "$as_me:$LINENO: checking for $sgemm in $BLAS_LIBS" >&5
-echo $ECHO_N "checking for $sgemm in $BLAS_LIBS... $ECHO_C" >&6; }
-	cat >conftest.$ac_ext <<_ACEOF
-      program main
-      call $sgemm
-      end
-_ACEOF
-rm -f conftest.$ac_objext conftest$ac_exeext
-if { (ac_try="$ac_link"
-case "(($ac_try" in
-  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
-  *) ac_try_echo=$ac_try;;
-esac
-eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
-  (eval "$ac_link") 2>conftest.er1
-  ac_status=$?
-  grep -v '^ *+' conftest.er1 >conftest.err
-  rm -f conftest.er1
-  cat conftest.err >&5
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); } && {
-	 test -z "$ac_fc_werror_flag" ||
-	 test ! -s conftest.err
-       } && test -s conftest$ac_exeext &&
-       $as_test_x conftest$ac_exeext; then
-  acx_blas_ok=yes; acx_blas_libs=$BLAS_LIBS
-else
-  echo "$as_me: failed program was:" >&5
-sed 's/^/| /' conftest.$ac_ext >&5
-
-
-fi
-
-rm -f core conftest.err conftest.$ac_objext conftest_ipa8_conftest.oo \
-      conftest$ac_exeext conftest.$ac_ext
-	{ echo "$as_me:$LINENO: result: $acx_blas_ok" >&5
-echo "${ECHO_T}$acx_blas_ok" >&6; }
-	LIBS="$save_LIBS"
-fi
-fi
-
-# BLAS linked to by default?  (happens on some supercomputers)
-if test $acx_blas_ok = no; then
-	{ echo "$as_me:$LINENO: checking for builtin $sgemm" >&5
-echo $ECHO_N "checking for builtin $sgemm... $ECHO_C" >&6; }
-	cat >conftest.$ac_ext <<_ACEOF
-      program main
-      call $sgemm
-      end
-_ACEOF
-rm -f conftest.$ac_objext conftest$ac_exeext
-if { (ac_try="$ac_link"
-case "(($ac_try" in
-  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
-  *) ac_try_echo=$ac_try;;
-esac
-eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
-  (eval "$ac_link") 2>conftest.er1
-  ac_status=$?
-  grep -v '^ *+' conftest.er1 >conftest.err
-  rm -f conftest.er1
-  cat conftest.err >&5
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); } && {
-	 test -z "$ac_fc_werror_flag" ||
-	 test ! -s conftest.err
-       } && test -s conftest$ac_exeext &&
-       $as_test_x conftest$ac_exeext; then
-  acx_blas_ok=yes
-else
-  echo "$as_me: failed program was:" >&5
-sed 's/^/| /' conftest.$ac_ext >&5
-
-
-fi
-
-rm -f core conftest.err conftest.$ac_objext conftest_ipa8_conftest.oo \
-      conftest$ac_exeext conftest.$ac_ext
-	{ echo "$as_me:$LINENO: result: $acx_blas_ok" >&5
-echo "${ECHO_T}$acx_blas_ok" >&6; }
-fi
-
-# Intel mkl BLAS. Unfortunately some of Intel's blas routines are
-# in their lapack library...
-if test $acx_blas_ok = no; then
-	{ echo "$as_me:$LINENO: trying Intel MKL library:" >&5
-echo "$as_me: trying Intel MKL library:" >&6;}
-	as_ac_Lib=`echo "ac_cv_lib_mkl_$sgemm" | $as_tr_sh`
-{ echo "$as_me:$LINENO: checking for $sgemm in -lmkl" >&5
-echo $ECHO_N "checking for $sgemm in -lmkl... $ECHO_C" >&6; }
-if { as_var=$as_ac_Lib; eval "test \"\${$as_var+set}\" = set"; }; then
-  echo $ECHO_N "(cached) $ECHO_C" >&6
-else
-  ac_check_lib_save_LIBS=$LIBS
-LIBS="-lmkl -lguide -lm $LIBS"
-cat >conftest.$ac_ext <<_ACEOF
-      program main
-      call $sgemm
-      end
-_ACEOF
-rm -f conftest.$ac_objext conftest$ac_exeext
-if { (ac_try="$ac_link"
-case "(($ac_try" in
-  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
-  *) ac_try_echo=$ac_try;;
-esac
-eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
-  (eval "$ac_link") 2>conftest.er1
-  ac_status=$?
-  grep -v '^ *+' conftest.er1 >conftest.err
-  rm -f conftest.er1
-  cat conftest.err >&5
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); } && {
-	 test -z "$ac_fc_werror_flag" ||
-	 test ! -s conftest.err
-       } && test -s conftest$ac_exeext &&
-       $as_test_x conftest$ac_exeext; then
-  eval "$as_ac_Lib=yes"
-else
-  echo "$as_me: failed program was:" >&5
-sed 's/^/| /' conftest.$ac_ext >&5
-
-	eval "$as_ac_Lib=no"
-fi
-
-rm -f core conftest.err conftest.$ac_objext conftest_ipa8_conftest.oo \
-      conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS
-fi
-ac_res=`eval echo '${'$as_ac_Lib'}'`
-	       { echo "$as_me:$LINENO: result: $ac_res" >&5
-echo "${ECHO_T}$ac_res" >&6; }
-if test `eval echo '${'$as_ac_Lib'}'` = yes; then
-  acx_blas_ok=yes; acx_blas_libs="-lmkl"
-fi
-
-if test $acx_blas_ok = no; then
-	as_ac_Lib=`echo "ac_cv_lib_mkl_def_$sgemm" | $as_tr_sh`
-{ echo "$as_me:$LINENO: checking for $sgemm in -lmkl_def" >&5
-echo $ECHO_N "checking for $sgemm in -lmkl_def... $ECHO_C" >&6; }
-if { as_var=$as_ac_Lib; eval "test \"\${$as_var+set}\" = set"; }; then
-  echo $ECHO_N "(cached) $ECHO_C" >&6
-else
-  ac_check_lib_save_LIBS=$LIBS
-LIBS="-lmkl_def -lm $LIBS"
-cat >conftest.$ac_ext <<_ACEOF
-      program main
-      call $sgemm
-      end
-_ACEOF
-rm -f conftest.$ac_objext conftest$ac_exeext
-if { (ac_try="$ac_link"
-case "(($ac_try" in
-  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
-  *) ac_try_echo=$ac_try;;
-esac
-eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
-  (eval "$ac_link") 2>conftest.er1
-  ac_status=$?
-  grep -v '^ *+' conftest.er1 >conftest.err
-  rm -f conftest.er1
-  cat conftest.err >&5
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); } && {
-	 test -z "$ac_fc_werror_flag" ||
-	 test ! -s conftest.err
-       } && test -s conftest$ac_exeext &&
-       $as_test_x conftest$ac_exeext; then
-  eval "$as_ac_Lib=yes"
-else
-  echo "$as_me: failed program was:" >&5
-sed 's/^/| /' conftest.$ac_ext >&5
-
-	eval "$as_ac_Lib=no"
-fi
-
-rm -f core conftest.err conftest.$ac_objext conftest_ipa8_conftest.oo \
-      conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS
-fi
-ac_res=`eval echo '${'$as_ac_Lib'}'`
-	       { echo "$as_me:$LINENO: result: $ac_res" >&5
-echo "${ECHO_T}$ac_res" >&6; }
-if test `eval echo '${'$as_ac_Lib'}'` = yes; then
-  acx_blas_ok=yes; acx_blas_libs="-lmkl_def -lm"
-fi
-
-fi
-if test $acx_blas_ok = no; then
-	as_ac_Lib=`echo "ac_cv_lib_mkl_ipf_$sgemm" | $as_tr_sh`
-{ echo "$as_me:$LINENO: checking for $sgemm in -lmkl_ipf" >&5
-echo $ECHO_N "checking for $sgemm in -lmkl_ipf... $ECHO_C" >&6; }
-if { as_var=$as_ac_Lib; eval "test \"\${$as_var+set}\" = set"; }; then
-  echo $ECHO_N "(cached) $ECHO_C" >&6
-else
-  ac_check_lib_save_LIBS=$LIBS
-LIBS="-lmkl_ipf -lguide -lm $LIBS"
-cat >conftest.$ac_ext <<_ACEOF
-      program main
-      call $sgemm
-      end
-_ACEOF
-rm -f conftest.$ac_objext conftest$ac_exeext
-if { (ac_try="$ac_link"
-case "(($ac_try" in
-  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
-  *) ac_try_echo=$ac_try;;
-esac
-eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
-  (eval "$ac_link") 2>conftest.er1
-  ac_status=$?
-  grep -v '^ *+' conftest.er1 >conftest.err
-  rm -f conftest.er1
-  cat conftest.err >&5
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); } && {
-	 test -z "$ac_fc_werror_flag" ||
-	 test ! -s conftest.err
-       } && test -s conftest$ac_exeext &&
-       $as_test_x conftest$ac_exeext; then
-  eval "$as_ac_Lib=yes"
-else
-  echo "$as_me: failed program was:" >&5
-sed 's/^/| /' conftest.$ac_ext >&5
-
-	eval "$as_ac_Lib=no"
-fi
-
-rm -f core conftest.err conftest.$ac_objext conftest_ipa8_conftest.oo \
-      conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS
-fi
-ac_res=`eval echo '${'$as_ac_Lib'}'`
-	       { echo "$as_me:$LINENO: result: $ac_res" >&5
-echo "${ECHO_T}$ac_res" >&6; }
-if test `eval echo '${'$as_ac_Lib'}'` = yes; then
-  acx_blas_ok=yes; acx_blas_libs="-lmkl_ipf -lguide -lm"
-fi
-
-fi
-# check for older mkl
-if test $acx_blas_ok = no; then
-	unset ac_cv_lib_mkl_def_sgemm
-	{ echo "$as_me:$LINENO: checking for lsame in -lmkl_lapack" >&5
-echo $ECHO_N "checking for lsame in -lmkl_lapack... $ECHO_C" >&6; }
-if test "${ac_cv_lib_mkl_lapack_lsame+set}" = set; then
-  echo $ECHO_N "(cached) $ECHO_C" >&6
-else
-  ac_check_lib_save_LIBS=$LIBS
-LIBS="-lmkl_lapack  $LIBS"
-cat >conftest.$ac_ext <<_ACEOF
-      program main
-      call lsame
-      end
-_ACEOF
-rm -f conftest.$ac_objext conftest$ac_exeext
-if { (ac_try="$ac_link"
-case "(($ac_try" in
-  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
-  *) ac_try_echo=$ac_try;;
-esac
-eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
-  (eval "$ac_link") 2>conftest.er1
-  ac_status=$?
-  grep -v '^ *+' conftest.er1 >conftest.err
-  rm -f conftest.er1
-  cat conftest.err >&5
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); } && {
-	 test -z "$ac_fc_werror_flag" ||
-	 test ! -s conftest.err
-       } && test -s conftest$ac_exeext &&
-       $as_test_x conftest$ac_exeext; then
-  ac_cv_lib_mkl_lapack_lsame=yes
-else
-  echo "$as_me: failed program was:" >&5
-sed 's/^/| /' conftest.$ac_ext >&5
-
-	ac_cv_lib_mkl_lapack_lsame=no
-fi
-
-rm -f core conftest.err conftest.$ac_objext conftest_ipa8_conftest.oo \
-      conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS
-fi
-{ echo "$as_me:$LINENO: result: $ac_cv_lib_mkl_lapack_lsame" >&5
-echo "${ECHO_T}$ac_cv_lib_mkl_lapack_lsame" >&6; }
-if test $ac_cv_lib_mkl_lapack_lsame = yes; then
-
-	    acx_lapack_ok=yes;
-		as_ac_Lib=`echo "ac_cv_lib_mkl_def_$sgemm" | $as_tr_sh`
-{ echo "$as_me:$LINENO: checking for $sgemm in -lmkl_def" >&5
-echo $ECHO_N "checking for $sgemm in -lmkl_def... $ECHO_C" >&6; }
-if { as_var=$as_ac_Lib; eval "test \"\${$as_var+set}\" = set"; }; then
-  echo $ECHO_N "(cached) $ECHO_C" >&6
-else
-  ac_check_lib_save_LIBS=$LIBS
-LIBS="-lmkl_def -lm -lpthread
-		 $LIBS"
-cat >conftest.$ac_ext <<_ACEOF
-      program main
-      call $sgemm
-      end
-_ACEOF
-rm -f conftest.$ac_objext conftest$ac_exeext
-if { (ac_try="$ac_link"
-case "(($ac_try" in
-  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
-  *) ac_try_echo=$ac_try;;
-esac
-eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
-  (eval "$ac_link") 2>conftest.er1
-  ac_status=$?
-  grep -v '^ *+' conftest.er1 >conftest.err
-  rm -f conftest.er1
-  cat conftest.err >&5
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); } && {
-	 test -z "$ac_fc_werror_flag" ||
-	 test ! -s conftest.err
-       } && test -s conftest$ac_exeext &&
-       $as_test_x conftest$ac_exeext; then
-  eval "$as_ac_Lib=yes"
-else
-  echo "$as_me: failed program was:" >&5
-sed 's/^/| /' conftest.$ac_ext >&5
-
-	eval "$as_ac_Lib=no"
-fi
-
-rm -f core conftest.err conftest.$ac_objext conftest_ipa8_conftest.oo \
-      conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS
-fi
-ac_res=`eval echo '${'$as_ac_Lib'}'`
-	       { echo "$as_me:$LINENO: result: $ac_res" >&5
-echo "${ECHO_T}$ac_res" >&6; }
-if test `eval echo '${'$as_ac_Lib'}'` = yes; then
-  acx_blas_ok=yes;
-			acx_blas_libs="-lmkl_def -lmkl_lapack -lm -lpthread"
-fi
-
-
-fi
-
-fi
-	{ echo "$as_me:$LINENO: Intel MKL library... $acx_blas_ok" >&5
-echo "$as_me: Intel MKL library... $acx_blas_ok" >&6;}
-fi
-
-# BLAS in ACML (pgi)
-if test $acx_blas_ok = no; then
-	as_ac_Lib=`echo "ac_cv_lib_acml_$sgemm" | $as_tr_sh`
-{ echo "$as_me:$LINENO: checking for $sgemm in -lacml" >&5
-echo $ECHO_N "checking for $sgemm in -lacml... $ECHO_C" >&6; }
-if { as_var=$as_ac_Lib; eval "test \"\${$as_var+set}\" = set"; }; then
-  echo $ECHO_N "(cached) $ECHO_C" >&6
-else
-  ac_check_lib_save_LIBS=$LIBS
-LIBS="-lacml  $LIBS"
-cat >conftest.$ac_ext <<_ACEOF
-      program main
-      call $sgemm
-      end
-_ACEOF
-rm -f conftest.$ac_objext conftest$ac_exeext
-if { (ac_try="$ac_link"
-case "(($ac_try" in
-  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
-  *) ac_try_echo=$ac_try;;
-esac
-eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
-  (eval "$ac_link") 2>conftest.er1
-  ac_status=$?
-  grep -v '^ *+' conftest.er1 >conftest.err
-  rm -f conftest.er1
-  cat conftest.err >&5
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); } && {
-	 test -z "$ac_fc_werror_flag" ||
-	 test ! -s conftest.err
-       } && test -s conftest$ac_exeext &&
-       $as_test_x conftest$ac_exeext; then
-  eval "$as_ac_Lib=yes"
-else
-  echo "$as_me: failed program was:" >&5
-sed 's/^/| /' conftest.$ac_ext >&5
-
-	eval "$as_ac_Lib=no"
-fi
-
-rm -f core conftest.err conftest.$ac_objext conftest_ipa8_conftest.oo \
-      conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS
-fi
-ac_res=`eval echo '${'$as_ac_Lib'}'`
-	       { echo "$as_me:$LINENO: result: $ac_res" >&5
-echo "${ECHO_T}$ac_res" >&6; }
-if test `eval echo '${'$as_ac_Lib'}'` = yes; then
-  acx_blas_ok=yes; acx_blas_libs="-lacml"
-fi
-
-fi
-
-# BLAS in ATLAS library? (http://math-atlas.sourceforge.net/)
-if test $acx_blas_ok = no; then
-{ echo "$as_me:$LINENO: trying ATLAS library:" >&5
-echo "$as_me: trying ATLAS library:" >&6;}
-	as_ac_Lib=`echo "ac_cv_lib_cblas_$sgemm" | $as_tr_sh`
-{ echo "$as_me:$LINENO: checking for $sgemm in -lcblas" >&5
-echo $ECHO_N "checking for $sgemm in -lcblas... $ECHO_C" >&6; }
-if { as_var=$as_ac_Lib; eval "test \"\${$as_var+set}\" = set"; }; then
-  echo $ECHO_N "(cached) $ECHO_C" >&6
-else
-  ac_check_lib_save_LIBS=$LIBS
-LIBS="-lcblas -lf77blas -latlas $LIBS"
-cat >conftest.$ac_ext <<_ACEOF
-      program main
-      call $sgemm
-      end
-_ACEOF
-rm -f conftest.$ac_objext conftest$ac_exeext
-if { (ac_try="$ac_link"
-case "(($ac_try" in
-  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
-  *) ac_try_echo=$ac_try;;
-esac
-eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
-  (eval "$ac_link") 2>conftest.er1
-  ac_status=$?
-  grep -v '^ *+' conftest.er1 >conftest.err
-  rm -f conftest.er1
-  cat conftest.err >&5
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); } && {
-	 test -z "$ac_fc_werror_flag" ||
-	 test ! -s conftest.err
-       } && test -s conftest$ac_exeext &&
-       $as_test_x conftest$ac_exeext; then
-  eval "$as_ac_Lib=yes"
-else
-  echo "$as_me: failed program was:" >&5
-sed 's/^/| /' conftest.$ac_ext >&5
-
-	eval "$as_ac_Lib=no"
-fi
-
-rm -f core conftest.err conftest.$ac_objext conftest_ipa8_conftest.oo \
-      conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS
-fi
-ac_res=`eval echo '${'$as_ac_Lib'}'`
-	       { echo "$as_me:$LINENO: result: $ac_res" >&5
-echo "${ECHO_T}$ac_res" >&6; }
-if test `eval echo '${'$as_ac_Lib'}'` = yes; then
-  acx_blas_ok=yes; acx_blas_libs="-lcblas -lf77blas -latlas"
-fi
-
-# BLAS in ATLAS library? (http://math-atlas.sourceforge.net/)
-if test $acx_blas_ok = no; then
-	as_ac_Lib=`echo "ac_cv_lib_f77blas_$sgemm" | $as_tr_sh`
-{ echo "$as_me:$LINENO: checking for $sgemm in -lf77blas" >&5
-echo $ECHO_N "checking for $sgemm in -lf77blas... $ECHO_C" >&6; }
-if { as_var=$as_ac_Lib; eval "test \"\${$as_var+set}\" = set"; }; then
-  echo $ECHO_N "(cached) $ECHO_C" >&6
-else
-  ac_check_lib_save_LIBS=$LIBS
-LIBS="-lf77blas -latlas $LIBS"
-cat >conftest.$ac_ext <<_ACEOF
-      program main
-      call $sgemm
-      end
-_ACEOF
-rm -f conftest.$ac_objext conftest$ac_exeext
-if { (ac_try="$ac_link"
-case "(($ac_try" in
-  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
-  *) ac_try_echo=$ac_try;;
-esac
-eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
-  (eval "$ac_link") 2>conftest.er1
-  ac_status=$?
-  grep -v '^ *+' conftest.er1 >conftest.err
-  rm -f conftest.er1
-  cat conftest.err >&5
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); } && {
-	 test -z "$ac_fc_werror_flag" ||
-	 test ! -s conftest.err
-       } && test -s conftest$ac_exeext &&
-       $as_test_x conftest$ac_exeext; then
-  eval "$as_ac_Lib=yes"
-else
-  echo "$as_me: failed program was:" >&5
-sed 's/^/| /' conftest.$ac_ext >&5
-
-	eval "$as_ac_Lib=no"
-fi
-
-rm -f core conftest.err conftest.$ac_objext conftest_ipa8_conftest.oo \
-      conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS
-fi
-ac_res=`eval echo '${'$as_ac_Lib'}'`
-	       { echo "$as_me:$LINENO: result: $ac_res" >&5
-echo "${ECHO_T}$ac_res" >&6; }
-if test `eval echo '${'$as_ac_Lib'}'` = yes; then
-  acx_blas_ok=yes; acx_blas_libs="-lf77blas -latlas"
-fi
-
-fi
-{ echo "$as_me:$LINENO: ATLAS library... $acx_blas_ok" >&5
-echo "$as_me: ATLAS library... $acx_blas_ok" >&6;}
-fi
-
-# ia64-hp-hpux11.22 BLAS library?
-if test $acx_blas_ok = no; then
-        as_ac_Lib=`echo "ac_cv_lib_veclib_$sgemm" | $as_tr_sh`
-{ echo "$as_me:$LINENO: checking for $sgemm in -lveclib" >&5
-echo $ECHO_N "checking for $sgemm in -lveclib... $ECHO_C" >&6; }
-if { as_var=$as_ac_Lib; eval "test \"\${$as_var+set}\" = set"; }; then
-  echo $ECHO_N "(cached) $ECHO_C" >&6
-else
-  ac_check_lib_save_LIBS=$LIBS
-LIBS="-lveclib  $LIBS"
-cat >conftest.$ac_ext <<_ACEOF
-      program main
-      call $sgemm
-      end
-_ACEOF
-rm -f conftest.$ac_objext conftest$ac_exeext
-if { (ac_try="$ac_link"
-case "(($ac_try" in
-  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
-  *) ac_try_echo=$ac_try;;
-esac
-eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
-  (eval "$ac_link") 2>conftest.er1
-  ac_status=$?
-  grep -v '^ *+' conftest.er1 >conftest.err
-  rm -f conftest.er1
-  cat conftest.err >&5
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); } && {
-	 test -z "$ac_fc_werror_flag" ||
-	 test ! -s conftest.err
-       } && test -s conftest$ac_exeext &&
-       $as_test_x conftest$ac_exeext; then
-  eval "$as_ac_Lib=yes"
-else
-  echo "$as_me: failed program was:" >&5
-sed 's/^/| /' conftest.$ac_ext >&5
-
-	eval "$as_ac_Lib=no"
-fi
-
-rm -f core conftest.err conftest.$ac_objext conftest_ipa8_conftest.oo \
-      conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS
-fi
-ac_res=`eval echo '${'$as_ac_Lib'}'`
-	       { echo "$as_me:$LINENO: result: $ac_res" >&5
-echo "${ECHO_T}$ac_res" >&6; }
-if test `eval echo '${'$as_ac_Lib'}'` = yes; then
-  acx_blas_ok=yes; acx_blas_libs="-lveclib8"
-fi
-
-fi
-
-# BLAS in PhiPACK libraries? (requires generic BLAS lib, too)
-if test $acx_blas_ok = no; then
-    { echo "$as_me:$LINENO: trying PhiPACK library:" >&5
-echo "$as_me: trying PhiPACK library:" >&6;}
-	as_ac_Lib=`echo "ac_cv_lib_blas_$sgemm" | $as_tr_sh`
-{ echo "$as_me:$LINENO: checking for $sgemm in -lblas" >&5
-echo $ECHO_N "checking for $sgemm in -lblas... $ECHO_C" >&6; }
-if { as_var=$as_ac_Lib; eval "test \"\${$as_var+set}\" = set"; }; then
-  echo $ECHO_N "(cached) $ECHO_C" >&6
-else
-  ac_check_lib_save_LIBS=$LIBS
-LIBS="-lblas  $LIBS"
-cat >conftest.$ac_ext <<_ACEOF
-      program main
-      call $sgemm
-      end
-_ACEOF
-rm -f conftest.$ac_objext conftest$ac_exeext
-if { (ac_try="$ac_link"
-case "(($ac_try" in
-  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
-  *) ac_try_echo=$ac_try;;
-esac
-eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
-  (eval "$ac_link") 2>conftest.er1
-  ac_status=$?
-  grep -v '^ *+' conftest.er1 >conftest.err
-  rm -f conftest.er1
-  cat conftest.err >&5
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); } && {
-	 test -z "$ac_fc_werror_flag" ||
-	 test ! -s conftest.err
-       } && test -s conftest$ac_exeext &&
-       $as_test_x conftest$ac_exeext; then
-  eval "$as_ac_Lib=yes"
-else
-  echo "$as_me: failed program was:" >&5
-sed 's/^/| /' conftest.$ac_ext >&5
-
-	eval "$as_ac_Lib=no"
-fi
-
-rm -f core conftest.err conftest.$ac_objext conftest_ipa8_conftest.oo \
-      conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS
-fi
-ac_res=`eval echo '${'$as_ac_Lib'}'`
-	       { echo "$as_me:$LINENO: result: $ac_res" >&5
-echo "${ECHO_T}$ac_res" >&6; }
-if test `eval echo '${'$as_ac_Lib'}'` = yes; then
-  { echo "$as_me:$LINENO: checking for dgemm in -ldgemm" >&5
-echo $ECHO_N "checking for dgemm in -ldgemm... $ECHO_C" >&6; }
-if test "${ac_cv_lib_dgemm_dgemm+set}" = set; then
-  echo $ECHO_N "(cached) $ECHO_C" >&6
-else
-  ac_check_lib_save_LIBS=$LIBS
-LIBS="-ldgemm -lblas $LIBS"
-cat >conftest.$ac_ext <<_ACEOF
-      program main
-      call dgemm
-      end
-_ACEOF
-rm -f conftest.$ac_objext conftest$ac_exeext
-if { (ac_try="$ac_link"
-case "(($ac_try" in
-  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
-  *) ac_try_echo=$ac_try;;
-esac
-eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
-  (eval "$ac_link") 2>conftest.er1
-  ac_status=$?
-  grep -v '^ *+' conftest.er1 >conftest.err
-  rm -f conftest.er1
-  cat conftest.err >&5
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); } && {
-	 test -z "$ac_fc_werror_flag" ||
-	 test ! -s conftest.err
-       } && test -s conftest$ac_exeext &&
-       $as_test_x conftest$ac_exeext; then
-  ac_cv_lib_dgemm_dgemm=yes
-else
-  echo "$as_me: failed program was:" >&5
-sed 's/^/| /' conftest.$ac_ext >&5
-
-	ac_cv_lib_dgemm_dgemm=no
-fi
-
-rm -f core conftest.err conftest.$ac_objext conftest_ipa8_conftest.oo \
-      conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS
-fi
-{ echo "$as_me:$LINENO: result: $ac_cv_lib_dgemm_dgemm" >&5
-echo "${ECHO_T}$ac_cv_lib_dgemm_dgemm" >&6; }
-if test $ac_cv_lib_dgemm_dgemm = yes; then
-  as_ac_Lib=`echo "ac_cv_lib_sgemm_$sgemm" | $as_tr_sh`
-{ echo "$as_me:$LINENO: checking for $sgemm in -lsgemm" >&5
-echo $ECHO_N "checking for $sgemm in -lsgemm... $ECHO_C" >&6; }
-if { as_var=$as_ac_Lib; eval "test \"\${$as_var+set}\" = set"; }; then
-  echo $ECHO_N "(cached) $ECHO_C" >&6
-else
-  ac_check_lib_save_LIBS=$LIBS
-LIBS="-lsgemm -lblas $LIBS"
-cat >conftest.$ac_ext <<_ACEOF
-      program main
-      call $sgemm
-      end
-_ACEOF
-rm -f conftest.$ac_objext conftest$ac_exeext
-if { (ac_try="$ac_link"
-case "(($ac_try" in
-  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
-  *) ac_try_echo=$ac_try;;
-esac
-eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
-  (eval "$ac_link") 2>conftest.er1
-  ac_status=$?
-  grep -v '^ *+' conftest.er1 >conftest.err
-  rm -f conftest.er1
-  cat conftest.err >&5
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); } && {
-	 test -z "$ac_fc_werror_flag" ||
-	 test ! -s conftest.err
-       } && test -s conftest$ac_exeext &&
-       $as_test_x conftest$ac_exeext; then
-  eval "$as_ac_Lib=yes"
-else
-  echo "$as_me: failed program was:" >&5
-sed 's/^/| /' conftest.$ac_ext >&5
-
-	eval "$as_ac_Lib=no"
-fi
-
-rm -f core conftest.err conftest.$ac_objext conftest_ipa8_conftest.oo \
-      conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS
-fi
-ac_res=`eval echo '${'$as_ac_Lib'}'`
-	       { echo "$as_me:$LINENO: result: $ac_res" >&5
-echo "${ECHO_T}$ac_res" >&6; }
-if test `eval echo '${'$as_ac_Lib'}'` = yes; then
-  acx_blas_ok=yes; acx_blas_libs="-lsgemm -ldgemm -lblas"
-fi
-
-fi
-
-
-fi
-
-    { echo "$as_me:$LINENO: PhiPACK library... $acx_blas_ok" >&5
-echo "$as_me: PhiPACK library... $acx_blas_ok" >&6;}
-fi
-
-# BLAS in Alpha CXML library?
-if test $acx_blas_ok = no; then
-	as_ac_Lib=`echo "ac_cv_lib_cxml_$sgemm" | $as_tr_sh`
-{ echo "$as_me:$LINENO: checking for $sgemm in -lcxml" >&5
-echo $ECHO_N "checking for $sgemm in -lcxml... $ECHO_C" >&6; }
-if { as_var=$as_ac_Lib; eval "test \"\${$as_var+set}\" = set"; }; then
-  echo $ECHO_N "(cached) $ECHO_C" >&6
-else
-  ac_check_lib_save_LIBS=$LIBS
-LIBS="-lcxml  $LIBS"
-cat >conftest.$ac_ext <<_ACEOF
-      program main
-      call $sgemm
-      end
-_ACEOF
-rm -f conftest.$ac_objext conftest$ac_exeext
-if { (ac_try="$ac_link"
-case "(($ac_try" in
-  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
-  *) ac_try_echo=$ac_try;;
-esac
-eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
-  (eval "$ac_link") 2>conftest.er1
-  ac_status=$?
-  grep -v '^ *+' conftest.er1 >conftest.err
-  rm -f conftest.er1
-  cat conftest.err >&5
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); } && {
-	 test -z "$ac_fc_werror_flag" ||
-	 test ! -s conftest.err
-       } && test -s conftest$ac_exeext &&
-       $as_test_x conftest$ac_exeext; then
-  eval "$as_ac_Lib=yes"
-else
-  echo "$as_me: failed program was:" >&5
-sed 's/^/| /' conftest.$ac_ext >&5
-
-	eval "$as_ac_Lib=no"
-fi
-
-rm -f core conftest.err conftest.$ac_objext conftest_ipa8_conftest.oo \
-      conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS
-fi
-ac_res=`eval echo '${'$as_ac_Lib'}'`
-	       { echo "$as_me:$LINENO: result: $ac_res" >&5
-echo "${ECHO_T}$ac_res" >&6; }
-if test `eval echo '${'$as_ac_Lib'}'` = yes; then
-  acx_blas_ok=yes;acx_blas_libs="-lcxml"
-fi
-
-fi
-
-# BLAS in Alpha DXML library? (now called CXML, see above)
-if test $acx_blas_ok = no; then
-	as_ac_Lib=`echo "ac_cv_lib_dxml_$sgemm" | $as_tr_sh`
-{ echo "$as_me:$LINENO: checking for $sgemm in -ldxml" >&5
-echo $ECHO_N "checking for $sgemm in -ldxml... $ECHO_C" >&6; }
-if { as_var=$as_ac_Lib; eval "test \"\${$as_var+set}\" = set"; }; then
-  echo $ECHO_N "(cached) $ECHO_C" >&6
-else
-  ac_check_lib_save_LIBS=$LIBS
-LIBS="-ldxml  $LIBS"
-cat >conftest.$ac_ext <<_ACEOF
-      program main
-      call $sgemm
-      end
-_ACEOF
-rm -f conftest.$ac_objext conftest$ac_exeext
-if { (ac_try="$ac_link"
-case "(($ac_try" in
-  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
-  *) ac_try_echo=$ac_try;;
-esac
-eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
-  (eval "$ac_link") 2>conftest.er1
-  ac_status=$?
-  grep -v '^ *+' conftest.er1 >conftest.err
-  rm -f conftest.er1
-  cat conftest.err >&5
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); } && {
-	 test -z "$ac_fc_werror_flag" ||
-	 test ! -s conftest.err
-       } && test -s conftest$ac_exeext &&
-       $as_test_x conftest$ac_exeext; then
-  eval "$as_ac_Lib=yes"
-else
-  echo "$as_me: failed program was:" >&5
-sed 's/^/| /' conftest.$ac_ext >&5
-
-	eval "$as_ac_Lib=no"
-fi
-
-rm -f core conftest.err conftest.$ac_objext conftest_ipa8_conftest.oo \
-      conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS
-fi
-ac_res=`eval echo '${'$as_ac_Lib'}'`
-	       { echo "$as_me:$LINENO: result: $ac_res" >&5
-echo "${ECHO_T}$ac_res" >&6; }
-if test `eval echo '${'$as_ac_Lib'}'` = yes; then
-  acx_blas_ok=yes;acx_blas_libs="-ldxml"
-fi
-
-fi
-
-# BLAS in Sun Performance library?
-if test $acx_blas_ok = no; then
-	if test "x$GCC" != xyes; then # only works with Sun CC
-		{ echo "$as_me:$LINENO: checking for acosp in -lsunmath" >&5
-echo $ECHO_N "checking for acosp in -lsunmath... $ECHO_C" >&6; }
-if test "${ac_cv_lib_sunmath_acosp+set}" = set; then
-  echo $ECHO_N "(cached) $ECHO_C" >&6
-else
-  ac_check_lib_save_LIBS=$LIBS
-LIBS="-lsunmath  $LIBS"
-cat >conftest.$ac_ext <<_ACEOF
-      program main
-      call acosp
-      end
-_ACEOF
-rm -f conftest.$ac_objext conftest$ac_exeext
-if { (ac_try="$ac_link"
-case "(($ac_try" in
-  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
-  *) ac_try_echo=$ac_try;;
-esac
-eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
-  (eval "$ac_link") 2>conftest.er1
-  ac_status=$?
-  grep -v '^ *+' conftest.er1 >conftest.err
-  rm -f conftest.er1
-  cat conftest.err >&5
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); } && {
-	 test -z "$ac_fc_werror_flag" ||
-	 test ! -s conftest.err
-       } && test -s conftest$ac_exeext &&
-       $as_test_x conftest$ac_exeext; then
-  ac_cv_lib_sunmath_acosp=yes
-else
-  echo "$as_me: failed program was:" >&5
-sed 's/^/| /' conftest.$ac_ext >&5
-
-	ac_cv_lib_sunmath_acosp=no
-fi
-
-rm -f core conftest.err conftest.$ac_objext conftest_ipa8_conftest.oo \
-      conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS
-fi
-{ echo "$as_me:$LINENO: result: $ac_cv_lib_sunmath_acosp" >&5
-echo "${ECHO_T}$ac_cv_lib_sunmath_acosp" >&6; }
-if test $ac_cv_lib_sunmath_acosp = yes; then
-  as_ac_Lib=`echo "ac_cv_lib_sunperf_$sgemm" | $as_tr_sh`
-{ echo "$as_me:$LINENO: checking for $sgemm in -lsunperf" >&5
-echo $ECHO_N "checking for $sgemm in -lsunperf... $ECHO_C" >&6; }
-if { as_var=$as_ac_Lib; eval "test \"\${$as_var+set}\" = set"; }; then
-  echo $ECHO_N "(cached) $ECHO_C" >&6
-else
-  ac_check_lib_save_LIBS=$LIBS
-LIBS="-lsunperf -lsunmath $LIBS"
-cat >conftest.$ac_ext <<_ACEOF
-      program main
-      call $sgemm
-      end
-_ACEOF
-rm -f conftest.$ac_objext conftest$ac_exeext
-if { (ac_try="$ac_link"
-case "(($ac_try" in
-  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
-  *) ac_try_echo=$ac_try;;
-esac
-eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
-  (eval "$ac_link") 2>conftest.er1
-  ac_status=$?
-  grep -v '^ *+' conftest.er1 >conftest.err
-  rm -f conftest.er1
-  cat conftest.err >&5
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); } && {
-	 test -z "$ac_fc_werror_flag" ||
-	 test ! -s conftest.err
-       } && test -s conftest$ac_exeext &&
-       $as_test_x conftest$ac_exeext; then
-  eval "$as_ac_Lib=yes"
-else
-  echo "$as_me: failed program was:" >&5
-sed 's/^/| /' conftest.$ac_ext >&5
-
-	eval "$as_ac_Lib=no"
-fi
-
-rm -f core conftest.err conftest.$ac_objext conftest_ipa8_conftest.oo \
-      conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS
-fi
-ac_res=`eval echo '${'$as_ac_Lib'}'`
-	       { echo "$as_me:$LINENO: result: $ac_res" >&5
-echo "${ECHO_T}$ac_res" >&6; }
-if test `eval echo '${'$as_ac_Lib'}'` = yes; then
-  acx_blas_libs="-xlic_lib=sunperf -lsunmath"
-                    acx_blas_ok=yes
-fi
-
-
-fi
-
-	fi
-fi
-
-# BLAS in SCSL library?  (SGI/Cray Scientific Library)
-if test $acx_blas_ok = no; then
-	as_ac_Lib=`echo "ac_cv_lib_scs_$sgemm" | $as_tr_sh`
-{ echo "$as_me:$LINENO: checking for $sgemm in -lscs" >&5
-echo $ECHO_N "checking for $sgemm in -lscs... $ECHO_C" >&6; }
-if { as_var=$as_ac_Lib; eval "test \"\${$as_var+set}\" = set"; }; then
-  echo $ECHO_N "(cached) $ECHO_C" >&6
-else
-  ac_check_lib_save_LIBS=$LIBS
-LIBS="-lscs  $LIBS"
-cat >conftest.$ac_ext <<_ACEOF
-      program main
-      call $sgemm
-      end
-_ACEOF
-rm -f conftest.$ac_objext conftest$ac_exeext
-if { (ac_try="$ac_link"
-case "(($ac_try" in
-  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
-  *) ac_try_echo=$ac_try;;
-esac
-eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
-  (eval "$ac_link") 2>conftest.er1
-  ac_status=$?
-  grep -v '^ *+' conftest.er1 >conftest.err
-  rm -f conftest.er1
-  cat conftest.err >&5
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); } && {
-	 test -z "$ac_fc_werror_flag" ||
-	 test ! -s conftest.err
-       } && test -s conftest$ac_exeext &&
-       $as_test_x conftest$ac_exeext; then
-  eval "$as_ac_Lib=yes"
-else
-  echo "$as_me: failed program was:" >&5
-sed 's/^/| /' conftest.$ac_ext >&5
-
-	eval "$as_ac_Lib=no"
-fi
-
-rm -f core conftest.err conftest.$ac_objext conftest_ipa8_conftest.oo \
-      conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS
-fi
-ac_res=`eval echo '${'$as_ac_Lib'}'`
-	       { echo "$as_me:$LINENO: result: $ac_res" >&5
-echo "${ECHO_T}$ac_res" >&6; }
-if test `eval echo '${'$as_ac_Lib'}'` = yes; then
-  acx_blas_ok=yes; acx_blas_libs="-lscs"
-fi
-
-fi
-
-# BLAS in SGIMATH library?
-if test $acx_blas_ok = no; then
-	as_ac_Lib=`echo "ac_cv_lib_complib.sgimath_$sgemm" | $as_tr_sh`
-{ echo "$as_me:$LINENO: checking for $sgemm in -lcomplib.sgimath" >&5
-echo $ECHO_N "checking for $sgemm in -lcomplib.sgimath... $ECHO_C" >&6; }
-if { as_var=$as_ac_Lib; eval "test \"\${$as_var+set}\" = set"; }; then
-  echo $ECHO_N "(cached) $ECHO_C" >&6
-else
-  ac_check_lib_save_LIBS=$LIBS
-LIBS="-lcomplib.sgimath  $LIBS"
-cat >conftest.$ac_ext <<_ACEOF
-      program main
-      call $sgemm
-      end
-_ACEOF
-rm -f conftest.$ac_objext conftest$ac_exeext
-if { (ac_try="$ac_link"
-case "(($ac_try" in
-  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
-  *) ac_try_echo=$ac_try;;
-esac
-eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
-  (eval "$ac_link") 2>conftest.er1
-  ac_status=$?
-  grep -v '^ *+' conftest.er1 >conftest.err
-  rm -f conftest.er1
-  cat conftest.err >&5
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); } && {
-	 test -z "$ac_fc_werror_flag" ||
-	 test ! -s conftest.err
-       } && test -s conftest$ac_exeext &&
-       $as_test_x conftest$ac_exeext; then
-  eval "$as_ac_Lib=yes"
-else
-  echo "$as_me: failed program was:" >&5
-sed 's/^/| /' conftest.$ac_ext >&5
-
-	eval "$as_ac_Lib=no"
-fi
-
-rm -f core conftest.err conftest.$ac_objext conftest_ipa8_conftest.oo \
-      conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS
-fi
-ac_res=`eval echo '${'$as_ac_Lib'}'`
-	       { echo "$as_me:$LINENO: result: $ac_res" >&5
-echo "${ECHO_T}$ac_res" >&6; }
-if test `eval echo '${'$as_ac_Lib'}'` = yes; then
-  acx_blas_ok=yes; acx_blas_libs="-lcomplib.sgimath"
-fi
-
-fi
-
-# BLAS in IBM ESSL library? (requires generic BLAS lib, too)
-if test $acx_blas_ok = no; then
-    unset ac_cv_lib_blas_sgemm
-	{ echo "$as_me:$LINENO: trying IBM ESSL:" >&5
-echo "$as_me: trying IBM ESSL:" >&6;}
-	as_ac_Lib=`echo "ac_cv_lib_blas_$sgemm" | $as_tr_sh`
-{ echo "$as_me:$LINENO: checking for $sgemm in -lblas" >&5
-echo $ECHO_N "checking for $sgemm in -lblas... $ECHO_C" >&6; }
-if { as_var=$as_ac_Lib; eval "test \"\${$as_var+set}\" = set"; }; then
-  echo $ECHO_N "(cached) $ECHO_C" >&6
-else
-  ac_check_lib_save_LIBS=$LIBS
-LIBS="-lblas  $LIBS"
-cat >conftest.$ac_ext <<_ACEOF
-      program main
-      call $sgemm
-      end
-_ACEOF
-rm -f conftest.$ac_objext conftest$ac_exeext
-if { (ac_try="$ac_link"
-case "(($ac_try" in
-  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
-  *) ac_try_echo=$ac_try;;
-esac
-eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
-  (eval "$ac_link") 2>conftest.er1
-  ac_status=$?
-  grep -v '^ *+' conftest.er1 >conftest.err
-  rm -f conftest.er1
-  cat conftest.err >&5
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); } && {
-	 test -z "$ac_fc_werror_flag" ||
-	 test ! -s conftest.err
-       } && test -s conftest$ac_exeext &&
-       $as_test_x conftest$ac_exeext; then
-  eval "$as_ac_Lib=yes"
-else
-  echo "$as_me: failed program was:" >&5
-sed 's/^/| /' conftest.$ac_ext >&5
-
-	eval "$as_ac_Lib=no"
-fi
-
-rm -f core conftest.err conftest.$ac_objext conftest_ipa8_conftest.oo \
-      conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS
-fi
-ac_res=`eval echo '${'$as_ac_Lib'}'`
-	       { echo "$as_me:$LINENO: result: $ac_res" >&5
-echo "${ECHO_T}$ac_res" >&6; }
-if test `eval echo '${'$as_ac_Lib'}'` = yes; then
-  as_ac_Lib=`echo "ac_cv_lib_essl_$sgemm" | $as_tr_sh`
-{ echo "$as_me:$LINENO: checking for $sgemm in -lessl" >&5
-echo $ECHO_N "checking for $sgemm in -lessl... $ECHO_C" >&6; }
-if { as_var=$as_ac_Lib; eval "test \"\${$as_var+set}\" = set"; }; then
-  echo $ECHO_N "(cached) $ECHO_C" >&6
-else
-  ac_check_lib_save_LIBS=$LIBS
-LIBS="-lessl -lblas $LIBS"
-cat >conftest.$ac_ext <<_ACEOF
-      program main
-      call $sgemm
-      end
-_ACEOF
-rm -f conftest.$ac_objext conftest$ac_exeext
-if { (ac_try="$ac_link"
-case "(($ac_try" in
-  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
-  *) ac_try_echo=$ac_try;;
-esac
-eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
-  (eval "$ac_link") 2>conftest.er1
-  ac_status=$?
-  grep -v '^ *+' conftest.er1 >conftest.err
-  rm -f conftest.er1
-  cat conftest.err >&5
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); } && {
-	 test -z "$ac_fc_werror_flag" ||
-	 test ! -s conftest.err
-       } && test -s conftest$ac_exeext &&
-       $as_test_x conftest$ac_exeext; then
-  eval "$as_ac_Lib=yes"
-else
-  echo "$as_me: failed program was:" >&5
-sed 's/^/| /' conftest.$ac_ext >&5
-
-	eval "$as_ac_Lib=no"
-fi
-
-rm -f core conftest.err conftest.$ac_objext conftest_ipa8_conftest.oo \
-      conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS
-fi
-ac_res=`eval echo '${'$as_ac_Lib'}'`
-	       { echo "$as_me:$LINENO: result: $ac_res" >&5
-echo "${ECHO_T}$ac_res" >&6; }
-if test `eval echo '${'$as_ac_Lib'}'` = yes; then
-  acx_blas_ok=yes; acx_blas_libs="-lessl -lblas"
-fi
-
-
-fi
-
-	{ echo "$as_me:$LINENO: IBM ESSL... $acx_blas_ok" >&5
-echo "$as_me: IBM ESSL... $acx_blas_ok" >&6;}
-fi
-
-# Generic BLAS library?
-if test $acx_blas_ok = no; then
-    unset ac_cv_lib_blas_sgemm
-	as_ac_Lib=`echo "ac_cv_lib_blas_$sgemm" | $as_tr_sh`
-{ echo "$as_me:$LINENO: checking for $sgemm in -lblas" >&5
-echo $ECHO_N "checking for $sgemm in -lblas... $ECHO_C" >&6; }
-if { as_var=$as_ac_Lib; eval "test \"\${$as_var+set}\" = set"; }; then
-  echo $ECHO_N "(cached) $ECHO_C" >&6
-else
-  ac_check_lib_save_LIBS=$LIBS
-LIBS="-lblas  $LIBS"
-cat >conftest.$ac_ext <<_ACEOF
-      program main
-      call $sgemm
-      end
-_ACEOF
-rm -f conftest.$ac_objext conftest$ac_exeext
-if { (ac_try="$ac_link"
-case "(($ac_try" in
-  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
-  *) ac_try_echo=$ac_try;;
-esac
-eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
-  (eval "$ac_link") 2>conftest.er1
-  ac_status=$?
-  grep -v '^ *+' conftest.er1 >conftest.err
-  rm -f conftest.er1
-  cat conftest.err >&5
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); } && {
-	 test -z "$ac_fc_werror_flag" ||
-	 test ! -s conftest.err
-       } && test -s conftest$ac_exeext &&
-       $as_test_x conftest$ac_exeext; then
-  eval "$as_ac_Lib=yes"
-else
-  echo "$as_me: failed program was:" >&5
-sed 's/^/| /' conftest.$ac_ext >&5
-
-	eval "$as_ac_Lib=no"
-fi
-
-rm -f core conftest.err conftest.$ac_objext conftest_ipa8_conftest.oo \
-      conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS
-fi
-ac_res=`eval echo '${'$as_ac_Lib'}'`
-	       { echo "$as_me:$LINENO: result: $ac_res" >&5
-echo "${ECHO_T}$ac_res" >&6; }
-if test `eval echo '${'$as_ac_Lib'}'` = yes; then
-  acx_blas_ok=yes; acx_blas_libs="-lblas"
-fi
-
-fi
-
-# blas on SGI/CRAY
-if test $acx_blas_ok = no; then
-    unset ac_cv_lib_blas_sgemm
-	as_ac_Lib=`echo "ac_cv_lib_blas_$sgemm" | $as_tr_sh`
-{ echo "$as_me:$LINENO: checking for $sgemm in -lblas" >&5
-echo $ECHO_N "checking for $sgemm in -lblas... $ECHO_C" >&6; }
-if { as_var=$as_ac_Lib; eval "test \"\${$as_var+set}\" = set"; }; then
-  echo $ECHO_N "(cached) $ECHO_C" >&6
-else
-  ac_check_lib_save_LIBS=$LIBS
-LIBS="-lblas -lcraylibs $LIBS"
-cat >conftest.$ac_ext <<_ACEOF
-      program main
-      call $sgemm
-      end
-_ACEOF
-rm -f conftest.$ac_objext conftest$ac_exeext
-if { (ac_try="$ac_link"
-case "(($ac_try" in
-  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
-  *) ac_try_echo=$ac_try;;
-esac
-eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
-  (eval "$ac_link") 2>conftest.er1
-  ac_status=$?
-  grep -v '^ *+' conftest.er1 >conftest.err
-  rm -f conftest.er1
-  cat conftest.err >&5
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); } && {
-	 test -z "$ac_fc_werror_flag" ||
-	 test ! -s conftest.err
-       } && test -s conftest$ac_exeext &&
-       $as_test_x conftest$ac_exeext; then
-  eval "$as_ac_Lib=yes"
-else
-  echo "$as_me: failed program was:" >&5
-sed 's/^/| /' conftest.$ac_ext >&5
-
-	eval "$as_ac_Lib=no"
-fi
-
-rm -f core conftest.err conftest.$ac_objext conftest_ipa8_conftest.oo \
-      conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS
-fi
-ac_res=`eval echo '${'$as_ac_Lib'}'`
-	       { echo "$as_me:$LINENO: result: $ac_res" >&5
-echo "${ECHO_T}$ac_res" >&6; }
-if test `eval echo '${'$as_ac_Lib'}'` = yes; then
-  acx_blas_ok=yes; acx_blas_libs="-lblas -lcraylibs"
-fi
-
-fi
-
-BLAS_LIBS="$acx_blas_libs"
-
-
-LIBS="$acx_blas_save_LIBS"
-LDFLAGS="$acx_blas_save_LDFLAGS $acx_blas_dir"
-
-if test x"$acx_blas_ok" = xspecific ; then
-   acx_blas_ok=yes
-fi
-# Finally, execute ACTION-IF-FOUND/ACTION-IF-NOT-FOUND:
-if test x"$acx_blas_ok" = xyes; then
-
-cat >>confdefs.h <<\_ACEOF
-#define HAVE_BLAS 1
-_ACEOF
-
-        :
-else
-        acx_blas_ok=no
-        { echo "$as_me:$LINENO: WARNING: No working blas library found!" >&5
-echo "$as_me: WARNING: No working blas library found!" >&2;}
-fi
-
-
-
-acx_lapack_ok=no
-acx_lapack_save_LIBS="$LIBS"
-acx_lapack_save_LDFLAGS="$LDFLAGS"
-acx_lapack_save_FFLAGS="$FFLAGS"
-acx_lapack_libs=""
-acx_lapack_dir=""
-
-
-# Check whether --with-lapack was given.
-if test "${with_lapack+set}" = set; then
-  withval=$with_lapack;
-fi
-
-
-case $with_lapack in
-	yes | "") ;;
-	no) acx_lapack_ok=disable ;;
-	-l* | */* | *.a | *.so | *.so.* | *.o) acx_lapack_libs="$with_lapack" ;;
-	*) acx_lapack_libs="-l$with_lapack" ;;
-esac
-
-
-# Check whether --with-lapack_dir was given.
-if test "${with_lapack_dir+set}" = set; then
-  withval=$with_lapack_dir;
-fi
-
-
-case $with_lapack_dir in
-      yes | no | "") ;;
-     -L*) LDFLAGS="$LDFLAGS $with_lapack_dir"
-	      acx_lapack_dir="$with_lapack_dir" ;;
-      *) LDFLAGS="$LDFLAGS -L$with_lapack_dir"
-	      acx_lapack_dir="-L$with_lapack_dir" ;;
-esac
-
-# We cannot use LAPACK if BLAS is not found
-if test "x$acx_blas_ok" != xyes; then
-	acx_lapack_ok=noblas
-fi
-
-# add BLAS to libs
-LIBS="$BLAS_LIBS $LIBS"
-
-# Are we linking from C?
-case "$ac_ext" in
-  f*|F*) dsyev="dsyev" ;;
-  *)
-   ac_ext=${ac_fc_srcext-f}
-ac_compile='$FC -c $FCFLAGS $ac_fcflags_srcext conftest.$ac_ext >&5'
-ac_link='$FC -o conftest$ac_exeext $FCFLAGS $LDFLAGS $ac_fcflags_srcext conftest.$ac_ext $LIBS >&5'
-ac_compiler_gnu=$ac_cv_fc_compiler_gnu
-case $ac_cv_fc_mangling in
-  upper*) ac_val="DSYEV" ;;
-  lower*) ac_val="dsyev" ;;
-  *)      ac_val="unknown" ;;
-esac
-case $ac_cv_fc_mangling in *," underscore"*) ac_val="$ac_val"_ ;; esac
-
-dsyev="$ac_val"
-
-ac_ext=${ac_fc_srcext-f}
-ac_compile='$FC -c $FCFLAGS $ac_fcflags_srcext conftest.$ac_ext >&5'
-ac_link='$FC -o conftest$ac_exeext $FCFLAGS $LDFLAGS $ac_fcflags_srcext conftest.$ac_ext $LIBS >&5'
-ac_compiler_gnu=$ac_cv_fc_compiler_gnu
-
-   LIBS="$LIBS $FCLIBS"
-   ;;
-esac
-
-# If --with-lapack is defined, then look for THIS AND ONLY THIS lapack lib
-if test $acx_lapack_ok = no; then
-case $with_lapack in
-    ""|yes) ;;
-	*) save_LIBS="$LIBS"; LIBS="$acx_lapack_libs $LIBS"
-	{ echo "$as_me:$LINENO: checking for $dsyev in $acx_lapack_libs" >&5
-echo $ECHO_N "checking for $dsyev in $acx_lapack_libs... $ECHO_C" >&6; }
-	cat >conftest.$ac_ext <<_ACEOF
-      program main
-      call $dsyev
-      end
-_ACEOF
-rm -f conftest.$ac_objext conftest$ac_exeext
-if { (ac_try="$ac_link"
-case "(($ac_try" in
-  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
-  *) ac_try_echo=$ac_try;;
-esac
-eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
-  (eval "$ac_link") 2>conftest.er1
-  ac_status=$?
-  grep -v '^ *+' conftest.er1 >conftest.err
-  rm -f conftest.er1
-  cat conftest.err >&5
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); } && {
-	 test -z "$ac_fc_werror_flag" ||
-	 test ! -s conftest.err
-       } && test -s conftest$ac_exeext &&
-       $as_test_x conftest$ac_exeext; then
-  acx_lapack_ok=yes
-else
-  echo "$as_me: failed program was:" >&5
-sed 's/^/| /' conftest.$ac_ext >&5
-
-
-fi
-
-rm -f core conftest.err conftest.$ac_objext conftest_ipa8_conftest.oo \
-      conftest$ac_exeext conftest.$ac_ext
-	{ echo "$as_me:$LINENO: result: $acx_lapack_ok" >&5
-echo "${ECHO_T}$acx_lapack_ok" >&6; }
-	LIBS="$save_LIBS"
-	acx_lapack_ok=specific
-	;;
-esac
-fi
-
-# First, check LAPACK_LIBS environment variable
-if test $acx_lapack_ok = no; then
-if test "x$LAPACK_LIBS" != x; then
-	save_LIBS="$LIBS"; LIBS="$LAPACK_LIBS $LIBS"
-	{ echo "$as_me:$LINENO: checking for $dsyev in $LAPACK_LIBS" >&5
-echo $ECHO_N "checking for $dsyev in $LAPACK_LIBS... $ECHO_C" >&6; }
-	cat >conftest.$ac_ext <<_ACEOF
-      program main
-      call $dsyev
-      end
-_ACEOF
-rm -f conftest.$ac_objext conftest$ac_exeext
-if { (ac_try="$ac_link"
-case "(($ac_try" in
-  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
-  *) ac_try_echo=$ac_try;;
-esac
-eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
-  (eval "$ac_link") 2>conftest.er1
-  ac_status=$?
-  grep -v '^ *+' conftest.er1 >conftest.err
-  rm -f conftest.er1
-  cat conftest.err >&5
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); } && {
-	 test -z "$ac_fc_werror_flag" ||
-	 test ! -s conftest.err
-       } && test -s conftest$ac_exeext &&
-       $as_test_x conftest$ac_exeext; then
-  acx_lapack_ok=yes;
-	     acx_lapack_libs=$LAPACK_LIBS
-else
-  echo "$as_me: failed program was:" >&5
-sed 's/^/| /' conftest.$ac_ext >&5
-
-
-fi
-
-rm -f core conftest.err conftest.$ac_objext conftest_ipa8_conftest.oo \
-      conftest$ac_exeext conftest.$ac_ext
-	{ echo "$as_me:$LINENO: result: $acx_lapack_ok" >&5
-echo "${ECHO_T}$acx_lapack_ok" >&6; }
-	LIBS="$save_LIBS"
-fi
-fi
-
-# Intel MKL LAPACK?
-if test $acx_lapack_ok = no; then
-	as_ac_Lib=`echo "ac_cv_lib_mkl_lapack_$dsyev" | $as_tr_sh`
-{ echo "$as_me:$LINENO: checking for $dsyev in -lmkl_lapack" >&5
-echo $ECHO_N "checking for $dsyev in -lmkl_lapack... $ECHO_C" >&6; }
-if { as_var=$as_ac_Lib; eval "test \"\${$as_var+set}\" = set"; }; then
-  echo $ECHO_N "(cached) $ECHO_C" >&6
-else
-  ac_check_lib_save_LIBS=$LIBS
-LIBS="-lmkl_lapack  $LIBS"
-cat >conftest.$ac_ext <<_ACEOF
-      program main
-      call $dsyev
-      end
-_ACEOF
-rm -f conftest.$ac_objext conftest$ac_exeext
-if { (ac_try="$ac_link"
-case "(($ac_try" in
-  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
-  *) ac_try_echo=$ac_try;;
-esac
-eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
-  (eval "$ac_link") 2>conftest.er1
-  ac_status=$?
-  grep -v '^ *+' conftest.er1 >conftest.err
-  rm -f conftest.er1
-  cat conftest.err >&5
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); } && {
-	 test -z "$ac_fc_werror_flag" ||
-	 test ! -s conftest.err
-       } && test -s conftest$ac_exeext &&
-       $as_test_x conftest$ac_exeext; then
-  eval "$as_ac_Lib=yes"
-else
-  echo "$as_me: failed program was:" >&5
-sed 's/^/| /' conftest.$ac_ext >&5
-
-	eval "$as_ac_Lib=no"
-fi
-
-rm -f core conftest.err conftest.$ac_objext conftest_ipa8_conftest.oo \
-      conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS
-fi
-ac_res=`eval echo '${'$as_ac_Lib'}'`
-	       { echo "$as_me:$LINENO: result: $ac_res" >&5
-echo "${ECHO_T}$ac_res" >&6; }
-if test `eval echo '${'$as_ac_Lib'}'` = yes; then
-  acx_lapack_ok=yes; acx_lapack_libs="-lmkl_lapack"
-fi
-
-fi
-
-# LAPACK linked to by default?  (is sometimes included in BLAS lib)
-if test $acx_lapack_ok = no; then
-	{ echo "$as_me:$LINENO: checking for $dsyev in BLAS library" >&5
-echo $ECHO_N "checking for $dsyev in BLAS library... $ECHO_C" >&6; }
-	cat >conftest.$ac_ext <<_ACEOF
-      program main
-      call $dsyev
-      end
-_ACEOF
-rm -f conftest.$ac_objext conftest$ac_exeext
-if { (ac_try="$ac_link"
-case "(($ac_try" in
-  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
-  *) ac_try_echo=$ac_try;;
-esac
-eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
-  (eval "$ac_link") 2>conftest.er1
-  ac_status=$?
-  grep -v '^ *+' conftest.er1 >conftest.err
-  rm -f conftest.er1
-  cat conftest.err >&5
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); } && {
-	 test -z "$ac_fc_werror_flag" ||
-	 test ! -s conftest.err
-       } && test -s conftest$ac_exeext &&
-       $as_test_x conftest$ac_exeext; then
-  acx_lapack_ok=yes; acx_lapack_libs=""
-else
-  echo "$as_me: failed program was:" >&5
-sed 's/^/| /' conftest.$ac_ext >&5
-
-
-fi
-
-rm -f core conftest.err conftest.$ac_objext conftest_ipa8_conftest.oo \
-      conftest$ac_exeext conftest.$ac_ext
-	{ echo "$as_me:$LINENO: result: $acx_lapack_ok" >&5
-echo "${ECHO_T}$acx_lapack_ok" >&6; }
-fi
-
-# Generic LAPACK library?
-if test $acx_lapack_ok = no; then
-	as_ac_Lib=`echo "ac_cv_lib_lapack_$dsyev" | $as_tr_sh`
-{ echo "$as_me:$LINENO: checking for $dsyev in -llapack" >&5
-echo $ECHO_N "checking for $dsyev in -llapack... $ECHO_C" >&6; }
-if { as_var=$as_ac_Lib; eval "test \"\${$as_var+set}\" = set"; }; then
-  echo $ECHO_N "(cached) $ECHO_C" >&6
-else
-  ac_check_lib_save_LIBS=$LIBS
-LIBS="-llapack  $LIBS"
-cat >conftest.$ac_ext <<_ACEOF
-      program main
-      call $dsyev
-      end
-_ACEOF
-rm -f conftest.$ac_objext conftest$ac_exeext
-if { (ac_try="$ac_link"
-case "(($ac_try" in
-  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
-  *) ac_try_echo=$ac_try;;
-esac
-eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
-  (eval "$ac_link") 2>conftest.er1
-  ac_status=$?
-  grep -v '^ *+' conftest.er1 >conftest.err
-  rm -f conftest.er1
-  cat conftest.err >&5
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); } && {
-	 test -z "$ac_fc_werror_flag" ||
-	 test ! -s conftest.err
-       } && test -s conftest$ac_exeext &&
-       $as_test_x conftest$ac_exeext; then
-  eval "$as_ac_Lib=yes"
-else
-  echo "$as_me: failed program was:" >&5
-sed 's/^/| /' conftest.$ac_ext >&5
-
-	eval "$as_ac_Lib=no"
-fi
-
-rm -f core conftest.err conftest.$ac_objext conftest_ipa8_conftest.oo \
-      conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS
-fi
-ac_res=`eval echo '${'$as_ac_Lib'}'`
-	       { echo "$as_me:$LINENO: result: $ac_res" >&5
-echo "${ECHO_T}$ac_res" >&6; }
-if test `eval echo '${'$as_ac_Lib'}'` = yes; then
-  acx_lapack_ok=yes; acx_lapack_libs="-llapack"
-fi
-
-fi
-
-LAPACK_LIBS="$acx_lapack_libs"
-LIBS="$acx_lapack_save_LIBS"
-LDFLAGS="$acx_lapack_save_LDFLAGS $acx_lapack_dir"
-
-
-
-if test x"$acx_lapack_ok" = xspecific ; then
-   acx_lapack_ok=yes
-fi
-
-# Finally, execute ACTION-IF-FOUND/ACTION-IF-NOT-FOUND:
-if test x"$acx_lapack_ok" = xyes; then
-
-cat >>confdefs.h <<\_ACEOF
-#define HAVE_LAPACK 1
-_ACEOF
-
-        :
-else
-        acx_lapack_ok=no
-        { echo "$as_me:$LINENO: WARNING: No working lapack library found!" >&5
-echo "$as_me: WARNING: No working lapack library found!" >&2;}
-fi
-
-
-
-
-
-
-
-if test "x$ax_f90_modext" = "xunknown" ; then
-     { { echo "$as_me:$LINENO: error: unable to find f90 modules extension" >&5
-echo "$as_me: error: unable to find f90 modules extension" >&2;}
-   { (exit 1); exit 1; }; }
-fi
-
-acx_blas95_ok="no"
-
-
-# Check whether --with-blas95 was given.
-if test "${with_blas95+set}" = set; then
-  withval=$with_blas95; case $withval in
-   yes|"")
-       withval=$FC_SEARCH_PATH ;;
-   no)
-       { echo "$as_me:$LINENO: WARNING: blas95 disabled at user option" >&5
-echo "$as_me: WARNING: blas95 disabled at user option" >&2;}
-	   withval=""
-       acx_blas95_ok="disabled"
-   ;;
-    esac
-else
-  withval="$FC_SEARCH_PATH"
-fi
-
-
-if test x"$acx_blas95_ok" != xdisabled; then
-
-ax_blas95_save_LIBS="$LIBS"
-acx_blas95_save_LIBS="$LIBS"
-LIBS="$LIBS $BLAS_LIBS"
-
-
-
-
-as_ax_include=`echo "ax_f90_headmod_blas95.$ax_f90_modext" | $as_tr_sh`
-
-{ echo "$as_me:$LINENO: checking blas95 fortran 90 module" >&5
-echo $ECHO_N "checking blas95 fortran 90 module... $ECHO_C" >&6; }
-ac_ext=${ac_fc_srcext-f}
-ac_compile='$FC -c $FCFLAGS $ac_fcflags_srcext conftest.$ac_ext >&5'
-ac_link='$FC -o conftest$ac_exeext $FCFLAGS $LDFLAGS $ac_fcflags_srcext conftest.$ac_ext $LIBS >&5'
-ac_compiler_gnu=$ac_cv_fc_compiler_gnu
-
-eval "$as_ax_include=\"not found\""
-
-if test "x$withval" = x ; then
-  ax_search=""
-else
-  ax_search="$withval"
-fi
-
-if test "$prefix" = "NONE"; then
-  ax_search="$ax_search:$ac_default_prefix"
-else
-  ax_search="$ax_search:$prefix:$ac_default_prefix"
-fi
-
-for ax_base in "" `echo $LD_LIBRARY_PATH | tr ':' '\012'` ; do
-  if test "x$ax_base" != x ; then
-        ax_base=`echo $ax_base | sed 's,/[^/]*$,,'`
-        ax_search="${ax_search}:${ax_base}"
-  fi
-done
-for ax_base in `echo $ax_search | tr ':' '\012'` ; do
- if test "`eval echo '${'$as_ax_include'}'`" = "not found" ; then
-   for ax_mod in "" `find $ax_base -follow -name blas95.$ax_f90_modext -print` ; do
-     if test "x$ax_mod" != x ; then
-              ax_dir=`echo $ax_mod | sed 's,/[^/]*$,,'`
-              ax_save_FCFLAGS="$FCFLAGS"
-       FCFLAGS="$ax_save_FCFLAGS "$ax_f90_modflag"$ax_dir"
-       cat >conftest.$ac_ext <<_ACEOF
-subroutine conftest_routine
-
-use blas95
-real(8), dimension(2,2) :: a=0.0, b=0.0, c
-call gemm(a,b,c)
-
-          end subroutine conftest_routine
-
-_ACEOF
-rm -f conftest.$ac_objext
-if { (ac_try="$ac_compile"
-case "(($ac_try" in
-  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
-  *) ac_try_echo=$ac_try;;
-esac
-eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
-  (eval "$ac_compile") 2>conftest.er1
-  ac_status=$?
-  grep -v '^ *+' conftest.er1 >conftest.err
-  rm -f conftest.er1
-  cat conftest.err >&5
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); } && {
-	 test -z "$ac_fc_werror_flag" ||
-	 test ! -s conftest.err
-       } && test -s conftest.$ac_objext; then
-  eval "$as_ax_include=\"\"\$ax_f90_modflag\"\$ax_dir\""
-else
-  echo "$as_me: failed program was:" >&5
-sed 's/^/| /' conftest.$ac_ext >&5
-
-
-fi
-
-rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
-       FCFLAGS="$ax_save_FCFLAGS"
-     fi
-   done
- fi
-done
-ac_ext=${ac_fc_srcext-f}
-ac_compile='$FC -c $FCFLAGS $ac_fcflags_srcext conftest.$ac_ext >&5'
-ac_link='$FC -o conftest$ac_exeext $FCFLAGS $LDFLAGS $ac_fcflags_srcext conftest.$ac_ext $LIBS >&5'
-ac_compiler_gnu=$ac_cv_fc_compiler_gnu
-
-{ echo "$as_me:$LINENO: result: `eval echo '${'$as_ax_include'}'`" >&5
-echo "${ECHO_T}`eval echo '${'$as_ax_include'}'`" >&6; }
-if test "`eval echo '${'$as_ax_include'}'`" = "not found"; then
- F90_MODULE_blas95=""
- acx_blas95_ok="yes"
-else
- F90_MODULE_blas95="`eval echo '${'$as_ax_include'}'`"
- FCFLAGS="$FCFLAGS $F90_MODULE_blas95"
-fi
-
-
-
-
-
-
-
-
-
-{ echo "$as_me:$LINENO: checking blas95 fortran 90 library" >&5
-echo $ECHO_N "checking blas95 fortran 90 library... $ECHO_C" >&6; }
-ac_ext=${ac_fc_srcext-f}
-ac_compile='$FC -c $FCFLAGS $ac_fcflags_srcext conftest.$ac_ext >&5'
-ac_link='$FC -o conftest$ac_exeext $FCFLAGS $LDFLAGS $ac_fcflags_srcext conftest.$ac_ext $LIBS >&5'
-ac_compiler_gnu=$ac_cv_fc_compiler_gnu
-
-ax_f90_ldflags_blas95=""
-ax_f90_library_blas95_ok="no"
-ax_f90_libs_blas95="not found"
-
-if test "x$withval" = x ; then
-  ax_search=""
-else
-  ax_search="$withval"
-fi
-
-if test "$prefix" = "NONE"; then
-  ax_search="$ax_search:$ac_default_prefix/lib"
-else
-  ax_search="$ax_search:$prefix/lib:$ac_default_prefix/lib"
-fi
-
-for ax_base in "" `echo $LD_LIBRARY_PATH | tr ':' '\012'` ; do
-  if test "x$ax_base" != x ; then
-        ax_base=`echo $ax_base | sed 's,/[^/]*$,,'`
-        ax_search="${ax_search}:${ax_base}"
-  fi
-done
-
-ax_save_LDFLAGS="$LDFLAGS"
-ax_save_LIBS="$LIBS"
-
-for ax_base in `echo $ax_search | tr ':' '\012'` ; do
- if test "$ax_f90_libs_blas95" = "not found" ; then
-   for ax_lib in "" `find $ax_base -follow -name 'libblas95*' -print` ; do
-     if test "x$ax_lib" != x ; then
-              ax_dir=`echo $ax_lib | sed 's,/[^/]*$,,'`
-       ax_lib=`echo $ax_lib | sed 's,.*/\([^/]*\)$,\1,'`
-              case "$ax_lib" in
-         lib*)
-                      ax_lib="`echo $ax_lib | sed 's,lib\(.*\)\.[^.]*$,\1,'`"
-                      ax_f90_ldflags_blas95="-L$ax_dir"
-           ax_f90_libs_blas95="-l$ax_lib"
-           ;;
-         *)
-           ax_f90_ldflags_blas95=""
-           ax_f90_libs_blas95="$ax_lib"
-           ;;
-       esac
-       LDFLAGS="$ax_save_LDFLAGS $ax_f90_ldflags_blas95"
-       LIBS="$ax_f90_libs_blas95 $ax_save_LIBS"
-       cat >conftest.$ac_ext <<_ACEOF
-program conftest_program
-
-use blas95
-real(8), dimension(2,2) :: a=0.0, b=0.0, c
-call gemm(a,b,c)
-
-          end program conftest_program
-
-_ACEOF
-rm -f conftest.$ac_objext conftest$ac_exeext
-if { (ac_try="$ac_link"
-case "(($ac_try" in
-  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
-  *) ac_try_echo=$ac_try;;
-esac
-eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
-  (eval "$ac_link") 2>conftest.er1
-  ac_status=$?
-  grep -v '^ *+' conftest.er1 >conftest.err
-  rm -f conftest.er1
-  cat conftest.err >&5
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); } && {
-	 test -z "$ac_fc_werror_flag" ||
-	 test ! -s conftest.err
-       } && test -s conftest$ac_exeext &&
-       $as_test_x conftest$ac_exeext; then
-  :
-else
-  echo "$as_me: failed program was:" >&5
-sed 's/^/| /' conftest.$ac_ext >&5
-
-	ax_f90_ldflags_blas95=""
-          ax_f90_libs_blas95="not found"
-
-fi
-
-rm -f core conftest.err conftest.$ac_objext conftest_ipa8_conftest.oo \
-      conftest$ac_exeext conftest.$ac_ext
-     fi
-   done
- fi
-done
-ac_ext=${ac_fc_srcext-f}
-ac_compile='$FC -c $FCFLAGS $ac_fcflags_srcext conftest.$ac_ext >&5'
-ac_link='$FC -o conftest$ac_exeext $FCFLAGS $LDFLAGS $ac_fcflags_srcext conftest.$ac_ext $LIBS >&5'
-ac_compiler_gnu=$ac_cv_fc_compiler_gnu
-
-{ echo "$as_me:$LINENO: result: $ax_f90_ldflags_blas95 $ax_f90_libs_blas95" >&5
-echo "${ECHO_T}$ax_f90_ldflags_blas95 $ax_f90_libs_blas95" >&6; }
-if test "$ax_f90_libs_blas95" = "not found"; then
- F90_LDFLAGS_blas95=""
- F90_LIBS_blas95=""
- LDFLAGS="$LDFLAGS $F90_LDFLAGS_blas95"
-LIBS="$F90_LIBS_blas95 $LIBS"
-else
- F90_LDFLAGS_blas95=$ax_f90_ldflags_blas95
- F90_LIBS_blas95=$ax_f90_libs_blas95
- ax_f90_library_blas95_ok="yes"
- acx_blas95_ok="yes"
-fi
-
-
-
-
-
-
-#LIBS="$ax_blas95_save_LIBS $F90_LIBS_blas95"
-LIBS="$acx_blas95_save_LIBS"
-fi
-
-# Finally, execute ACTION-IF-FOUND/ACTION-IF-NOT-FOUND:
-if test x"$acx_blas95_ok" = xyes; then
-
-		:
-else
-        if test x"$acx_blas95_ok" = xdisabled; then
-          acx_blas95_ok="no"
-		  :
-		else
-          acx_blas95_ok="no"
-		  { echo "$as_me:$LINENO: WARNING: No working lapack95 library found!" >&5
-echo "$as_me: WARNING: No working lapack95 library found!" >&2;}
-		fi
-fi
-
-
-
-
-
-
-
-
-
-if test "x$ax_f90_modext" = "xunknown" ; then
-     { { echo "$as_me:$LINENO: error: unable to find f90 modules extension" >&5
-echo "$as_me: error: unable to find f90 modules extension" >&2;}
-   { (exit 1); exit 1; }; }
-fi
-
-acx_lapack95_ok="no"
-
-
-# Check whether --with-lapack95 was given.
-if test "${with_lapack95+set}" = set; then
-  withval=$with_lapack95; case $withval in
-   yes|"")
-       withval=$FC_SEARCH_PATH ;;
-   no)
-       { echo "$as_me:$LINENO: WARNING: blas95 disabled at user option" >&5
-echo "$as_me: WARNING: blas95 disabled at user option" >&2;}
-	   withval=""
-       acx_blas95_ok="disabled"
-   ;;
-    esac
-else
-  withval="$FC_SEARCH_PATH"
-fi
-
-
-if test x"$acx_lapack95_ok" != xdisabled; then
-
-ax_blas95_save_LIBS="$LIBS"
-acx_lapack95_save_LIBS="$LIBS"
-LIBS="$LIBS $LAPACK_LIBS $BLAS_LIBS"
-
-
-
-
-as_ax_include=`echo "ax_f90_headmod_lapack95.$ax_f90_modext" | $as_tr_sh`
-
-{ echo "$as_me:$LINENO: checking lapack95 fortran 90 module" >&5
-echo $ECHO_N "checking lapack95 fortran 90 module... $ECHO_C" >&6; }
-ac_ext=${ac_fc_srcext-f}
-ac_compile='$FC -c $FCFLAGS $ac_fcflags_srcext conftest.$ac_ext >&5'
-ac_link='$FC -o conftest$ac_exeext $FCFLAGS $LDFLAGS $ac_fcflags_srcext conftest.$ac_ext $LIBS >&5'
-ac_compiler_gnu=$ac_cv_fc_compiler_gnu
-
-eval "$as_ax_include=\"not found\""
-
-if test "x$withval" = x ; then
-  ax_search=""
-else
-  ax_search="$withval"
-fi
-
-if test "$prefix" = "NONE"; then
-  ax_search="$ax_search:$ac_default_prefix"
-else
-  ax_search="$ax_search:$prefix:$ac_default_prefix"
-fi
-
-for ax_base in "" `echo $LD_LIBRARY_PATH | tr ':' '\012'` ; do
-  if test "x$ax_base" != x ; then
-        ax_base=`echo $ax_base | sed 's,/[^/]*$,,'`
-        ax_search="${ax_search}:${ax_base}"
-  fi
-done
-for ax_base in `echo $ax_search | tr ':' '\012'` ; do
- if test "`eval echo '${'$as_ax_include'}'`" = "not found" ; then
-   for ax_mod in "" `find $ax_base -follow -name lapack95.$ax_f90_modext -print` ; do
-     if test "x$ax_mod" != x ; then
-              ax_dir=`echo $ax_mod | sed 's,/[^/]*$,,'`
-              ax_save_FCFLAGS="$FCFLAGS"
-       FCFLAGS="$ax_save_FCFLAGS "$ax_f90_modflag"$ax_dir"
-       cat >conftest.$ac_ext <<_ACEOF
-subroutine conftest_routine
-
-use lapack95
-real(8), dimension(2,2) :: a=0.0
-real(8), dimension(2) :: b=0.0
-call syev(a,b)
-
-          end subroutine conftest_routine
-
-_ACEOF
-rm -f conftest.$ac_objext
-if { (ac_try="$ac_compile"
-case "(($ac_try" in
-  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
-  *) ac_try_echo=$ac_try;;
-esac
-eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
-  (eval "$ac_compile") 2>conftest.er1
-  ac_status=$?
-  grep -v '^ *+' conftest.er1 >conftest.err
-  rm -f conftest.er1
-  cat conftest.err >&5
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); } && {
-	 test -z "$ac_fc_werror_flag" ||
-	 test ! -s conftest.err
-       } && test -s conftest.$ac_objext; then
-  eval "$as_ax_include=\"\"\$ax_f90_modflag\"\$ax_dir\""
-else
-  echo "$as_me: failed program was:" >&5
-sed 's/^/| /' conftest.$ac_ext >&5
-
-
-fi
-
-rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
-       FCFLAGS="$ax_save_FCFLAGS"
-     fi
-   done
- fi
-done
-ac_ext=${ac_fc_srcext-f}
-ac_compile='$FC -c $FCFLAGS $ac_fcflags_srcext conftest.$ac_ext >&5'
-ac_link='$FC -o conftest$ac_exeext $FCFLAGS $LDFLAGS $ac_fcflags_srcext conftest.$ac_ext $LIBS >&5'
-ac_compiler_gnu=$ac_cv_fc_compiler_gnu
-
-{ echo "$as_me:$LINENO: result: `eval echo '${'$as_ax_include'}'`" >&5
-echo "${ECHO_T}`eval echo '${'$as_ax_include'}'`" >&6; }
-if test "`eval echo '${'$as_ax_include'}'`" = "not found"; then
- F90_MODULE_lapack95=""
- acx_lapack95_ok="yes"
-else
- F90_MODULE_lapack95="`eval echo '${'$as_ax_include'}'`"
- FCFLAGS="$FCFLAGS $F90_MODULE_lapack95"
-fi
-
-
-
-
-
-
-
-
-
-{ echo "$as_me:$LINENO: checking lapack95 fortran 90 library" >&5
-echo $ECHO_N "checking lapack95 fortran 90 library... $ECHO_C" >&6; }
-ac_ext=${ac_fc_srcext-f}
-ac_compile='$FC -c $FCFLAGS $ac_fcflags_srcext conftest.$ac_ext >&5'
-ac_link='$FC -o conftest$ac_exeext $FCFLAGS $LDFLAGS $ac_fcflags_srcext conftest.$ac_ext $LIBS >&5'
-ac_compiler_gnu=$ac_cv_fc_compiler_gnu
-
-ax_f90_ldflags_lapack95=""
-ax_f90_library_lapack95_ok="no"
-ax_f90_libs_lapack95="not found"
-
-if test "x$withval" = x ; then
-  ax_search=""
-else
-  ax_search="$withval"
-fi
-
-if test "$prefix" = "NONE"; then
-  ax_search="$ax_search:$ac_default_prefix/lib"
-else
-  ax_search="$ax_search:$prefix/lib:$ac_default_prefix/lib"
-fi
-
-for ax_base in "" `echo $LD_LIBRARY_PATH | tr ':' '\012'` ; do
-  if test "x$ax_base" != x ; then
-        ax_base=`echo $ax_base | sed 's,/[^/]*$,,'`
-        ax_search="${ax_search}:${ax_base}"
-  fi
-done
-
-ax_save_LDFLAGS="$LDFLAGS"
-ax_save_LIBS="$LIBS"
-
-for ax_base in `echo $ax_search | tr ':' '\012'` ; do
- if test "$ax_f90_libs_lapack95" = "not found" ; then
-   for ax_lib in "" `find $ax_base -follow -name 'liblapack95*' -print` ; do
-     if test "x$ax_lib" != x ; then
-              ax_dir=`echo $ax_lib | sed 's,/[^/]*$,,'`
-       ax_lib=`echo $ax_lib | sed 's,.*/\([^/]*\)$,\1,'`
-              case "$ax_lib" in
-         lib*)
-                      ax_lib="`echo $ax_lib | sed 's,lib\(.*\)\.[^.]*$,\1,'`"
-                      ax_f90_ldflags_lapack95="-L$ax_dir"
-           ax_f90_libs_lapack95="-l$ax_lib"
-           ;;
-         *)
-           ax_f90_ldflags_lapack95=""
-           ax_f90_libs_lapack95="$ax_lib"
-           ;;
-       esac
-       LDFLAGS="$ax_save_LDFLAGS $ax_f90_ldflags_lapack95"
-       LIBS="$ax_f90_libs_lapack95 $ax_save_LIBS"
-       cat >conftest.$ac_ext <<_ACEOF
-program conftest_program
-
-use lapack95
-real(8), dimension(2,2) :: a=0.0
-real(8), dimension(2) :: b=0.0
-call syev(a,b)
-
-          end program conftest_program
-
-_ACEOF
-rm -f conftest.$ac_objext conftest$ac_exeext
-if { (ac_try="$ac_link"
-case "(($ac_try" in
-  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
-  *) ac_try_echo=$ac_try;;
-esac
-eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
-  (eval "$ac_link") 2>conftest.er1
-  ac_status=$?
-  grep -v '^ *+' conftest.er1 >conftest.err
-  rm -f conftest.er1
-  cat conftest.err >&5
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); } && {
-	 test -z "$ac_fc_werror_flag" ||
-	 test ! -s conftest.err
-       } && test -s conftest$ac_exeext &&
-       $as_test_x conftest$ac_exeext; then
-  :
-else
-  echo "$as_me: failed program was:" >&5
-sed 's/^/| /' conftest.$ac_ext >&5
-
-	ax_f90_ldflags_lapack95=""
-          ax_f90_libs_lapack95="not found"
-
-fi
-
-rm -f core conftest.err conftest.$ac_objext conftest_ipa8_conftest.oo \
-      conftest$ac_exeext conftest.$ac_ext
-     fi
-   done
- fi
-done
-ac_ext=${ac_fc_srcext-f}
-ac_compile='$FC -c $FCFLAGS $ac_fcflags_srcext conftest.$ac_ext >&5'
-ac_link='$FC -o conftest$ac_exeext $FCFLAGS $LDFLAGS $ac_fcflags_srcext conftest.$ac_ext $LIBS >&5'
-ac_compiler_gnu=$ac_cv_fc_compiler_gnu
-
-{ echo "$as_me:$LINENO: result: $ax_f90_ldflags_lapack95 $ax_f90_libs_lapack95" >&5
-echo "${ECHO_T}$ax_f90_ldflags_lapack95 $ax_f90_libs_lapack95" >&6; }
-if test "$ax_f90_libs_lapack95" = "not found"; then
- F90_LDFLAGS_lapack95=""
- F90_LIBS_lapack95=""
- LDFLAGS="$LDFLAGS $F90_LDFLAGS_lapack95"
-LIBS="$F90_LIBS_lapack95 $LIBS"
-else
- F90_LDFLAGS_lapack95=$ax_f90_ldflags_lapack95
- F90_LIBS_lapack95=$ax_f90_libs_lapack95
- ax_f90_library_lapack95_ok="yes"
- acx_lapack95_ok="yes"
-fi
-
-
-
-
-
-
-#LIBS="$ax_blas95_save_LIBS $F90_LIBS_blas95"
-LIBS="$acx_lapack95_save_LIBS"
-fi
-
-# Finally, execute ACTION-IF-FOUND/ACTION-IF-NOT-FOUND:
-if test x"$acx_lapack95_ok" = xyes; then
-
-		:
-else
-        if test x"$acx_lapack95_ok" = xdisabled; then
-          acx_lapack95_ok="no"
-		  :
-		else
-          acx_lapack95_ok="no"
-		  { echo "$as_me:$LINENO: WARNING: No working lapack95 library found!" >&5
-echo "$as_me: WARNING: No working lapack95 library found!" >&2;}
-		fi
-fi
-
-
-
-ac_ext=c
-ac_cpp='$CPP $CPPFLAGS'
-ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
-ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
-ac_compiler_gnu=$ac_cv_c_compiler_gnu
-
+#AC_CACHE_SAVE
+#AC_LANG_PUSH([Fortran])
+#ACX_BLAS(,AC_MSG_WARN([No working blas library found!]))
+#ACX_LAPACK(,AC_MSG_WARN([No working lapack library found!]))
+#ACX_BLAS95(,AC_MSG_WARN([No working lapack95 library found!]))
+#ACX_LAPACK95(,AC_MSG_WARN([No working lapack95 library found!]))
+#AC_LANG_POP([Fortran])
 
 ax_save_LIBS="$LIBS"
 { echo "$as_me:$LINENO: Checking if ACES2 libraries are available" >&5
@@ -7418,415 +5340,6 @@ fi
 
 
 LIBS="$ax_save_LIBS"
-
-if test "x$enable_mpi" = "xyes"; then
-	cat >confcache <<\_ACEOF
-# This file is a shell script that caches the results of configure
-# tests run on this system so they can be shared between configure
-# scripts and configure runs, see configure's option --config-cache.
-# It is not useful on other systems.  If it contains results you don't
-# want to keep, you may remove or edit it.
-#
-# config.status only pays attention to the cache file if you give it
-# the --recheck option to rerun configure.
-#
-# `ac_cv_env_foo' variables (set or unset) will be overridden when
-# loading this file, other *unset* `ac_cv_foo' will be assigned the
-# following values.
-
-_ACEOF
-
-# The following way of writing the cache mishandles newlines in values,
-# but we know of no workaround that is simple, portable, and efficient.
-# So, we kill variables containing newlines.
-# Ultrix sh set writes to stderr and can't be redirected directly,
-# and sets the high bit in the cache file unless we assign to the vars.
-(
-  for ac_var in `(set) 2>&1 | sed -n 's/^\([a-zA-Z_][a-zA-Z0-9_]*\)=.*/\1/p'`; do
-    eval ac_val=\$$ac_var
-    case $ac_val in #(
-    *${as_nl}*)
-      case $ac_var in #(
-      *_cv_*) { echo "$as_me:$LINENO: WARNING: Cache variable $ac_var contains a newline." >&5
-echo "$as_me: WARNING: Cache variable $ac_var contains a newline." >&2;} ;;
-      esac
-      case $ac_var in #(
-      _ | IFS | as_nl) ;; #(
-      *) $as_unset $ac_var ;;
-      esac ;;
-    esac
-  done
-
-  (set) 2>&1 |
-    case $as_nl`(ac_space=' '; set) 2>&1` in #(
-    *${as_nl}ac_space=\ *)
-      # `set' does not quote correctly, so add quotes (double-quote
-      # substitution turns \\\\ into \\, and sed turns \\ into \).
-      sed -n \
-	"s/'/'\\\\''/g;
-	  s/^\\([_$as_cr_alnum]*_cv_[_$as_cr_alnum]*\\)=\\(.*\\)/\\1='\\2'/p"
-      ;; #(
-    *)
-      # `set' quotes correctly as required by POSIX, so do not add quotes.
-      sed -n "/^[_$as_cr_alnum]*_cv_[_$as_cr_alnum]*=/p"
-      ;;
-    esac |
-    sort
-) |
-  sed '
-     /^ac_cv_env_/b end
-     t clear
-     :clear
-     s/^\([^=]*\)=\(.*[{}].*\)$/test "${\1+set}" = set || &/
-     t end
-     s/^\([^=]*\)=\(.*\)$/\1=${\1=\2}/
-     :end' >>confcache
-if diff "$cache_file" confcache >/dev/null 2>&1; then :; else
-  if test -w "$cache_file"; then
-    test "x$cache_file" != "x/dev/null" &&
-      { echo "$as_me:$LINENO: updating cache $cache_file" >&5
-echo "$as_me: updating cache $cache_file" >&6;}
-    cat confcache >$cache_file
-  else
-    { echo "$as_me:$LINENO: not updating unwritable cache $cache_file" >&5
-echo "$as_me: not updating unwritable cache $cache_file" >&6;}
-  fi
-fi
-rm -f confcache
-	{ echo "$as_me:$LINENO: Checking if MPI is available" >&5
-echo "$as_me: Checking if MPI is available" >&6;}
-	ac_ext=${ac_fc_srcext-f}
-ac_compile='$FC -c $FCFLAGS $ac_fcflags_srcext conftest.$ac_ext >&5'
-ac_link='$FC -o conftest$ac_exeext $FCFLAGS $LDFLAGS $ac_fcflags_srcext conftest.$ac_ext $LIBS >&5'
-ac_compiler_gnu=$ac_cv_fc_compiler_gnu
-
-
-
-
-
-
-	for ac_prog in mpif77 mpif90 hf77 mpxlf mpf77 mpf90 mpxlf90 mpxlf95 mpxlf_r
-do
-  # Extract the first word of "$ac_prog", so it can be a program name with args.
-set dummy $ac_prog; ac_word=$2
-{ echo "$as_me:$LINENO: checking for $ac_word" >&5
-echo $ECHO_N "checking for $ac_word... $ECHO_C" >&6; }
-if test "${ac_cv_prog_MPIFC+set}" = set; then
-  echo $ECHO_N "(cached) $ECHO_C" >&6
-else
-  if test -n "$MPIFC"; then
-  ac_cv_prog_MPIFC="$MPIFC" # Let the user override the test.
-else
-as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
-for as_dir in $PATH
-do
-  IFS=$as_save_IFS
-  test -z "$as_dir" && as_dir=.
-  for ac_exec_ext in '' $ac_executable_extensions; do
-  if { test -f "$as_dir/$ac_word$ac_exec_ext" && $as_test_x "$as_dir/$ac_word$ac_exec_ext"; }; then
-    ac_cv_prog_MPIFC="$ac_prog"
-    echo "$as_me:$LINENO: found $as_dir/$ac_word$ac_exec_ext" >&5
-    break 2
-  fi
-done
-done
-IFS=$as_save_IFS
-
-fi
-fi
-MPIFC=$ac_cv_prog_MPIFC
-if test -n "$MPIFC"; then
-  { echo "$as_me:$LINENO: result: $MPIFC" >&5
-echo "${ECHO_T}$MPIFC" >&6; }
-else
-  { echo "$as_me:$LINENO: result: no" >&5
-echo "${ECHO_T}no" >&6; }
-fi
-
-
-  test -n "$MPIFC" && break
-done
-test -n "$MPIFC" || MPIFC="$FC"
-
-	acx_mpi_save_FC="$FC"
-	FC="$MPIFC"
-
-
-
-if test x = x"$MPILIBS"; then
-	{ echo "$as_me:$LINENO: checking for MPI_Init" >&5
-echo $ECHO_N "checking for MPI_Init... $ECHO_C" >&6; }
-			cat >conftest.$ac_ext <<_ACEOF
-      program main
-      call MPI_Init
-      end
-_ACEOF
-rm -f conftest.$ac_objext conftest$ac_exeext
-if { (ac_try="$ac_link"
-case "(($ac_try" in
-  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
-  *) ac_try_echo=$ac_try;;
-esac
-eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
-  (eval "$ac_link") 2>conftest.er1
-  ac_status=$?
-  grep -v '^ *+' conftest.er1 >conftest.err
-  rm -f conftest.er1
-  cat conftest.err >&5
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); } && {
-	 test -z "$ac_fc_werror_flag" ||
-	 test ! -s conftest.err
-       } && test -s conftest$ac_exeext &&
-       $as_test_x conftest$ac_exeext; then
-  MPILIBS=" "
-				{ echo "$as_me:$LINENO: result: yes" >&5
-echo "${ECHO_T}yes" >&6; }
-else
-  echo "$as_me: failed program was:" >&5
-sed 's/^/| /' conftest.$ac_ext >&5
-
-	{ echo "$as_me:$LINENO: result: no" >&5
-echo "${ECHO_T}no" >&6; }
-fi
-
-rm -f core conftest.err conftest.$ac_objext conftest_ipa8_conftest.oo \
-      conftest$ac_exeext conftest.$ac_ext
-fi
-if test x = x"$MPILIBS"; then
-	{ echo "$as_me:$LINENO: checking for MPI_Init in -lmpi" >&5
-echo $ECHO_N "checking for MPI_Init in -lmpi... $ECHO_C" >&6; }
-if test "${ac_cv_lib_mpi_MPI_Init+set}" = set; then
-  echo $ECHO_N "(cached) $ECHO_C" >&6
-else
-  ac_check_lib_save_LIBS=$LIBS
-LIBS="-lmpi  $LIBS"
-cat >conftest.$ac_ext <<_ACEOF
-      program main
-      call MPI_Init
-      end
-_ACEOF
-rm -f conftest.$ac_objext conftest$ac_exeext
-if { (ac_try="$ac_link"
-case "(($ac_try" in
-  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
-  *) ac_try_echo=$ac_try;;
-esac
-eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
-  (eval "$ac_link") 2>conftest.er1
-  ac_status=$?
-  grep -v '^ *+' conftest.er1 >conftest.err
-  rm -f conftest.er1
-  cat conftest.err >&5
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); } && {
-	 test -z "$ac_fc_werror_flag" ||
-	 test ! -s conftest.err
-       } && test -s conftest$ac_exeext &&
-       $as_test_x conftest$ac_exeext; then
-  ac_cv_lib_mpi_MPI_Init=yes
-else
-  echo "$as_me: failed program was:" >&5
-sed 's/^/| /' conftest.$ac_ext >&5
-
-	ac_cv_lib_mpi_MPI_Init=no
-fi
-
-rm -f core conftest.err conftest.$ac_objext conftest_ipa8_conftest.oo \
-      conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS
-fi
-{ echo "$as_me:$LINENO: result: $ac_cv_lib_mpi_MPI_Init" >&5
-echo "${ECHO_T}$ac_cv_lib_mpi_MPI_Init" >&6; }
-if test $ac_cv_lib_mpi_MPI_Init = yes; then
-  MPILIBS="-lmpi"
-fi
-
-fi
-if test x = x"$MPILIBS"; then
-	{ echo "$as_me:$LINENO: checking for MPI_Init in -lmpich" >&5
-echo $ECHO_N "checking for MPI_Init in -lmpich... $ECHO_C" >&6; }
-if test "${ac_cv_lib_mpich_MPI_Init+set}" = set; then
-  echo $ECHO_N "(cached) $ECHO_C" >&6
-else
-  ac_check_lib_save_LIBS=$LIBS
-LIBS="-lmpich  $LIBS"
-cat >conftest.$ac_ext <<_ACEOF
-      program main
-      call MPI_Init
-      end
-_ACEOF
-rm -f conftest.$ac_objext conftest$ac_exeext
-if { (ac_try="$ac_link"
-case "(($ac_try" in
-  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
-  *) ac_try_echo=$ac_try;;
-esac
-eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
-  (eval "$ac_link") 2>conftest.er1
-  ac_status=$?
-  grep -v '^ *+' conftest.er1 >conftest.err
-  rm -f conftest.er1
-  cat conftest.err >&5
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); } && {
-	 test -z "$ac_fc_werror_flag" ||
-	 test ! -s conftest.err
-       } && test -s conftest$ac_exeext &&
-       $as_test_x conftest$ac_exeext; then
-  ac_cv_lib_mpich_MPI_Init=yes
-else
-  echo "$as_me: failed program was:" >&5
-sed 's/^/| /' conftest.$ac_ext >&5
-
-	ac_cv_lib_mpich_MPI_Init=no
-fi
-
-rm -f core conftest.err conftest.$ac_objext conftest_ipa8_conftest.oo \
-      conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS
-fi
-{ echo "$as_me:$LINENO: result: $ac_cv_lib_mpich_MPI_Init" >&5
-echo "${ECHO_T}$ac_cv_lib_mpich_MPI_Init" >&6; }
-if test $ac_cv_lib_mpich_MPI_Init = yes; then
-  MPILIBS="-lmpich"
-fi
-
-fi
-
-if test x != x"$MPILIBS"; then
-	{ echo "$as_me:$LINENO: checking for mpif.h" >&5
-echo $ECHO_N "checking for mpif.h... $ECHO_C" >&6; }
-	cat >conftest.$ac_ext <<_ACEOF
-      program main
-      include 'mpif.h'
-      end
-_ACEOF
-rm -f conftest.$ac_objext
-if { (ac_try="$ac_compile"
-case "(($ac_try" in
-  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
-  *) ac_try_echo=$ac_try;;
-esac
-eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
-  (eval "$ac_compile") 2>conftest.er1
-  ac_status=$?
-  grep -v '^ *+' conftest.er1 >conftest.err
-  rm -f conftest.er1
-  cat conftest.err >&5
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); } && {
-	 test -z "$ac_fc_werror_flag" ||
-	 test ! -s conftest.err
-       } && test -s conftest.$ac_objext; then
-  { echo "$as_me:$LINENO: result: yes" >&5
-echo "${ECHO_T}yes" >&6; }
-else
-  echo "$as_me: failed program was:" >&5
-sed 's/^/| /' conftest.$ac_ext >&5
-
-	MPILIBS=""
-		{ echo "$as_me:$LINENO: result: no" >&5
-echo "${ECHO_T}no" >&6; }
-fi
-
-rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
-fi
-
-FC="$acx_mpi_save_FC"
-
-
-
-# Finally, execute ACTION-IF-FOUND/ACTION-IF-NOT-FOUND:
-if test x = x"$MPILIBS"; then
-
-        :
-else
-        FC=$MPIFC
-        :
-fi
-
-	ac_ext=c
-ac_cpp='$CPP $CPPFLAGS'
-ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
-ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
-ac_compiler_gnu=$ac_cv_c_compiler_gnu
-
-	fcflags="$fcflags -DHAVE_MPI"
-fi
-cat >confcache <<\_ACEOF
-# This file is a shell script that caches the results of configure
-# tests run on this system so they can be shared between configure
-# scripts and configure runs, see configure's option --config-cache.
-# It is not useful on other systems.  If it contains results you don't
-# want to keep, you may remove or edit it.
-#
-# config.status only pays attention to the cache file if you give it
-# the --recheck option to rerun configure.
-#
-# `ac_cv_env_foo' variables (set or unset) will be overridden when
-# loading this file, other *unset* `ac_cv_foo' will be assigned the
-# following values.
-
-_ACEOF
-
-# The following way of writing the cache mishandles newlines in values,
-# but we know of no workaround that is simple, portable, and efficient.
-# So, we kill variables containing newlines.
-# Ultrix sh set writes to stderr and can't be redirected directly,
-# and sets the high bit in the cache file unless we assign to the vars.
-(
-  for ac_var in `(set) 2>&1 | sed -n 's/^\([a-zA-Z_][a-zA-Z0-9_]*\)=.*/\1/p'`; do
-    eval ac_val=\$$ac_var
-    case $ac_val in #(
-    *${as_nl}*)
-      case $ac_var in #(
-      *_cv_*) { echo "$as_me:$LINENO: WARNING: Cache variable $ac_var contains a newline." >&5
-echo "$as_me: WARNING: Cache variable $ac_var contains a newline." >&2;} ;;
-      esac
-      case $ac_var in #(
-      _ | IFS | as_nl) ;; #(
-      *) $as_unset $ac_var ;;
-      esac ;;
-    esac
-  done
-
-  (set) 2>&1 |
-    case $as_nl`(ac_space=' '; set) 2>&1` in #(
-    *${as_nl}ac_space=\ *)
-      # `set' does not quote correctly, so add quotes (double-quote
-      # substitution turns \\\\ into \\, and sed turns \\ into \).
-      sed -n \
-	"s/'/'\\\\''/g;
-	  s/^\\([_$as_cr_alnum]*_cv_[_$as_cr_alnum]*\\)=\\(.*\\)/\\1='\\2'/p"
-      ;; #(
-    *)
-      # `set' quotes correctly as required by POSIX, so do not add quotes.
-      sed -n "/^[_$as_cr_alnum]*_cv_[_$as_cr_alnum]*=/p"
-      ;;
-    esac |
-    sort
-) |
-  sed '
-     /^ac_cv_env_/b end
-     t clear
-     :clear
-     s/^\([^=]*\)=\(.*[{}].*\)$/test "${\1+set}" = set || &/
-     t end
-     s/^\([^=]*\)=\(.*\)$/\1=${\1=\2}/
-     :end' >>confcache
-if diff "$cache_file" confcache >/dev/null 2>&1; then :; else
-  if test -w "$cache_file"; then
-    test "x$cache_file" != "x/dev/null" &&
-      { echo "$as_me:$LINENO: updating cache $cache_file" >&5
-echo "$as_me: updating cache $cache_file" >&6;}
-    cat confcache >$cache_file
-  else
-    { echo "$as_me:$LINENO: not updating unwritable cache $cache_file" >&5
-echo "$as_me: not updating unwritable cache $cache_file" >&6;}
-  fi
-fi
-rm -f confcache
 
 ac_ext=c
 ac_cpp='$CPP $CPPFLAGS'
@@ -8842,30 +6355,6 @@ echo "$as_me: not updating unwritable cache $cache_file" >&6;}
 fi
 rm -f confcache
 
-
-fcflags=$fcflags
-
-fdebug=$fdebug
-
-fprof=$fprof
-
-frange=$frange
-
-fldflags=$fldflags
-
-
-cflags=$cflags
-
-cdebug=$cdebug
-
-cprof=$cprof
-
-crange=$crange
-
-cldflags=$cldflags
-
-
-
 ACES2LIBS=$ACES2LIBS
 
 top_bindir='$(topdir)'
@@ -9563,36 +7052,36 @@ OBJEXT!$OBJEXT$ac_delim
 FC!$FC$ac_delim
 FCFLAGS!$FCFLAGS$ac_delim
 ac_ct_FC!$ac_ct_FC$ac_delim
-FCLIBS!$FCLIBS$ac_delim
-FCFLAGS_f90!$FCFLAGS_f90$ac_delim
-FC_MODEXT!$FC_MODEXT$ac_delim
-FC_MODCASE!$FC_MODCASE$ac_delim
-BLAS_LIBS!$BLAS_LIBS$ac_delim
-LAPACK_LIBS!$LAPACK_LIBS$ac_delim
-F90_MODULE_blas95!$F90_MODULE_blas95$ac_delim
-F90_LDFLAGS_blas95!$F90_LDFLAGS_blas95$ac_delim
-F90_LIBS_blas95!$F90_LIBS_blas95$ac_delim
-F90_MODULE_lapack95!$F90_MODULE_lapack95$ac_delim
-F90_LDFLAGS_lapack95!$F90_LDFLAGS_lapack95$ac_delim
-F90_LIBS_lapack95!$F90_LIBS_lapack95$ac_delim
-F90_HEADER_aces2!$F90_HEADER_aces2$ac_delim
-F90_MODULE_aces2!$F90_MODULE_aces2$ac_delim
-F90_LDFLAGS_aces2!$F90_LDFLAGS_aces2$ac_delim
-F90_LIBS_aces2!$F90_LIBS_aces2$ac_delim
-MPIFC!$MPIFC$ac_delim
-MPILIBS!$MPILIBS$ac_delim
-PYTHON_BIN!$PYTHON_BIN$ac_delim
-CPP!$CPP$ac_delim
-GREP!$GREP$ac_delim
-EGREP!$EGREP$ac_delim
-PYTHON_INCLUDE_DIR!$PYTHON_INCLUDE_DIR$ac_delim
-PYTHON_LIB!$PYTHON_LIB$ac_delim
 fcflags!$fcflags$ac_delim
 fdebug!$fdebug$ac_delim
 fprof!$fprof$ac_delim
 frange!$frange$ac_delim
 fldflags!$fldflags$ac_delim
 cflags!$cflags$ac_delim
+cdebug!$cdebug$ac_delim
+cprof!$cprof$ac_delim
+crange!$crange$ac_delim
+cldflags!$cldflags$ac_delim
+MPIFC!$MPIFC$ac_delim
+MPILIBS!$MPILIBS$ac_delim
+pbsdsh!$pbsdsh$ac_delim
+MPI_TYPE!$MPI_TYPE$ac_delim
+FCLIBS!$FCLIBS$ac_delim
+FCFLAGS_f90!$FCFLAGS_f90$ac_delim
+FC_MODEXT!$FC_MODEXT$ac_delim
+FC_MODCASE!$FC_MODCASE$ac_delim
+F90_HEADER_aces2!$F90_HEADER_aces2$ac_delim
+F90_MODULE_aces2!$F90_MODULE_aces2$ac_delim
+F90_LDFLAGS_aces2!$F90_LDFLAGS_aces2$ac_delim
+F90_LIBS_aces2!$F90_LIBS_aces2$ac_delim
+PYTHON_BIN!$PYTHON_BIN$ac_delim
+CPP!$CPP$ac_delim
+GREP!$GREP$ac_delim
+EGREP!$EGREP$ac_delim
+PYTHON_INCLUDE_DIR!$PYTHON_INCLUDE_DIR$ac_delim
+PYTHON_LIB!$PYTHON_LIB$ac_delim
+ACES2LIBS!$ACES2LIBS$ac_delim
+top_bindir!$top_bindir$ac_delim
 _ACEOF
 
   if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 97; then
@@ -9634,19 +7123,13 @@ _ACEOF
 ac_delim='%!_!# '
 for ac_last_try in false false false false false :; do
   cat >conf$$subs.sed <<_ACEOF
-cdebug!$cdebug$ac_delim
-cprof!$cprof$ac_delim
-crange!$crange$ac_delim
-cldflags!$cldflags$ac_delim
-ACES2LIBS!$ACES2LIBS$ac_delim
-top_bindir!$top_bindir$ac_delim
 top_includedir!$top_includedir$ac_delim
 top_libdir!$top_libdir$ac_delim
 LIBOBJS!$LIBOBJS$ac_delim
 LTLIBOBJS!$LTLIBOBJS$ac_delim
 _ACEOF
 
-  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 10; then
+  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 4; then
     break
   elif $ac_last_try; then
     { { echo "$as_me:$LINENO: error: could not make $CONFIG_STATUS" >&5

@@ -20,6 +20,7 @@ m4_include([config/ax_python.m4])
 AC_DEFUN([ACX_BUILD_FLAGS],[. ./config/$1.conf])
 
 AC_DEFUN([ACX_SUBST_BUILD_FLAGS],[
+[. ./config/$1.conf]
 AC_SUBST(fcflags, $fcflags)
 AC_SUBST(fdebug, $fdebug)
 AC_SUBST(fprof, $fprof)

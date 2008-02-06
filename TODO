@@ -2,12 +2,12 @@
 + release and version control
 + install tools
 o documentation
-o parallel magnetic field
-o normalize magnetic field
++ parallel magnetic field
++ normalize magnetic field
 + fix turbo2mol.py two letter atoms
 o add magnet direction to xyz files
-o add para- diamag check
-o add dryrun option
++ add para- diamag check
++ add dryrun option
 
 CLEAN UP:
 o debian pack

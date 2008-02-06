@@ -13,7 +13,8 @@ AC_PREFIX_DEFAULT([/usr/local])
 AC_PROG_MAKE_SET
 AC_CANONICAL_HOST
 
-AC_ARG_ENABLE([mpi], AS_HELP_STRING(--enable-mpi,Enable the parallel version))
+AC_ARG_ENABLE([mpi], AC_HELP_STRING([--enable-mpi=vendor],
+	[enable parallel version using mpich, lam, openmpi or scali]))
 
 #AC_ARG_WITH([aces2], AS_HELP_STRING(--with-aces2=DIR,path to the ACES2 libraries))
 
@@ -93,12 +94,44 @@ esac
 AC_PROG_CC([$try_cc])
 AC_PROG_FC([$try_fort])
 
-# we build these from scratch, to avoid stupid defaults...
-CFLAGS=""
+# clear the default compiler flags. we don't want them!
 FCFLAGS=""
+CFLAGS=""
+ACX_SUBST_BUILD_FLAGS([$build_type])
 
-ACX_BUILD_FLAGS([$build_type])
-AC_CACHE_SAVE
+MPI_TYPE="none"
+if test "x$enable_mpi" != "x"; then
+	test "$enable_mpi" != "yes" && MPI_TYPE="$enable_mpi"
+	AC_MSG_NOTICE([Checking if MPI is available])
+	AC_LANG_PUSH([Fortran])
+	save_FCFLAGS=$FCFLAGS
+	FCFLAGS=$fcflags
+	ACX_MPI([],AC_MSG_ERROR([MPI not found: $MPI_TYPE]))
+	FCFLAGS=$save_FCFLAGS
+	AC_LANG_POP
+	case $enable_mpi in
+		openmpi) ;;
+		lam) ;;
+		mpich) ;;
+		scali|scampi) ;;
+		none) ;;
+		*) AC_MSG_WARN([Unknown MPI implementation: $MPI_TYPE])
+		;;
+	esac
+	AC_CACHE_SAVE
+fi
+
+pbsdsh=no
+if test "x$enable_pbsdsh" != "x"; then
+	pbsdsh=yes
+fi
+AC_SUBST([pbsdsh],[$pbsdsh])
+AC_SUBST(MPI_TYPE, [$MPI_TYPE])
+
+if test "x$enable_mpi" != "x"; then 
+	FC=$MPIFC
+	fcflags="$fcflags -DHAVE_MPI"
+fi
 
 AX_FC_SEARCH_PATH
 
@@ -116,34 +149,23 @@ if test "x$ax_f90_modext" = "xunknown" ; then
 	AC_MSG_ERROR([unable to find f90 modules extension])
 fi
 
-AC_CACHE_SAVE
-AC_LANG_PUSH([Fortran])
-ACX_BLAS(,AC_MSG_WARN([No working blas library found!]))
-ACX_LAPACK(,AC_MSG_WARN([No working lapack library found!]))
-ACX_BLAS95(,AC_MSG_WARN([No working lapack95 library found!]))
-ACX_LAPACK95(,AC_MSG_WARN([No working lapack95 library found!]))
-AC_LANG_POP([Fortran])
+#AC_CACHE_SAVE
+#AC_LANG_PUSH([Fortran])
+#ACX_BLAS(,AC_MSG_WARN([No working blas library found!]))
+#ACX_LAPACK(,AC_MSG_WARN([No working lapack library found!]))
+#ACX_BLAS95(,AC_MSG_WARN([No working lapack95 library found!]))
+#ACX_LAPACK95(,AC_MSG_WARN([No working lapack95 library found!]))
+#AC_LANG_POP([Fortran])
 
 ax_save_LIBS="$LIBS"
 AC_MSG_NOTICE([Checking if ACES2 libraries are available])
 AX_F90_LIBRARY_SETUP([aces2],[],[],[liblibr.a],[call crapsi],[$FC_SEARCH_PATH])
 LIBS="$ax_save_LIBS"
 
-if test "x$enable_mpi" = "xyes"; then
-	AC_CACHE_SAVE
-	AC_MSG_NOTICE([Checking if MPI is available])
-	AC_LANG_PUSH([Fortran])
-	ACX_MPI([FC=$MPIFC])
-	AC_LANG_POP
-	fcflags="$fcflags -DHAVE_MPI"
-fi
-AC_CACHE_SAVE
-
 AX_PYTHON
 
 AC_CACHE_SAVE
 
-ACX_SUBST_BUILD_FLAGS 
 AC_SUBST(ACES2LIBS, $ACES2LIBS)
 AC_SUBST(top_bindir,['$(topdir)'])
 AC_SUBST(top_includedir,['$(topdir)/include'])
