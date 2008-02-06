@@ -7,7 +7,7 @@
 	spherical=off #don't touch, unless you know what you are doing
 	debug=5
 	openshell=false
-    screening=false
+    screening=true
 #     calc=[cdens]
 #     calc=[cdens, integral]
 	 calc=[cdens, integral, divj]

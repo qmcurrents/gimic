@@ -21,37 +21,37 @@ module dfdb_class
 	real(DP), dimension(:,:), allocatable, target, save :: xvec
 
 contains
-	subroutine init_dfdb(dbt, mol, dop, bfv)
-		type(dfdb_t) :: dbt
+	subroutine init_dfdb(self, mol, dop, bfv)
+		type(dfdb_t) :: self
 		type(molecule_t), target :: mol
 		type(dbop_t), target :: dop
 		type(bfeval_t), target :: bfv
 
-		nullify(dbt%db)
+		nullify(self%db)
 
-		if (associated(dbt%db)) then
+		if (associated(self%db)) then
 			call msg_warn('init_dfdb(): already allocated!')
 		else
-			allocate(dbt%db(get_ncgto(mol),3))
+			allocate(self%db(get_ncgto(mol),3))
 		end if
-		dbt%mol=>mol
-		dbt%dop=>dop
-		dbt%bfv=>bfv
-		dbt%r=INITRV
+		self%mol=>mol
+		self%dop=>dop
+		self%bfv=>bfv
+		self%r=INITRV
 	end subroutine
 
-	subroutine del_dfdb(dbt)
-		type(dfdb_t) :: dbt
-		if (associated(dbt%db)) then
-			deallocate(dbt%db)
-			nullify(dbt%db)
+	subroutine del_dfdb(self)
+		type(dfdb_t) :: self
+		if (associated(self%db)) then
+			deallocate(self%db)
+			nullify(self%db)
 		else
 			call msg_warn('del_dfdb(): not allocated!')
 		end if
 	end subroutine
 	
-	subroutine dfdb(dbt, r, dbv)
-		type(dfdb_t) :: dbt
+	subroutine dfdb(self, r, dbv)
+		type(dfdb_t) :: self
 		real(DP), dimension(3), intent(in) :: r
 		real(DP), dimension(:,:), pointer :: dbv
 		
@@ -62,27 +62,27 @@ contains
 		integer(I4) :: i, j, k, natoms, ncgto
 
 		! Check if we already have the result
-		if (r(1)==dbt%r(1) .and. r(2)==dbt%r(2) .and. r(3)==dbt%r(3)) then 
-			dbv=>dbt%db
+		if (r(1)==self%r(1) .and. r(2)==self%r(2) .and. r(3)==self%r(3)) then 
+			dbv=>self%db
 			return
 		end if
 		
-		dbt%r=r
-		natoms=get_natoms(dbt%mol)
-		call mkdbop(dbt%dop,r, dbop)
-		call bfeval(dbt%bfv, r, bfvec)
+		self%r=r
+		natoms=get_natoms(self%mol)
+		call mkdbop(self%dop,r, dbop)
+		call bfeval(self%bfv, r, bfvec)
 		
 		j=1
 		do k=1,natoms
-			call get_atom(dbt%mol, k, atom)
+			call get_atom(self%mol, k, atom)
 			call get_basis(atom, basis)
 			ncgto=get_ncgto(basis)
 			do i=1,ncgto
-				dbt%db(j,:)=dbop(:,k)*bfvec(j)
+				self%db(j,:)=dbop(:,k)*bfvec(j)
 				j=j+1
 			end do
 		end do
-		dbv=>dbt%db
+		dbv=>self%db
 	end subroutine 
 
 end module

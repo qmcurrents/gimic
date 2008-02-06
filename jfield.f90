@@ -12,7 +12,7 @@ module jfield_class
 	use grid_class
 	use basis_class
 	use teletype_m
-	use mpi_m
+	use parallel_m
 	use magnet_m
 	implicit none
 
@@ -399,7 +399,7 @@ contains
 		call eta(jf%jt,jf%grid)
 		call get_grid_size(jf%grid, p1, p2, p3)
 
-		call schedule(p2, lo, hi, npts)
+		call schedule(p2, lo, hi)
 	
 		do k=1,p3
 			do j=lo,hi
@@ -419,7 +419,7 @@ contains
 				call gather_data(jf%jjb,jf%jjb(:,lo:hi))
 				call gather_data(jf%jsd,jf%jsd(:,lo:hi))
 			end if
-			call jtens_io(jf, k, 'w')
+			if (master_p) call jtens_io(jf, k, 'w')
 			jf%zpos_j=k
 		end do
 	end subroutine 
@@ -436,7 +436,7 @@ contains
 		call get_grid_size(jf%grid, p1, p2)
 		jj=>jf%jj
 
-		call schedule(p2, lo, hi, npts)
+		call schedule(p2, lo, hi)
 
 		do j=lo,hi
 			do i=1,p1

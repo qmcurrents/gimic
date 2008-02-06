@@ -2,11 +2,7 @@ module timer_m
 	use globals_m
 	use teletype_m
 	implicit none
-	intrinsic etime, dtime, fdate
 
-	real(4) :: etime, dtime
-	character(BUFLEN) :: fdate
-	
 	real(4) :: delta_t
 	real(4), dimension(2) :: times
 
@@ -14,6 +10,9 @@ module timer_m
 	private
 contains
 	subroutine stockas_klocka()
+		real(4) :: etime
+		character(BUFLEN) :: fdate
+
 		delta_t=etime(times)
 		call msg_out(repeat('-', 70))
 		write(str_g, '(a,f9.2,a)') '   wall time:', delta_t, 'sec'
@@ -28,6 +27,8 @@ contains
 
 	subroutine swatch(foo)
 		integer(I4), intent(in) :: foo
+
+		real(4) :: dtime
 		
 		delta_t=dtime(times)
 		if (foo > 0) then

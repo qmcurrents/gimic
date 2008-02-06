@@ -8,7 +8,7 @@ program gimic
 	use basis_class
 	use timer_m
 	use magnet_m
-	use mpi_m
+	use parallel_m
     implicit none 
 
 	character(BUFLEN) :: buf
@@ -50,15 +50,8 @@ contains
 		call getkw(input, 'density', denfil)
 
 		if (mpirun_p) then
-			stop 'The parallell code is out of order currently. Sorry.'
 			rank=start_mpi()
             call rankname(rankdir)
-!            if (rank /= 0) then
-!                ierr=system('mkdir ' // rankdir)
-!                ierr=chdir(rankdir)
-!                ierr=system('ln -s ../' // trim(molfil) // ' .' )
-!                ierr=system('ln -s ../' // trim(denfil) // ' .' )
-!            end if
 		else
 			master_p=.true.
 			rank=0
@@ -126,8 +119,10 @@ contains
 		character(LINELEN), dimension(:), pointer :: cstr
 
 		divj_p=.false.; int_p=.false.
-		cdens_p=.false.; edens_p=.false.
+		cdens_p=.false.; edens_p=.false.; dryrun_p=.false.
 		nike_p=.true.;  xdens_p=.false.; modens_p=.false.
+
+		call getkw(input,'dryrun', dryrun_p)
 
 		if (spherical) then
 			call init_c2sop(c2s,mol)
@@ -157,7 +152,7 @@ contains
 				modens_p=.true.
 			end if
 		end do
-		if (mpirun_p .or. dryrun_p) nike_p=.false.
+		if (dryrun_p) nike_p=.false.
 
 		call getkw(input, 'openshell', uhf_p)
 		if (uhf_p) then
@@ -180,41 +175,46 @@ contains
 		if (int_p) call init_integral(it, jt, jf, igrid)
 		if (edens_p) call init_edens(ed, mol, modens, egrid)
 
+		if (dryrun_p) then
+			call msg_info('Dry run, skipping...')
+			goto 100
+		end if
+
 		do i=1,ncalc
 			select case(calc(i))
 			case(CDENS_TAG)
-				if (nike_p) call jfield(jf)
-				! Contract the tensors with B
-				call jvectors(jf)
-				call jvector_plot(jf)
+				call jfield(jf)
+					! Contract the tensors with B
+				if (master_p) then
+					call jvectors(jf)
+					call jvector_plot(jf)
+				end if
 			case(INTGRL_TAG)
-				if (nike_p) then
-					call int_s_direct(it)
-					call nl
-					call getkw(input, 'integral.modulus', imod_p)
-					if (imod_p) then
-						call msg_info('Integrating |J|')
-						call int_mod_direct(it)
-					end if
-					call getkw(input, 'integral.tensor', imod_p)
-					if (imod_p) then
-						call msg_info('Integrating current tensor')
-                        call int_t_direct(it)  ! tensor integral
-					end if
+				call int_s_direct(it)
+				call nl
+				call getkw(input, 'integral.modulus', imod_p)
+				if (imod_p) then
+					call msg_info('Integrating |J|')
+					call int_mod_direct(it)
+				end if
+				call getkw(input, 'integral.tensor', imod_p)
+				if (imod_p) then
+					call msg_info('Integrating current tensor')
+					call int_t_direct(it)  ! tensor integral
 				end if
 !                    call write_integral(it)
 			case(DIVJ_TAG)
-				if (nike_p) call divj(dj)
-				call divj_plot(dj)
+				call divj(dj)
+				if (master_p) call divj_plot(dj)
 			case(EDENS_TAG)
-				if (nike_p) call edens(ed)
-				call edens_plot(ed)
+				call edens(ed)
+				if (master_p) call edens_plot(ed)
 			case default
 				call msg_error('gimic(): Unknown operation!')
 			end select
 		end do
 
-		if (int_p) then
+100		if (int_p) then
 			call del_integral(it)
 			call del_grid(igrid)
 		end if

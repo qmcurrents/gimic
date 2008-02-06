@@ -20,51 +20,51 @@ module dens_class
 	
 	real(DP), dimension(:,:,:), pointer :: dens
 contains
-	subroutine init_dens(dd, mol, modens_p)
-		type(dens_t) :: dd
+	subroutine init_dens(self, mol, modens_p)
+		type(dens_t) :: self
 		type(molecule_t), target :: mol
 		logical, optional :: modens_p
 
 		integer(I4) :: ncgto
 
-		dd%mol=>mol
+		self%mol=>mol
 		ncgto=get_ncgto(mol)
 
 		if (present(modens_p)) then
 			if (modens_p) then
-				dd%pdens_p=.false.
+				self%pdens_p=.false.
 			end if
 		end if
 
 		if (uhf_p) then
-			dd%spin=2
+			self%spin=2
 		else
-			dd%spin=1
+			self%spin=1
 		end if
 
-		if (dd%pdens_p) then
-			allocate(dd%da(ncgto,ncgto,0:3))
-			if (uhf_p) allocate(dd%db(ncgto,ncgto,0:3))
+		if (self%pdens_p) then
+			allocate(self%da(ncgto,ncgto,0:3))
+			if (uhf_p) allocate(self%db(ncgto,ncgto,0:3))
 		else
-			allocate(dd%da(ncgto,ncgto,0:0))
-			if (uhf_p) allocate(dd%db(ncgto,ncgto,0:0))
+			allocate(self%da(ncgto,ncgto,0:0))
+			if (uhf_p) allocate(self%db(ncgto,ncgto,0:0))
 		end if
 
 	end subroutine
 
-	subroutine read_dens(dd)
-		type(dens_t), intent(inout) :: dd
+	subroutine read_dens(self)
+		type(dens_t), intent(inout) :: self
 		character(80) :: xdens_file
 
 		integer(I4) :: b, mo, ispin, s
 		type(reorder_t) :: bofh
 		real(DP), dimension(:,:), allocatable :: kusse
 
-		if ( .not.associated(dd%da) ) then
+		if ( .not.associated(self%da) ) then
 			call msg_error('read_dens(): dens not allocated!')
 			call exit(1)
 		end if
-		if ( uhf_p.and..not.associated(dd%db) ) then
+		if ( uhf_p.and..not.associated(self%db) ) then
 			call msg_error('read_dens(): beta dens not allocated!')
 			call exit(1)
 		end if
@@ -73,13 +73,13 @@ contains
 
 		open(XDFD, file=xdens_file, status='old', err=42)
 
-		dens=>dd%da
-		s=size(dd%da(:,1,1))
+		dens=>self%da
+		s=size(self%da(:,1,1))
 		allocate(kusse(s,s))
 
-		do ispin=1,dd%spin
-			if (ispin == 2) dens=>dd%db
-			if (dd%pdens_p) then
+		do ispin=1,self%spin
+			if (ispin == 2) dens=>self%db
+			if (self%pdens_p) then
 				do b=0,3
 					read(XDFD,*) kusse
 					dens(:,:,b)=kusse
@@ -94,15 +94,15 @@ contains
 
 		if (uhf_p) then
 			call  msg_info('scaling perturbed densities by 0.d5')
-			dd%da(:,:,1:3)= dd%da(:,:,1:3)/2.d0
-			dd%db(:,:,1:3)= dd%db(:,:,1:3)/2.d0
+			self%da(:,:,1:3)= self%da(:,:,1:3)/2.d0
+			self%db(:,:,1:3)= self%db(:,:,1:3)/2.d0
 		end if
 
 		if (turbomole_p) then
-			call init_reorder(bofh, dd%mol)
+			call init_reorder(bofh, self%mol)
 			call msg_info('Reordering densities [TURBOMOLE]')
 			call turbo_reorder(bofh)
-			call reorder_dens(bofh, dd)
+			call reorder_dens(bofh, self)
 			call del_reorder(bofh)
 		end if
 
@@ -112,96 +112,96 @@ contains
 42      bert_is_evil=.true. 
         call msg_error('Density file not found, all densities set to 1')
 		call nl
-		dens=>dd%da
-		do ispin=1,dd%spin
-			if (ispin == 2) dens=>dd%db
+		dens=>self%da
+		do ispin=1,self%spin
+			if (ispin == 2) dens=>self%db
 			do b=0,3
 				dens(:,:,b)=1.d0
 			end do
 		end do
 	end subroutine
 
-	subroutine del_dens(dd)
-		type(dens_t) :: dd
+	subroutine del_dens(self)
+		type(dens_t) :: self
 
-		if (associated(dd%da)) then
-			deallocate(dd%da)
+		if (associated(self%da)) then
+			deallocate(self%da)
 		else
 			call msg_warn('del_dens(): not allocated!')
 		end if
 		
-		if (uhf_p.and.associated(dd%db)) then
-			deallocate(dd%db)
+		if (uhf_p.and.associated(self%db)) then
+			deallocate(self%db)
 		end if
 		
 	end subroutine
 
-	subroutine get_dens(dd,a, spin)
-		type(dens_t) :: dd
+	subroutine get_dens(self,a, spin)
+		type(dens_t) :: self
 		real(DP), dimension(:,:), pointer :: a
 		integer(I4), optional :: spin
 
-		dens=>dd%da
+		dens=>self%da
 		if (present(spin)) then
-			if (spin == spin_b) dens=>dd%db
+			if (spin == spin_b) dens=>self%db
 		end if
 		
 		a=>dens(:,:,0)
 	end subroutine  
 
-	subroutine set_dens(dd,a,spin)
-		type(dens_t) :: dd
+	subroutine set_dens(self,a,spin)
+		type(dens_t) :: self
 		real(DP), dimension(:,:) :: a
 		integer(I4), optional :: spin
 		
-		dens=>dd%da
+		dens=>self%da
 		if (present(spin)) then
-			if (spin == spin_b) dens=>dd%db
+			if (spin == spin_b) dens=>self%db
 		end if
 		dens(:,:,0)=a
 	end subroutine  
 
-	subroutine  get_pdens(dd,b,a,spin)
-		type(dens_t) :: dd
+	subroutine  get_pdens(self,b,a,spin)
+		type(dens_t) :: self
 		integer(I4), intent(in) :: b
 		real(DP), dimension(:,:), pointer :: a
 		integer(I4), optional :: spin
 
-		dens=>dd%da
+		dens=>self%da
 		if (present(spin)) then
-			if (spin == spin_b) dens=>dd%db
+			if (spin == spin_b) dens=>self%db
 		end if
 		a=>dens(:,:,b)
 	end subroutine  
 
-	subroutine  set_pdens(dd,b,a,spin)
-		type(dens_t) :: dd
+	subroutine  set_pdens(self,b,a,spin)
+		type(dens_t) :: self
 		integer(I4), intent(in) :: b
 		real(DP), dimension(:,:) :: a
 		integer(I4), optional :: spin
 
-		dens=>dd%da
+		dens=>self%da
 		if (present(spin)) then
-			if (spin == spin_b) dens=>dd%db
+			if (spin == spin_b) dens=>self%db
 		end if
 		dens(:,:,b)=a
 	end subroutine  
 
-	subroutine reorder_dens(bofh, dd)
+	subroutine reorder_dens(bofh, self)
 		type(reorder_t) :: bofh
-		type(dens_t) :: dd
+		type(dens_t) :: self
 
 		integer(I4) :: i,b,p,ncgto,  ispin
 
-		ncgto=get_ncgto(dd%mol)
+		ncgto=get_ncgto(self%mol)
 		p=0
-		if (dd%pdens_p) then
+		if (self%pdens_p) then
 			p=3
 		end if
 
-		dens=>dd%da
-		do ispin=1,dd%spin
-			if (ispin == 2) dens=>dd%db
+		dens=>self%da
+		do ispin=1,self%spin
+			if (ispin == 2) dens=>self%db
 			do b=0,p
 				call reorder_cols(bofh, dens(:,:,b))
 			end do
@@ -213,15 +213,15 @@ contains
 		end do
 	end subroutine
 
-	subroutine moco(dd, mos, spin)
-		type(dens_t) :: dd
+	subroutine moco(self, mos, spin)
+		type(dens_t) :: self
 		real(DP), dimension(:,:) :: mos
 		integer(I4), optional :: spin
 
 		integer(I4), dimension(2) :: moran
 		integer(I4) :: ncgto, i, a, b
 
-		dens=>dd%da
+		dens=>self%da
 		if (present(spin)) then
 			if (spin == spin_b) then
 				if (.not.uhf_p) then
@@ -229,10 +229,10 @@ contains
 					&invalid spin for closed shell')
 					stop
 				end if
-				dens=>dd%db
+				dens=>self%db
 			end if
 		end if
-		ncgto=get_ncgto(dd%mol)
+		ncgto=get_ncgto(self%mol)
 		moran=0
 		call getkw(input, 'edens.mos', moran)
 
@@ -260,8 +260,8 @@ contains
 		dens(:,:,0)=dens(:,:,0)*2.d0
 	end subroutine
 
-	subroutine read_modens(dd)
-		type(dens_t) :: dd
+	subroutine read_modens(self)
+		type(dens_t) :: self
 		
 		integer(4) :: n, i,j
 		real(DP), dimension(:,:), allocatable :: mos
@@ -269,22 +269,22 @@ contains
 		character(BUFLEN) :: mofile
 
 		if (.not.turbomole_p) then
-			call read_dens(dd)
+			call read_dens(self)
 			return
 		end if
 
-		dens=>dd%da
+		dens=>self%da
 		dens(:,:,0)=D0
 		call getkw(input, 'edens.mofile', mofile)
 		if (trim(mofile) == '') then
-			call read_dens(dd)
+			call read_dens(self)
 		end if
 		open(XDFD, file=trim(mofile), status='old', err=42)
 		read(XDFD, *) 
 		read(XDFD, *) 
 		read(XDFD, *) 
 
-		n=get_ncgto(dd%mol)
+		n=get_ncgto(self%mol)
 		allocate(mos(n,n))
 		
 		do i=1,n
@@ -293,12 +293,12 @@ contains
 		end do
 		close(XDFD)
 
-		call moco(dd, mos)
+		call moco(self, mos)
 
-		call init_reorder(bofh, dd%mol)
+		call init_reorder(bofh, self%mol)
 		call msg_info('Reordering densities [TURBOMOLE]')
 		call turbo_reorder(bofh)
-		call reorder_dens(bofh, dd)
+		call reorder_dens(bofh, self)
 		call del_reorder(bofh)
 		
 		deallocate(mos)

@@ -27,43 +27,43 @@ module d2fdrdb_class
 	
 contains
 
-	subroutine init_d2fdrdb(d2f, mol, dop, dfr, bfv)
-		type(d2fdrdb_t) :: d2f
+	subroutine init_d2fdrdb(self, mol, dop, dfr, bfv)
+		type(d2fdrdb_t) :: self
 		type(molecule_t), target :: mol
 		type(dbop_t), target :: dop
 		type(dfdr_t), target :: dfr
 		type(bfeval_t), target :: bfv
 
-		nullify(d2f%d2)
+		nullify(self%d2)
 
-		if (associated(d2f%d2)) then
-			call msg_warn('init_d2fdrdb(): already allocated!')
+		if (associated(self%d2)) then
+			call msg_warn('init_selfdrdb(): already allocated!')
 		else
-			allocate(d2f%d2(get_ncgto(mol),9))
+			allocate(self%d2(get_ncgto(mol),9))
 		end if
-		d2f%mol=>mol
-		d2f%dop=>dop
-		d2f%dfr=>dfr
-		d2f%bfv=>bfv
-		d2f%r=INITRV
+		self%mol=>mol
+		self%dop=>dop
+		self%dfr=>dfr
+		self%bfv=>bfv
+		self%r=INITRV
 	end subroutine
 
-	subroutine del_d2fdrdb(d2f)
-		type(d2fdrdb_t) :: d2f
+	subroutine del_d2fdrdb(self)
+		type(d2fdrdb_t) :: self
 
-		if (associated(d2f%d2)) then
-			deallocate(d2f%d2)
-			nullify(d2f%d2)
-			nullify(d2f%mol)
+		if (associated(self%d2)) then
+			deallocate(self%d2)
+			nullify(self%d2)
+			nullify(self%mol)
 		else
-			call msg_warn('del_d2fdrdb(): not allocated!')
+			call msg_warn('del_selfdrdb(): not allocated!')
 		end if
 	end subroutine
 
-	subroutine d2fdrdb(d2f, r, d2fv)
-		type(d2fdrdb_t) :: d2f
+	subroutine d2fdrdb(self, r, selfv)
+		type(d2fdrdb_t) :: self
 		real(DP), dimension(:), intent(in) :: r
-		real(DP), dimension(:,:), pointer :: d2fv
+		real(DP), dimension(:,:), pointer :: selfv
 	
 		type(atom_t), dimension(:), pointer :: atoms
 		integer(I4) :: i, j, k, natoms, nctr, ncomp, idx
@@ -76,22 +76,22 @@ contains
 		integer(I4) :: l, idx1, idx2
 		
 		! Check if we already have the result
-		if (r(1)==d2f%r(1) .and. r(2)==d2f%r(2) .and. r(3)==d2f%r(3)) then 
-			d2fv=>d2f%d2
+		if (r(1)==self%r(1) .and. r(2)==self%r(2) .and. r(3)==self%r(3)) then 
+			selfv=>self%d2
 			return
 		end if
 		
-		d2f%r=r
-		natoms=get_natoms(d2f%mol)
-		call mkdbop(d2f%dop, r, dbop)
-		call bfeval(d2f%bfv, r, bfvec)
-		call dfdr(d2f%dfr, r, drvec)
+		self%r=r
+		natoms=get_natoms(self%mol)
+		call mkdbop(self%dop, r, dbop)
+		call bfeval(self%bfv, r, bfvec)
+		call dfdr(self%dfr, r, drvec)
 		
 		idx=1
 		idx2=0
-		d2f%d2=0.d0
+		self%d2=0.d0
 		do i=1,natoms
-			call get_atom(d2f%mol,i,atom)
+			call get_atom(self%mol,i,atom)
 			dbov=dbop(:,i)
 			call get_coord(atom, coord)
 			ror1=coord(1)
@@ -105,16 +105,16 @@ contains
 				idx=idx2+get_ctridx(basis, j)
 				ncomp=get_ncomp(ctr)
 				do k=1,ncomp
-					call d2f_comp(d2f%d2, idx)
+					call self_comp(self%d2, idx)
 					idx=idx+1
 				end do
 			end do
 			idx2=idx2+get_ncgto(basis)
 		end do
-		d2fv=>d2f%d2
+		selfv=>self%d2
 	end subroutine 
 
-	subroutine d2f_comp(d2,idx)
+	subroutine self_comp(d2,idx)
 		real(DP), dimension(:,:) :: d2
 		integer(I4), intent(in) :: idx
 
@@ -146,7 +146,7 @@ contains
 		d2(idx,9)=drvec3*dbov3
 	end subroutine
 
-	subroutine print_d2fvec(foo)
+	subroutine print_selfvec(foo)
 		real(DP), dimension(:,:), intent(in) :: foo
 
 		integer(I4) :: i

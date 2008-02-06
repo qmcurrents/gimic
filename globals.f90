@@ -7,7 +7,7 @@ module globals_m
 	use getkw_class
 	implicit none 
 
-	intrinsic hostnm
+!    intrinsic hostnm
 
 	character(16), parameter :: GIMIC_VERSION='1.5.1'
 

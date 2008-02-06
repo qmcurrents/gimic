@@ -27,36 +27,36 @@ module dfdr_class
 		
 contains
 
-	subroutine init_dfdr(dfr, mol)
-		type(dfdr_t) :: dfr
+	subroutine init_dfdr(self, mol)
+		type(dfdr_t) :: self
 		type(molecule_t), target :: mol
 
-		nullify(dfr%dr)
+		nullify(self%dr)
 
-		if (associated(dfr%dr)) then
+		if (associated(self%dr)) then
 			call msg_warn('init_dfdr(): already allocated!')
 		else
-			allocate(dfr%dr(get_nccgto(mol),3))
-			if (spherical) allocate(dfr%sdr(get_ncgto(mol),3))
+			allocate(self%dr(get_nccgto(mol),3))
+			if (spherical) allocate(self%sdr(get_ncgto(mol),3))
 		end if
-		dfr%mol=>mol
-		dfr%r=INITRV
+		self%mol=>mol
+		self%r=INITRV
 	end subroutine
 
-	subroutine del_dfdr(dfr)
-		type(dfdr_t) :: dfr
-		if (associated(dfr%dr)) then
-			deallocate(dfr%dr)
-			if (spherical) deallocate(dfr%sdr)
-			nullify(dfr%dr)
-			nullify(dfr%sdr)
+	subroutine del_dfdr(self)
+		type(dfdr_t) :: self
+		if (associated(self%dr)) then
+			deallocate(self%dr)
+			if (spherical) deallocate(self%sdr)
+			nullify(self%dr)
+			nullify(self%sdr)
 		else
 			call msg_warn('del_dfdr(): not allocated!')
 		end if
 	end subroutine
 
-	subroutine dfdr(dfr, r, drv)
-		type(dfdr_t) :: dfr
+	subroutine dfdr(self, r, drv)
+		type(dfdr_t) :: self
 		real(DP), dimension(3), intent(in) :: r
 		real(DP), dimension(:,:), pointer :: drv
 
@@ -64,19 +64,19 @@ contains
 		integer(I4) :: idx1, idx2
 
 		! Check if we already have the result
-		if (r(1)==dfr%r(1) .and. r(2)==dfr%r(2) .and. r(3)==dfr%r(3)) then 
-			drv=>dfr%dr
+		if (r(1)==self%r(1) .and. r(2)==self%r(2) .and. r(3)==self%r(3)) then 
+			drv=>self%dr
 			return
 		end if
 		
-		dfr%r=r
-		natoms=get_natoms(dfr%mol)
+		self%r=r
+		natoms=get_natoms(self%mol)
 		
 		idx=1
 		idx2=0
-		dfr%dr=0.d0
+		self%dr=0.d0
 		do i=1,natoms
-			call get_atom(dfr%mol,i,atom)
+			call get_atom(self%mol,i,atom)
 			call get_coord(atom, coord)
 			rr=r-coord
 			call get_basis(atom, basis)
@@ -87,18 +87,18 @@ contains
 				idx=idx2+get_ctridx(basis, j)
 				do axis=1,3
 					call dcgto(rr, axis, ctr, &
-					dfr%dr(idx:, axis))
+					self%dr(idx:, axis))
 				end do
 			end do
 			idx2=idx2+get_ncgto(basis)
 		end do
 		if (spherical) then
 			do axis=1,3
-				call cao2sao(dfr%mol%c2s, dfr%dr(:, axis), dfr%sdr(:,axis))
+				call cao2sao(self%mol%c2s, self%dr(:, axis), self%sdr(:,axis))
 			end do
-			drv=>dfr%sdr
+			drv=>self%sdr
 		else
-			drv=>dfr%dr
+			drv=>self%dr
 		end if
 	end subroutine 
 end module

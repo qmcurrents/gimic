@@ -10,11 +10,11 @@ module edens_class
 	use dens_class
 	use grid_class
 	use teletype_m
+	use parallel_m
 	implicit none
 	
 	public init_edens, del_edens, edens_t
 	public edens_direct, edens, edens_plot
-	public edens_master, edens_slave
 	
 	type edens_t
 		real(DP), dimension(:), pointer :: tmp
@@ -28,8 +28,8 @@ module edens_class
 
 contains
 	! set up memory (once) for the different components
-	subroutine init_edens(ed, mol, dens, grid)
-		type(edens_t) :: ed
+	subroutine init_edens(self, mol, dens, grid)
+		type(edens_t) :: self
 		type(molecule_t) :: mol
 		type(dens_t), target :: dens
 		type(grid_t), target :: grid
@@ -38,39 +38,39 @@ contains
 		integer(I4) :: p1, p2
 
 		call get_grid_size(grid, p1, p2)
-		call get_dens(dens, ed%aodens)
+		call get_dens(dens, self%aodens)
 		n=get_ncgto(mol)
-		allocate(ed%tmp(n))
-		allocate(ed%buf(p1,p2))
-		call init_bfeval(ed%bf, mol)
-		ed%grid=>grid
+		allocate(self%tmp(n))
+		allocate(self%buf(p1,p2))
+		call init_bfeval(self%bf, mol)
+		self%grid=>grid
 
 		if (master_p) then
 			open(EDFD, file='EDENS', access='direct', recl=p1*p2*DP)
 		end if
 	end subroutine
 
-	subroutine del_edens(ed)
-		type(edens_t) :: ed
+	subroutine del_edens(self)
+		type(edens_t) :: self
 
-		if (associated(ed%tmp)) deallocate(ed%tmp)
-		if (associated(ed%buf)) deallocate(ed%buf)
-		call del_bfeval(ed%bf)
-		nullify(ed%aodens,ed%grid)
+		if (associated(self%tmp)) deallocate(self%tmp)
+		if (associated(self%buf)) deallocate(self%buf)
+		call del_bfeval(self%bf)
+		nullify(self%aodens,self%grid)
 		if (master_p) then
 			close(EDFD)
 		end if
 	end subroutine
 
-	subroutine set_edens(ed, k)
-		type(edens_t), intent(in) :: ed
+	subroutine set_edens(self, k)
+		type(edens_t), intent(in) :: self
 		integer(I4), intent(in) :: k
 
-		write(EDFD, rec=k) ed%buf
+		write(EDFD, rec=k) self%buf
 	end subroutine
 
-	subroutine edens_plot(ed)
-		type(edens_t), intent(inout) :: ed
+	subroutine edens_plot(self)
+		type(edens_t), intent(inout) :: self
 		
 		integer(I4), dimension(:), pointer :: z
 		integer(I4) :: i,j,k,p1,p2,p3
@@ -78,8 +78,8 @@ contains
 		real(DP), dimension(3) :: rr
 		real(DP), dimension(:,:), pointer :: buf
 
-		call get_grid_size(ed%grid, p1, p2,p3)
-		buf=>ed%buf
+		call get_grid_size(self%grid, p1, p2,p3)
+		buf=>self%buf
 		if (keyword_is_set(input,'edens.plots')) then
 !            call get_kw_size('edens.plots', i)
 !            allocate(z(i))
@@ -98,12 +98,12 @@ contains
 				call msg_error(str_g)
 				cycle
 			end if
-			read(EDFD, rec=z(k)) ed%buf
+			read(EDFD, rec=z(k)) self%buf
 			str_g=enumfile('EDENSPLT', k)
 			open(EDPFD, file=trim(str_g))
 			do j=1,p2
 				do i=1,p1
-					rr=gridpoint(ed%grid, i, j, z(k))
+					rr=gridpoint(self%grid, i, j, z(k))
 					write(EDPFD, '(4f19.8)') rr, buf(i,j)
 					if (abs(buf(i,j)) > amax) amax=abs(buf(i,j))
 				end do
@@ -113,108 +113,65 @@ contains
 			write(str_g, '(a,e19.12)') 'Max electronic density:', amax
 			call msg_info(str_g)
 		end do
-		call edens_gopenmol(ed)
+		call edens_gopenmol(self)
 	end subroutine
 
-	subroutine edens_direct(ed, k)
-		type(edens_t) :: ed
+	subroutine edens_direct(self, k)
+		type(edens_t) :: self
 		integer(I4), intent(in) :: k
 
 		integer(I4) :: i, j, p1, p2
+		integer(I4) :: lo, hi
 		real(DP), dimension(3) :: rr
 		real(DP), dimension(:,:), pointer :: buf
 		real(DP), dimension(:), pointer :: bfvec
 
-		call get_grid_size(ed%grid, p1, p2)
+		call get_grid_size(self%grid, p1, p2)
+		call schedule(p2, lo, hi)
 
-		buf=>ed%buf
+		buf=>self%buf
 
-		do j=1,p2
+		do j=lo,hi
 			do i=1,p1
-				rr=gridpoint(ed%grid, i, j, k)
-				call bfeval(ed%bf,rr, bfvec)
-				ed%tmp=matmul(ed%aodens, bfvec)
-				ed%buf(i,j)=dot_product(ed%tmp, bfvec)
+				rr=gridpoint(self%grid, i, j, k)
+				call bfeval(self%bf,rr, bfvec)
+				self%tmp=matmul(self%aodens, bfvec)
+				self%buf(i,j)=dot_product(self%tmp, bfvec)
 			end do
 		end do
+		call gather_data(self%buf, self%buf(:,lo:hi))
 	end subroutine
 
-	subroutine edens(ed)
-		type(edens_t) :: ed
+	subroutine edens(self)
+		type(edens_t) :: self
 
 		integer(I4) :: i, j, k, p1, p2, p3
+		integer(I4) :: lo, hi
 		real(DP), dimension(3) :: rr
 		real(DP), dimension(:,:), pointer :: buf
 		real(DP), dimension(:), pointer :: bfvec
 
-		call get_grid_size(ed%grid, p1, p2, p3)
+		call get_grid_size(self%grid, p1, p2, p3)
+		call schedule(p2, lo, hi)
 
-		buf=>ed%buf
+		buf=>self%buf
 	
 		do k=1,p3
-			do j=1,p2
+			do j=lo, hi
 				do i=1,p1
-					rr=gridpoint(ed%grid, i, j, k)
-					call bfeval(ed%bf,rr, bfvec)
-					ed%tmp=matmul(ed%aodens, bfvec)
-					ed%buf(i,j)=dot_product(ed%tmp, bfvec)
+					rr=gridpoint(self%grid, i, j, k)
+					call bfeval(self%bf,rr, bfvec)
+					self%tmp=matmul(self%aodens, bfvec)
+					self%buf(i,j)=dot_product(self%tmp, bfvec)
 				end do
 			end do
-			write(EDFD, rec=k) ed%buf
+			call gather_data(self%buf, self%buf(:,lo:hi))
+			if (master_p) write(EDFD, rec=k) self%buf
 		end do
 	end subroutine
 
-	subroutine edens_master(ed, who)
-		use mpi_m
-		type(edens_t) :: ed
-		integer(I4), intent(in) :: who
-
-#ifdef HAVE_MPI
-		integer(I4) :: p1, p2, jnum
-		integer(I4) :: bufsz, ierr
-		integer(I4), dimension(MPI_STATUS_SIZE) :: stat
-		real(DP), dimension(:,:), allocatable :: buf
-		real(DP) :: amax
-
-		call get_grid_size(ed%grid, p1, p2)
-
-		bufsz=size(ed%buf)
-
-		call mpi_recv(jnum,1,MPI_INTEGER,who,EDENS_TAG, &
-			MPI_COMM_WORLD, stat, ierr)
-		call mpi_recv(ed%buf,bufsz,MPI_DOUBLE_PRECISION,who, &
-			EDENS_TAG, MPI_COMM_WORLD, stat, ierr)
-
-		call set_edens(ed, jnum)
-
-#endif
-	end subroutine
-
-	subroutine edens_slave(ed, jnum)
-		use mpi_m
-		type(edens_t) :: ed
-		type(grid_t) :: grid
-		integer(I4), intent(in) :: jnum
-
-#ifdef HAVE_MPI
-		integer(I4) :: bufsz, ierr
-		integer(I4), dimension(MPI_STATUS_SIZE) :: stat
-
-		bufsz=size(ed%buf)
-		ed%buf=D0
-
-		call edens_direct(ed, jnum)
-		call mpi_send(EDENS_TAG, 1, MPI_INTEGER, 0, JOB_TAG,&
-			MPI_COMM_WORLD, ierr)
-		call mpi_send(jnum, 1, MPI_INTEGER, 0, EDENS_TAG,&
-			MPI_COMM_WORLD, ierr)
-		call mpi_send(ed%buf, bufsz, MPI_DOUBLE_PRECISION, 0, EDENS_TAG, &
-			MPI_COMM_WORLD, ierr)
-#endif
-	end subroutine
-		
-	subroutine edens_gopenmol(ed)
-		type(edens_t) :: ed
+	subroutine edens_gopenmol(self)
+		type(edens_t) :: self
 
 		integer(I4) :: surface, rank, p1, p2, p3
 		integer(I4) :: i, j, k, l
@@ -222,7 +179,7 @@ contains
 		real(DP), dimension(:,:), pointer :: buf
 		character(BUFLEN) :: gopen_file
 
-		buf=>ed%buf
+		buf=>self%buf
 		gopen_file=''
 		call getkw(input, 'edens.gopenmol', gopen_file)
 		if (trim(gopen_file) == '') return
@@ -231,9 +188,9 @@ contains
 		surface=200
 		rank=3
 
-		call get_grid_size(ed%grid, p1, p2, p3)
-		qmin=gridpoint(ed%grid,1,1,1)*AU2A
-		qmax=gridpoint(ed%grid,p1,p2,p3)*AU2A
+		call get_grid_size(self%grid, p1, p2, p3)
+		qmin=gridpoint(self%grid,1,1,1)*AU2A
+		qmax=gridpoint(self%grid,p1,p2,p3)*AU2A
 
 		write(GOPFD,rec=1) rank
 		write(GOPFD,rec=2) surface

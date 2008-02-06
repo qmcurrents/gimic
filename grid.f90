@@ -35,8 +35,8 @@ module grid_class
 	real(DP), parameter :: DPTOL=1.d-10
 contains
 
-	subroutine init_grid(g, mol)
-		type(grid_t) :: g
+	subroutine init_grid(self, mol)
+		type(grid_t) :: self
 		type(molecule_t) :: mol
 
 		real(DP) :: ll 
@@ -44,86 +44,86 @@ contains
 		integer(I4), dimension(3) :: ngp
 		integer(I4) :: i, j
 		
-		g%step=1.d0
-		g%gtype='even'
-		g%map=0.0
-		g%basv=0.0
-		g%l=0.0
-		call getkw(input, 'grid', g%mode)
+		self%step=1.d0
+		self%gtype='even'
+		self%map=0.0
+		self%basv=0.0
+		self%l=0.0
+		call getkw(input, 'grid', self%mode)
 
 		! first figure out where and how to place the grid
-		select case (trim(g%mode))
+		select case (trim(self%mode))
 			case ('file')
-				call extgrid(g)
+				call extgrid(self)
 				return
 			case ('std','base')
-				call setup_std_grid(g)
+				call setup_std_grid(self)
 			case ('bond')
-				call setup_bond_grid(g,mol)
+				call setup_bond_grid(self,mol)
 			case default
-				call msg_error('Unknown grid type: ' // trim(g%mode))
+				call msg_error('Unknown grid type: ' // trim(self%mode))
 				stop
 		end select
 
-		call msg_out('Grid mode = ' // trim(g%mode))
+		call msg_out('Grid mode = ' // trim(self%mode))
 
 		if (keyword_is_set(input, 'grid.map')) then
-			call getkw(input, 'grid.map', g%map)
+			call getkw(input, 'grid.map', self%map)
 		end if
 
-		call normalise(g%basv)
-		call ortho_coordsys(g)
-!        call check_handedness(g)
+		call normalise(self%basv)
+		call ortho_coordsys(self)
+!        call check_handedness(self)
 		
 		! rotate basis vectors if needed
 		if (keyword_is_set(input, 'grid.angle')) then
 			call getkw(input, 'grid.angle', angle)
-			call rotate(g, angle)
+			call rotate(self, angle)
 		end if
 
 		! calculate distibution of grid points
-		call getkw(input, 'grid.type', g%gtype)
-		i=len(trim(g%gtype))
-		select case (g%gtype(1:i))
+		call getkw(input, 'grid.type', self%gtype)
+		i=len(trim(self%gtype))
+		select case (self%gtype(1:i))
 			case ('even')
-				call setup_even_gdata(g)
+				call setup_even_gdata(self)
 			case ('gauss')
-				call setup_gauss_gdata(g)
+				call setup_gauss_gdata(self)
 			case default
-				call msg_error('Unknown grid type: ' // trim(g%gtype))
+				call msg_error('Unknown grid type: ' // trim(self%gtype))
 				stop
 		end select
 
 		write(str_g, '(2x,a,3i5)') 'Number of grid points <v1,v2>:', &
-			g%npts(1), g%npts(2), g%npts(3)
+			self%npts(1), self%npts(2), self%npts(3)
 		call msg_out(str_g)
 		write(str_g, '(2x,a,i10)') 'Total number of grid points  :', &
-			product(g%npts)
+			product(self%npts)
 		call msg_out(str_g)
 		call nl
 
 	end subroutine
 
-	subroutine setup_std_grid(g)
-		type(grid_t) :: g
+	subroutine setup_std_grid(self)
+		type(grid_t) :: self
 
 		integer(I4) :: i
 		real(DP), dimension(3) :: normv
 
-		call getkw(input, 'grid.origin', g%origin)
-		call getkw(input, 'grid.ivec', g%basv(:,1))
-		call getkw(input, 'grid.jvec', g%basv(:,2))
-		call getkw(input, 'grid.kvec', g%basv(:,3))
-		call getkw(input, 'grid.spacing', g%step)
-		call getkw(input, 'grid.lengths', g%l)
+		call getkw(input, 'grid.origin', self%origin)
+		call getkw(input, 'grid.ivec', self%basv(:,1))
+		call getkw(input, 'grid.jvec', self%basv(:,2))
+		call getkw(input, 'grid.kvec', self%basv(:,3))
+		call getkw(input, 'grid.spacing', self%step)
+		call getkw(input, 'grid.lengths', self%l)
 
-		g%basv(:,1)=g%basv(:,1)
-		g%basv(:,2)=g%basv(:,2)
-		g%basv(:,3)=cross_product(g%basv(:,1),g%basv(:,2)) 
+		self%basv(:,1)=self%basv(:,1)
+		self%basv(:,2)=self%basv(:,2)
+		self%basv(:,3)=cross_product(self%basv(:,1),self%basv(:,2)) 
 	end subroutine
 
-	subroutine setup_bond_grid(g,mol)
-		type(grid_t) :: g
+	subroutine setup_bond_grid(self,mol)
+		type(grid_t) :: self
 		type(molecule_t) :: mol
 
 		type(atom_t), pointer :: atom
@@ -135,20 +135,20 @@ contains
 		real(DP), dimension(2) :: lh, ht
 		real(DP) :: l3
 
-		call getkw(input, 'grid.origin', g%origin)
+		call getkw(input, 'grid.origin', self%origin)
 
 		if (keyword_is_set(input, 'grid.atoms')) then
 			call getkw(input, 'grid.atoms', atoms)
 			call get_atom(mol, atoms(1), atom)
-			call get_coord(atom, g%basv(:,1))
+			call get_coord(atom, self%basv(:,1))
 			call get_atom(mol, atoms(2), atom)
-			call get_coord(atom, g%basv(:,2))
+			call get_coord(atom, self%basv(:,2))
 		else
-			call getkw(input, 'grid.coord1', g%basv(:,1))
-			call getkw(input, 'grid.coord2', g%basv(:,2))
+			call getkw(input, 'grid.coord1', self%basv(:,1))
+			call getkw(input, 'grid.coord2', self%basv(:,2))
 		end if
  		!defaults, etc.
-		call getkw(input, 'grid.spacing', g%step)
+		call getkw(input, 'grid.spacing', self%step)
 
 		l3=-1.d0
 		lh=-1.d0
@@ -156,7 +156,7 @@ contains
 		call getkw(input, 'grid.distance', l3)
 		call getkw(input, 'grid.width', lh)
 		call getkw(input, 'grid.height', ht)
-		g%l=(/sum(lh), sum(ht), 0.d0/)
+		self%l=(/sum(lh), sum(ht), 0.d0/)
 
 		if ( l3 < 0.d0 ) then
 			call msg_critical('grid.distance < 0!')
@@ -171,15 +171,15 @@ contains
 			stop 
 		end if
 
-		v1=norm(g%basv(:,1)-g%basv(:,2))
-		oo=g%basv(:,1)-l3*v1
-		v3=norm(cross_product(v1, g%origin-oo))
+		v1=norm(self%basv(:,1)-self%basv(:,2))
+		oo=self%basv(:,1)-l3*v1
+		v3=norm(cross_product(v1, self%origin-oo))
 		v2=cross_product(v1, v3)
-		g%origin=oo-lh(1)*v2-ht(2)*v3
+		self%origin=oo-lh(1)*v2-ht(2)*v3
 
-        g%basv(:,1)=v2
-        g%basv(:,2)=v3
-		g%basv(:,3)=cross_product(v2,v3) 
+        self%basv(:,1)=v2
+        self%basv(:,2)=v3
+		self%basv(:,3)=cross_product(v2,v3) 
 
 		call nl
 		call msg_out('Grid data')
@@ -187,13 +187,13 @@ contains
 		call msg_out(str_g)
 		write(str_g, '(a,3f12.6)') 'center ', oo
 		call msg_out(str_g)
-		write(str_g, '(a,3f12.6)') 'origin ', g%origin
+		write(str_g, '(a,3f12.6)') 'origin ', self%origin
 		call msg_out(str_g)
-		write(str_g, '(a,3f12.6)') 'basv1  ', g%basv(:,1)
+		write(str_g, '(a,3f12.6)') 'basv1  ', self%basv(:,1)
 		call msg_out(str_g)
-		write(str_g, '(a,3f12.6)') 'basv2  ', g%basv(:,2)
+		write(str_g, '(a,3f12.6)') 'basv2  ', self%basv(:,2)
 		call msg_out(str_g)
-		write(str_g, '(a,3f12.6)') 'basv3  ', g%basv(:,3)
+		write(str_g, '(a,3f12.6)') 'basv3  ', self%basv(:,3)
 		call msg_out(str_g)
 		call nl
 	end subroutine
@@ -211,8 +211,8 @@ contains
 	end subroutine
 
 
-	subroutine setup_gauss_gdata(g)
-		type(grid_t) :: g
+	subroutine setup_gauss_gdata(self)
+		type(grid_t) :: self
 
 		integer(I4), dimension(3) :: ngp
 		integer(I4) :: i
@@ -220,98 +220,98 @@ contains
 		call msg_info('Integration grid selected.')
 		call nl
 		call getkw(input, 'grid.gauss_points', ngp)
-		call getkw(input, 'grid.grid_points', g%npts)
+		call getkw(input, 'grid.grid_points', self%npts)
 
-		g%lobato=.true.
+		self%lobato=.true.
 		do i=1,3
-			if (g%npts(i) > 0) then
-				allocate(g%gdata(i)%pts(g%npts(i)))
-				allocate(g%gdata(i)%wgt(g%npts(i)))
+			if (self%npts(i) > 0) then
+				allocate(self%gdata(i)%pts(self%npts(i)))
+				allocate(self%gdata(i)%wgt(self%npts(i)))
 			else
 				ngp(i)=1
-				g%npts(i)=1
-				allocate(g%gdata(i)%pts(1))
-				allocate(g%gdata(i)%wgt(1))
+				self%npts(i)=1
+				allocate(self%gdata(i)%pts(1))
+				allocate(self%gdata(i)%wgt(1))
 			end if
-			call setup_lobby(0.d0, g%l(i), ngp(i), g%gdata(i))
+			call setup_lobby(0.d0, self%l(i), ngp(i), self%gdata(i))
 		end do
 	end subroutine
 
-	subroutine setup_even_gdata(g)
-		type(grid_t), intent(inout) :: g
+	subroutine setup_even_gdata(self)
+		type(grid_t), intent(inout) :: self
 
 		integer(I4) :: i, n
 
-		g%lobato=.false.
-		g%npts(1)=nint(g%l(1)/g%step(1))+1
-		g%npts(2)=nint(g%l(2)/g%step(2))+1
-		if (g%l(3) == 0.d0 .or. g%step(3) == 0.d0) then
-			g%npts(3)=1
+		self%lobato=.false.
+		self%npts(1)=nint(self%l(1)/self%step(1))+1
+		self%npts(2)=nint(self%l(2)/self%step(2))+1
+		if (self%l(3) == 0.d0 .or. self%step(3) == 0.d0) then
+			self%npts(3)=1
 		else
-			g%npts(3)=nint(g%l(3)/g%step(3))+1
+			self%npts(3)=nint(self%l(3)/self%step(3))+1
 		end if
 
 		do n=1,3
-			allocate(g%gdata(n)%pts(g%npts(n)))
-			allocate(g%gdata(n)%wgt(g%npts(n)))
-			do i=1,g%npts(n)
-				g%gdata(n)%pts(i)=real(i-1)*g%step(n)
-				g%gdata(n)%wgt(i)=1.d0
+			allocate(self%gdata(n)%pts(self%npts(n)))
+			allocate(self%gdata(n)%wgt(self%npts(n)))
+			do i=1,self%npts(n)
+				self%gdata(n)%pts(i)=real(i-1)*self%step(n)
+				self%gdata(n)%wgt(i)=1.d0
 			end do
 		end do
 	end subroutine
 
-	subroutine copy_grid(g, g2)
-		type(grid_t), intent(in) :: g
+	subroutine copy_grid(self, g2)
+		type(grid_t), intent(in) :: self
 		type(grid_t), intent(inout) :: g2
 
 		integer(I4) :: i, n
 
-		g2%lobato=g%lobato
-		g2%basv=g%basv
-		g2%l=g%l
-		g2%origin=g%origin
-		g2%step=g%step
-		g2%npts=g%npts
+		g2%lobato=self%lobato
+		g2%basv=self%basv
+		g2%l=self%l
+		g2%origin=self%origin
+		g2%step=self%step
+		g2%npts=self%npts
 
 		do n=1,3
 			allocate(g2%gdata(n)%pts(g2%npts(n)))
 			allocate(g2%gdata(n)%wgt(g2%npts(n)))
-			g2%gdata(n)%pts=g%gdata(n)%pts
-			g2%gdata(n)%wgt=g%gdata(n)%wgt
+			g2%gdata(n)%pts=self%gdata(n)%pts
+			g2%gdata(n)%wgt=self%gdata(n)%wgt
 		end do
 	end subroutine
 
-	subroutine del_gdata(g)
-		type(gdata_t), intent(inout) :: g
+	subroutine del_gdata(self)
+		type(gdata_t), intent(inout) :: self
 
-		deallocate(g%pts)
-		deallocate(g%wgt)
+		deallocate(self%pts)
+		deallocate(self%wgt)
 	end subroutine
 
-	subroutine ortho_coordsys(g)
-		type(grid_t), intent(inout) :: g
+	subroutine ortho_coordsys(self)
+		type(grid_t), intent(inout) :: self
 
 		integer(I4) :: i
 		real(DP), dimension(3) :: tvec
 		real(DP) :: dpr
 		
-		dpr=dot_product(g%basv(:,1), g%basv(:,2))
+		dpr=dot_product(self%basv(:,1), self%basv(:,2))
 		if (abs(dpr) > DPTOL ) then
-			tvec=cross_product(g%basv(:,1), g%basv(:,3))
+			tvec=cross_product(self%basv(:,1), self%basv(:,3))
 			tvec=tvec/sqrt(sum(tvec**2))
-			g%basv(:,2)=tvec
-			call normalise(g%basv)
+			self%basv(:,2)=tvec
+			call normalise(self%basv)
 			call msg_info( 'init_grid():&
 				& You specified a nonorthogonal coordinate system.' )
 			call nl
 			call msg_out('    New unit coordinate system is:')
 			call msg_out('    -------------------------------')
-			write(str_g, 99) '     v1 = (', g%basv(:,1), ' )'
+			write(str_g, 99) '     v1 = (', self%basv(:,1), ' )'
 			call msg_out(str_g)
-			write(str_g, 99) '     v2 = (', g%basv(:,2), ' )'
+			write(str_g, 99) '     v2 = (', self%basv(:,2), ' )'
 			call msg_out(str_g)
-			write(str_g, 99) '     v3 = (', g%basv(:,3), ' )'
+			write(str_g, 99) '     v3 = (', self%basv(:,3), ' )'
 			call msg_out(str_g)
 			call nl
 			return
@@ -319,85 +319,85 @@ contains
 99		format(a,3f12.8,a)
 	end subroutine
 		
-	subroutine get_grid_size(g, i, j, k)
-		type(grid_t), intent(in) :: g
+	subroutine get_grid_size(self, i, j, k)
+		type(grid_t), intent(in) :: self
 		integer(I4), intent(out) :: i
 		integer(I4), intent(out), optional :: j, k
 
-		i=g%npts(1)
-		if (present(j)) j=g%npts(2)
-		if (present(k)) k=g%npts(3)
+		i=self%npts(1)
+		if (present(j)) j=self%npts(2)
+		if (present(k)) k=self%npts(3)
 	end subroutine
 
-	subroutine del_grid(g)
-		type(grid_t) :: g
+	subroutine del_grid(self)
+		type(grid_t) :: self
 
-		if (g%gtype == 'file') then
-			deallocate(g%xdata)
+		if (self%gtype == 'file') then
+			deallocate(self%xdata)
 		else
-			call del_gdata(g%gdata(1))
-			call del_gdata(g%gdata(2))
-			call del_gdata(g%gdata(3))
+			call del_gdata(self%gdata(1))
+			call del_gdata(self%gdata(2))
+			call del_gdata(self%gdata(3))
 		end if
 		call msg_note('Deallocated grid data')
 	end subroutine 
 
-	function get_weight(g, i, d) result(w)
+	function get_weight(self, i, d) result(w)
 		integer(I4), intent(in) :: i, d
-		type(grid_t), intent(in) :: g
+		type(grid_t), intent(in) :: self
 		real(DP) :: w
 
-		w=g%gdata(d)%wgt(i)
+		w=self%gdata(d)%wgt(i)
 	end function
 
-	function is_lobo_grid(g) result(r)
-		type(grid_t), intent(in) :: g
+	function is_lobo_grid(self) result(r)
+		type(grid_t), intent(in) :: self
 		logical :: r
 		
-		r=g%lobato
+		r=self%lobato
 	end function
 
-	function get_grid_length(g) result(l)
-		type(grid_t), intent(in) :: g
+	function get_grid_length(self) result(l)
+		type(grid_t), intent(in) :: self
 		real(DP), dimension(3) :: l
 		
-		l=g%l
+		l=self%l
 	end function
 
-	function gridpoint(g, i, j, k) result(r)
-		type(grid_t), intent(in) :: g
+	function gridpoint(self, i, j, k) result(r)
+		type(grid_t), intent(in) :: self
 		integer(I4), intent(in) :: i, j, k
 		real(DP), dimension(3) :: r
 		
 		real(DP) :: q1, q2, q3
 
-		if (g%gtype == 'file') then
-			r=g%xdata(:,i)
+		if (self%gtype == 'file') then
+			r=self%xdata(:,i)
 		else
-			r=g%origin+&
-			  g%gdata(1)%pts(i)*g%basv(:,1)+&
-			  g%gdata(2)%pts(j)*g%basv(:,2)+&
-			  g%gdata(3)%pts(k)*g%basv(:,3)
+			r=self%origin+&
+			  self%gdata(1)%pts(i)*self%basv(:,1)+&
+			  self%gdata(2)%pts(j)*self%basv(:,2)+&
+			  self%gdata(3)%pts(k)*self%basv(:,3)
 		end if
 	end function 
 
-	function realpoint(g, i, j) result(r)
+	function realpoint(self, i, j) result(r)
 		integer(I4), intent(in) :: i, j
-		type(grid_t), intent(in) :: g
+		type(grid_t), intent(in) :: self
 		real(DP), dimension(3) :: r
 
-		r=g%origin+real(i)*g%step(1)*g%basv(:,1)+real(j)*g%step(2)*g%basv(:,2)
+		r=self%origin+real(i)*self%step(1)*self%basv(:,1)+real(j)*self%step(2)*self%basv(:,2)
 	end function 
 
-	function gridmap(g, i, j) result(r)
-		type(grid_t), intent(in) :: g
+	function gridmap(self, i, j) result(r)
+		type(grid_t), intent(in) :: self
 		integer(I4), intent(in) :: i, j
 		real(DP), dimension(2) :: r
 
 		real(DP), dimension(2) :: m1, m2
 		real(DP) :: q1, q2, w1, w2
 
-		if (g%gtype == 'file') then
+		if (self%gtype == 'file') then
 			r=0.d0
 			return
 		end if
@@ -405,44 +405,44 @@ contains
 		m1=(/0.0, 1.0/)
 		m2=(/1.0, 0.0/)
 
-		q1=g%gdata(1)%pts(i)
-		q2=g%gdata(2)%pts(j)
+		q1=self%gdata(1)%pts(i)
+		q2=self%gdata(2)%pts(j)
 
-		r=g%map+q1*m1+q2*m2 
+		r=self%map+q1*m1+q2*m2 
 	end function 
 
-	function get_grid_normal(g) result(n)
-		type(grid_t), intent(in) :: g
+	function get_grid_normal(self) result(n)
+		type(grid_t), intent(in) :: self
 		real(DP), dimension(3) :: n
 		
-		n=g%basv(:,3)
+		n=self%basv(:,3)
 	end function
 
-	subroutine grid_center(grid, center)
-		type(grid_t), intent(in) :: grid
+	subroutine grid_center(self, center)
+		type(grid_t), intent(in) :: self
 		real(DP), dimension(3), intent(out) :: center
 
 		real(DP), dimension(3) :: v1, v2
 		
-		v1=gridpoint(grid, grid%npts(1), 1, 1)
-		v2=gridpoint(grid, 1, grid%npts(2), 1)
+		v1=gridpoint(self, self%npts(1), 1, 1)
+		v2=gridpoint(self, 1, self%npts(2), 1)
 		center=(v1+v2)*0.5d0
 !        write(str_g, '(a,3f10.5)') 'Grid center:', center
 !        call msg_note(str_g)
 !        call nl
 	end subroutine
 
-	subroutine extgrid(g)
-		type(grid_t), intent(inout) :: g
+	subroutine extgrid(self)
+		type(grid_t), intent(inout) :: self
 
 		integer(I4) :: nlines, i
 
-		g%basv=0.d0
-		g%l=0.d0
-		g%origin=0.d0
-		g%step=0.d0
-		g%map=0.d0
-		g%gtype='file'
+		self%basv=0.d0
+		self%l=0.d0
+		self%origin=0.d0
+		self%step=0.d0
+		self%map=0.d0
+		self%gtype='file'
 
 		if (mpirun_p) then
 			call msg_error('grid type ''file'' does not work with the &
@@ -458,12 +458,12 @@ contains
 		end if
 
 		nlines=getnlines(GRIDFD)
-		allocate(g%xdata(3,nlines))
-		g%npts=(/nlines,1,1/)
-		read(GRIDFD,*) g%xdata
+		allocate(self%xdata(3,nlines))
+		self%npts=(/nlines,1,1/)
+		read(GRIDFD,*) self%xdata
 		close(GRIDFD)
 		write(str_g, '(2x,a,i10)') 'Total number of grid points  :', &
-			product(g%npts)
+			product(self%npts)
 		call msg_out(str_g)
 		call nl
 	end subroutine
@@ -478,9 +478,9 @@ contains
 		n=v/l
 	end function
 
-	subroutine plot_grid_xyz(fname, g, mol, np)
+	subroutine plot_grid_xyz(fname, self, mol, np)
 		character(*), intent(in) :: fname
-		type(grid_t), intent(inout) :: g
+		type(grid_t), intent(inout) :: self
 		type(molecule_t) :: mol
 		integer(I4), intent(in) :: np
 
@@ -494,7 +494,7 @@ contains
 		
 		p3=0
 		if (np > 0) then
-			call get_grid_size(g,p1,p2,p3)
+			call get_grid_size(self,p1,p2,p3)
 		end if
 
 		write(str_g, '(2a)') 'Grid plot in ', trim(fname)
@@ -504,32 +504,32 @@ contains
 		if (p3 > 1) then
 			write(77,*) natoms+8
 			write(77,*)
-			r=gridpoint(g,1,1,1)
+			r=gridpoint(self,1,1,1)
 			write(77,'(a,3f16.10)') 'X ', r*au2a
-			r=gridpoint(g,p1,1,1)
+			r=gridpoint(self,p1,1,1)
 			write(77,'(a,3f16.10)') 'X ', r*au2a
-			r=gridpoint(g,1,p2,1)
+			r=gridpoint(self,1,p2,1)
 			write(77,'(a,3f16.10)') 'X ', r*au2a
-			r=gridpoint(g,1,1,p3)
+			r=gridpoint(self,1,1,p3)
 			write(77,'(a,3f16.10)') 'X ', r*au2a
-			r=gridpoint(g,p1,p2,1)
+			r=gridpoint(self,p1,p2,1)
 			write(77,'(a,3f16.10)') 'X ', r*au2a
-			r=gridpoint(g,p1,1,p3)
+			r=gridpoint(self,p1,1,p3)
 			write(77,'(a,3f16.10)') 'X ', r*au2a
-			r=gridpoint(g,1,p2,p3)
+			r=gridpoint(self,1,p2,p3)
 			write(77,'(a,3f16.10)') 'X ', r*au2a
-			r=gridpoint(g,p1,p2,p3)
+			r=gridpoint(self,p1,p2,p3)
 			write(77,'(a,3f16.10)') 'X ', r*au2a
 		else if (p3 == 1) then
 			write(77,*) natoms+4
 			write(77,*)
-			r=gridpoint(g,1,1,1)
+			r=gridpoint(self,1,1,1)
 			write(77,'(a,3f16.10)') 'X ', r*au2a
-			r=gridpoint(g,p1,1,1)
+			r=gridpoint(self,p1,1,1)
 			write(77,'(a,3f16.10)') 'X ', r*au2a
-			r=gridpoint(g,1,p2,1)
+			r=gridpoint(self,1,p2,1)
 			write(77,'(a,3f16.10)') 'X ', r*au2a
-			r=gridpoint(g,p1,p2,1)
+			r=gridpoint(self,p1,p2,1)
 			write(77,'(a,3f16.10)') 'X ', r*au2a
 		else 
 			write(77,*) natoms
@@ -546,9 +546,9 @@ contains
 		close(77)
 	end subroutine
 
-	subroutine plot_grid_xyz_old(fname, g, mol, np)
+	subroutine plot_grid_xyz_old(fname, self, mol, np)
 		character(*), intent(in) :: fname
-		type(grid_t), intent(inout) :: g
+		type(grid_t), intent(inout) :: self
 		type(molecule_t) :: mol
 		integer(I4), intent(in) :: np
 
@@ -561,7 +561,7 @@ contains
 		natoms=get_natoms(mol)
 		
 		if (np > 0) then
-			call get_grid_size(g,p1,p2,p3)
+			call get_grid_size(self,p1,p2,p3)
 			if (mod(p1,2) > 0) then
 				d1=pltdiv(p1-1,np)
 			else
@@ -613,7 +613,7 @@ contains
 						kr=k
 					end if
 					
-					r=gridpoint(g,jr,ir,kr)
+					r=gridpoint(self,jr,ir,kr)
 					write(77,'(a,3f16.10)') 'X ', r*au2a
 				end do
 			end do
@@ -653,57 +653,57 @@ contains
 		end if
 	end function
 
-	subroutine write_grid(g, fd)
-		type(grid_t), intent(in) :: g
+	subroutine write_grid(self, fd)
+		type(grid_t), intent(in) :: self
 		integer(I4), intent(in) :: fd
 
 		integer(I4) :: i
 
-		write(fd, *) g%lobato
-		write(fd, *) g%basv
-		write(fd, *) g%l
-		write(fd, *) g%origin
-		write(fd, *) g%step
-		write(fd, *) g%npts
+		write(fd, *) self%lobato
+		write(fd, *) self%basv
+		write(fd, *) self%l
+		write(fd, *) self%origin
+		write(fd, *) self%step
+		write(fd, *) self%npts
         do i=1,3
-			write(fd, *) g%gdata(i)%pts
-			write(fd, *) g%gdata(i)%wgt
+			write(fd, *) self%gdata(i)%pts
+			write(fd, *) self%gdata(i)%wgt
         end do
 		write(fd, *)
 	end subroutine
 
-	subroutine read_grid(g, fd)
-		type(grid_t), intent(inout) :: g
+	subroutine read_grid(self, fd)
+		type(grid_t), intent(inout) :: self
 		integer(I4), intent(in) :: fd
 
 		integer(I4) :: i
 
-		call getkw(input, 'grid.map', g%map)
+		call getkw(input, 'grid.map', self%map)
 
-		read(fd, *) g%lobato
-		read(fd, *) g%basv
-		read(fd, *) g%l
-		read(fd, *) g%origin
-		read(fd, *) g%step
-		read(fd, *) g%npts
+		read(fd, *) self%lobato
+		read(fd, *) self%basv
+		read(fd, *) self%l
+		read(fd, *) self%origin
+		read(fd, *) self%step
+		read(fd, *) self%npts
 		do i=1,3
-			allocate(g%gdata(i)%pts(g%npts(i)))
-			allocate(g%gdata(i)%wgt(g%npts(i)))
-			read(fd, *) g%gdata(i)%pts
-			read(fd, *) g%gdata(i)%wgt
+			allocate(self%gdata(i)%pts(self%npts(i)))
+			allocate(self%gdata(i)%wgt(self%npts(i)))
+			read(fd, *) self%gdata(i)%pts
+			read(fd, *) self%gdata(i)%wgt
 		end do
 		write(str_g, '(a,3i5)') 'Number of grid points <v1,v2>:', &
-			g%npts(1), g%npts(2), g%npts(3)
+			self%npts(1), self%npts(2), self%npts(3)
 		call msg_out(str_g)
 		write(str_g, '(a,i7)') 'Total number of grid points  :', &
-			product(g%npts)
+			product(self%npts)
 		call msg_out(str_g)
 		call nl
 	end subroutine
 	
 	! rotate basis vectors (prior to grid setup)
-	subroutine rotate(g, angle)
-		type(grid_t) :: g
+	subroutine rotate(self, angle)
+		type(grid_t) :: self
 		real(DP), dimension(3), intent(in) :: angle
 
 		real(DP), dimension(3) :: rad
@@ -736,15 +736,15 @@ contains
 
 		euler=matmul(rot,euler)
 
-		g%basv=matmul(euler,g%basv)
-		g%origin=matmul(euler,g%origin)
+		self%basv=matmul(euler,self%basv)
+		self%origin=matmul(euler,self%origin)
 	end subroutine
 
 !
 ! Obsolete stuff
 ! 
-	subroutine hcsmbd(g)
-		type(grid_t), intent(inout) :: g
+	subroutine hcsmbd(self)
+		type(grid_t), intent(inout) :: self
 
 		integer(I4) :: i
 		real(DP), dimension(3) :: v1, v2, v3, oo
@@ -770,38 +770,38 @@ contains
 			stop 
 		end if
 
-		i=len(trim(g%mode))
-		if (g%mode(1:i) == 'foo') then
-			v1=norm(g%basv(:,1)-g%basv(:,2))
-			oo=g%basv(:,1)-l3*v1
-			v2=norm(oo-g%origin)
+		i=len(trim(self%mode))
+		if (self%mode(1:i) == 'foo') then
+			v1=norm(self%basv(:,1)-self%basv(:,2))
+			oo=self%basv(:,1)-l3*v1
+			v2=norm(oo-self%origin)
 			v3=norm(cross_product(v1, v2))
 			v1=cross_product(v2, v3)
-			g%origin=oo-lh(1)*v2+ht(2)*v3
-		else if (g%mode(1:i) == 'bond') then
-			v1=norm(g%basv(:,1)-g%basv(:,2))
-			oo=g%basv(:,1)-l3*v1
-			v3=norm(cross_product(v1, g%origin-oo))
+			self%origin=oo-lh(1)*v2+ht(2)*v3
+		else if (self%mode(1:i) == 'bond') then
+			v1=norm(self%basv(:,1)-self%basv(:,2))
+			oo=self%basv(:,1)-l3*v1
+			v3=norm(cross_product(v1, self%origin-oo))
 			v2=cross_product(v1, v3)
-			g%origin=oo-lh(1)*v2+ht(2)*v3
-		else if (g%mode(1:i) == 'bar') then
-			v3=norm(g%basv(:,1)-g%basv(:,2))
-			oo=g%basv(:,1)-sqrt(sum((g%basv(:,1)-&
-			g%basv(:,2))**2))*v3*0.5d0
-			v1=norm(cross_product(v3, g%origin-oo))
+			self%origin=oo-lh(1)*v2+ht(2)*v3
+		else if (self%mode(1:i) == 'bar') then
+			v3=norm(self%basv(:,1)-self%basv(:,2))
+			oo=self%basv(:,1)-sqrt(sum((self%basv(:,1)-&
+			self%basv(:,2))**2))*v3*0.5d0
+			v1=norm(cross_product(v3, self%origin-oo))
 			v2=norm(cross_product(v1, v3))
 			oo=oo+2.d0*v2 !uhh...
-			g%origin=oo-lh(1)*v2+ht(2)*v3+l3*v1
+			self%origin=oo-lh(1)*v2+ht(2)*v3+l3*v1
 		else
-			call msg_error('Unknown grid mode: ' // trim(g%mode))
+			call msg_error('Unknown grid mode: ' // trim(self%mode))
 			call exit(1)
 		end if
 
-        g%basv(:,1)=g%origin+sum(lh)*v2
-        g%basv(:,2)=g%origin-sum(ht)*v3
+        self%basv(:,1)=self%origin+sum(lh)*v2
+        self%basv(:,2)=self%origin-sum(ht)*v3
 
-		r1=sqrt(sum((g%origin+v2)**2))
-		r2=sqrt(sum((g%origin-v2)**2))
+		r1=sqrt(sum((self%origin+v2)**2))
+		r2=sqrt(sum((self%origin-v2)**2))
 
 		call nl
 		call msg_out('Grid data')
@@ -814,24 +814,24 @@ contains
 		call msg_out(str_g)
 		write(str_g, '(a,3f12.6)') 'center ', oo
 		call msg_out(str_g)
-		write(str_g, '(a,3f12.6)') 'origin ', g%origin
+		write(str_g, '(a,3f12.6)') 'origin ', self%origin
 		call msg_out(str_g)
-		write(str_g, '(a,3f12.6)') 'basv1  ', g%basv(:,1)
+		write(str_g, '(a,3f12.6)') 'basv1  ', self%basv(:,1)
 		call msg_out(str_g)
-		write(str_g, '(a,3f12.6)') 'basv2  ', g%basv(:,2)
+		write(str_g, '(a,3f12.6)') 'basv2  ', self%basv(:,2)
 		call msg_out(str_g)
 		write(str_g, '(a,3f12.6)') '|basv1|', &
-			sqrt(sum((g%basv(:,1)-g%origin)**2))
+			sqrt(sum((self%basv(:,1)-self%origin)**2))
 		call msg_out(str_g)
 		write(str_g, '(a,3f12.6)') '|basv2|', &
-			sqrt(sum((g%basv(:,2)-g%origin)**2))
+			sqrt(sum((self%basv(:,2)-self%origin)**2))
 		call msg_out(str_g)
 		call nl
 
 	end subroutine
 
-	subroutine bondage(g)
-		type(grid_t), intent(inout) :: g
+	subroutine bondage(self)
+		type(grid_t), intent(inout) :: self
 
 		real(DP), dimension(3) :: v1, v2, v3, oo
 		real(DP) :: l3, r
@@ -843,34 +843,34 @@ contains
 		if ( l3 < 0.d0 ) stop 'grid.l3 < 0!'
 		if ( r < 0.d0 ) stop 'grid.radius < 0!'
 
-		v1=norm(g%basv(:,2)-g%basv(:,1))
+		v1=norm(self%basv(:,2)-self%basv(:,1))
 		v2(1)=-v1(2)-v1(3)
 		v2(2)=v1(1)-v1(3)
 		v2(3)=v1(1)+v1(2)
 		v2=norm(v2)
 		v3=cross_product(v1, v2)
 
-		oo=g%basv(:,1)+l3*v1
-		g%origin=oo+r*(v2+v3)
-        g%basv(:,1)=oo-r*(v2-v3)
-        g%basv(:,2)=oo-r*(-v2+v3)
+		oo=self%basv(:,1)+l3*v1
+		self%origin=oo+r*(v2+v3)
+        self%basv(:,1)=oo-r*(v2-v3)
+        self%basv(:,2)=oo-r*(-v2+v3)
 !        print *
 !        print *, 'center', oo
-!        print *, 'origin', g%origin
-!        print *, 'basv1', g%basv(:,1)
-!        print *, 'basv2', g%basv(:,2)
-!        print *, '|basv1|', sqrt(sum((g%basv(:,1)-g%origin)**2))
-!        print *, '|basv2|', sqrt(sum((g%basv(:,2)-g%origin)**2))
+!        print *, 'origin', self%origin
+!        print *, 'basv1', self%basv(:,1)
+!        print *, 'basv2', self%basv(:,2)
+!        print *, '|basv1|', sqrt(sum((self%basv(:,1)-self%origin)**2))
+!        print *, '|basv2|', sqrt(sum((self%basv(:,2)-self%origin)**2))
 !        print *
 		
 	end subroutine
 
-	subroutine get_basv(g, i, j, k)
-		type(grid_t) :: g
+	subroutine get_basv(self, i, j, k)
+		type(grid_t) :: self
 		real(DP), dimension(3) :: i, j, k
-		i=g%basv(:,1)
-		j=g%basv(:,2)
-		k=g%basv(:,3)
+		i=self%basv(:,1)
+		j=self%basv(:,2)
+		k=self%basv(:,3)
 	end subroutine
 end module
 

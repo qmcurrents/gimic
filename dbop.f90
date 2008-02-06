@@ -15,31 +15,34 @@ module dbop_class
 	private
 
 contains
-	subroutine init_dbop(dop, mol)
-		type(dbop_t) :: dop
+	subroutine init_dbop(self, mol)
+		type(dbop_t) :: self
 		type(molecule_t), target :: mol
-		if (associated(dop%db)) then
+
+		nullify(self%db)
+
+		if (associated(self%db)) then
 			call msg_warn('init_dbop(): already allocated!')
 		else
-			allocate(dop%db(3,get_natoms(mol)))
+			allocate(self%db(3,get_natoms(mol)))
 		end if
-		dop%mol=>mol
-		dop%r=INITRV
+		self%mol=>mol
+		self%r=INITRV
 	end subroutine
 
-	subroutine del_dbop(dop)
-		type(dbop_t) :: dop
-		if (associated(dop%db)) then
-			deallocate(dop%db)
-			nullify(dop%db)
-			nullify(dop%mol)
+	subroutine del_dbop(self)
+		type(dbop_t) :: self
+		if (associated(self%db)) then
+			deallocate(self%db)
+			nullify(self%db)
+			nullify(self%mol)
 		else
 			call msg_warn('del_dbop(): not allocated!')
 		end if
 	end subroutine
 	
-	subroutine mkdbop(dop, r, dbop)
-		type(dbop_t) :: dop
+	subroutine mkdbop(self, r, dbop)
+		type(dbop_t) :: self
 		real(DP), dimension(3), intent(in) :: r
 		real(DP), dimension(:,:), pointer :: dbop
 		
@@ -48,25 +51,25 @@ contains
 		real(DP), dimension(3) :: coord
 		integer(I4) :: i, natoms
 		
-		if (r(1)==dop%r(1) .and. r(2)==dop%r(2) .and. r(3)==dop%r(3)) then
-			dbop=>dop%db
+		if (r(1)==self%r(1) .and. r(2)==self%r(2) .and. r(3)==self%r(3)) then
+			dbop=>self%db
 			return
 		end if
 		
-		dop%r=r
-		natoms=get_natoms(dop%mol)
+		self%r=r
+		natoms=get_natoms(self%mol)
 
 		do i=1,natoms
-			call get_atom(dop%mol, i, atom)
+			call get_atom(self%mol, i, atom)
 			call get_coord(atom, coord)
 			Rx=coord(1)
 			Ry=coord(2)
 			Rz=coord(3)
-			dop%db(1,i)=(r(2)*Rz-r(3)*Ry)
-			dop%db(2,i)=(r(3)*Rx-r(1)*Rz)
-			dop%db(3,i)=(r(1)*Ry-r(2)*Rx)
+			self%db(1,i)=(r(2)*Rz-r(3)*Ry)
+			self%db(2,i)=(r(3)*Rx-r(1)*Rz)
+			self%db(3,i)=(r(1)*Ry-r(2)*Rx)
 		end do
-		dbop=>dop%db
+		dbop=>self%db
 	end subroutine
 
 end module

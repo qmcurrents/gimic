@@ -1,4 +1,4 @@
-module mpi_m
+module parallel_m
 	use kinds_m
 	use globals_m
 	use teletype_m
@@ -13,12 +13,13 @@ module mpi_m
 #endif
 
 	public start_mpi, stop_mpi, get_mpi_rank, rankname, schedule
-	public gather_data
+	public gather_data, collect_sum
 	private
 
 	interface gather_data
 		module procedure gather_data1d
 		module procedure gather_data2d
+		module procedure gather_data1d_tensor
 		module procedure gather_data2d_tensor
 	end interface
 
@@ -72,12 +73,18 @@ contains
 
 	end subroutine
 
-	subroutine schedule(npts, lo, hi, pts)
+	subroutine schedule(npts, lo, hi)
 		integer(I4), intent(in) :: npts
-		integer(I4), intent(out) :: pts, lo, hi
-#ifdef HAVE_MPI
+		integer(I4), intent(out) :: lo, hi
+
 		integer(I4) :: sz, num, reminder, i
 
+		if (.not.mpirun_p) then
+			lo=1
+			hi=npts
+			return
+		end if
+#ifdef HAVE_MPI
 		call mpi_comm_size(MPI_COMM_WORLD, sz,ierr)
 		reminder=mod(npts,sz)
 		num=(npts-reminder)/sz
@@ -87,11 +94,7 @@ contains
 			hi=hi+num
 			if (rank < reminder) hi=hi+1
 		end do
-#else
-		lo=1
-		hi=npts
 #endif
-		pts=hi-lo+1
 	end subroutine
 
 	subroutine gather_data1d(dest, source)
@@ -102,6 +105,10 @@ contains
 		integer(I4) :: lo, hi 
 		npts=size(source)
 
+		if (.not.mpirun_p) then
+			dest=source
+			return
+		end if
 !        call mpi_barrier(MPI_COMM_WORLD, ierr)
 
 		if (rank == 0) then
@@ -122,8 +129,6 @@ contains
 			call mpi_send(source,npts,MPI_DOUBLE_PRECISION,0,GATHER_DATA_TAG, &
 				MPI_COMM_WORLD, ierr)
 		end if
-#else
-		dest=source
 #endif
 	end subroutine
 
@@ -131,9 +136,14 @@ contains
 		real(DP), dimension(:,:), intent(out) :: dest
 		real(DP), dimension(:,:), intent(in) :: source
 
-#ifdef HAVE_MPI
 		integer(I4) :: nproc, client, ni, nj
 		integer(I4) :: lo, hi,i 
+
+		if (.not.mpirun_p) then
+			dest=source
+			return
+		end if
+#ifdef HAVE_MPI
 		ni=size(source(:,1))
 		nj=size(source(1,:))
 		if (size(dest(:,1)) /= ni) then
@@ -165,8 +175,50 @@ contains
 					GATHER_DATA_TAG, MPI_COMM_WORLD, ierr)
 			end do
 		end if
-#else
-		dest=source
+#endif
+	end subroutine
+
+	subroutine gather_data1d_tensor(dest, source)
+		type(tensor_t), dimension(:), intent(out) :: dest
+		type(tensor_t), dimension(:), intent(in) :: source
+
+		integer(I4) :: nproc, client, ni
+		integer(I4) :: lo, hi,i 
+		real(8), dimension(:), allocatable :: tmp
+
+		if (.not.mpirun_p) then
+			call copy_tensor(source,dest)
+			return
+		end if
+#ifdef HAVE_MPI
+
+		if (master_p) call msg_warn('gather_1d_tensor(): not tested, pls vrfy')
+
+		ni=size(source)
+
+		allocate(tmp(ni*9))
+
+		if (rank == 0) then
+			call mpi_comm_size(MPI_COMM_WORLD, nproc,ierr)
+			call copy_tensor(source(1:ni),dest(1:ni))
+			lo=ni+1
+			do client=1,nproc-1
+				call mpi_recv(ni,1,MPI_INTEGER,client,&
+					DATA_SIZE_TAG, MPI_COMM_WORLD, MPI_STATUS_IGNORE, ierr)
+				hi=lo+ni-1
+				call mpi_recv(tmp,ni*9,MPI_DOUBLE_PRECISION,client,&
+				GATHER_DATA_TAG, MPI_COMM_WORLD, MPI_STATUS_IGNORE, ierr)
+				call pack_tensors(tmp,dest(lo:hi)) 
+				lo=hi+1
+			end do
+		else
+			call mpi_send(ni,1,MPI_INTEGER,0, DATA_SIZE_TAG, &
+				MPI_COMM_WORLD, ierr)
+			call unpack_tensors(source, tmp)
+			call mpi_send(tmp,ni*9,MPI_DOUBLE_PRECISION,0, &
+				GATHER_DATA_TAG, MPI_COMM_WORLD, ierr)
+		end if
+		deallocate(tmp)
 #endif
 	end subroutine
 
@@ -174,10 +226,15 @@ contains
 		type(tensor_t), dimension(:,:), intent(out) :: dest
 		type(tensor_t), dimension(:,:), intent(in) :: source
 
-#ifdef HAVE_MPI
 		integer(I4) :: nproc, client, ni, nj
 		integer(I4) :: lo, hi,i 
 		real(8), dimension(:), allocatable :: tmp
+
+		if (.not.mpirun_p) then
+			call copy_tensor(source,dest)
+			return
+		end if
+#ifdef HAVE_MPI
 
 		ni=size(source(:,1))
 		nj=size(source(1,:))
@@ -213,8 +270,6 @@ contains
 			end do
 		end if
 		deallocate(tmp)
-#else
-		dest=source
 #endif
 	end subroutine
 
@@ -253,7 +308,20 @@ contains
 		end do
 
 	end subroutine
-
 #endif
+	
+	subroutine collect_sum(source, dest)
+		real(DP), intent(in) :: source
+		real(DP), intent(out) :: dest
+
+		if (.not.mpirun_p) then
+			dest=source
+			return
+		end if
+#ifdef HAVE_MPI
+		call mpi_reduce(source,dest,1,MPI_DOUBLE_PRECISION,MPI_SUM,0,&
+			MPI_COMM_WORLD,ierr)
+#endif
+	end subroutine
 
 end module

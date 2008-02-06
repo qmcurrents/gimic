@@ -16,7 +16,7 @@ module jtensor_class
 	use teletype_m
 	implicit none
 
-	intrinsic dtime
+!    intrinsic dtime
 	
 	type jtensor_t
 		type(molecule_t), pointer :: mol

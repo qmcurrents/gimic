@@ -11,6 +11,7 @@ module integral_class
 	use gaussint_m
 	use lip_m
 	use teletype_m
+	use parallel_m
 	use magnet_m
 	implicit none
 
@@ -23,30 +24,30 @@ module integral_class
 
 	public init_integral, del_integral, integral_t
 	public integrate, int_t_direct, int_s_direct, int_t_2d, lipton
-	public integral_master, integral_slave, write_integral, int_mod_direct
+	public write_integral, int_mod_direct
 	
 	private 
 	
 	integer(I4) :: nlip
 contains
-	subroutine init_integral(it, jt, jf, grid)
-		type(integral_t) :: it
+	subroutine init_integral(self, jt, jf, grid)
+		type(integral_t) :: self
 		type(jtensor_t), target :: jt
 		type(jfield_t),  target :: jf
 		type(grid_t), target :: grid
 		
-		it%jf=>jf
-		it%jt=>jt
-		it%grid=>grid
-		it%tint=D0
+		self%jf=>jf
+		self%jt=>jt
+		self%grid=>grid
+		self%tint=D0
 	end subroutine
 
-	subroutine del_integral(it)
-		type(integral_t) :: it
+	subroutine del_integral(self)
+		type(integral_t) :: self
 
-		nullify(it%jf)
-		nullify(it%jt)
-		nullify(it%grid)
+		nullify(self%jf)
+		nullify(self%jt)
+		nullify(self%grid)
 	end subroutine
 
 	subroutine integrate(jf, grid)
@@ -62,41 +63,46 @@ contains
 		end if
 	end subroutine
 
-	subroutine int_t_direct(it)
-		type(integral_t) :: it
+	subroutine int_t_direct(self)
+		type(integral_t) :: self
 
 		integer(I4) :: i, j, k, p1, p2, p3
+		integer(I4) :: lo, hi
 		real(DP), dimension(3) :: rr
 		real(DP), dimension(3,3) :: xsum
 		type(tensor_t), dimension(:), allocatable  :: jt1, jt2, jt3
 		
-        call eta(it%jt,it%grid)
-		call get_grid_size(it%grid, p1, p2, p3)
+        call eta(self%jt,self%grid)
+		call get_grid_size(self%grid, p1, p2, p3)
+
+		call schedule(p2, lo, hi)
 
 		allocate(jt1(p1))
 		allocate(jt2(p2))
 		allocate(jt3(p3))
 
 		do k=1,p3
-			do j=1,p2
+			do j=lo,hi
 				do i=1,p1
-					rr=gridpoint(it%grid, i, j, k)
-					call ctensor(it%jt, rr, jt1(i), 'total')
+					rr=gridpoint(self%grid, i, j, k)
+					call ctensor(self%jt, rr, jt1(i), 'total')
 				end do
-				jt2(j)%t=int_t_1d(jt1,it%grid,1)
+				jt2(j)%t=int_t_1d(jt1,self%grid,1)
 			end do
-			jt3(k)%t=int_t_1d(jt2,it%grid,2)
+			call gather_data(jt2,jt2(lo:hi))
+			jt3(k)%t=int_t_1d(jt2,self%grid,2)
 		end do
-		xsum=int_t_1d(jt3,it%grid,3)
+		xsum=int_t_1d(jt3,self%grid,3)
 
 		call print_t_int(xsum)
 		deallocate(jt1, jt2, jt3)
 	end subroutine
 
-	subroutine int_s_direct(it)
-		type(integral_t), intent(inout) :: it
+	subroutine int_s_direct(self)
+		type(integral_t), intent(inout) :: self
 
 		integer(I4) :: i, j, k, p1, p2, p3
+		integer(I4) :: lo, hi
 		real(DP), dimension(3) :: normal, rr, center, bb
 		real(DP) :: psum, nsum, w, jp, r, bound
 		real(DP) :: psum2, nsum2
@@ -105,14 +111,16 @@ contains
 		type(vector_t) :: jvec
 		type(tensor_t) :: jt
 		
-		call get_grid_size(it%grid, p1, p2, p3)
-		call get_magnet(it%grid, bb)
+		call get_grid_size(self%grid, p1, p2, p3)
+		call get_magnet(self%grid, bb)
 
-		normal=get_grid_normal(it%grid)
+		normal=get_grid_normal(self%grid)
 
 		bound=1.d+10
 		call getkw(input, 'integral.radius', bound)
-		call grid_center(it%grid,center)
+		call grid_center(self%grid,center)
+
+		call schedule(p2, lo, hi)
 
 		xsum3=0.d0
 		psum3=0.d0
@@ -121,19 +129,19 @@ contains
 			xsum2=0.d0
 			psum2=0.d0
 			nsum2=0.d0
-			do j=1,p2
+			do j=lo,hi
 				xsum=0.d0
 				psum=0.d0
 				nsum=0.d0
 				do i=1,p1
-					rr=gridpoint(it%grid, i, j, k)
+					rr=gridpoint(self%grid, i, j, k)
 					r=sqrt(sum((rr-center)**2))
-					call ctensor(it%jt, rr, jt, 'total')
+					call ctensor(self%jt, rr, jt, 'total')
 					jvec%v=matmul(jt%t,bb)
 					if ( r > bound ) then
 						w=0.d0
 					else
-						w=get_weight(it%grid, i, 1) 
+						w=get_weight(self%grid, i, 1) 
 						jp=dot_product(normal,jvec%v)
 					end if
 					xsum=xsum+jp*w
@@ -143,15 +151,18 @@ contains
 						nsum=nsum+jp*w
 					end if
 				end do
-				w=get_weight(it%grid,j,2)
+				w=get_weight(self%grid,j,2)
 				xsum2=xsum2+xsum*w
 				psum2=psum2+psum*w
 				nsum2=nsum2+nsum*w
 			end do
-			w=get_weight(it%grid,k,3)
-			xsum3=xsum3+xsum2*w
-			psum3=psum3+psum2*w
-			nsum3=nsum3+nsum2*w
+			call collect_sum(xsum2, xsum)
+			call collect_sum(psum2, psum)
+			call collect_sum(nsum2, nsum)
+			w=get_weight(self%grid,k,3)
+			xsum3=xsum3+xsum*w
+			psum3=psum3+psum*w
+			nsum3=nsum3+nsum*w
 		end do
 
 		call nl
@@ -174,10 +185,11 @@ contains
 
 	! integrate the modulus of the current, retaining the sign
 	! test version
-	subroutine int_mod_direct(it)
-		type(integral_t), intent(inout) :: it
+	subroutine int_mod_direct(self)
+		type(integral_t), intent(inout) :: self
 
 		integer(I4) :: i, j, k, p1, p2, p3
+		integer(I4) :: lo, hi
 		real(DP), dimension(3) :: normal, rr, center, bb
 		real(DP) :: psum, nsum, w, jp, r, bound, sgn
 		real(DP) :: psum2, nsum2
@@ -186,14 +198,15 @@ contains
 		type(vector_t) :: jvec
 		type(tensor_t) :: jt
 		
-		call get_grid_size(it%grid, p1, p2, p3)
-		call getkw(input, 'cdens.magnet', bb)
+		call get_grid_size(self%grid, p1, p2, p3)
+		call get_magnet(self%grid, bb)
+		call schedule(p2, lo, hi)
 
-		normal=get_grid_normal(it%grid)
+		normal=get_grid_normal(self%grid)
 
 		bound=1.d+10
 		call getkw(input, 'integral.radius', bound)
-		call grid_center(it%grid,center)
+		call grid_center(self%grid,center)
 
 		xsum3=0.d0
 		psum3=0.d0
@@ -202,19 +215,19 @@ contains
 			xsum2=0.d0
 			psum2=0.d0
 			nsum2=0.d0
-			do j=1,p2
+			do j=lo,hi
 				xsum=0.d0
 				psum=0.d0
 				nsum=0.d0
 				do i=1,p1
-					rr=gridpoint(it%grid, i, j, k)
+					rr=gridpoint(self%grid, i, j, k)
 					r=sqrt(sum((rr-center)**2))
-					call ctensor(it%jt, rr, jt, 'total')
+					call ctensor(self%jt, rr, jt, 'total')
 					jvec%v=matmul(jt%t,bb)
 					if ( r > bound ) then
 						w=0.d0
 					else
-						w=get_weight(it%grid, i, 1) 
+						w=get_weight(self%grid, i, 1) 
 						jp=dot_product(normal,jvec%v)
 						if (abs(jp) < 1.d-12) then ! prob. parallel component
 							sgn=0.d0
@@ -232,15 +245,18 @@ contains
 						nsum=nsum+jp*w
 					end if
 				end do
-				w=get_weight(it%grid,j,2)
+				w=get_weight(self%grid,j,2)
 				xsum2=xsum2+xsum*w
 				psum2=psum2+psum*w
 				nsum2=nsum2+nsum*w
 			end do
-			w=get_weight(it%grid,k,3)
-			xsum3=xsum3+xsum2*w
-			psum3=psum3+psum2*w
-			nsum3=nsum3+nsum2*w
+			call collect_sum(xsum2, xsum)
+			call collect_sum(psum2, psum)
+			call collect_sum(nsum2, nsum)
+			w=get_weight(self%grid,k,3)
+			xsum3=xsum3+xsum*w
+			psum3=psum3+psum*w
+			nsum3=nsum3+nsum*w
 		end do
 
 		call nl
@@ -261,8 +277,8 @@ contains
 		call msg_out(repeat('*', 60))
 	end subroutine
 
-	subroutine int_t_2d_sigma(it, k)
-		type(integral_t) :: it
+	subroutine int_t_2d_sigma(self, k)
+		type(integral_t) :: self
 		integer(I4), intent(in) :: k
 		
 		integer(I4) :: i, j, p1, p2
@@ -272,15 +288,15 @@ contains
 		real(DP), dimension(3,3) :: s1
 		real(DP) :: r3
 		
-		call get_grid_size(it%grid, p1, p2)
+		call get_grid_size(self%grid, p1, p2)
 
 		allocate(jt1(p1))
 		allocate(jt2(p2))
 
 		do j=1,p2
 			do i=1,p1
-				rr=gridpoint(it%grid, i, j, k)
-				call ctensor(it%jt, rr, jt1(i), 'total')
+				rr=gridpoint(self%grid, i, j, k)
+				call ctensor(self%jt, rr, jt1(i), 'total')
 				r3=sqrt(sum(rr**2))**3
 
 				if (r3 < 1.d-15) then
@@ -302,34 +318,34 @@ contains
 				s1(3,3)=rr(1)*s1(2,3)-rr(2)*s1(1,3)
 				jt1(i)%t=s1
 			end do
-			jt2(j)%t=int_t_1d(jt1,it%grid,1)
+			jt2(j)%t=int_t_1d(jt1,self%grid,1)
 		end do
-		it%tint=int_t_1d(jt2,it%grid,2)
+		self%tint=int_t_1d(jt2,self%grid,2)
 
 		deallocate(jt1, jt2)
 	end subroutine
 
-	subroutine int_t_2d(it, k)
-		type(integral_t) :: it
+	subroutine int_t_2d(self, k)
+		type(integral_t) :: self
 		integer(I4), intent(in) :: k
 		
 		integer(I4) :: i, j, p1, p2
 		real(DP), dimension(3) :: rr
 		type(tensor_t), dimension(:), allocatable  :: jt1, jt2
 		
-		call get_grid_size(it%grid, p1, p2)
+		call get_grid_size(self%grid, p1, p2)
 
 		allocate(jt1(p1))
 		allocate(jt2(p2))
 
 		do j=1,p2
 			do i=1,p1
-				rr=gridpoint(it%grid, i, j, k)
-				call ctensor(it%jt, rr, jt1(i), 'total')
+				rr=gridpoint(self%grid, i, j, k)
+				call ctensor(self%jt, rr, jt1(i), 'total')
 			end do
-			jt2(j)%t=int_t_1d(jt1,it%grid,1)
+			jt2(j)%t=int_t_1d(jt1,self%grid,1)
 		end do
-		it%tint=int_t_1d(jt2,it%grid,2)
+		self%tint=int_t_1d(jt2,self%grid,2)
 
 		deallocate(jt1, jt2)
 	end subroutine
@@ -718,62 +734,16 @@ contains
 	subroutine twinings
 		return
 	end subroutine
-
-	subroutine integral_master(it, who)
-		use mpi_m
-		type(integral_t) :: it
-		integer(I4), intent(in) :: who
-
-#ifdef HAVE_MPI
-		integer(I4), parameter :: BUFSZ=9
-		integer(I4) :: jnum, ierr
-		integer(I4), dimension(MPI_STATUS_SIZE) :: stat
-		real(DP), dimension(3,3) :: buf
-		real(DP) :: w
-
-		call mpi_recv(jnum,1,MPI_INTEGER,who,INTGRL_TAG, &
-				MPI_COMM_WORLD, stat, ierr)
-		call mpi_recv(buf,BUFSZ,MPI_DOUBLE_PRECISION,who, &
-				INTGRL_TAG, MPI_COMM_WORLD, stat, ierr)
-			
-		w=get_weight(it%grid, jnum, 3) 
-		it%tint=it%tint+buf*w
-
-#endif
-	end subroutine
-
-	subroutine integral_slave(it, jnum)
-		use mpi_m
-		type(integral_t) :: it
-		integer(I4), intent(in) :: jnum
-
-#ifdef HAVE_MPI
-		integer(I4) :: ierr
-		integer(I4), parameter :: INTBUFSZ=9
-		integer(I4), dimension(MPI_STATUS_SIZE) :: stat
-		real(DP), dimension(3,3) :: buf
-
-		buf=D0
-
-		call int_t_2d(it, jnum)
-		call mpi_send(INTGRL_TAG, 1, MPI_INTEGER, 0, JOB_TAG,&
-			MPI_COMM_WORLD, ierr)
-		call mpi_send(jnum, 1, MPI_INTEGER, 0, INTGRL_TAG,&
-			MPI_COMM_WORLD, ierr)
-		call mpi_send(it%tint, INTBUFSZ, MPI_DOUBLE_PRECISION,0, INTGRL_TAG, &
-			MPI_COMM_WORLD, ierr)
-#endif
-	end subroutine
 	
-	subroutine write_integral(it)
-		type(integral_t) :: it
+	subroutine write_integral(self)
+		type(integral_t) :: self
 		integer(I4) :: tun
 
-       	call print_t_int(it%tint)
+       	call print_t_int(self%tint)
 		open(JINTFD, file='JINTEGRAL')
 		call get_teletype_unit(tun)
 		call set_teletype_unit(JINTFD)
-       	call print_t_int(it%tint)
+       	call print_t_int(self%tint)
 		call set_teletype_unit(tun)
 		close(JINTFD)
 	end subroutine
