@@ -1,90 +1,94 @@
 # NEW INPUT
 
-	dryrun=off
-	title="CO2"
-	basis="mol"
-	density="XDENS"
-	spherical=off #don't touch, unless you know what you are doing
-	debug=5
-	openshell=false
-    screening=true
-#     calc=[cdens]
-#     calc=[cdens, integral]
-	 calc=[cdens, integral, divj]
-
-	cdens {
-		jtensor="JTENSOR"
-		jvector="JVECTOR"
-		magnet_axis=y #[-] i,j,k || x,y,z 
-#         magnet=[0.0, -1.0, 0.0]
-		scale_vectors=1.0
-        spin_density=off
-		diamag=on
-		paramag=on
-		plot(on) {
-			plots=[1]
-			vector="JVEC"
-			modulus="JMOD"
-			projection="JPRJ"
-           nvector="NJVEC"
-			gopenmol="jmod.plt"
-		}
-	}
 	
+dryrun=off        # don't actually calculate (good for tuning grids, etc.)
+mpirun=off        # run in parallel mode
+title="CO2"
+basis="mol"
+density="XDENS"
+spherical=off     # don't touch, unless you REALLY know what you are doing
+debug=1           # debug print level
+openshell=false   
+screening=on      # use screening to speed up 
+# calc=[cdens]      # what to calculate, and in which order
+calc=[cdens, integral]
+# calc=[cdens, integral, divj, edens]
+
+cdens {           
+	magnet_axis=y #[-] i,j,k || x,y,z -> align magnet along axis
+#	magnet=[0.0, -1.0, 0.0]   # magnet vector
+	scale_vectors=1.0
+	spin_density=off          
+	diamag=on           # turn on/off diamagnetic contributions
+	paramag=on          # turn on/off paramagnetic contributions
+	jtensor="JTENSOR"   # file name for the current tensors
+	jvector="JVECTOR"   # file name for the current vectors
+	plot(on) {          # file names for plots
+		vector="JVEC"   
+		modulus="JMOD"
+		nvector="NJVEC"
+		gopenmol="jmod.plt"
+		projection="JPRJ"
+	}
+}
+	
+grid(base) {    # grid type can be: base/std, bond or file (see below)
+	type=even   # even spaced or gauss quadrature distribution on interval
+	origin=[-4.0,  0.0, -4.0]  # origin of grid
+	ivec=[1.0, 0.0, 0.0]       # basis vector i
+	jvec=[ 0.0, 0.0, 1.0]      # basis vector j ( k = i x j )
+	lengths=[8.0, 8.0, 0.0]    # lenthts of (i,j,k)
+	spacing=[0.5, 0.5, 0.5]    # spacing of points on grid (i,j,k)
+#	grid_points=[50,50,0]      # number of gridpoints on grid (i,j,k)
+	angle=[0.0,0.0,0.0]        # Rotation of (i,j,k) -> (i',j',k') in degrees
+                               # Euler angles, x-y-z convention
+}
+
+## Read in grid from external file. Use the source, Luke.
+# grid(file) {   
+#     file=myspecialgrid.grd
+# }
+
+
+integral {
+	modulus=off                      # calculate the |J| integral
+	grid(bond) {                     # define grid orthogonal to a bond 
+		type=gauss                   # gauss distribution of grid points
+		origin=[0.0, 1.0, 1.096]     # fix grid orientation
+		atoms=[3,1]                  # atom indeces for bond
+#		coord1=[0.0, 0.0, 2.145166]  # "atom" coordinates
+#		coord2=[0.0, 0.0, -2.145166] 
+		distance=1.096               # place grid 'distance' between atoms
+        ## Either grid_points or spacing can be specified. The number of grid
+        ## points will be rounded upwards to nearest multiple of gauss_order
+		gauss_order=9                # order for gauss quadrature
+#        grid_points=[89,77,0]        # number of gridpoints on grid (i,j,k)
+		spacing=[0.1, 0.1, 0.1]      # spacing of points on grid (i,j,k)
+		height=[3.0, 3.0]            # hight of grid above and below the center
+		width=[6.0, 6.0]             # width of grid in and out from the center
+		angle=[0.0,0.0,0.0]          # Rotation of (i,j,k) -> (i',j',k') 
+#		radius=3.0                   # round grid: cut off at radius
+	}
+# Advanced options, refer to the souece for details
+	tensor=off       # integrate the tensor components
+	interpolate=off  # do integration on even spaced grid by interpolation
+	lip_order=5      # order of Lagrange Interpolating Polynominals to use
+}
+
+divj {
+	gopenmol='divj.plt'
 	grid(base) { 
 		type=even
-		origin=[-4.0,  0.0, -4.0]
+		origin=[-4.0, 0.0, -4.0]
 		ivec=[1.0, 0.0, 0.0]
 		jvec=[ 0.0, 0.0, 1.0]
-		lengths=[8.0, 8.0, 0.0]
+		lengths=[10.0, 10.0, 0.0]
 		spacing=[0.5, 0.5, 0.5]
-# Euler angles in degrees; x-y-z convention
-#         angle=[1.0,1.0,1.0]
-		gridplot=10 # wht?
 	}
+}
 
-
-#     grid(file) {
-#         file=myspecialgrid.grd
-#         gridplot=10 # wht?
-#     }
-
-
-	integral {
-		interpolate=off
-		lip_order=5
-		modulus=off
-		tensor=off
-		grid(bond) {      
-			type=gauss
-			origin=[0.0, 1.0, 1.096]
-			atoms=[3,1]
-#             coord1=[0.0, 0.0, 2.145166]
-#             coord2=[0.0, 0.0, -2.145166]
-			distance=1.096
-			gauss_points=[9,9,0]
-			grid_points=[90,90,0]
-			height=[3.0, 3.0]
-			width=[6.0, 6.0]
-			gridplot=15
-#             radius=3.0
-#             angle=0.0
-#         angle=[0.0,0.0,0.0]
-		}
-	}
-
-	divj {
-		plots=[1]
-		gopenmol=divj.plt
-		grid(base) { 
-			type=even
-			origin=[-4.0, 0.0, -4.0]
-			ivec=[1.0, 0.0, 0.0]
-			jvec=[ 0.0, 0.0, 1.0]
-			kvec=[0.0,1.0,0.0] # optional, deduced from i x j
-			lengths=[10.0, 10.0, 0.0]
-			spacing=[0.5, 0.5, 0.5]
-#         angle=[0.0,0.0,0.0]
-			gridplot=15 # wht?
-		}
-	}
+edens {
+	density='EDENS'
+	density_plot='edens_plt.txt'
+	gopenmol='edens.plt'
+}
