@@ -74,7 +74,6 @@ def main():
 
 	plot=getkw.Section('plot')
 	plot.set_arg('BOOL', (True, ))
-	plot.add_kw('plots','INT_ARRAY', None)
 	plot.add_kw('vector','STR', ('',))
 	plot.add_kw('modulus','STR', ('',))
 	plot.add_kw('projection','STR', ('',))
@@ -99,7 +98,6 @@ def main():
 	grid.add_kw("origin", 'DBL_ARRAY', 3)
 	grid.add_kw("ivec", 'DBL_ARRAY', 3)
 	grid.add_kw("jvec", 'DBL_ARRAY', 3)
-	grid.add_kw("kvec", 'DBL_ARRAY', 3)
 	grid.add_kw("lengths", 'DBL_ARRAY', 3)
 	grid.add_kw("atoms", 'INT_ARRAY', 2)
 	grid.add_kw("coord1", 'DBL_ARRAY', 3)
@@ -111,9 +109,8 @@ def main():
 	grid.add_kw("height", 'DBL_ARRAY', 2)
 	grid.add_kw("width", 'DBL_ARRAY', 2)
 	grid.add_kw("radius", 'DBL', 1)
-	grid.add_kw("gridplot", 'INT', 1)
 	grid.add_kw("grid_points", 'INT_ARRAY', 3)
-	grid.add_kw("gauss_points", 'INT_ARRAY', 3)
+	grid.add_kw("gauss_order", 'INT', 1)
 
 	intgrid=getkw.Section('grid', callback=check_grid)
 	intgrid.set_arg('STR', ('std',))
@@ -122,7 +119,6 @@ def main():
 	intgrid.add_kw("origin", 'DBL_ARRAY', 3)
 	intgrid.add_kw("ivec", 'DBL_ARRAY', 3)
 	intgrid.add_kw("jvec", 'DBL_ARRAY', 3)
-	intgrid.add_kw("kvec", 'DBL_ARRAY', 3)
 	intgrid.add_kw("lengths", 'DBL_ARRAY', 3)
 	intgrid.add_kw("atoms", 'INT_ARRAY', 2)
 	intgrid.add_kw("coord1", 'DBL_ARRAY', 3)
@@ -136,7 +132,7 @@ def main():
 	intgrid.add_kw("radius", 'DBL', 1)
 	intgrid.add_kw("gridplot", 'INT', 1)
 	intgrid.add_kw("grid_points", 'INT_ARRAY', 3)
-	intgrid.add_kw("gauss_points", 'INT_ARRAY', 3)
+	intgrid.add_kw("gauss_order", 'INT', 1)
 
 	divgrid=getkw.Section('grid', callback=check_grid)
 	divgrid.set_arg('STR', ('std',))
@@ -145,7 +141,6 @@ def main():
 	divgrid.add_kw("origin", 'DBL_ARRAY', 3)
 	divgrid.add_kw("ivec", 'DBL_ARRAY', 3)
 	divgrid.add_kw("jvec", 'DBL_ARRAY', 3)
-	divgrid.add_kw("kvec", 'DBL_ARRAY', 3)
 	divgrid.add_kw("lengths", 'DBL_ARRAY', 3)
 	divgrid.add_kw("atoms", 'INT_ARRAY', 2)
 	divgrid.add_kw("coord1", 'DBL_ARRAY', 3)
@@ -159,7 +154,7 @@ def main():
 	divgrid.add_kw("radius", 'DBL', 1)
 	divgrid.add_kw("gridplot", 'INT', 1)
 	divgrid.add_kw("grid_points", 'INT_ARRAY', 3)
-	divgrid.add_kw("gauss_points", 'INT_ARRAY', 3)
+	divgrid.add_kw("gauss_order", 'INT', 1)
 
 	integral=getkw.Section('integral')
 	integral.add_kw('lip_order', 'INT', (10,))
@@ -170,14 +165,19 @@ def main():
 	integral.add_sect(intgrid)
 
 	divj=getkw.Section('divj')
-	divj.add_kw('plots', 'INT_ARRAY', None)
 	divj.add_kw('gopenmol', 'STR', ('divj.plt',))
 	divj.add_sect(divgrid)
+
+	edens=getkw.Section('edens', req=False)
+	edens.add_kw('density', 'STR', ('EDENS',))
+	edens.add_kw('density_plot', 'STR', ('edens.txt',))
+	edens.add_kw('gopenmol', 'STR', ('edens.plt',))
 
 	top.add_sect(cdens)
 	top.add_sect(grid)
 	top.add_sect(integral)
 	top.add_sect(divj)
+	top.add_sect(edens)
 	
 	if inpfil is not None:
 		input=getkw.GetkwParser(top)
@@ -242,7 +242,7 @@ def check_grid(grid):
 				print warn % (i,arg)
 	elif arg == 'file': 
 		required=('file',)
-		ignore=('ivec', 'jvec', 'kvec', 'atoms', 'coord1', 
+		ignore=('ivec', 'jvec', 'atoms', 'coord1', 
 				'coord2', 'origin','height', 'width', 'angle', 'radius',
 				'lengths','distance', 'spacing', 'map')
 		for i in required:
@@ -254,7 +254,7 @@ def check_grid(grid):
 				print warn % (i,arg)
 	elif arg == 'bond':
 		required=('origin', 'height', 'width', 'distance')
-		ignore=('file','ivec', 'jvec', 'kvec', 'lengths')
+		ignore=('file','ivec', 'jvec', 'lengths')
 		for i in required:
 			if not check_opt(grid,i):
 				print err % (i,arg)
@@ -279,8 +279,8 @@ def check_grid(grid):
 		sys.exit(1)
 
 	if grid.getkw('type')[0] == 'even':
-		if check_opt(grid,'gauss_points'):
-			print "Error: 'gauss_points' incompatible with type=even grids" 
+		if check_opt(grid,'gauss_order'):
+			print "Error: 'gauss_order' incompatible with type=even grids" 
 			sys.exit(1)
 		if  check_opt(grid,'spacing') and check_opt(grid, 'grid_points'):
 			print "Error: both spacing and grid_points cannot be specified"
@@ -289,16 +289,15 @@ def check_grid(grid):
 			print "Error: either spacing or grid_points must be specified"
 			sys.exit(1)
 
-	if grid.getkw('type')[0] == 'gauss':
-		if check_opt(grid,'spacing'):
-			print "Error: 'spacing' incompatible with type=gauss grids" 
-			sys.exit(1)
-		if not (check_opt(grid,'gauss_points') and \
-				check_opt(grid, 'grid_points')):
-			print "Error: both 'grid_points' and 'gauss_points' must be \
-specified"
-			sys.exit(1)
-
+#    if grid.getkw('type')[0] == 'gauss':
+#        if check_opt(grid,'spacing'):
+#            print "Error: 'spacing' incompatible with type=gauss grids" 
+#            sys.exit(1)
+#        if not (check_opt(grid,'gauss_order') and \
+#                check_opt(grid, 'grid_points')):
+#            print "Error: both 'grid_points' and 'gauss_order' must be \
+#specified"
+#            sys.exit(1)
 
 def check_calc(top):
 	calc=top.getkw('calc')	
