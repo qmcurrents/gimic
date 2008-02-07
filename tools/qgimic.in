@@ -172,11 +172,13 @@ qopts=""
 
 get_cmdline $*
 
+mpi_arg=""
 if [ $((nodes > 1)) ]; then
 	if [ "$paratype" = "serial" ]; then
 	echo "GIMIC not compiled for parallel calculations yet, please recompile GIMIC."
 	exit 0
 	fi
+	mpi_arg="--mpi"
 fi
 
 case $global in
@@ -190,28 +192,25 @@ if [ "$batchjob" = 1 ]; then
 	[ "x$mem" = "x" ] &&  usage "  No memory specified."
 fi
 
-if [ "$nodes" = "1" ]; then
-	aces2="$GIMIC"
-else
-	aces2="$PARGIMIC"
-fi
-
 templ="$PROG/share/gimic.run"
 runscript="`pwd`/gimic.run"
 
 cp $templ $runscript 
 
+subst PROG     "$GIMIC"
 subst name     "$name"
 subst queue    "$queue"
 subst nodes    "$nodes"
 subst global   "$global"
 subst jobtype  "$jobtype"
+subst paratype "$paratype"
 subst notify   "$notify"
 subst wall     "$time"
 subst mem      "$mem"
 subst workdir  "$workdir"
 subst outdir   "$outdir"
 subst qopts    "$qopts"
+subst mpi_arg  "$mpi_arg"
 
 chmod 755 $runscript
 

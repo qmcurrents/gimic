@@ -246,21 +246,16 @@ contains
 		p=.false.; divj_p=.false.; int_p=.false.
 		cdens_p=.false.; edens_p=.false.
 
-		call plot_grid_xyz('koord.xyz', grid, mol, 0)
+		call plot_grid_xyz('koord.xyz', grid, mol)
 		do k=1,size(calc)
 			select case(calc(k))
 			case(CDENS_TAG)
-				i=0
 				call init_grid(grid, mol)
 				call grid_center(grid,center)
-				call getkw(input, 'grid.gridplot', i)
 				if (master_p) then
-					if (i > 0) then
-						call plot_grid_xyz('grid.xyz', grid, mol, i)
-					end if
+					call plot_grid_xyz('grid.xyz', grid, mol)
 				end if
 			case(DIVJ_TAG)
-				i=0
 				if (.not.section_is_set(input, 'divj')) then
 					call msg_error('Divergence calculation requested, '//& 
 					& 'but ''divj'' is undefined in input!')
@@ -272,33 +267,26 @@ contains
 					call push_section(input, 'divj')
 					call init_grid(dgrid, mol)
 					call grid_center(dgrid,center)
-					call getkw(input, 'grid.gridplot', i)
 					call pop_section(input)
 				else
 					call msg_info('Using default grid for divergence calucaltion')
 					call init_grid(dgrid, mol)
 				end if
 				if (master_p) then
-					if (i > 0) then
-						call plot_grid_xyz('divj.xyz', dgrid, mol, i)
-					end if
+					call plot_grid_xyz('divj.xyz', dgrid, mol)
 				end if
 			case(INTGRL_TAG)
-				i=0
 				p=keyword_is_set(input, 'integral.grid')
 				if (p) then
 					call push_section(input, 'integral')
 					call init_grid(igrid, mol)
 					call grid_center(igrid,center)
-					call getkw(input, 'grid.gridplot', i)
 					call pop_section(input)
 				else
 					call init_grid(igrid, mol)
 				end if
 				if (master_p) then
-					if (i > 0) then
-						call plot_grid_xyz('integral.xyz', igrid, mol, i)
-					end if
+					call plot_grid_xyz('integral.xyz', igrid, mol)
 				end if
 			case(EDENS_TAG)
 				i=0
@@ -307,15 +295,12 @@ contains
 					call push_section(input, 'edens')
 					call init_grid(egrid, mol)
 					call grid_center(egrid,center)
-					call getkw(input, 'grid.gridplot', i)
 					call pop_section(input)
 				else
 					call init_grid(egrid, mol)
 				end if
 				if (master_p) then
-					if (i > 0) then
-						call plot_grid_xyz('edens.xyz', egrid, mol, i)
-					end if
+					call plot_grid_xyz('edens.xyz', egrid, mol)
 				end if
 			case(0)
 				continue
@@ -364,17 +349,16 @@ call nl
 
 	subroutine program_footer
 		real(DP) :: rnd
-		character(*), dimension(6), parameter :: raboof=(/ &
+		character(*), dimension(5), parameter :: raboof=(/ &
 			'GIMIC - Grossly Irrelevant Magnetically Incuced Currents', &
 			'GIMIC - Gone Interrailing, My Inspiration Croaked       ', &
 			'GIMIC - Galenskap I Miniatyr, Ingen Censur              ', &
 			'GIMIC - Gone Insane, My Indifferent Cosmos              ', &
-			'GIMIC - Give Idiots More Ice-Coffee                     ', &
-			'GIMIC - Gleaming Indubitably Mediocre Inapplicable Crap '/)
+			'GIMIC - Give Idiots More Ice-Coffee                     '/)
 
 		call random_number(rnd)
 		call nl
-		call msg_out(raboof(nint(rnd*6.d0)))
+		call msg_out(raboof(nint(rnd*5.d0)))
 		call nl
 	end subroutine
 

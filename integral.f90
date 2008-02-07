@@ -113,6 +113,7 @@ contains
 		
 		call get_grid_size(self%grid, p1, p2, p3)
 		call get_magnet(self%grid, bb)
+        call eta(self%jt,self%grid)
 
 		normal=get_grid_normal(self%grid)
 

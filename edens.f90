@@ -46,7 +46,8 @@ contains
 		self%grid=>grid
 
 		if (master_p) then
-			open(EDFD, file='EDENS', access='direct', recl=p1*p2*DP)
+			call getkw(input, 'edens.density_matrix', str_g)
+			open(EDFD, file=trim(str_g), access='direct', recl=p1*p2*DP)
 		end if
 	end subroutine
 
@@ -80,39 +81,22 @@ contains
 
 		call get_grid_size(self%grid, p1, p2,p3)
 		buf=>self%buf
-		if (keyword_is_set(input,'edens.plots')) then
-!            call get_kw_size('edens.plots', i)
-!            allocate(z(i))
-			call getkw(input, 'edens.plots', z)
-		else
-			return
-!            allocate(z(1))
-!            z=1
-		end if
 
-		do k=1,size(z)
-			amax=D0
-			if (z(k) < 1 .or. z(k) > p3 ) then
-				write(str_g, '(a,i6)') 'edens_plot(): &
-					&invalid value for polts:', z(k)
-				call msg_error(str_g)
-				cycle
-			end if
-			read(EDFD, rec=z(k)) self%buf
-			str_g=enumfile('EDENSPLT', k)
-			open(EDPFD, file=trim(str_g))
-			do j=1,p2
-				do i=1,p1
-					rr=gridpoint(self%grid, i, j, z(k))
-					write(EDPFD, '(4f19.8)') rr, buf(i,j)
-					if (abs(buf(i,j)) > amax) amax=abs(buf(i,j))
-				end do
-				write(EDPFD, *) 
+		amax=D0
+		read(EDFD, rec=z(k)) self%buf
+		call getkw(input, 'edens.density_plot', str_g)
+		open(EDPFD, file=trim(str_g))
+		do j=1,p2
+			do i=1,p1
+				rr=gridpoint(self%grid, i, j, z(k))
+				write(EDPFD, '(4f19.8)') rr, buf(i,j)
+				if (abs(buf(i,j)) > amax) amax=abs(buf(i,j))
 			end do
-			close(EDPFD)
-			write(str_g, '(a,e19.12)') 'Max electronic density:', amax
-			call msg_info(str_g)
+			write(EDPFD, *) 
 		end do
+		close(EDPFD)
+		write(str_g, '(a,e19.12)') 'Max electronic density:', amax
+		call msg_info(str_g)
 		call edens_gopenmol(self)
 	end subroutine
 

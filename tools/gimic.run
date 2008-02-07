@@ -18,7 +18,7 @@
 #PBS -N @name@
 #PBS -o run.out 
 #PBS -e qsub.out
-#PBS -q @queue@
+##PBS -q @queue@
 #PBS -lnodes=@nodes@
 #PBS -lwalltime=@wall@
 #PBS -lpmem=@mem@MB
@@ -38,8 +38,8 @@
 ###------------end LSF ------------------
 
 
-PROG=@prefix@
-QUESYS=$PROG/share/quesys.sh
+PROG=@PROG@
+QUESYS=$PROG/lib/quesys.sh
 
 if [ -f $QUESYS ]; then
     .   $QUESYS
@@ -68,7 +68,7 @@ global_workdisk="@global@"
 outdir="@outdir@"
 
 ###--- JOB SPECIFICATION ---###
-input="gimic.inp XDENS MOL"
+input="gimic.inp XDENS mol"
 initialize_job
 
 # distribute input files to all nodes
@@ -83,7 +83,7 @@ distribute $input
 #   -serial/-seq run non-parallel program on all nodes
 #   -driver/-drv start a dirver program
 
-run gimic --mpi
+run gimic @mpi_arg@
 
 # gather files from all nodes. 
 # gather() accepts the follwing flags:

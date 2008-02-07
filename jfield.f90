@@ -272,16 +272,6 @@ contains
 
 		call get_grid_size(jf%grid, p1, p2, p3)
 		norm=get_grid_normal(jf%grid)
-		
-		if (keyword_is_set(input, 'cdens.plot.plots')) then
-!            call get_kw_size('cdens.plot.plots', i)
-!            allocate(z(i))
-			call getkw_ptr(input, 'cdens.plot.plots', z)
-		else
-			return
-!            allocate(z(1))
-!            z=1
-		end if
 
 		spin=1
 		if (uhf_p) then
@@ -289,25 +279,18 @@ contains
 		end if
 
 		do ispin=1,spin
-		select case(ispin)
-			case(1)
-				scase=''
-			case(2)
-				scase='a'
-			case(3)
-				scase='b'
-			case(4)
-				scase='sd'
-		end select
-		do k=1,size(z)
-			if (z(k) < 1 .or. z(k) > p3 ) then
-				write(str_g, '(a,i6)') 'jvector_plot(): &
-					&invalid value for polts:', z(k)
-				call msg_error(str_g)
-				cycle
-			end if
+			select case(ispin)
+				case(1)
+					scase=''
+				case(2)
+					scase='a'
+				case(3)
+					scase='b'
+				case(4)
+					scase='sd'
+			end select
 			if (jvec_plt /= '') then
-				tfil=trim(enumfile(jvec_plt,k))//trim(scase)//'.txt' 
+				tfil=trim(jvec_plt)//trim(scase)//'.txt' 
 				call msg_note('Writing j in        : '//trim(tfil))
 				open(JVPFD, file=trim(tfil))
 				write(JVPFD, *) '#********************************************#'
@@ -317,27 +300,26 @@ contains
 				write(JVPFD, *) '#********************************************#'
 			end if
 			if (jmod_plt /= '') then
-				tfil=trim(enumfile(jmod_plt,k))//trim(scase)//'.txt'
+				tfil=trim(jmod_plt)//trim(scase)//'.txt'
 				call msg_note('Writing |j| in      : '//trim(tfil))
 				open(MODFD, file=trim(tfil))
 			end if
 			if (njvec_plt /= '') then
-				tfil=trim(enumfile(njvec_plt,k))//trim(scase)//'.txt'
+				tfil=trim(njvec_plt)//trim(scase)//'.txt'
 				call msg_note('Writing j/|j| in    : ' //trim(tfil))
 				open(NJVFD, file=trim(tfil))
 			end if
 			if (jprj_plt /= '') then
-				tfil=trim(enumfile(jprj_plt,k))//trim(scase)//'.txt'
+				tfil=trim(jprj_plt)//trim(scase)//'.txt'
 				call msg_note('Writing (j;n) in    : '//trim(tfil))
 				open(JPRJFD, file=trim(tfil))
 			end if
 
-			call jvec_io(jf, z(k), 'r')
-			jf%zpos_v=z(k)
+			call jvec_io(jf, 1, 'r')
+			jf%zpos_v=1
 			do j=1,p2
 				do i=1,p1
-!                    mr=gridmap(jf%grid,i,j)
-					rr=gridpoint(jf%grid, i,j,z(k))*AU2A
+					rr=gridpoint(jf%grid, i,j,1)*AU2A
 					select case(ispin)
 						case(1)
 							foo=jf%vv(i,j)%v
@@ -365,10 +347,6 @@ contains
 					if (jprj_plt /= '') then
 						write(JPRJFD, '(3e19.12)') rr, jprj
 					end if
-!                    write(99, '(3f)') jf%jj(i,j)%t(1,:)
-!                    write(99, '(3f)') jf%jj(i,j)%t(2,:)
-!                    write(99, '(3f)') jf%jj(i,j)%t(3,:)
-!                    write(99, *) 
 				end do
 				if (jmod_plt /= '') then
 					write(MODFD,*)
@@ -383,9 +361,7 @@ contains
 			if (njvec_plt /= '') close(NJVFD)
 			if (jprj_plt /= '')  close(JPRJFD)
 		end do
-		end do
 		call jmod_gopenmol(jf)
-!        if (allocated(z)) deallocate(z)
 	end subroutine
 
 	subroutine jfield(jf)
