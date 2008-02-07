@@ -409,11 +409,13 @@ contains
 		call get_grid_size(grid, p1, p2, p3)
 		
 		call etime(times, tim1)
+		tim1=times(1)
 		do i=1,100
 			call jtensor(self, (/i*SC, i*SC, i*SC/), foo, spin_a)
 			foobar=matmul(bar,foo%t)
 		end do
 		call etime(times, tim2)
+		tim2=times(1)
 		
 		delta_t=tim2-tim1
 		if ( present(fac) ) delta_t=delta_t*fac

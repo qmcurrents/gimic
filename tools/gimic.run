@@ -83,7 +83,7 @@ distribute $input
 #   -serial/-seq run non-parallel program on all nodes
 #   -driver/-drv start a dirver program
 
-run gimic @mpi_arg@
+@jobcmd@
 
 # gather files from all nodes. 
 # gather() accepts the follwing flags:

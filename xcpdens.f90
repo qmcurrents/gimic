@@ -467,8 +467,8 @@ contains
 ! GET NUMBER OF BASIS FUNCTIONS CONSIDERING A CARTESIAN BASIS
 !
 		ione=1
-		CALL GETREC(20,'JOBARC','NAOBASFN',IONE,NBASC)
-		if (debug) print *, 'NBAS[C]', NBAS, NBASC
+		call getrec(20,'JOBARC','NAOBASFN',ione,nbasc)
+		if (debug) print *, 'NBAS[C]', nbas, nbasc
 !
 ! SYMMETRY STUFF, NUMBER OF BASIS FUNCTIONS PER IRREP 
 !
@@ -497,8 +497,8 @@ contains
 !
 ! SAO --> CAO TRANSFORMATION; TWO XGEMM CALLS
 !
-			ISTART2=ISTART
-			ISTART3=ISTART2+NBAS*NBASC
+			istart2=istart
+			istart3=istart2+nbas*nbasc
 			CALL GETREC(20,'JOBARC','CMP2ZMAT',NBAS*NBASC*IINTFP,&
 			SCR(ISTART2))
 			CALL XGEMM('N','N',NBASC,NBAS,NBAS,1.D0,SCR(ISTART2), &
@@ -852,8 +852,8 @@ contains
 					scr(imo0),nbas,0.d0,scr(iscr1),nbas)
 				istart2=iscr2
 				istart3=istart2+nbas*nbasc
-				CALL GETREC(20,'JOBARC','CMP2ZMAT',NBAS*NBASC*IINTFP,&
-					SCR(ISTART2))
+				call getrec(20,'JOBARC','CMP2ZMAT',nbas*nbasc*iintfp,&
+					scr(istart2))
 				call xgemm('n','n',nbasc,nbas,nbas,1.d0,scr(istart2),&
 					nbasc,scr(iscr1),nbas,0.d0,scr(istart3),nbasc)
 				call xgemm('n','t',nbasc,nbasc,nbas,1.d0,scr(istart3),nbasc,&
@@ -861,7 +861,7 @@ contains
 !
 ! ADD CORRELATION CONTRIBUTION TO HF PART
 !
-				call saxpy(nbasc*nbasc,1.d0,scr(iscr1),1,scr(iddens),1)
+                call saxpy(nbasc*nbasc,1.d0,scr(iscr1),1,scr(iddens),1)
 !
 ! ANTISYMMETRIZE PERTURBED DENSITY MATRIX: D(mu,nu) = 1/2 (D(mu,nu) - D(nu,mu))
 !

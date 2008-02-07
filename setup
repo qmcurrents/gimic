@@ -1,17 +1,16 @@
 #!/bin/sh
 
 snykov() {
-BLASDIR=/opt/intel/cmkl/8.0/lib/64
+BLASDIR=/opt/intel/cmkl/9.1.023/lib/64
 INSTDIR=$HOME/gimic
 case $* in 
 	--mpi) 
-	MPIFC=scampif90 ./configure --prefix=${INSTDIR} \
-	--with-fc-search-path=$HOME/flibs --with-blas-dir=$BLASDIR \
-	--with-aces2=$HOME/aces2/lib --enable-mpi
+	MPIFC=scampif90 ./configure --prefix=${INSTDIR} --with-blas-dir=$BLASDIR \
+	--with-aces2=$HOME/aces2/lib --enable-mpi=scali
 	;;
 	*)
-	./configure --prefix=${INSTDIR} --with-blas-dir=$BLASDIR \
-	--with-fc-search-path=$HOME/flibs --with-aces2=$HOME/aces2/lib
+	./configure --prefix=${INSTDIR} --with-aces2=$HOME/aces2/lib \
+	--with-blas-dir=$BLASDIR
 	;;
 esac
 }
@@ -20,8 +19,8 @@ stallo() {
 INSTDIR=$HOME/gimic
 case $* in 
 	--mpi) 
-	FC=ifort MPIFC=mpif90 ./configure --prefix=${INSTDIR} \
-	--enable-mpi --with-aces2=$HOME/aces2/lib
+	FC=ifort ./configure --prefix=${INSTDIR} \
+	--enable-mpi=openmpi --with-aces2=$HOME/aces2/lib
 	;;
 	*)
 	FC=ifort ./configure --prefix=${INSTDIR} --with-aces2=$HOME/aces2/lib
@@ -34,7 +33,7 @@ BLASDIR=/opt/lib
 INSTDIR=/opt/aces2
 case $* in
 	--mpi) 
-	./configure --prefix=${INSTDIR}.par --with-blas-dir=$BLASDIR --enable-mpi
+	./configure --prefix=${INSTDIR}.par --enable-mpi=openmpi
 	;;
 	*)
 	./configure --prefix=${INSTDIR} --with-blas-dir=$BLASDIR \

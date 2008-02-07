@@ -12,7 +12,7 @@
 # University of Texas, 2006
 #
 
-paratype=@paratype@
+paratype=@MPI_TYPE@
 pbsdsh=@pbsdsh@
 shell="/bin/sh -l"
 qsubsys=""
@@ -33,7 +33,7 @@ pshell () {
 				lam) lamexec C $* ;;
 				mpich) mpiexec -comm none -pernode $* ;;
 				mvapich) ibrun $* ;;
-				scali) mpiexec -comm none $* ;;
+				scali|scampi) mpiexec -comm none $* ;;
 				serial) $* ;;
 				*) echo "Error: Unknown job type '$*'."
 				exit 1	
@@ -49,7 +49,7 @@ pshell () {
 				lam) lamexec N $* ;;
 				mpich) mpiexec -comm none $*;;
 				mvapich) ibrun $* ;;
-				scali) mpiexec -comm none $* ;;
+				scali|scampi) mpiexec -comm none $* ;;
 				serial) $* ;;
 				*) echo "Error: Unknown job type '$*'."
 				exit 1	
@@ -76,7 +76,7 @@ parexe()
 		lam) mpirun C $* ;;
 		mpich) mpiexec $* ;;
 		mvapich) ibrun $* ;;
-		scali) mpimon $* -- `cat $nodefile` ;;
+		scali|scampi) mpimon $* -- `cat $nodefile` ;;
 		serial) $* ;;
 	esac
 
@@ -395,7 +395,7 @@ initialize_job() {
 
 	# scali uses the rather damaged mpimon which needs explicit access to 
 	# the nodefile...
-	if [ $paratype = "scali" ]; then
+	if [ $paratype = "scali" -o $paratype = "scampi" ]; then
 		test -f "$nodefile" && cp $nodefile $submitdir/jobnodes
 		distribute $submitdir/jobnodes
 		rm $submitdir/jobnodes

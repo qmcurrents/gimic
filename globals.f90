@@ -9,7 +9,7 @@ module globals_m
 
 !    intrinsic hostnm
 
-	character(16), parameter :: GIMIC_VERSION='1.6.0'
+	character(16), parameter :: GIMIC_VERSION='2.0pre1'
 
 	! file descriptors
 	integer, parameter :: BASFD=42

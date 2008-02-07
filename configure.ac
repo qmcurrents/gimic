@@ -4,7 +4,7 @@
 # Written by Jonas Juselius <jonas@iki.fi>
 #
 
-AC_INIT([GIMIC],[1.6.0],[jonas@iki.fi])
+AC_INIT([GIMIC],[2.0pre1],[jonas@iki.fi])
 
 AC_CONFIG_SRCDIR(gimic.f90)
 AC_CONFIG_HEADER(config.h)
@@ -101,7 +101,7 @@ ACX_SUBST_BUILD_FLAGS([$build_type])
 
 MPI_TYPE="serial"
 if test "x$enable_mpi" != "x"; then
-	MPI_TYPE="none"
+	MPI_TYPE="not set"
 	test "$enable_mpi" != "yes" && MPI_TYPE="$enable_mpi"
 	AC_MSG_NOTICE([Checking if MPI is available])
 	AC_LANG_PUSH([Fortran])
@@ -115,7 +115,7 @@ if test "x$enable_mpi" != "x"; then
 		lam) ;;
 		mpich) ;;
 		scali|scampi) ;;
-		*) AC_MSG_WARN([Unknown MPI implementation: $MPI_TYPE])
+		*) AC_MSG_ERROR([Unknown MPI implementation: $MPI_TYPE])
 		;;
 	esac
 	AC_CACHE_SAVE
@@ -149,13 +149,13 @@ if test "x$ax_f90_modext" = "xunknown" ; then
 	AC_MSG_ERROR([unable to find f90 modules extension])
 fi
 
-#AC_CACHE_SAVE
-#AC_LANG_PUSH([Fortran])
-#ACX_BLAS(,AC_MSG_WARN([No working blas library found!]))
+AC_CACHE_SAVE
+AC_LANG_PUSH([Fortran])
+ACX_BLAS(,AC_MSG_WARN([No working blas library found!]))
 #ACX_LAPACK(,AC_MSG_WARN([No working lapack library found!]))
 #ACX_BLAS95(,AC_MSG_WARN([No working lapack95 library found!]))
 #ACX_LAPACK95(,AC_MSG_WARN([No working lapack95 library found!]))
-#AC_LANG_POP([Fortran])
+AC_LANG_POP([Fortran])
 
 ax_save_LIBS="$LIBS"
 AC_MSG_NOTICE([Checking if ACES2 libraries are available])
