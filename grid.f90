@@ -113,7 +113,6 @@ contains
 		call getkw(input, 'grid.origin', self%origin)
 		call getkw(input, 'grid.ivec', self%basv(:,1))
 		call getkw(input, 'grid.jvec', self%basv(:,2))
-		call getkw(input, 'grid.kvec', self%basv(:,3))
 		call getkw(input, 'grid.spacing', self%step)
 		call getkw(input, 'grid.lengths', self%l)
 
@@ -214,13 +213,30 @@ contains
 	subroutine setup_gauss_gdata(self)
 		type(grid_t) :: self
 
-		integer(I4), dimension(3) :: ngp
-		integer(I4) :: i
+		integer(I4) :: order, i, rem
+		real(DP), dimension(3) :: spc
+		logical :: flag=.false.
 
 		call msg_info('Integration grid selected.')
-		call nl
-		call getkw(input, 'grid.gauss_points', ngp)
-		call getkw(input, 'grid.grid_points', self%npts)
+		call getkw(input, 'grid.gauss_order', order)
+		if (keyword_is_set(input,'grid.grid_points')) then
+			call getkw(input, 'grid.grid_points', self%npts)
+		else
+			call getkw(input, 'grid.spacing', spc)
+			self%npts=nint(self%l/spc)
+		end if
+		do i=1,3
+			rem=mod(self%npts(i),order)
+			if (rem /= 0) then
+				self%npts(i)=self%npts(i)-rem+order
+				flag=.true.
+			end if
+		end do
+		if (flag) then
+			write(str_g, '(a,3i5)'), &
+			'Adjusted number of grid points for quadrature: ', self%npts
+			call msg_info(str_g)
+		end if
 
 		self%lobato=.true.
 		do i=1,3
@@ -228,12 +244,12 @@ contains
 				allocate(self%gdata(i)%pts(self%npts(i)))
 				allocate(self%gdata(i)%wgt(self%npts(i)))
 			else
-				ngp(i)=1
+				order=1
 				self%npts(i)=1
 				allocate(self%gdata(i)%pts(1))
 				allocate(self%gdata(i)%wgt(1))
 			end if
-			call setup_lobby(0.d0, self%l(i), ngp(i), self%gdata(i))
+			call setup_lobby(0.d0, self%l(i), order, self%gdata(i))
 		end do
 	end subroutine
 
@@ -478,11 +494,10 @@ contains
 		n=v/l
 	end function
 
-	subroutine plot_grid_xyz(fname, self, mol, np)
+	subroutine plot_grid_xyz(fname, self, mol)
 		character(*), intent(in) :: fname
 		type(grid_t), intent(inout) :: self
 		type(molecule_t) :: mol
-		integer(I4), intent(in) :: np
 
 		integer(I4) :: natoms, i
 		integer(I4) :: p1, p2, p3
@@ -492,10 +507,7 @@ contains
 		
 		natoms=get_natoms(mol)
 		
-		p3=0
-		if (np > 0) then
-			call get_grid_size(self,p1,p2,p3)
-		end if
+		call get_grid_size(self,p1,p2,p3)
 
 		write(str_g, '(2a)') 'Grid plot in ', trim(fname)
 		call msg_note(str_g)
