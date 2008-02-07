@@ -62,7 +62,8 @@ contains
 		x=dot_product(g%basv(:,3), mag)
 		if (x < 0.d0) then
 			mag=-mag
-			call msg_info('Left handed coordinate system, reversing field')
+			call msg_info('Left handed coordinate system,&
+		    	& reversing magnetic field')
 		end if
 		if (abs(x) /= 1.d0 .and. abs(x) > 1.d-10) then
 			call msg_warn('Magnetic field not orthogonal to grid')
