@@ -57,6 +57,10 @@ tools/turbo2mol.py: tools/turbo2mol.py.in
 	sed 's/@inst_bindir@/$(subst /,\/,$(inst_bindir))/; s/@inst_libdir@/$(subst /,\/,$(inst_libdir))/; s/@python_bin@/$(PYTHON_BIN)/' $< > $@
 	chmod 755 $@
 
+tools/qgimic: tools/qgimic.sh
+	cp -f $< $@
+	chmod 755 $@
+
 $(datadir)/gimic.run: tools/gimic.run
 	cp -f $< $@
 

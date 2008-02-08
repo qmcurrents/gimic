@@ -73,8 +73,7 @@ contains
 	subroutine edens_plot(self)
 		type(edens_t), intent(inout) :: self
 		
-		integer(I4), dimension(:), pointer :: z
-		integer(I4) :: i,j,k,p1,p2,p3
+		integer(I4) :: i,j,p1,p2,p3
 		real(DP) :: amax
 		real(DP), dimension(3) :: rr
 		real(DP), dimension(:,:), pointer :: buf
@@ -83,12 +82,12 @@ contains
 		buf=>self%buf
 
 		amax=D0
-		read(EDFD, rec=z(k)) self%buf
+		read(EDFD, rec=1) self%buf
 		call getkw(input, 'edens.density_plot', str_g)
 		open(EDPFD, file=trim(str_g))
 		do j=1,p2
 			do i=1,p1
-				rr=gridpoint(self%grid, i, j, z(k))
+				rr=gridpoint(self%grid, i, j, 1)
 				write(EDPFD, '(4f19.8)') rr, buf(i,j)
 				if (abs(buf(i,j)) > amax) amax=abs(buf(i,j))
 			end do
@@ -173,8 +172,8 @@ contains
 		rank=3
 
 		call get_grid_size(self%grid, p1, p2, p3)
-		qmin=gridpoint(self%grid,1,1,1)*AU2A
-		qmax=gridpoint(self%grid,p1,p2,p3)*AU2A
+		qmin=real(gridpoint(self%grid,1,1,1)*AU2A)
+		qmax=real(gridpoint(self%grid,p1,p2,p3)*AU2A)
 
 		write(GOPFD,rec=1) rank
 		write(GOPFD,rec=2) surface

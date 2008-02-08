@@ -141,6 +141,7 @@ contains
 					jvec%v=matmul(jt%t,bb)
 					if ( r > bound ) then
 						w=0.d0
+						jp=0.d0
 					else
 						w=get_weight(self%grid, i, 1) 
 						jp=dot_product(normal,jvec%v)
@@ -209,6 +210,7 @@ contains
 		call getkw(input, 'integral.radius', bound)
 		call grid_center(self%grid,center)
 
+		sgn=1.d0
 		xsum3=0.d0
 		psum3=0.d0
 		nsum3=0.d0
@@ -481,6 +483,7 @@ contains
 					r=sqrt(sum((rr-center)**2))
 					if ( r > bound ) then
 						w=0.d0
+						jp=0.d0
 					else
 						w=get_weight(grid, i, 1) 
 						jp=dot_product(normal,jvec(i,j)%v)
@@ -552,6 +555,7 @@ contains
 				r=sqrt(sum((rr-center)**2))
 				if ( r > bound ) then
 					w=0.d0
+					jp=0.d0
 				else
 					w=get_weight(grid, i, 1) 
                 	jp=dot_product(normal,jvec(i,j)%v)

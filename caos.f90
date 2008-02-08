@@ -13,7 +13,6 @@ module caos_m
 
 	private
 
-	real(DP), dimension(3) :: rr
 	real(DP) :: rr2
 	type(contraction_t), pointer :: cc
 
@@ -77,14 +76,13 @@ contains
 		integer(I4) :: i
 		real(DP), dimension(:,:), pointer :: f
 
-		rr=r
-		rr2=sum(rr**2)
+		rr2=sum(r**2)
 
 		call get_gto_nlm(ctr%l, f)
 		cc=>ctr
 		q=cao()
 		do i=1,Ctr%nccomp 
-			p=product(rr**f(:,i))
+			p=product(r**f(:,i))
 			val(i)=p*q
 		end do
 	end subroutine
@@ -101,8 +99,7 @@ contains
 		real(DP) :: up, down
 		integer(I4) :: i, j
 
-		rr=r
-		rr2=sum(rr**2)
+		rr2=sum(r**2)
 		
 		call get_gto_nlm(ctr%l,f)
 		cc=>Ctr
@@ -113,8 +110,8 @@ contains
 			if (df(ax) < D0) then
 				df(ax)=D0
 			end if
-			down=f(ax,i)*product(rr**df)*bfval
-			up=2.d0*rr(ax)*product(rr**f(:,i))*dbfval
+			down=f(ax,i)*product(r**df)*bfval
+			up=2.d0*r(ax)*product(r**f(:,i))*dbfval
 			val(i)=down-up
 		end do
 	end subroutine

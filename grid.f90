@@ -18,7 +18,6 @@ module grid_class
 		real(DP), dimension(3) :: l        ! |v|
 		real(DP), dimension(3) :: origin
 		real(DP), dimension(3) :: step
-		real(DP), dimension(2) :: map
 		integer(I4), dimension(3) :: npts
 		type(gdata_t), dimension(3) :: gdata
 		character(BUFLEN) :: mode, gtype
@@ -26,7 +25,7 @@ module grid_class
 	end type grid_t
 
 	public grid_t
-	public init_grid, del_grid, gridpoint, gridmap, get_grid_normal
+	public init_grid, del_grid, gridpoint, get_grid_normal
 	public get_grid_size, get_weight, write_grid, read_grid
 	public get_grid_length, is_lobo_grid, realpoint, copy_grid
 	public grid_center, plot_grid_xyz, get_basv
@@ -46,7 +45,6 @@ contains
 		
 		self%step=1.d0
 		self%gtype='even'
-		self%map=0.0
 		self%basv=0.0
 		self%l=0.0
 		call getkw(input, 'grid', self%mode)
@@ -67,10 +65,6 @@ contains
 
 		call msg_out('Grid mode = ' // trim(self%mode))
 
-		if (keyword_is_set(input, 'grid.map')) then
-			call getkw(input, 'grid.map', self%map)
-		end if
-
 		call normalise(self%basv)
 		call ortho_coordsys(self)
 !        call check_handedness(self)
@@ -78,7 +72,7 @@ contains
 		! rotate basis vectors if needed
 		if (keyword_is_set(input, 'grid.angle')) then
 			call getkw(input, 'grid.angle', angle)
-			call rotate(self, angle)
+!            call rotate(self, angle)
 		end if
 
 		! calculate distibution of grid points
@@ -101,6 +95,7 @@ contains
 			product(self%npts)
 		call msg_out(str_g)
 		call nl
+!        call write_grid(self, 50)
 
 	end subroutine
 
@@ -115,9 +110,8 @@ contains
 		call getkw(input, 'grid.jvec', self%basv(:,2))
 		call getkw(input, 'grid.spacing', self%step)
 		call getkw(input, 'grid.lengths', self%l)
+! grid_points
 
-		self%basv(:,1)=self%basv(:,1)
-		self%basv(:,2)=self%basv(:,2)
 		self%basv(:,3)=cross_product(self%basv(:,1),self%basv(:,2)) 
 	end subroutine
 
@@ -213,7 +207,7 @@ contains
 	subroutine setup_gauss_gdata(self)
 		type(grid_t) :: self
 
-		integer(I4) :: order, i, rem
+		integer(I4) ::  i, rem, order
 		real(DP), dimension(3) :: spc
 		logical :: flag=.false.
 
@@ -223,15 +217,26 @@ contains
 			call getkw(input, 'grid.grid_points', self%npts)
 		else
 			call getkw(input, 'grid.spacing', spc)
-			self%npts=nint(self%l/spc)
+			do i=1,3
+				if (abs(spc(i)) < 1.d-10 .or.spc(i) < 0.d0) then
+					self%npts(i)=0
+				else
+					self%npts(i)=nint(self%l(i)/spc(i))
+				end if
+			end do
 		end if
+		
 		do i=1,3
+			if (.not.self%npts(i) > 1) then
+				self%npts(i)=0
+			end if
 			rem=mod(self%npts(i),order)
 			if (rem /= 0) then
 				self%npts(i)=self%npts(i)-rem+order
 				flag=.true.
 			end if
 		end do
+		
 		if (flag) then
 			write(str_g, '(a,3i5)'), &
 			'Adjusted number of grid points for quadrature: ', self%npts
@@ -243,13 +248,13 @@ contains
 			if (self%npts(i) > 0) then
 				allocate(self%gdata(i)%pts(self%npts(i)))
 				allocate(self%gdata(i)%wgt(self%npts(i)))
+				call setup_lobby(0.d0, self%l(i), order, self%gdata(i))
 			else
-				order=1
 				self%npts(i)=1
 				allocate(self%gdata(i)%pts(1))
 				allocate(self%gdata(i)%wgt(1))
+				call setup_lobby(0.d0, self%l(i), 1, self%gdata(i))
 			end if
-			call setup_lobby(0.d0, self%l(i), order, self%gdata(i))
 		end do
 	end subroutine
 
@@ -385,8 +390,6 @@ contains
 		integer(I4), intent(in) :: i, j, k
 		real(DP), dimension(3) :: r
 		
-		real(DP) :: q1, q2, q3
-
 		if (self%gtype == 'file') then
 			r=self%xdata(:,i)
 		else
@@ -402,29 +405,8 @@ contains
 		type(grid_t), intent(in) :: self
 		real(DP), dimension(3) :: r
 
-		r=self%origin+real(i)*self%step(1)*self%basv(:,1)+real(j)*self%step(2)*self%basv(:,2)
-	end function 
-
-	function gridmap(self, i, j) result(r)
-		type(grid_t), intent(in) :: self
-		integer(I4), intent(in) :: i, j
-		real(DP), dimension(2) :: r
-
-		real(DP), dimension(2) :: m1, m2
-		real(DP) :: q1, q2, w1, w2
-
-		if (self%gtype == 'file') then
-			r=0.d0
-			return
-		end if
-
-		m1=(/0.0, 1.0/)
-		m2=(/1.0, 0.0/)
-
-		q1=self%gdata(1)%pts(i)
-		q2=self%gdata(2)%pts(j)
-
-		r=self%map+q1*m1+q2*m2 
+		r=self%origin+real(i)*self%step(1)*self%basv(:,1)+&
+			real(j)*self%step(2)*self%basv(:,2)
 	end function 
 
 	function get_grid_normal(self) result(n)
@@ -457,7 +439,6 @@ contains
 		self%l=0.d0
 		self%origin=0.d0
 		self%step=0.d0
-		self%map=0.d0
 		self%gtype='file'
 
 		if (mpirun_p) then
@@ -485,7 +466,7 @@ contains
 	end subroutine
 
 	function norm(v) result(n)
-		real(DP), dimension(3), intent(in) :: v
+		real(DP), dimension(:), intent(in) :: v
 		real(DP), dimension(3) :: n
 		
 		real(DP) :: l
@@ -494,9 +475,9 @@ contains
 		n=v/l
 	end function
 
-	subroutine plot_grid_xyz(fname, self, mol)
-		character(*), intent(in) :: fname
+	subroutine plot_grid_xyz(self, fname, mol)
 		type(grid_t), intent(inout) :: self
+		character(*), intent(in) :: fname
 		type(molecule_t) :: mol
 
 		integer(I4) :: natoms, i
@@ -646,6 +627,7 @@ contains
 
 		integer(I4) :: i, j
 
+		d=1
 		if ( p > np) then
 			i=1
 			j=2
@@ -660,8 +642,6 @@ contains
 				end if
 				j=j+1
 			end do
-		else 
-			d=1
 		end if
 	end function
 
@@ -671,6 +651,7 @@ contains
 
 		integer(I4) :: i
 
+		write(fd, *) self%mode
 		write(fd, *) self%lobato
 		write(fd, *) self%basv
 		write(fd, *) self%l
@@ -682,6 +663,7 @@ contains
 			write(fd, *) self%gdata(i)%wgt
         end do
 		write(fd, *)
+
 	end subroutine
 
 	subroutine read_grid(self, fd)
@@ -689,8 +671,6 @@ contains
 		integer(I4), intent(in) :: fd
 
 		integer(I4) :: i
-
-		call getkw(input, 'grid.map', self%map)
 
 		read(fd, *) self%lobato
 		read(fd, *) self%basv
@@ -885,4 +865,26 @@ contains
 		k=self%basv(:,3)
 	end subroutine
 end module
+
+!    function gridmap(self, i, j) result(r)
+!        type(grid_t), intent(in) :: self
+!        integer(I4), intent(in) :: i, j
+!        real(DP), dimension(2) :: r
+
+!        real(DP), dimension(2) :: m1, m2
+!        real(DP) :: q1, q2, w1, w2
+
+!        if (self%gtype == 'file') then
+!            r=0.d0
+!            return
+!        end if
+
+!        m1=(/0.0, 1.0/)
+!        m2=(/1.0, 0.0/)
+
+!        q1=self%gdata(1)%pts(i)
+!        q2=self%gdata(2)%pts(j)
+
+!        r=self%map+q1*m1+q2*m2 
+!    end function 
 

@@ -7886,7 +7886,7 @@ echo "$as_me: creating lib" >&6;}
 fi
 
 
-ac_config_files="$ac_config_files Makefile make.config make.rules tools/Makefile tools/qgimic tools/quesys.sh"
+ac_config_files="$ac_config_files Makefile make.config make.rules tools/Makefile tools/qgimic.sh tools/quesys.sh"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -8446,7 +8446,7 @@ do
     "make.config") CONFIG_FILES="$CONFIG_FILES make.config" ;;
     "make.rules") CONFIG_FILES="$CONFIG_FILES make.rules" ;;
     "tools/Makefile") CONFIG_FILES="$CONFIG_FILES tools/Makefile" ;;
-    "tools/qgimic") CONFIG_FILES="$CONFIG_FILES tools/qgimic" ;;
+    "tools/qgimic.sh") CONFIG_FILES="$CONFIG_FILES tools/qgimic.sh" ;;
     "tools/quesys.sh") CONFIG_FILES="$CONFIG_FILES tools/quesys.sh" ;;
 
   *) { { echo "$as_me:$LINENO: error: invalid argument: $ac_config_target" >&5

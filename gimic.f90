@@ -109,18 +109,17 @@ contains
 		type(divj_t) :: dj
 		type(edens_t) :: ed
 		type(integral_t) :: it
-!        type(parallel_t) :: pt
 		type(cao2sao_t) :: c2s
 
 		integer(I4) :: i,j, ncalc
 		integer(I4), dimension(4) :: calc
 		logical :: divj_p, int_p, cdens_p, edens_p
-		logical :: nike_p, xdens_p, modens_p, dryrun_p, imod_p
+		logical :: xdens_p, modens_p, dryrun_p, imod_p
 		character(LINELEN), dimension(:), pointer :: cstr
 
 		divj_p=.false.; int_p=.false.
 		cdens_p=.false.; edens_p=.false.; dryrun_p=.false.
-		nike_p=.true.;  xdens_p=.false.; modens_p=.false.
+		xdens_p=.false.; modens_p=.false.; imod_p=.false.
 
 		call getkw(input,'dryrun', dryrun_p)
 
@@ -152,7 +151,6 @@ contains
 				modens_p=.true.
 			end if
 		end do
-		if (dryrun_p) nike_p=.false.
 
 		call getkw(input, 'openshell', uhf_p)
 		if (uhf_p) then
@@ -161,10 +159,14 @@ contains
 			call msg_info('Closed-shell calculation')
 		end if
 
-		if (xdens_p) call init_dens(xdens, mol)
-		if (modens_p) call init_dens(modens, mol, modens_p)
-		if (xdens_p) call read_dens(xdens)
-		if (modens_p) call read_modens(modens)
+		if (xdens_p) then
+			call init_dens(xdens, mol)
+			call read_dens(xdens)
+		end if
+		if (modens_p) then
+			call init_dens(modens, mol, modens_p)
+			call read_modens(modens)
+		end if
 
 		call setup_grids(calc(1:ncalc), grid, igrid, dgrid, egrid)
 
@@ -233,6 +235,7 @@ contains
 		if (xdens_p) call del_dens(xdens)
 		if (modens_p) call del_dens(modens)
 		if (spherical) call del_c2sop(c2s)
+		call del_jtensor(jt)
 	end subroutine
 
 	subroutine setup_grids(calc, grid, igrid, dgrid, egrid)
@@ -246,14 +249,14 @@ contains
 		p=.false.; divj_p=.false.; int_p=.false.
 		cdens_p=.false.; edens_p=.false.
 
-		call plot_grid_xyz('koord.xyz', grid, mol)
+!        call plot_grid_xyz(grid, 'koord.xyz', mol)
 		do k=1,size(calc)
 			select case(calc(k))
 			case(CDENS_TAG)
 				call init_grid(grid, mol)
 				call grid_center(grid,center)
 				if (master_p) then
-					call plot_grid_xyz('grid.xyz', grid, mol)
+					call plot_grid_xyz(grid, 'grid.xyz',  mol)
 				end if
 			case(DIVJ_TAG)
 				if (.not.section_is_set(input, 'divj')) then
@@ -273,7 +276,7 @@ contains
 					call init_grid(dgrid, mol)
 				end if
 				if (master_p) then
-					call plot_grid_xyz('divj.xyz', dgrid, mol)
+					call plot_grid_xyz(dgrid, 'divj.xyz', mol)
 				end if
 			case(INTGRL_TAG)
 				p=keyword_is_set(input, 'integral.grid')
@@ -286,7 +289,7 @@ contains
 					call init_grid(igrid, mol)
 				end if
 				if (master_p) then
-					call plot_grid_xyz('integral.xyz', igrid, mol)
+					call plot_grid_xyz(igrid, 'integral.xyz', mol)
 				end if
 			case(EDENS_TAG)
 				i=0
@@ -300,7 +303,7 @@ contains
 					call init_grid(egrid, mol)
 				end if
 				if (master_p) then
-					call plot_grid_xyz('edens.xyz', egrid, mol)
+					call plot_grid_xyz(egrid, 'edens.xyz', mol)
 				end if
 			case(0)
 				continue

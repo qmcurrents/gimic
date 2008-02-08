@@ -33,29 +33,19 @@ contains
 		type(bfeval_t) :: self
 		type(molecule_t), target :: mol
 		
-		nullify(self%bf)
-
-		if (associated(self%bf)) then
-			call msg_warn('init_bfeval(): already allocated!')
-		else
-			allocate(self%bf(get_ncgto(mol)))
-			if (spherical) allocate(self%sbf(get_nccgto(mol)))
-		end if
+		allocate(self%bf(get_ncgto(mol)))
+		if (spherical) allocate(self%sbf(get_nccgto(mol)))
 		self%mol=>mol
 		self%r=INITRV
 	end subroutine
 
 	subroutine del_bfeval(self)
 		type(bfeval_t) :: self
-		if (associated(self%bf)) then
-			deallocate(self%bf)
-			if (spherical) deallocate(self%sbf)
-			nullify(self%bf)
-			nullify(self%sbf)
-			nullify(self%mol)
-		else
-			call msg_warn('del_bfeval(): not allocated!')
-		end if
+
+		deallocate(self%bf)
+		if (spherical) deallocate(self%sbf)
+		nullify(self%sbf)
+		nullify(self%mol)
 	end subroutine
 	
 	subroutine bfeval(self, r, ans)
@@ -84,6 +74,8 @@ contains
 			call get_basis(atom, basis)
 			rr=r-coord
 			call filter_screened(basis, rr, posvec, nctr)
+!            nctr=get_nctr(basis)
+!            do j=1,nctr 
 			do k=1,nctr 
 				j=posvec(k)
 				call get_contraction(atom, j, ctr)

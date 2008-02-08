@@ -23,7 +23,7 @@ contains
 		
 		character(6) :: intgrlkw
 		character(9) :: turbokw
-		integer(I4) :: ngto, i, ios, n, fgetc
+		integer(I4) :: i, ios
 		type(atom_t), pointer :: a     ! short hand...
 		type(basis_t), pointer :: b  ! short hand...
 		integer(I4), dimension(:), allocatable :: bdim
@@ -90,7 +90,7 @@ contains
 	subroutine read_atom(atm)
 		type(atom_t), intent(inout) :: atm
 
-		integer(I4) :: i, n, ios
+		integer(I4) :: i
 		character(80) :: tmp
 
 		! i is (am) a dummy..

@@ -30,6 +30,7 @@ contains
 		character(*) :: molfil
 
 		integer(I4) :: i, natoms
+		logical :: screen=.true.
         type(atom_t), dimension(:), pointer :: atoms
 
 		call read_intgrl(molfil,self%atoms, natoms)
@@ -48,10 +49,19 @@ contains
 			call normalize(atoms(i)%basis)
 		end do
 		call nl
-		call msg_out('Calculating screening thresholds')
-		do i=1,natoms
-			call setup_screening(atoms(i)%basis)
-		end do
+
+		call getkw(input, 'screening', screen)
+		if (.not.screen) then
+			call msg_info('Screening is not used')
+			do i=1,natoms
+				atoms(i)%basis%thrs=1.d10
+			end do
+		else
+			call msg_out('Calculating screening thresholds')
+			do i=1,natoms
+				call setup_screening(atoms(i)%basis)
+			end do
+		end if
 
 		do i=1,natoms
 			call print_atom_data(atoms(i),i)
@@ -72,13 +82,6 @@ contains
 
 		integer(I4) :: i,j,l
 		real(DP) :: xp, min_xp, x, dist
-		logical :: screen=.true.
-
-		call getkw(input, 'screening', screen)
-		if (.not.screen) then
-			basis%thrs=1.d10
-			return
-		end if
 
 		do i=1,basis%nctr
 			min_xp=1.d+15

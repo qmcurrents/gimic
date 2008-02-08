@@ -91,6 +91,20 @@ contains
 		allocate(self%pdbf(ncgto))
 	end subroutine
 
+	subroutine del_jtensor(self)
+		type(jtensor_t) :: self
+
+		call del_dbop(self%dop)
+		call del_dfdb(self%dbt)
+		call del_bfeval(self%bfv)
+		call del_dfdr(self%dfr)
+		call del_d2fdrdb(self%d2f)
+		deallocate(self%denbf)
+		deallocate(self%pdbf)
+		deallocate(self%dendb)
+	end subroutine
+
+
 	subroutine qtensor(self, r)
 		type(jtensor_t) :: self
 		real(DP), dimension(3), intent(in) :: r
@@ -217,7 +231,7 @@ contains
 
 	subroutine jtensor(self, r, j, spin)
 		type(jtensor_t) :: self
-		real(DP), dimension(3), intent(in) :: r
+		real(DP), dimension(:), intent(in) :: r
 		type(tensor_t), intent(inout) :: j
 		integer(I4) :: spin
 
@@ -227,6 +241,7 @@ contains
 		rho=DP50*r ! needed for diamag. contr.
 
 		call bfeval(self%bfv, r, bfvec)
+!        print *, self%bfv%bf
 		call dfdb(self%dbt, r, dbvec)
 		call dfdr(self%dfr, r, drvec)
 		call d2fdrdb(self%d2f, r, d2fvec)
@@ -357,6 +372,7 @@ contains
 			end do
 		end do
 
+
 ! Calculate the total J tensor. The diamagnetic pobability density only
 ! contributes to the diagonal.
 
@@ -380,19 +396,6 @@ contains
 
 	end subroutine
 
-	subroutine del_jtensor(self)
-		type(jtensor_t) :: self
-
-		call del_dbop(self%dop)
-		call del_dfdb(self%dbt)
-		call del_bfeval(self%bfv)
-		call del_dfdr(self%dfr)
-		call del_d2fdrdb(self%d2f)
-		deallocate(self%denbf)
-		deallocate(self%pdbf)
-		deallocate(self%dendb)
-	end subroutine
-
 	subroutine eta(self, grid, fac)
 		type(jtensor_t) :: self
 		type(grid_t) :: grid
@@ -400,7 +403,8 @@ contains
 
 		integer(I4) :: i, j, p1, p2, p3
 		type(tensor_t) :: foo
-		real(4) :: delta_t, tim1, tim2
+		real(DP) :: delta_t
+		real(4) :: tim1, tim2
 		real(4), dimension(2) :: times
 		real(DP), dimension(3) :: bar=(/D1,D1,D1/)
 		real(DP), dimension(3) :: foobar

@@ -9,7 +9,7 @@ density="XDENS"
 spherical=off     # don't touch, unless you REALLY know what you are doing
 debug=1           # debug print level
 openshell=false   
-screening=on      # use screening to speed up 
+screening=off      # use screening to speed up 
 # calc=[cdens]      # what to calculate, and in which order
 calc=[cdens, integral]
 # calc=[cdens, integral, divj, edens]
@@ -39,7 +39,7 @@ grid(base) {    # grid type can be: base/std, bond or file (see below)
 	jvec=[ 0.0, 0.0, 1.0]      # basis vector j ( k = i x j )
 	lengths=[8.0, 8.0, 0.0]    # lenthts of (i,j,k)
 	spacing=[0.5, 0.5, 0.5]    # spacing of points on grid (i,j,k)
-#	grid_points=[50,50,0]      # number of gridpoints on grid (i,j,k)
+#     grid_points=[5,5,0]      # number of gridpoints on grid (i,j,k)
 	angle=[0.0,0.0,0.0]        # Rotation of (i,j,k) -> (i',j',k') in degrees
                                # Euler angles, x-y-z convention
 }
@@ -62,8 +62,8 @@ integral {
         ## Either grid_points or spacing can be specified. The number of grid
         ## points will be rounded upwards to nearest multiple of gauss_order
 		gauss_order=9                # order for gauss quadrature
-#        grid_points=[89,77,0]        # number of gridpoints on grid (i,j,k)
-		spacing=[0.1, 0.1, 0.1]      # spacing of points on grid (i,j,k)
+	   grid_points=[90,90,0]        # number of gridpoints on grid (i,j,k)
+#         spacing=[0.1, 0.1, 0.1]      # spacing of points on grid (i,j,k)
 		height=[3.0, 3.0]            # hight of grid above and below the center
 		width=[6.0, 6.0]             # width of grid in and out from the center
 		angle=[0.0,0.0,0.0]          # Rotation of (i,j,k) -> (i',j',k') 

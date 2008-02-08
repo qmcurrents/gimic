@@ -75,8 +75,7 @@ contains
 	subroutine divj_plot(self)
 		type(divj_t), intent(inout) :: self
 		
-		integer(I4), dimension(:), pointer :: z
-		integer(I4) :: i,j,k,p1,p2,p3
+		integer(I4) :: i,j,p1,p2,p3
 		real(DP) :: amax
 		real(DP), dimension(3) :: rr
 		real(DP), dimension(:,:), pointer :: buf
@@ -84,39 +83,22 @@ contains
 		call get_grid_size(self%grid, p1, p2, p3)
 
 		buf=>self%buf
-		if (keyword_is_set(input, 'divj.plots')) then
-!            call get_kw_size('divj.plots', i)
-!            allocate(z(i))
-			call getkw_ptr(input, 'divj.plots', z)
-		else
-!            allocate(z(1))
-!            z=1
-		return
-		end if
 
-		do k=1,size(z)
-			amax=D0
-			if (z(k) < 1 .or. z(k) > p3 ) then
-				write(str_g, '(a,i6)') 'divj_plot(): &
-					&invalid value for polts:', z(k)
-				call msg_error(str_g)
-				cycle
-			end if
-			read(DIVJFD, rec=z(k)) self%buf
-			str_g=enumfile('DIVJPLT',k)
-			open(DJPFD, file=trim(str_g))
-			do j=1,p2
-				do i=1,p1
-					rr=gridpoint(self%grid, i, j, z(k))
-					write(DJPFD, '(4f19.8)') rr, buf(i,j)
-					if (abs(buf(i,j)) > amax) amax=abs(buf(i,j))
-				end do
-				write(DJPFD, *) 
+		amax=D0
+		read(DIVJFD, rec=1) self%buf
+		str_g='DIVJPLT'
+		open(DJPFD, file=trim(str_g))
+		do j=1,p2
+			do i=1,p1
+				rr=gridpoint(self%grid, i, j, 1)
+				write(DJPFD, '(4f19.8)') rr, buf(i,j)
+				if (abs(buf(i,j)) > amax) amax=abs(buf(i,j))
 			end do
-			close(DJPFD)
-			write(str_g, '(a,e19.12)') 'Max divergence:', amax
-			call msg_info(str_g)
+			write(DJPFD, *) 
 		end do
+		close(DJPFD)
+		write(str_g, '(a,e19.12)') 'Max divergence:', amax
+		call msg_info(str_g)
 		call divj_gopenmol(self)
 	end subroutine
 
@@ -284,8 +266,8 @@ contains
 		rank=3
 
 		call get_grid_size(self%grid, p1, p2, p3)
-		qmin=gridpoint(self%grid,1,1,1)*AU2A
-		qmax=gridpoint(self%grid,p1,p2,p3)*AU2A
+		qmin=real(gridpoint(self%grid,1,1,1)*AU2A)
+		qmax=real(gridpoint(self%grid,p1,p2,p3)*AU2A)
 
 		write(GOPFD,rec=1) rank
 		write(GOPFD,rec=2) surface

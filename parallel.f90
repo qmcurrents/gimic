@@ -98,7 +98,7 @@ contains
 	end subroutine
 
 	subroutine gather_data1d(dest, source)
-		real(DP), dimension(:), intent(out) :: dest
+		real(DP), dimension(:) :: dest
 		real(DP), dimension(:), intent(in) :: source
 #ifdef HAVE_MPI
 		integer(I4) :: nproc, client, npts

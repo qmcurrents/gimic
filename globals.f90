@@ -169,9 +169,11 @@ contains
 	function getfsize(fil) result(fs)
 		character(*), intent(in) :: fil
 		integer(I4) :: fs
-		integer, dimension(13) :: buf
+		integer(I4), dimension(13) :: buf
 
-		call stat(fil, buf)
+		integer(I4) :: st
+
+		call stat(fil, buf,st)
 		fs=buf(8)
 	end function
 

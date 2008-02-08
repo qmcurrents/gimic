@@ -360,6 +360,7 @@ contains
 			if (jvec_plt /= '') close(JVPFD)
 			if (njvec_plt /= '') close(NJVFD)
 			if (jprj_plt /= '')  close(JPRJFD)
+			call nl
 		end do
 		call jmod_gopenmol(jf)
 	end subroutine
@@ -502,8 +503,8 @@ contains
 
 		call get_grid_size(jf%grid, p1, p2, p3)
 		norm=get_grid_normal(jf%grid)
-		qmin=gridpoint(jf%grid,1,1,1)*AU2A
-		qmax=gridpoint(jf%grid,p1,p2,p3)*AU2A
+		qmin=real(gridpoint(jf%grid,1,1,1)*AU2A)
+		qmax=real(gridpoint(jf%grid,p1,p2,p3)*AU2A)
 
 		write(GOPFD,rec=1) rank;      write(GOPFD2,rec=1) rank
 		write(GOPFD,rec=2) surface;   write(GOPFD2,rec=2) surface

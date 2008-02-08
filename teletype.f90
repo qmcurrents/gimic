@@ -76,8 +76,6 @@ contains
 
 		write(STDERR, 102) '<<< ERROR: ', trim(str), ' >>>'
 
-100 format(a)	
-101 format(1x,a)	
 102 format(a,a,a)	
 	end subroutine
 

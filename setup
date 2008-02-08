@@ -33,7 +33,7 @@ BLASDIR=/opt/lib
 INSTDIR=/opt/aces2
 case $* in
 	--mpi) 
-	./configure --prefix=${INSTDIR}.par --enable-mpi=openmpi
+	FC=gfortran ./configure --prefix=${INSTDIR}.par --enable-mpi=openmpi
 	;;
 	*)
 	./configure --prefix=${INSTDIR} --with-blas-dir=$BLASDIR \

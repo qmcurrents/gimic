@@ -163,7 +163,7 @@ contains
 		if (mod(dble(t)+v-vm, 2.d0) > 0.d0) then
 			q=-q
 		end if
-		iq=binom(l,t)*binom(l-t,am+t)*binom(t,u)*binom(am,int(2.d0*v))
+		iq=int(binom(l,t)*binom(l-t,am+t)*binom(t,u)*binom(am,int(2.d0*v)))
 		q=q*dble(iq)
 	end function
 

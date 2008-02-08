@@ -338,8 +338,6 @@ contains
     subroutine new_getkw(self, ilun)
 		type(getkw_t), target :: self
 		integer(SP), optional :: ilun
-
-        logical :: ok
 		
 		if (present(ilun)) then
 			self%lun=ilun
@@ -415,6 +413,7 @@ contains
 		
 		type(keyword_t), pointer :: ptr
 
+		nullify(ptr)
 		call globals(self)
 
 		ok=findkw(self%active, path, ptr)
@@ -440,6 +439,7 @@ contains
 		
 		integer(SP), dimension(:), pointer :: ptr
 
+		nullify(ptr)
 		call getkw_ivec_ref(self, path, ptr)
 		if (associated(ptr)) val=ptr
 	end subroutine
@@ -450,8 +450,9 @@ contains
 		integer(SP), dimension(:), pointer :: val
 		
 		logical :: ok
-		
 		type(keyword_t), pointer :: ptr
+
+		nullify(ptr)
 		call globals(self)
 
 		ok=findkw(self%active, path, ptr)
@@ -478,6 +479,7 @@ contains
 		logical :: ok
 		
 		type(keyword_t), pointer :: ptr
+		nullify(ptr)
 		call globals(self)
 
 		ok=findkw(self%active, path, ptr)
@@ -502,6 +504,7 @@ contains
 		real(DP), dimension(:) :: val
 		
 		real(DP), dimension(:), pointer :: ptr
+		nullify(ptr)
 
 		call getkw_dvec_ref(self, path, ptr)
 		if (associated(ptr)) val=ptr
@@ -515,6 +518,7 @@ contains
 		logical :: ok
 		
 		type(keyword_t), pointer :: ptr
+		nullify(ptr)
 		call globals(self)
 
 		ok=findkw(self%active, path, ptr)
@@ -539,6 +543,7 @@ contains
 		logical, dimension(:) :: val
 		
 		logical, dimension(:), pointer :: ptr
+		nullify(ptr)
 
 		call getkw_lvec_ref(self, path, ptr)
 		if (associated(ptr)) val=ptr
@@ -552,6 +557,7 @@ contains
 		logical :: ok
 		
 		type(keyword_t), pointer :: ptr
+		nullify(ptr)
 		call globals(self)
 
 		ok=findkw(self%active, path, ptr)
@@ -585,6 +591,7 @@ contains
 		character(*), intent(out) :: val
 
 		character(LINELEN), dimension(:), pointer :: ptr
+		nullify(ptr)
 		call getkw_str_ref(self, path, ptr)
 		if (associated(ptr)) val=ptr(1)
 	end subroutine
@@ -597,6 +604,7 @@ contains
 		logical :: ok
 		
 		type(keyword_t), pointer :: ptr
+		nullify(ptr)
 		call globals(self)
 
 		ok=findkw(self%active, path, ptr)
@@ -623,6 +631,7 @@ contains
 		logical :: ok
 		
 		type(keyword_t), pointer :: ptr
+		nullify(ptr)
 		call globals(self)
 
 		ok=findkw(self%active, path, ptr)
@@ -651,6 +660,7 @@ contains
 		logical :: ok
 		
 		type(keyword_t), pointer :: ptr
+		nullify(ptr)
 		call globals(self)
 
 		ok=findkw(sect, ' ', ptr)
@@ -678,6 +688,7 @@ contains
 		logical :: ok
 		
 		type(keyword_t), pointer :: ptr
+		nullify(ptr)
 		call globals(self)
 
 		ok=findkw(sect, ' ', ptr)
@@ -704,6 +715,7 @@ contains
 		logical :: ok
 		
 		type(keyword_t), pointer :: ptr
+		nullify(ptr)
 		call globals(self)
 
 		ok=findkw(sect, ' ', ptr)
@@ -730,6 +742,7 @@ contains
 		logical :: ok
 		
 		type(keyword_t), pointer :: ptr
+		nullify(ptr)
 		call globals(self)
 
 		ok=findkw(sect, ' ', ptr)
@@ -756,6 +769,7 @@ contains
 		logical :: ok
 		
 		type(keyword_t), pointer :: ptr
+		nullify(ptr)
 		call globals(self)
 
 		ok=findkw(sect, ' ', ptr)
@@ -782,6 +796,7 @@ contains
 		logical :: ok
 		
 		type(keyword_t), pointer :: ptr
+		nullify(ptr)
 		call globals(self)
 
 		ok=findkw(sect, ' ', ptr)
@@ -808,6 +823,7 @@ contains
 		logical :: ok
 		
 		type(keyword_t), pointer :: ptr
+		nullify(ptr)
 		call globals(self)
 
 		ok=findkw(sect, ' ', ptr)
@@ -846,6 +862,7 @@ contains
 		logical :: ok, arg
 		integer(SP) :: idx
 		type(section_t), pointer :: ptr
+		nullify(ptr)
 
 		ok=.false.
 		arg=.false.
@@ -1071,6 +1088,7 @@ contains
 		logical :: ok
 		integer(SP) :: idx
 		type(section_t), pointer :: ptr
+		nullify(ptr)
 
 		ok=.false.
 		idx=index(path, '.', back=.true.)
@@ -1135,6 +1153,7 @@ contains
 		logical :: ok
 		
 		type(keyword_t), pointer :: ptr
+		nullify(ptr)
 		call globals(self)
 
 		ok=findkw(self%active, path, ptr)
@@ -1158,6 +1177,7 @@ contains
 		logical :: ok
 		
 		type(keyword_t), pointer :: ptr
+		nullify(ptr)
 		call globals(self)
 
 		ok=findkw(self%active, path, ptr)
@@ -1185,6 +1205,7 @@ contains
 		logical :: ok
 		
 		type(keyword_t), pointer :: ptr
+		nullify(ptr)
 		call globals(self)
 
 		ok=findkw(self%active, path, ptr)
@@ -1212,6 +1233,7 @@ contains
 		logical :: ok
 		
 		type(keyword_t), pointer :: ptr
+		nullify(ptr)
 		call globals(self)
 
 		ok=findkw(self%active, path, ptr)
@@ -1235,6 +1257,7 @@ contains
 		logical :: ok
 		
 		type(keyword_t), pointer :: ptr
+		nullify(ptr)
 		call globals(self)
 
 		ok=findkw(self%active, path, ptr)
@@ -1262,6 +1285,7 @@ contains
 		logical :: ok
 		
 		type(keyword_t), pointer :: ptr
+		nullify(ptr)
 		call globals(self)
 
 		ok=findkw(self%active, path, ptr)
@@ -1285,6 +1309,7 @@ contains
 		logical :: ok
 		
 		type(keyword_t), pointer :: ptr
+		nullify(ptr)
 		call globals(self)
 
 		ok=findkw(self%active, path, ptr)
@@ -1369,6 +1394,7 @@ contains
 		integer(SP) :: nkw, i
 		type(keyword_t), pointer :: kw
 		type(section_t), pointer :: ptr
+		nullify(ptr)
 
 		write(lun,*) 'SECT ', trim(sect%id), sect%nsect, sect%set
 		write(lun,*) 'ARG ', associated(sect%arg), ' KW ', sect%nkw
@@ -1398,8 +1424,9 @@ contains
 		logical :: ok
 
 		type(section_t), pointer :: next
-
 		integer(SP) :: index, idx, i, nkw
+		
+		nullify(ptr)
 
 		ok=.false.
 			
@@ -1452,6 +1479,7 @@ contains
 		type(section_t), pointer :: ptr
 
 		logical :: ok
+
 		call globals(self)
 		ok=find_sect(self%active, path, ptr)
 		if (.not.ok) then

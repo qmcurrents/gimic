@@ -12,7 +12,7 @@ module gtodefs_m
 		real(DP), dimension(:,:), pointer :: nlm
 	end type
 	
-	integer(I2), dimension(0:MAX_L,0:MAX_L,0:MAX_L) :: GTO_MAP
+	integer(I4), dimension(0:MAX_L,0:MAX_L,0:MAX_L) :: GTO_MAP
 
 	integer, parameter, public :: X_  = 1, Y_  = 2, Z_  = 3
 	integer, parameter, public :: XX_ = 1, XY_ = 2, XZ_ = 3
@@ -154,9 +154,9 @@ contains
 		
 		do a=0,MAX_L
 			do i=1,GTO_DEFS(a)%ncomp
-				k=GTO_DEFS(a)%nlm(1,i)
-				l=GTO_DEFS(a)%nlm(2,i)
-				m=GTO_DEFS(a)%nlm(3,i)
+				k=int(GTO_DEFS(a)%nlm(1,i))
+				l=int(GTO_DEFS(a)%nlm(2,i))
+				m=int(GTO_DEFS(a)%nlm(3,i))
 				GTO_MAP(k,l,m)=i
 			end do
 		end do

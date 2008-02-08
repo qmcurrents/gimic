@@ -31,28 +31,20 @@ contains
 		type(dfdr_t) :: self
 		type(molecule_t), target :: mol
 
-		nullify(self%dr)
 
-		if (associated(self%dr)) then
-			call msg_warn('init_dfdr(): already allocated!')
-		else
-			allocate(self%dr(get_nccgto(mol),3))
-			if (spherical) allocate(self%sdr(get_ncgto(mol),3))
-		end if
+		allocate(self%dr(get_nccgto(mol),3))
+		if (spherical) allocate(self%sdr(get_ncgto(mol),3))
 		self%mol=>mol
 		self%r=INITRV
 	end subroutine
 
 	subroutine del_dfdr(self)
 		type(dfdr_t) :: self
-		if (associated(self%dr)) then
-			deallocate(self%dr)
-			if (spherical) deallocate(self%sdr)
-			nullify(self%dr)
-			nullify(self%sdr)
-		else
-			call msg_warn('del_dfdr(): not allocated!')
-		end if
+
+		deallocate(self%dr)
+		if (spherical) deallocate(self%sdr)
+		nullify(self%dr)
+		nullify(self%sdr)
 	end subroutine
 
 	subroutine dfdr(self, r, drv)

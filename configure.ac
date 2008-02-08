@@ -177,5 +177,5 @@ ACX_CHECK_DIR(share)
 ACX_CHECK_DIR(lib)
 
 AC_CONFIG_FILES([Makefile make.config make.rules tools/Makefile
-				 tools/qgimic tools/quesys.sh])
+				 tools/qgimic.sh tools/quesys.sh])
 AC_OUTPUT

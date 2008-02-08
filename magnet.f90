@@ -6,7 +6,7 @@ module magnet_m
 	
 	public get_magnet
 	private
-	real(DP), dimension(3), save :: magnet=0.d0
+	real(DP), dimension(3), save :: magnet=-99.d0
 contains
 	subroutine get_magnet(g,mag)
 		type(grid_t) :: g
@@ -50,6 +50,7 @@ contains
 			magnet=mag
 			write(str_g, '(a,3f10.5)') '   Magnetic field <x,y,z> =', mag
 			call msg_out(str_g)
+			call nl
 		end if
 	end subroutine
 

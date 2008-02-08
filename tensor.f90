@@ -38,7 +38,7 @@ contains
 	end function
 
 	function d_cross_product(a,b) result(c)
-		real(DP), dimension(3), intent(in) :: a,b
+		real(DP), dimension(:), intent(in) :: a,b
 		real(DP), dimension(3) :: c
 
 		c(1)=a(2)*b(3)-a(3)*b(2)
@@ -47,7 +47,7 @@ contains
 	end function
 
 	function i_cross_product(a,b) result(c)
-		integer(8), dimension(3), intent(in) :: a,b
+		integer(8), dimension(:), intent(in) :: a,b
 		integer(8), dimension(3) :: c
 
 		c(1)=a(2)*b(3)-a(3)*b(2)
