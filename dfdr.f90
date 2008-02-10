@@ -78,8 +78,7 @@ contains
 				call get_contraction(atom, j, ctr)
 				idx=idx2+get_ctridx(basis, j)
 				do axis=1,3
-					call dcgto(rr, axis, ctr, &
-					self%dr(idx:, axis))
+					call dcgto(rr, axis, ctr, self%dr(idx:, axis))
 				end do
 			end do
 			idx2=idx2+get_ncgto(basis)

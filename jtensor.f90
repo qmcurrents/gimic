@@ -241,7 +241,6 @@ contains
 		rho=DP50*r ! needed for diamag. contr.
 
 		call bfeval(self%bfv, r, bfvec)
-!        print *, self%bfv%bf
 		call dfdb(self%dbt, r, dbvec)
 		call dfdr(self%dfr, r, drvec)
 		call d2fdrdb(self%d2f, r, d2fvec)

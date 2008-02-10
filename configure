@@ -1312,8 +1312,6 @@ Optional Features:
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
   --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
-  --with-fc-search-path=DIR
-                          Base path to installed Fortran libraries
   --with-blas=LIB         use BLAS library LIB
   --with-blas-dir=DIR     look for BLAS library in DIR
   --with-aces2=PATH       specify search path form aces2 module and library
@@ -3871,30 +3869,7 @@ if test "x$enable_mpi" != "x"; then
 	fcflags="$fcflags -DHAVE_MPI"
 fi
 
-
-
-
-
-# Check whether --with-fc_search_path was given.
-if test "${with_fc_search_path+set}" = set; then
-  withval=$with_fc_search_path;
-fi
-
-
-case $with_fc_search_path in
-	  yes | no | "") ;;
-	  *) LDFLAGS="$LDFLAGS -L$with_fc_search_path/lib"
-		 FCFLAGS="$FCFLAGS -I$with_fc_search_path/include"
-		 CFLAGS="$CFLAGS -I$with_fc_search_path/include"
-		 if test "x$FC_SEARCH_PATH" = x; then
-		    FC_SEARCH_PATH="$with_fc_search_path"
-		 else
-		    FC_SEARCH_PATH="$FC_SEARCH_PATH:$with_fc_search_path"
-		 fi
-	  ;;
-esac
-
-
+#AX_FC_SEARCH_PATH
 
 ac_ext=${ac_fc_srcext-f}
 ac_compile='$FC -c $FCFLAGS $ac_fcflags_srcext conftest.$ac_ext >&5'

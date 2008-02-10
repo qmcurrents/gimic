@@ -133,7 +133,7 @@ if test "x$enable_mpi" != "x"; then
 	fcflags="$fcflags -DHAVE_MPI"
 fi
 
-AX_FC_SEARCH_PATH
+#AX_FC_SEARCH_PATH
 
 AC_FC_LIBRARY_LDFLAGS
 AC_FC_WRAPPERS

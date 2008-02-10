@@ -11,7 +11,8 @@ debug=1           # debug print level
 openshell=false   
 screening=off      # use screening to speed up 
 # calc=[cdens]      # what to calculate, and in which order
-calc=[cdens, integral]
+# calc=[cdens, integral]
+calc=[integral]
 # calc=[cdens, integral, divj, edens]
 
 cdens {           
@@ -62,7 +63,7 @@ integral {
         ## Either grid_points or spacing can be specified. The number of grid
         ## points will be rounded upwards to nearest multiple of gauss_order
 		gauss_order=9                # order for gauss quadrature
-	   grid_points=[90,90,0]        # number of gridpoints on grid (i,j,k)
+	   grid_points=[30,30,0]        # number of gridpoints on grid (i,j,k)
 #         spacing=[0.1, 0.1, 0.1]      # spacing of points on grid (i,j,k)
 		height=[3.0, 3.0]            # hight of grid above and below the center
 		width=[6.0, 6.0]             # width of grid in and out from the center
