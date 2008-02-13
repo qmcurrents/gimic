@@ -9,7 +9,7 @@ module globals_m
 
 !    intrinsic hostnm
 
-	character(16), parameter :: GIMIC_VERSION='2.0pre1'
+	character(16), parameter :: GIMIC_VERSION='2.0pre2'
 
 	! file descriptors
 	integer, parameter :: BASFD=42
@@ -62,6 +62,7 @@ module globals_m
 	
 	real(DP), parameter :: D0=0.0D0,D1=1.0D0,D2=2.0D0,D4=4.0D0,D5=5.0D0
 	real(DP), parameter :: DP25=0.25D0, DP50=0.50D0, DP75=0.75D0
+	real(DP), dimension(3), parameter :: NILL_VECTOR=(/0.d0, 0.d0, 0.d0/)
 
 	
 	! default filenames
@@ -201,7 +202,7 @@ contains
 		end if
 
 		do i=1,s1
-			if (v1(i)-v2(i) > thrs) return
+			if (abs(v1(i))-abs(v2(i)) > thrs) return
 		end do
 		p=.true.
 	end function

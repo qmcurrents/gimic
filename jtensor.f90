@@ -66,8 +66,8 @@ contains
 		diamag_p=.true.
 		paramag_p=.true.
 		spin_density=.false.
-		call getkw(input, 'cdens.diamag', diamag_p)
-		call getkw(input, 'cdens.paramag', paramag_p)
+		call getkw(input, 'diamag', diamag_p)
+		call getkw(input, 'paramag', paramag_p)
 		if (uhf_p) call getkw(input, 'cdens.spin_density', spin_density)
 
 		if (.not.diamag_p) then

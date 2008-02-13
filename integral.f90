@@ -112,7 +112,9 @@ contains
 		type(tensor_t) :: jt
 		
 		call get_grid_size(self%grid, p1, p2, p3)
+		call push_section(input, 'integral')
 		call get_magnet(self%grid, bb)
+		call pop_section(input)
         call eta(self%jt,self%grid)
 
 		normal=get_grid_normal(self%grid)
@@ -201,7 +203,9 @@ contains
 		type(tensor_t) :: jt
 		
 		call get_grid_size(self%grid, p1, p2, p3)
+		call push_section(input, 'integral')
 		call get_magnet(self%grid, bb)
+		call pop_section(input)
 		call schedule(p2, lo, hi)
 
 		normal=get_grid_normal(self%grid)

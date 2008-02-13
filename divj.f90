@@ -43,7 +43,9 @@ contains
 		self%bb=D0
 		p1=0
 		
+		call push_section(input, 'divj')
 		call get_magnet(grid, self%bb)
+		call pop_section(input)
 
 		call get_grid_size(grid, p1, p2)
 		djrl=p1*p2*DP

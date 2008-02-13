@@ -103,7 +103,7 @@ contains
 		use edens_class
 
 		type(jfield_t) :: jf
-		type(grid_t) :: grid, igrid, dgrid, egrid
+		type(grid_t) :: cgrid, igrid, dgrid, egrid
 		type(jtensor_t) :: jt
 		type(dens_t) :: xdens, modens
 		type(divj_t) :: dj
@@ -127,6 +127,14 @@ contains
 			call init_c2sop(c2s,mol)
 			call set_c2sop(mol, c2s)
 		end if
+
+		call getkw(input, 'openshell', uhf_p)
+		if (uhf_p) then
+			call msg_info('Open-shell calculation')
+		else
+			call msg_info('Closed-shell calculation')
+		end if
+		call nl
 		
 		! figure out work order
 		nullify(cstr)
@@ -152,13 +160,6 @@ contains
 			end if
 		end do
 
-		call getkw(input, 'openshell', uhf_p)
-		if (uhf_p) then
-			call msg_info('Open-shell calculation')
-		else
-			call msg_info('Closed-shell calculation')
-		end if
-
 		if (xdens_p) then
 			call init_dens(xdens, mol)
 			call read_dens(xdens)
@@ -168,14 +169,8 @@ contains
 			call read_modens(modens)
 		end if
 
-		call setup_grids(calc(1:ncalc), grid, igrid, dgrid, egrid)
 
 		call init_jtensor(jt,mol,xdens)
-
-		if (divj_p) call init_divj(dj, dgrid, jt)
-		if (cdens_p) call init_jfield(jf, jt, grid)
-		if (int_p) call init_integral(it, jt, jf, igrid)
-		if (edens_p) call init_edens(ed, mol, modens, egrid)
 
 		if (dryrun_p) then
 			call msg_info('Dry run, skipping...')
@@ -185,6 +180,10 @@ contains
 		do i=1,ncalc
 			select case(calc(i))
 			case(CDENS_TAG)
+				call msg_out('Calculating current density')
+				call msg_out('*****************************************')
+				call setup_grid(calc(i), cgrid)
+				call init_jfield(jf, jt, cgrid)
 				call jfield(jf)
 					! Contract the tensors with B
 				if (master_p) then
@@ -192,23 +191,35 @@ contains
 					call jvector_plot(jf)
 				end if
 			case(INTGRL_TAG)
+				call msg_out('Integrating current density')
+				call msg_out('*****************************************')
+				call setup_grid(calc(i), igrid)
+				call init_integral(it, jt, jf, igrid)
 				call int_s_direct(it)
 				call nl
 				call getkw(input, 'integral.modulus', imod_p)
 				if (imod_p) then
-					call msg_info('Integrating |J|')
+					call msg_note('Integrating |J|')
 					call int_mod_direct(it)
 				end if
 				call getkw(input, 'integral.tensor', imod_p)
 				if (imod_p) then
-					call msg_info('Integrating current tensor')
+					call msg_note('Integrating current tensor')
 					call int_t_direct(it)  ! tensor integral
 				end if
 !                    call write_integral(it)
 			case(DIVJ_TAG)
+				call msg_out('Calculating divergence')
+				call msg_out('*****************************************')
+				call setup_grid(calc(i), dgrid)
+				call init_divj(dj, dgrid, jt)
 				call divj(dj)
 				if (master_p) call divj_plot(dj)
 			case(EDENS_TAG)
+				call msg_out('Calculating charge density')
+				call msg_out('*****************************************')
+				call setup_grid(calc(i), egrid)
+				call init_edens(ed, mol, modens, egrid)
 				call edens(ed)
 				if (master_p) call edens_plot(ed)
 			case default
@@ -226,7 +237,7 @@ contains
 		end if
 		if (cdens_p) then
 			call del_jfield(jf)
-			call del_grid(grid)
+			call del_grid(cgrid)
 		end if
 		if (edens_p) then
 			call del_edens(ed)
@@ -238,23 +249,24 @@ contains
 		call del_jtensor(jt)
 	end subroutine
 
-	subroutine setup_grids(calc, grid, igrid, dgrid, egrid)
+	subroutine setup_grid(calc, grid)
 		use grid_class
-		integer(I4), dimension(:) :: calc
-		type(grid_t) :: grid, igrid, dgrid, egrid
+		integer(I4) :: calc
+		type(grid_t) :: grid
 		logical :: p, divj_p, int_p, cdens_p, edens_p
-		integer(I4) :: i,k
+		integer(I4) :: i
 		real(DP), dimension(3) :: center
 		
 		p=.false.; divj_p=.false.; int_p=.false.
 		cdens_p=.false.; edens_p=.false.
 
 !        call plot_grid_xyz(grid, 'koord.xyz', mol)
-		do k=1,size(calc)
-			select case(calc(k))
+		select case(calc)
 			case(CDENS_TAG)
+				call push_section(input, 'cdens')
 				call init_grid(grid, mol)
 				call grid_center(grid,center)
+				call pop_section(input)
 				if (master_p) then
 					call plot_grid_xyz(grid, 'grid.xyz',  mol)
 				end if
@@ -262,53 +274,50 @@ contains
 				if (.not.section_is_set(input, 'divj')) then
 					call msg_error('Divergence calculation requested, '//& 
 					& 'but ''divj'' is undefined in input!')
-					cycle
-				end if
-			
-				p=section_is_set(input, 'divj.grid')
-				if (p) then
-					call push_section(input, 'divj')
-					call init_grid(dgrid, mol)
-					call grid_center(dgrid,center)
-					call pop_section(input)
 				else
-					call msg_info('Using default grid for divergence calucaltion')
-					call init_grid(dgrid, mol)
-				end if
-				if (master_p) then
-					call plot_grid_xyz(dgrid, 'divj.xyz', mol)
+					p=section_is_set(input, 'divj.grid')
+					if (p) then
+						call push_section(input, 'divj')
+						call init_grid(grid, mol)
+						call grid_center(grid,center)
+						call pop_section(input)
+					else
+						call msg_critical('No grid definition for section divj')
+					end if
+					if (master_p) then
+						call plot_grid_xyz(grid, 'divj.xyz', mol)
+					end if
 				end if
 			case(INTGRL_TAG)
 				p=keyword_is_set(input, 'integral.grid')
 				if (p) then
 					call push_section(input, 'integral')
-					call init_grid(igrid, mol)
-					call grid_center(igrid,center)
+					call init_grid(grid, mol)
+					call grid_center(grid,center)
 					call pop_section(input)
 				else
-					call init_grid(igrid, mol)
+					call msg_critical('No grid definition for section integral')
 				end if
 				if (master_p) then
-					call plot_grid_xyz(igrid, 'integral.xyz', mol)
+					call plot_grid_xyz(grid, 'integral.xyz', mol)
 				end if
 			case(EDENS_TAG)
 				i=0
 				p=keyword_is_set(input, 'edens.grid')
 				if (p) then
 					call push_section(input, 'edens')
-					call init_grid(egrid, mol)
-					call grid_center(egrid,center)
+					call init_grid(grid, mol)
+					call grid_center(grid,center)
 					call pop_section(input)
 				else
-					call init_grid(egrid, mol)
+					call msg_critical('No grid definition for section edens')
 				end if
 				if (master_p) then
-					call plot_grid_xyz(egrid, 'edens.xyz', mol)
+					call plot_grid_xyz(grid, 'edens.xyz', mol)
 				end if
 			case(0)
 				continue
-			end select
-		end do
+		end select
 		
 	end subroutine
 

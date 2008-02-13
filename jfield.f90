@@ -71,7 +71,9 @@ contains
 		call nl
 		call pop_section(input)
 
+		call push_section(input, 'cdens')
         call get_magnet(g, f%b)
+		call pop_section(input)
 	end subroutine
 
 	subroutine setup_files(jf)

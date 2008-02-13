@@ -1172,7 +1172,7 @@ contains
 	subroutine setkw_ivec(self, path, val)
 		type(getkw_t), target :: self
 		character(*), intent(in) :: path
-		integer(SP), dimension(:), pointer :: val
+		integer(SP), dimension(:) :: val
 		
 		logical :: ok
 		
@@ -1200,7 +1200,7 @@ contains
 	subroutine setkw_dvec(self, path, val)
 		type(getkw_t), target :: self
 		character(*), intent(in) :: path
-		real(DP), dimension(:), pointer :: val
+		real(DP), dimension(:) :: val
 		
 		logical :: ok
 		

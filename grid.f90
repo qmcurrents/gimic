@@ -16,7 +16,7 @@ module grid_class
 		logical :: lobato  ! integration grid, 1,2 or 3-D
 		real(DP), dimension(3,3) :: basv   ! grid basis vectors
 		real(DP), dimension(3) :: l        ! |v|
-		real(DP), dimension(3) :: origin
+		real(DP), dimension(3) :: origin, ortho
 		real(DP), dimension(3) :: step
 		integer(I4), dimension(3) :: npts
 		type(gdata_t), dimension(3) :: gdata
@@ -28,7 +28,12 @@ module grid_class
 	public init_grid, del_grid, gridpoint, get_grid_normal
 	public get_grid_size, get_weight, write_grid, read_grid
 	public get_grid_length, is_lobo_grid, realpoint, copy_grid
-	public grid_center, plot_grid_xyz, get_basv
+	public grid_center, plot_grid_xyz, get_basvec, get_ortho
+
+	interface get_basvec
+		module procedure get_basv1
+		module procedure get_basv3
+	end interface
 
 	private
 	real(DP), parameter :: DPTOL=1.d-10
@@ -47,6 +52,7 @@ contains
 		self%gtype='even'
 		self%basv=0.0
 		self%l=0.0
+		self%ortho=0.d0
 		call getkw(input, 'grid', self%mode)
 
 		! first figure out where and how to place the grid
@@ -67,12 +73,11 @@ contains
 
 		call normalise(self%basv)
 		call ortho_coordsys(self)
-!        call check_handedness(self)
 		
 		! rotate basis vectors if needed
-		if (keyword_is_set(input, 'grid.angle')) then
-			call getkw(input, 'grid.angle', angle)
-!            call rotate(self, angle)
+		if (keyword_is_set(input, 'grid.rotation')) then
+			call getkw(input, 'grid.rotation', angle)
+			call rotate(self, angle)
 		end if
 
 		! calculate distibution of grid points
@@ -123,12 +128,10 @@ contains
 
 		integer(I4) :: i
 		real(DP), dimension(3) :: normv
-		integer(I4), dimension(2) :: atoms
+		integer(I4), dimension(3) :: atoms
 		real(DP), dimension(3) :: v1, v2, v3, oo
 		real(DP), dimension(2) :: lh, ht
 		real(DP) :: l3
-
-		call getkw(input, 'grid.origin', self%origin)
 
 		if (keyword_is_set(input, 'grid.atoms')) then
 			call getkw(input, 'grid.atoms', atoms)
@@ -136,12 +139,14 @@ contains
 			call get_coord(atom, self%basv(:,1))
 			call get_atom(mol, atoms(2), atom)
 			call get_coord(atom, self%basv(:,2))
+			call get_atom(mol, atoms(3), atom)
+			call get_coord(atom, self%origin)
 		else
 			call getkw(input, 'grid.coord1', self%basv(:,1))
 			call getkw(input, 'grid.coord2', self%basv(:,2))
+        	call getkw(input, 'grid.coord3', self%origin)
 		end if
  		!defaults, etc.
-		call getkw(input, 'grid.spacing', self%step)
 
 		l3=-1.d0
 		lh=-1.d0
@@ -164,6 +169,18 @@ contains
 			stop 
 		end if
 
+		! figure out "orthogonal" axis for magnetic field
+		v1=self%basv(:,1)-self%origin
+		v2=self%basv(:,2)-self%origin
+		self%ortho=cross_product(v1,v2)
+		if (vcmp(self%ortho, NILL_VECTOR)) then
+			call msg_error('Basis vectors are linearly dependent, field &
+			&direction undefined!')
+			stop
+		end if
+		self%ortho=norm(self%ortho)
+
+		! set up basis vectors for actual grid
 		v1=norm(self%basv(:,1)-self%basv(:,2))
 		oo=self%basv(:,1)-l3*v1
 		v3=norm(cross_product(v1, self%origin-oo))
@@ -175,9 +192,8 @@ contains
 		self%basv(:,3)=cross_product(v2,v3) 
 
 		call nl
-		call msg_out('Grid data')
+		call msg_out('Integration grid data')
 		call msg_out('------------------------------------------------')
-		call msg_out(str_g)
 		write(str_g, '(a,3f12.6)') 'center ', oo
 		call msg_out(str_g)
 		write(str_g, '(a,3f12.6)') 'origin ', self%origin
@@ -187,6 +203,8 @@ contains
 		write(str_g, '(a,3f12.6)') 'basv2  ', self%basv(:,2)
 		call msg_out(str_g)
 		write(str_g, '(a,3f12.6)') 'basv3  ', self%basv(:,3)
+		call msg_out(str_g)
+		write(str_g, '(a,3f12.6)') 'magnet ', self%ortho
 		call msg_out(str_g)
 		call nl
 	end subroutine
@@ -209,7 +227,9 @@ contains
 
 		integer(I4) ::  i, rem, order
 		real(DP), dimension(3) :: spc
-		logical :: flag=.false.
+		logical :: flag
+
+		flag=.false.
 
 		call msg_info('Integration grid selected.')
 		call getkw(input, 'grid.gauss_order', order)
@@ -698,33 +718,40 @@ contains
 		type(grid_t) :: self
 		real(DP), dimension(3), intent(in) :: angle
 
+		real(DP) :: x
 		real(DP), dimension(3) :: rad
 		real(DP), dimension(3,3) :: euler, rot
 
+		rad=0.d0
+		euler=0.d0
+		rot=0.d0
 		rad=angle/180.d0*PII
 		write(str_g, '(a,3f9.5)') 'Rotation is: ', rad
 		call msg_info(str_g)
 
 ! z-mat
-		rot(1,1)=cos(rad(3))
-		rot(2,2)=cos(rad(3))
-		rot(3,3)=1
-		rot(1,2)=sin(rad(3))
-		rot(2,1)=-sin(rad(3))
+		x=rad(3)
+		rot(1,1)=cos(x)
+		rot(2,2)=cos(x)
+		rot(3,3)=1.d0
+		rot(1,2)=sin(x)
+		rot(2,1)=-sin(x)
 ! y-mat
-		euler(1,1)=cos(rad(2))
-		euler(2,2)=1
-		euler(3,3)=cos(rad(2))
-		euler(1,3)=-sin(rad(2))
-		euler(3,1)=sin(rad(2))
+		x=rad(2)
+		euler(1,1)=cos(x)
+		euler(2,2)=1.d0
+		euler(3,3)=cos(x)
+		euler(1,3)=-sin(x)
+		euler(3,1)=sin(x)
 
 		euler=matmul(euler,rot)
 ! x-mat
-		rot(1,1)=1
-		rot(2,2)=cos(rad(1))
-		rot(3,3)=cos(rad(1))
-		rot(1,2)=sin(rad(1))
-		rot(2,1)=-sin(rad(1))
+		x=rad(1)
+		rot(1,1)=1.d0
+		rot(2,2)=cos(x)
+		rot(3,3)=cos(x)
+		rot(1,2)=sin(x)
+		rot(2,1)=-sin(x)
 
 		euler=matmul(rot,euler)
 
@@ -857,12 +884,25 @@ contains
 		
 	end subroutine
 
-	subroutine get_basv(self, i, j, k)
+	subroutine get_basv3(self, i, j, k)
 		type(grid_t) :: self
 		real(DP), dimension(3) :: i, j, k
 		i=self%basv(:,1)
 		j=self%basv(:,2)
 		k=self%basv(:,3)
+	end subroutine
+
+	subroutine get_basv1(self, n, v)
+		type(grid_t) :: self
+		integer(I4), intent(in) :: n
+		real(DP), dimension(3), intent(out) :: v
+		v=self%basv(:,n)
+	end subroutine
+
+	subroutine get_ortho(self, v)
+		type(grid_t) :: self
+		real(DP), dimension(3), intent(out) :: v
+		v=self%ortho
 	end subroutine
 end module
 

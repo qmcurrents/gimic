@@ -23,7 +23,7 @@ from pyparsing import \
 	printables, ParseException, restOfLine, alphas, alphanums, nums, \
 	pythonStyleComment, oneOf, quotedString, SkipTo, Forward, \
 	commaSeparatedList, OneOrMore, Combine, srange, delimitedList, \
-	downcaseTokens, line, lineno
+	downcaseTokens, line, lineno, StringEnd
 
 verbose=True
 strict=True
@@ -443,6 +443,7 @@ class GetkwParser:
 		if GetkwParser.bnf == None:
 			GetkwParser.bnf=self.getkw_bnf()
 		self.parseString=self.bnf.parseString
+#        GetkwParser.bnf.setDebug(True)
 	
 	def set_caseless(self, arg):
 		if arg is True:
@@ -563,12 +564,20 @@ class GetkwParser:
 		else:
 			k=self.path[-1].findkw(name)
 			if k is None:
-				print "Unknown keyword '%s' line: %d" % (name, 
+				print "Unknown keyword '%s', line: %d" % (name, 
 						lineno(self.loc,self.strg))
 				if strict:
 					sys.exit(1)
 				argt=None
 			else:
+				if k.nargs == -1: 
+					pass
+				elif len(arg) != k.nargs:
+					print "Invalid number of elements for key '%s',\
+line: %d" % ( name, lineno(self.loc,self.strg))
+					print "  -> %d required, %d given." % (k.nargs, len(arg))
+					if strict:
+						sys.exit(1)
 				argt=self.check_vectype(arg,k.type)
 		k=Keyword(name,argt,arg)
 		self.cur.add_kwkw(k,set=True)
@@ -674,51 +683,54 @@ class GetkwParser:
 		return 'STR'
 
 	def getkw_bnf(self):
-		lcb  = Literal("{").suppress()
-		rcb  = Literal("}").suppress()
-		lsb  = Literal("[").suppress()
-		rsb  = Literal("]").suppress()
-		lps  = Literal("(").suppress()
-		rps  = Literal(")").suppress()
-		eql  = Literal("=").suppress()
-		dmark=Literal('$').suppress()
-		end_sect=rcb
+		sect_begin   = Literal("{").suppress()
+		sect_end   = Literal("}").suppress()
+		array_begin   = Literal("[").suppress()
+		array_end   = Literal("]").suppress()
+		arg_begin   = Literal("(").suppress()
+		arg_end   = Literal(")").suppress()
+		eql   = Literal("=").suppress()
+		dmark = Literal('$').suppress()
 		end_data=Literal('$end').suppress()
-		prtable = srange("[0-9a-zA-Z]")+r'!$%&*+-./<>?@^_|~'
+		prtable = alphanums+r'!$%&*+-./<>?@^_|~'
 
+	
+		# Helper definitions
 		kstr=Word(prtable) ^ quotedString.setParseAction(removeQuotes)
-
 		name = Word(alphas+"_",alphanums+"_")
-		
-		vec=lsb+delimitedList(Word(prtable) ^ Literal("\n").suppress() ^\
-				quotedString.setParseAction(removeQuotes))+rsb
-		key=kstr ^ vec
+		vec=array_begin+delimitedList(Word(prtable) ^ \
+				Literal("\n").suppress() ^ \
+				quotedString.setParseAction(removeQuotes))+array_end
+		sect=name+sect_begin
+		key_sect=name+Group(arg_begin+kstr+arg_end)+sect_begin
+		vec_sect=name+Group(arg_begin+vec+ arg_end)+sect_begin
+
+		# Grammar
 		keyword = name + eql + kstr
 		vector = name + eql + vec
 		data=Combine(dmark+name)+SkipTo(end_data)+end_data
-		data.setParseAction(self.store_data)
-		sect=name+lcb
-		sect.setParseAction(self.add_sect)
-		key_sect=name+Group(lps+kstr+rps)+lcb
-		key_sect.setParseAction(self.add_sect)
-		vec_sect=name+Group(lps+vec+rps)+lcb
-		vec_sect.setParseAction(self.add_vecsect)
-		end_sect.setParseAction(self.pop_sect)
+		section=Forward()
+		sect_def=(sect | key_sect | vec_sect)
+		input=section | data | vector | keyword 
+		section << sect_def+ZeroOrMore(input) + sect_end
 
+		# Parsing actions	
 		keyword.setParseAction(self.store_key)
 		vector.setParseAction(self.store_vector)
+		data.setParseAction(self.store_data)
+		sect.setParseAction(self.add_sect)
+		key_sect.setParseAction(self.add_sect)
+		vec_sect.setParseAction(self.add_vecsect)
+		sect_end.setParseAction(self.pop_sect)
 
-		section=Forward()
-		input=section ^ data ^ keyword ^ vector
-
-		sectdef=sect ^ key_sect ^ vec_sect
-		section << sectdef+ZeroOrMore(input)+rcb
-		
-		bnf=ZeroOrMore(input)
-		bnf.ignore( pythonStyleComment )
-
+		bnf=ZeroOrMore(input) + StringEnd().setFailAction(parse_error)
+		bnf.ignore(pythonStyleComment)
 		return bnf
 
+def parse_error(s,t,d,err):
+	print "Parse error, line %d: %s" %  ( lineno(err.loc,err.pstr), 
+			line(err.loc,err.pstr))
+	sys.exit(1)
 
 def test( strng ):
 	bnf = GetkwParser()
