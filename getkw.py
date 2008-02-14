@@ -29,7 +29,7 @@ verbose=True
 strict=True
 
 ival=re.compile(r'[-]?\d+$')
-dval=re.compile(r'-?\d+\.\d*([dDeE][+-]?\d+)?',re.I)
+dval=re.compile(r'-?\d+\.?\d*([dDeE][+-]?\d+)?',re.I)
 lval=re.compile(r'(0|1|yes|no|true|false|on|off)$',re.I)
 
 

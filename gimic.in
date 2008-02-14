@@ -67,6 +67,7 @@ def main():
 	top.add_kw('density', 'STR', 1)
 	top.add_kw('mpirun', 'BOOL', (False,))
 	top.add_kw('screening', 'BOOL', (True,))
+	top.add_kw('screen_thrs', 'DBL', (1.0e-6,))
 	top.add_kw('spherical', 'BOOL', (True,))
 	top.add_kw('dryrun', 'BOOL', (False,))
 	top.add_kw('openshell', 'BOOL', (False,))

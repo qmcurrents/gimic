@@ -58,7 +58,7 @@ module globals_m
 	real(DP), parameter :: PM2AU = 1.889725949e+3
 
 	real(DP), dimension(3), parameter :: INITRV = 123456789.d5
-	real(DP), parameter :: SCREEN_THRS = 1.d-6
+	real(DP) :: SCREEN_THRS = 1.d-6
 	
 	real(DP), parameter :: D0=0.0D0,D1=1.0D0,D2=2.0D0,D4=4.0D0,D5=5.0D0
 	real(DP), parameter :: DP25=0.25D0, DP50=0.50D0, DP75=0.75D0

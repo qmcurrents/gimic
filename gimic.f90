@@ -67,7 +67,6 @@ contains
 			call msg_debug(str_g,2)
 		end if
 
-		
 		i=0
 		call getkw(input, 'debug', i)
 		call set_debug_level(i)

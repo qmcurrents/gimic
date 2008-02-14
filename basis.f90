@@ -50,19 +50,6 @@ contains
 		end do
 		call nl
 
-		call getkw(input, 'screening', screen)
-		if (.not.screen) then
-			call msg_info('Screening is not used')
-			do i=1,natoms
-				atoms(i)%basis%thrs=1.d10
-			end do
-		else
-			call msg_out('Calculating screening thresholds')
-			do i=1,natoms
-				call setup_screening(atoms(i)%basis)
-			end do
-		end if
-
 		do i=1,natoms
 			call print_atom_data(atoms(i),i)
 		end do
@@ -71,6 +58,26 @@ contains
 		write(str_g, 77) '  Total number of contracted GTO''s ', self%ncgto
 		call msg_out(str_g)
 		call nl
+
+		call getkw(input, 'screening', screen)
+		if (.not.screen) then
+			call msg_info('Screening is not used')
+			do i=1,natoms
+				atoms(i)%basis%thrs=1.d10
+			end do
+		else
+			call msg_note('Calculating screening coefficients')
+			if (keyword_is_set(input, 'screen_thrs')) then
+				call getkw(input, 'screen_thrs', SCREEN_THRS)	
+			end if
+			write(str_g, '(a,e12.4)') 'Screening threshold: ', SCREEN_THRS
+			call msg_info(str_g)
+			call nl
+			do i=1,natoms
+				call setup_screening(atoms(i)%basis)
+			end do
+		end if
+
 
 77		format(a,i4)
 	end subroutine
