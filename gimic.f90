@@ -226,7 +226,7 @@ contains
 			end select
 		end do
 
-100		if (int_p) then
+		if (int_p) then
 			call del_integral(it)
 			call del_grid(igrid)
 		end if
@@ -242,7 +242,7 @@ contains
 			call del_edens(ed)
 			call del_grid(egrid)
 		end if
-		if (xdens_p) call del_dens(xdens)
+100		if (xdens_p) call del_dens(xdens)
 		if (modens_p) call del_dens(modens)
 		if (spherical) call del_c2sop(c2s)
 		call del_jtensor(jt)
