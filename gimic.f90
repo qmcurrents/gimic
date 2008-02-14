@@ -172,8 +172,8 @@ contains
 		call init_jtensor(jt,mol,xdens)
 
 		if (dryrun_p) then
-			call msg_info('Dry run, skipping...')
-			goto 100
+			call msg_note('Dry run, not calculating...')
+			call nl
 		end if
 
 		do i=1,ncalc
@@ -183,6 +183,7 @@ contains
 				call msg_out('*****************************************')
 				call setup_grid(calc(i), cgrid)
 				call init_jfield(jf, jt, cgrid)
+				if (dryrun_p) cycle
 				call jfield(jf)
 					! Contract the tensors with B
 				if (master_p) then
@@ -194,6 +195,7 @@ contains
 				call msg_out('*****************************************')
 				call setup_grid(calc(i), igrid)
 				call init_integral(it, jt, jf, igrid)
+				if (dryrun_p) cycle
 				call int_s_direct(it)
 				call nl
 				call getkw(input, 'integral.modulus', imod_p)
@@ -212,6 +214,7 @@ contains
 				call msg_out('*****************************************')
 				call setup_grid(calc(i), dgrid)
 				call init_divj(dj, dgrid, jt)
+				if (dryrun_p) cycle
 				call divj(dj)
 				if (master_p) call divj_plot(dj)
 			case(EDENS_TAG)
@@ -219,6 +222,7 @@ contains
 				call msg_out('*****************************************')
 				call setup_grid(calc(i), egrid)
 				call init_edens(ed, mol, modens, egrid)
+				if (dryrun_p) cycle
 				call edens(ed)
 				if (master_p) call edens_plot(ed)
 			case default
@@ -242,7 +246,7 @@ contains
 			call del_edens(ed)
 			call del_grid(egrid)
 		end if
-100		if (xdens_p) call del_dens(xdens)
+		if (xdens_p) call del_dens(xdens)
 		if (modens_p) call del_dens(modens)
 		if (spherical) call del_c2sop(c2s)
 		call del_jtensor(jt)
