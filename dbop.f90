@@ -10,7 +10,6 @@ module dbop_class
 	type dbop_t 
 		type(molecule_t), pointer :: mol
 		real(DP), dimension(:,:), pointer :: db
-		real(DP), dimension(3) :: r
 	end type
 	private
 
@@ -27,7 +26,6 @@ contains
 			allocate(self%db(3,get_natoms(mol)))
 		end if
 		self%mol=>mol
-		self%r=INITRV
 	end subroutine
 
 	subroutine del_dbop(self)
@@ -51,12 +49,6 @@ contains
 		real(DP), dimension(3) :: coord
 		integer(I4) :: i, natoms
 		
-		if (r(1)==self%r(1) .and. r(2)==self%r(2) .and. r(3)==self%r(3)) then
-			dbop=>self%db
-			return
-		end if
-		
-		self%r=r
 		natoms=get_natoms(self%mol)
 
 		do i=1,natoms

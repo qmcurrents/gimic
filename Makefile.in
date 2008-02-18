@@ -13,7 +13,7 @@ include $(topdir)/make.config
 vpath %.py tools
 vpath %.sh tools
 
-INST_PROGS:=gimic.x gimic tools/MOL2mol.sh tools/turbo2mol.py tools/qgimic
+INST_PROGS:=gimic.x gimic tools/MOL2mol.sh tools/turbo2gimic.py tools/qgimic
 INST_LIBS:=getkw.py pyparsing.py Atom.py Const.py Elements.py QCTools.py \
 	quesys.sh
 INST_INCLUDES:=
@@ -53,7 +53,7 @@ tools/MOL2mol.sh: tools/MOL2mol.sh.in
 	sed 's/@inst_bindir@/$(subst /,\/,$(inst_bindir))/' $< > $@
 	chmod 755 $@
 
-tools/turbo2mol.py: tools/turbo2mol.py.in
+tools/turbo2gimic.py: tools/turbo2gimic.py.in
 	sed 's/@inst_bindir@/$(subst /,\/,$(inst_bindir))/; s/@inst_libdir@/$(subst /,\/,$(inst_libdir))/; s/@python_bin@/$(PYTHON_BIN)/' $< > $@
 	chmod 755 $@
 

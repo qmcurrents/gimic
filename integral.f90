@@ -146,13 +146,13 @@ contains
 						jp=0.d0
 					else
 						w=get_weight(self%grid, i, 1) 
-						jp=dot_product(normal,jvec%v)
+						jp=dot_product(normal,jvec%v)*w
 					end if
-					xsum=xsum+jp*w
+					xsum=xsum+jp
 					if (jp > 0.d0) then
-						psum=psum+jp*w
+						psum=psum+jp
 					else
-						nsum=nsum+jp*w
+						nsum=nsum+jp
 					end if
 				end do
 				w=get_weight(self%grid,j,2)
@@ -206,13 +206,14 @@ contains
 		call push_section(input, 'integral')
 		call get_magnet(self%grid, bb)
 		call pop_section(input)
-		call schedule(p2, lo, hi)
 
 		normal=get_grid_normal(self%grid)
 
 		bound=1.d+10
 		call getkw(input, 'integral.radius', bound)
 		call grid_center(self%grid,center)
+
+		call schedule(p2, lo, hi)
 
 		sgn=1.d0
 		xsum3=0.d0

@@ -39,7 +39,7 @@ module jtensor_class
 	real(DP), dimension(3) :: rho
 
 	real(DP), dimension(:), pointer :: bfvec
-	real(DP), dimension(:,:), pointer :: dbvec, drvec, d2fvec
+	real(DP), dimension(:,:), pointer :: dbvec, drvec, d2fvec, dbop
 	real(DP), dimension(:,:), pointer :: aodens, pdens
 	logical :: diamag_p, paramag_p, spin_density
 	integer(I4), parameter :: NOTIFICATION=1000
@@ -59,9 +59,9 @@ contains
 		self%xdens=>xdens
 		call init_bfeval(self%bfv, self%mol)
 		call init_dbop(self%dop, self%mol)
-		call init_dfdb(self%dbt, self%mol, self%dop, self%bfv)
+		call init_dfdb(self%dbt, self%mol)
 		call init_dfdr(self%dfr, self%mol)
-		call init_d2fdrdb(self%d2f, self%mol, self%dop, self%dfr, self%bfv)
+		call init_d2fdrdb(self%d2f, self%mol)
 
 		diamag_p=.true.
 		paramag_p=.true.
@@ -241,9 +241,10 @@ contains
 		rho=DP50*r ! needed for diamag. contr.
 
 		call bfeval(self%bfv, r, bfvec)
-		call dfdb(self%dbt, r, dbvec)
 		call dfdr(self%dfr, r, drvec)
-		call d2fdrdb(self%d2f, r, d2fvec)
+        call mkdbop(self%dop, r, dbop)
+		call dfdb(self%dbt, r, bfvec, dbop, dbvec)
+		call d2fdrdb(self%d2f, r, bfvec, drvec, dbop, d2fvec)
 
 		call contract(self, j%t, spin)
 
@@ -274,9 +275,10 @@ contains
 		rho=DP50*r ! needed for diamag. contr.
 
 		call bfeval(self%bfv, r, bfvec)
-		call dfdb(self%dbt, r, dbvec)
 		call dfdr(self%dfr, r, drvec)
-		call d2fdrdb(self%d2f, r, d2fvec)
+        call mkdbop(self%dop, r, dbop)
+		call dfdb(self%dbt, r, bfvec, dbop, dbvec)
+		call d2fdrdb(self%d2f, r, bfvec, drvec, dbop, d2fvec)
 
 		call contract2(self, pj%t, dj%t, spin)
 
@@ -367,6 +369,8 @@ contains
 				ppd=dot_product(self%pdbf, drvec(:,m))
 !                ct(m,b)=ZETA*ppd
 				ct(m,b)=ZETA*(ppd+prsp1+prsp2)
+!                print *, m,b
+!                print *, ppd, prsp1, prsp2
 				k=k+1
 			end do
 		end do
@@ -458,9 +462,10 @@ contains
 		call getkw(input, 'grid.origin', r)
 
 		call bfeval(self%bfv, r, bfvec)
-		call dfdb(self%dbt, r, dbvec)
 		call dfdr(self%dfr, r, drvec)
-		call d2fdrdb(self%d2f, r, d2fvec)
+        call mkdbop(self%dop, r, dbop)
+		call dfdb(self%dbt, r, bfvec, dbop, dbvec)
+		call d2fdrdb(self%d2f, r, bfvec, drvec, dbop, d2fvec)
 		
 		print *, 'bfvec'
 		print *, repeat('-', 70)

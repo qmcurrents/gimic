@@ -12,27 +12,19 @@ module d2fdrdb_class
 
 	type d2fdrdb_t
 		type(molecule_t), pointer :: mol
-		type(dbop_t), pointer :: dop
-		type(dfdr_t), pointer :: dfr
-		type(bfeval_t), pointer :: bfv
 		real(DP), dimension(:,:), pointer :: d2
-		real(DP), dimension(3) :: r
+		integer(I4) :: ptn
 	end type
 
 	private
-	real(DP), dimension(:,:), pointer :: drvec, dbop
-	real(DP), dimension(:), pointer :: bfvec
 	real(DP), dimension(3) :: dbov
 	real(DP) :: ror1, ror2, ror3
 	
 contains
 
-	subroutine init_d2fdrdb(self, mol, dop, dfr, bfv)
+	subroutine init_d2fdrdb(self, mol)
 		type(d2fdrdb_t) :: self
 		type(molecule_t), target :: mol
-		type(dbop_t), target :: dop
-		type(dfdr_t), target :: dfr
-		type(bfeval_t), target :: bfv
 
 		nullify(self%d2)
 
@@ -42,10 +34,6 @@ contains
 			allocate(self%d2(get_ncgto(mol),9))
 		end if
 		self%mol=>mol
-		self%dop=>dop
-		self%dfr=>dfr
-		self%bfv=>bfv
-		self%r=INITRV
 	end subroutine
 
 	subroutine del_d2fdrdb(self)
@@ -60,9 +48,11 @@ contains
 		end if
 	end subroutine
 
-	subroutine d2fdrdb(self, r, selfv)
+	subroutine d2fdrdb(self, r,  bfvec, drvec, dbop, selfv)
 		type(d2fdrdb_t) :: self
 		real(DP), dimension(:), intent(in) :: r
+		real(DP), dimension(:,:), intent(in) :: drvec, dbop
+		real(DP), dimension(:), intent(in) :: bfvec
 		real(DP), dimension(:,:), pointer :: selfv
 	
 		type(atom_t), dimension(:), pointer :: atoms
@@ -75,17 +65,7 @@ contains
 		integer(I4), dimension(99) :: posvec
 		integer(I4) :: l, idx1, idx2
 		
-		! Check if we already have the result
-		if (r(1)==self%r(1) .and. r(2)==self%r(2) .and. r(3)==self%r(3)) then 
-			selfv=>self%d2
-			return
-		end if
-		
-		self%r=r
 		natoms=get_natoms(self%mol)
-		call mkdbop(self%dop, r, dbop)
-		call bfeval(self%bfv, r, bfvec)
-		call dfdr(self%dfr, r, drvec)
 		
 		idx=1
 		idx2=0
@@ -105,7 +85,22 @@ contains
 				idx=idx2+get_ctridx(basis, j)
 				ncomp=get_ncomp(ctr)
 				do k=1,ncomp
-					call self_comp(self%d2, idx)
+!                    call self_comp(self%d2, idx)
+
+					! dBx
+					self%d2(idx,1)=drvec(idx,1)*dbov(1)                  ! dx
+					self%d2(idx,2)=drvec(idx,2)*dbov(1)+ror3*bfvec(idx)  ! dy
+					self%d2(idx,3)=drvec(idx,3)*dbov(1)-ror2*bfvec(idx)  ! dz
+
+					! dBy
+					self%d2(idx,4)=drvec(idx,1)*dbov(2)-ror3*bfvec(idx)
+					self%d2(idx,5)=drvec(idx,2)*dbov(2)
+					self%d2(idx,6)=drvec(idx,3)*dbov(2)+ror1*bfvec(idx)
+
+					! dBz
+					self%d2(idx,7)=drvec(idx,1)*dbov(3)+ror2*bfvec(idx)
+					self%d2(idx,8)=drvec(idx,2)*dbov(3)-ror1*bfvec(idx)
+					self%d2(idx,9)=drvec(idx,3)*dbov(3)
 					idx=idx+1
 				end do
 			end do
@@ -113,38 +108,6 @@ contains
 		end do
 		selfv=>self%d2
 	end subroutine 
-
-	subroutine self_comp(d2,idx)
-		real(DP), dimension(:,:) :: d2
-		integer(I4), intent(in) :: idx
-
-		real(DP) :: bfv
-		real(DP) :: drvec1, drvec2, drvec3
-		real(DP) :: dbov1, dbov2, dbov3
-
-		bfv=bfvec(idx)
-		drvec1=drvec(idx,1)
-		drvec2=drvec(idx,2)
-		drvec3=drvec(idx,3)
-		dbov1=dbov(1)
-		dbov2=dbov(2)
-		dbov3=dbov(3)
-		
-		! dBx
-		d2(idx,1)=drvec1*dbov1           ! dx
-		d2(idx,2)=drvec2*dbov1+ror3*bfv  ! dy
-		d2(idx,3)=drvec3*dbov1-ror2*bfv  ! dz
-		
-		! dBy
-		d2(idx,4)=drvec1*dbov2-ror3*bfv
-		d2(idx,5)=drvec2*dbov2
-		d2(idx,6)=drvec3*dbov2+ror1*bfv
-		
-		! dBz
-		d2(idx,7)=drvec1*dbov3+ror2*bfv
-		d2(idx,8)=drvec2*dbov3-ror1*bfv
-		d2(idx,9)=drvec3*dbov3
-	end subroutine
 
 	subroutine print_selfvec(foo)
 		real(DP), dimension(:,:), intent(in) :: foo

@@ -56,22 +56,21 @@ integral {
 	modulus=on                      # calculate the |J| integral
 	grid(bond) {                     # define grid orthogonal to a bond 
 		type=gauss                   # gauss distribution of grid points
-		origin=[0.0, 1.0, 1.096]     # fix grid orientation
-## Ok, here we define two things: a bond, and a plane to which the magnetic
-## field is orthogonal to. The two first indeces in atoms, or coord1 and
-## coord2 define the bond, and the third coordinate fixes the plane.
-#         atoms=[2,3,1]                  # atom indeces for bond
-		coord1=[0.0, 0.0, 2.145166]  # "atom" coordinates
-		coord2=[0.0, 0.0, -2.145166] 
-		coord3=[0.0, 1.0, 0.0] 
+        bond=[2,3]      # define a bond
+#         coord1=[0.0, 0.0, 2.145166]  # "atom" coordinates
+#         coord2=[0.0, 0.0, -2.145166] 
+#         fixpoint=1      # fix magnetic field
+		fixcoord=[0.0, 1.0, 0.0] 
 		distance=1.096               # place grid 'distance' between atoms
         ## Either grid_points or spacing can be specified. The number of grid
         ## points will be rounded upwards to nearest multiple of gauss_order
 		gauss_order=9                # order for gauss quadrature
-	   grid_points=[30,30,0]        # number of gridpoints on grid (i,j,k)
+	   grid_points=[40,40,0]        # number of gridpoints on grid (i,j,k)
 #         spacing=[0.1, 0.1, 0.1]      # spacing of points on grid (i,j,k)
-		height=[3.0, 3.0]            # hight of grid above and below the center
-		width=[6.0, 6.0]             # width of grid in and out from the center
+		up=6.0            # hight of grid above and below the center
+		down=6.0
+		in=6.0             # width of grid in and out from the center
+		out=6.0
 		rotation=[0.0,0.0,0.0]          # Rotation of (i,j,k) -> (i',j',k') 
 #		radius=3.0                   # round grid: cut off at radius
 	}

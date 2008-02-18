@@ -34,6 +34,20 @@ def main():
 			(sym, 1, a.coord[0], a.coord[1], a.coord[2])
 		for c in b.ctr_list:
 			print c,
+	
+	try:
+		fcao=open('CAODENS', 'r')
+		fxcao=open('XCAODENS', 'r')
+	except:
+		sys.exit(0)
+	cao=fcao.read()
+	xcao=fxcao.read()
+	fcao.close()
+	fxcao.close()
+	xdens=open('XDENS', 'w')
+	xdens.write(cao)
+	xdens.write(xcao)
+	xdens.close()
 
 class AOBasis(object):
 	"Basis set holder for one atom"

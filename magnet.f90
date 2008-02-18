@@ -81,7 +81,7 @@ contains
 			call msg_info('Left handed coordinate system,&
 				& reversing magnetic field')
 		end if
-		if (abs(x) /= 1.d0 .and. abs(x) > 1.d-10) then
+		if (abs(x)-1.d0 > 1.d-12 .and. abs(x) > 1.d-12) then
 			call msg_warn('Magnetic field not orthogonal to grid')
 		end if
 	end subroutine

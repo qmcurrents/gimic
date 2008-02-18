@@ -18,7 +18,7 @@ import getkw
 package_version="1.5.1"
 
 def main():
-	usage="%prog [options] [config] density"
+	usage="%prog [options] [config]"
 	cmdln=optparse.OptionParser(usage=usage)
 	cmdln.add_option('-t', action='store', dest='title',
 			help='title of job')
@@ -44,16 +44,11 @@ def main():
 		print "GIMIC", package_version
 		sys.exit(0)
 
-	density=None
 	inpfil=None
 	if (len(args) == 0):
 		inpfil="gimic.inp"
 	elif (len(args) == 1):
-		inpfil="gimic.inp"
-		density=args[0]
-	elif (len(args) == 2):
 		inpfil=args[0]
-		density=args[1]
 	else:
 		cmdln.error('incorrect number of files')
 		sys.exit(0)
@@ -91,16 +86,21 @@ def main():
 	cgrid.add_kw("ivec", 'DBL_ARRAY', 3)
 	cgrid.add_kw("jvec", 'DBL_ARRAY', 3)
 	cgrid.add_kw("lengths", 'DBL_ARRAY', 3)
-	cgrid.add_kw("atoms", 'INT_ARRAY', 3)
+	cgrid.add_kw("bond", 'INT_ARRAY', 2)
+	cgrid.add_kw("fixpoint", 'INT', 1)
 	cgrid.add_kw("coord1", 'DBL_ARRAY', 3)
 	cgrid.add_kw("coord2", 'DBL_ARRAY', 3)
-	cgrid.add_kw("coord3", 'DBL_ARRAY', 3)
+	cgrid.add_kw("fixcoord", 'DBL_ARRAY', 3)
 	cgrid.add_kw("distance", 'DBL', 1)
 	cgrid.add_kw("rotation", 'DBL_ARRAY', (0.0,0.0,0.0))
 	cgrid.add_kw("spacing", 'DBL_ARRAY', 3)
 	cgrid.add_kw("map", 'DBL_ARRAY', 2)
-	cgrid.add_kw("height", 'DBL_ARRAY', 2)
-	cgrid.add_kw("width", 'DBL_ARRAY', 2)
+#    cgrid.add_kw("height", 'DBL_ARRAY', 2)
+#    cgrid.add_kw("width", 'DBL_ARRAY', 2)
+	cgrid.add_kw("up", 'DBL', 1)
+	cgrid.add_kw("down", 'DBL', 1)
+	cgrid.add_kw("in", 'DBL', 1)
+	cgrid.add_kw("out", 'DBL', 1)
 	cgrid.add_kw("radius", 'DBL', 1)
 	cgrid.add_kw("grid_points", 'INT_ARRAY', 3)
 	cgrid.add_kw("gauss_order", 'INT', 1)
@@ -124,16 +124,21 @@ def main():
 	intgrid.add_kw("ivec", 'DBL_ARRAY', 3)
 	intgrid.add_kw("jvec", 'DBL_ARRAY', 3)
 	intgrid.add_kw("lengths", 'DBL_ARRAY', 3)
-	intgrid.add_kw("atoms", 'INT_ARRAY', 3)
+	intgrid.add_kw("bond", 'INT_ARRAY', 2)
+	intgrid.add_kw("fixpoint", 'INT', 1)
 	intgrid.add_kw("coord1", 'DBL_ARRAY', 3)
 	intgrid.add_kw("coord2", 'DBL_ARRAY', 3)
-	intgrid.add_kw("coord3", 'DBL_ARRAY', 3)
+	intgrid.add_kw("fixcoord", 'DBL_ARRAY', 3)
 	intgrid.add_kw("distance", 'DBL', 1)
 	intgrid.add_kw("rotation", 'DBL_ARRAY', (0.0,0.0,0.0))
 	intgrid.add_kw("spacing", 'DBL_ARRAY', 3)
 	intgrid.add_kw("map", 'DBL_ARRAY', 2)
-	intgrid.add_kw("height", 'DBL_ARRAY', 2)
-	intgrid.add_kw("width", 'DBL_ARRAY', 2)
+#    intgrid.add_kw("height", 'DBL_ARRAY', 2)
+#    intgrid.add_kw("width", 'DBL_ARRAY', 2)
+	intgrid.add_kw("up", 'DBL', 1)
+	intgrid.add_kw("down", 'DBL', 1)
+	intgrid.add_kw("in", 'DBL', 1)
+	intgrid.add_kw("out", 'DBL', 1)
 	intgrid.add_kw("radius", 'DBL', 1)
 	intgrid.add_kw("gridplot", 'INT', 1)
 	intgrid.add_kw("grid_points", 'INT_ARRAY', 3)
@@ -147,16 +152,21 @@ def main():
 	divgrid.add_kw("ivec", 'DBL_ARRAY', 3)
 	divgrid.add_kw("jvec", 'DBL_ARRAY', 3)
 	divgrid.add_kw("lengths", 'DBL_ARRAY', 3)
-	divgrid.add_kw("atoms", 'INT_ARRAY', 3)
+	divgrid.add_kw("bond", 'INT_ARRAY', 2)
+	divgrid.add_kw("fixpoint", 'INT', 1)
 	divgrid.add_kw("coord1", 'DBL_ARRAY', 3)
 	divgrid.add_kw("coord2", 'DBL_ARRAY', 3)
-	divgrid.add_kw("coord3", 'DBL_ARRAY', 3)
+	divgrid.add_kw("fixcoord", 'DBL_ARRAY', 3)
 	divgrid.add_kw("distance", 'DBL', 1)
 	divgrid.add_kw("rotation", 'DBL_ARRAY', (0.0,0.0,0.0))
 	divgrid.add_kw("spacing", 'DBL_ARRAY', 3)
 	divgrid.add_kw("map", 'DBL_ARRAY', 2)
-	divgrid.add_kw("height", 'DBL_ARRAY', 2)
-	divgrid.add_kw("width", 'DBL_ARRAY', 2)
+#    divgrid.add_kw("height", 'DBL_ARRAY', 2)
+#    divgrid.add_kw("width", 'DBL_ARRAY', 2)
+	divgrid.add_kw("up", 'DBL', 1)
+	divgrid.add_kw("down", 'DBL', 1)
+	divgrid.add_kw("in", 'DBL', 1)
+	divgrid.add_kw("out", 'DBL', 1)
 	divgrid.add_kw("radius", 'DBL', 1)
 	divgrid.add_kw("gridplot", 'INT', 1)
 	divgrid.add_kw("grid_points", 'INT_ARRAY', 3)
@@ -186,16 +196,21 @@ def main():
 	egrid.add_kw("ivec", 'DBL_ARRAY', 3)
 	egrid.add_kw("jvec", 'DBL_ARRAY', 3)
 	egrid.add_kw("lengths", 'DBL_ARRAY', 3)
-	egrid.add_kw("atoms", 'INT_ARRAY', 3)
+	egrid.add_kw("bond", 'INT_ARRAY', 2)
+	egrid.add_kw("fixpoint", 'INT', 1)
 	egrid.add_kw("coord1", 'DBL_ARRAY', 3)
 	egrid.add_kw("coord2", 'DBL_ARRAY', 3)
-	egrid.add_kw("coord3", 'DBL_ARRAY', 3)
+	egrid.add_kw("fixcoord", 'DBL_ARRAY', 3)
 	egrid.add_kw("distance", 'DBL', 1)
 	egrid.add_kw("rotation", 'DBL_ARRAY', (0.0,0.0,0.0))
 	egrid.add_kw("spacing", 'DBL_ARRAY', 3)
 	egrid.add_kw("map", 'DBL_ARRAY', 2)
-	egrid.add_kw("height", 'DBL_ARRAY', 2)
-	egrid.add_kw("width", 'DBL_ARRAY', 2)
+#    egrid.add_kw("height", 'DBL_ARRAY', 2)
+#    egrid.add_kw("width", 'DBL_ARRAY', 2)
+	egrid.add_kw("up", 'DBL', 1)
+	egrid.add_kw("down", 'DBL', 1)
+	egrid.add_kw("in", 'DBL', 1)
+	egrid.add_kw("out", 'DBL', 1)
 	egrid.add_kw("radius", 'DBL', 1)
 	egrid.add_kw("grid_points", 'INT_ARRAY', 3)
 	egrid.add_kw("gauss_order", 'INT', 1)
@@ -230,8 +245,6 @@ def main():
 		inkw.setkw('outfile', opts.outfile)
 	if opts.debugf:
 		inkw.setkw('debug_file', opts.debugf)
-	if density is not None:
-		inkw.setkw('density', density)
 
 	inkw.run_callbacks(top)
 
@@ -263,8 +276,8 @@ def check_grid(grid):
 	arg=grid.get_arg().arg[0]
 	if (arg == 'std' or arg == 'base'):
 		required=('origin', 'ivec', 'jvec', 'lengths', 'spacing')
-		ignore=('file', 'atoms', 'coord1', 'coord2',
-				'height', 'width', 'radius')
+		ignore=('file', 'bond', 'coord1', 'coord2',
+				'in', 'out', 'up', 'down', 'radius')
 		for i in required:
 			if not check_opt(grid,i):
 				print err % (i,arg)
@@ -274,9 +287,9 @@ def check_grid(grid):
 				print warn % (i,arg)
 	elif arg == 'file': 
 		required=('file',)
-		ignore=('ivec', 'jvec', 'atoms', 'coord1', 
-				'coord2', 'origin','height', 'width', 'rotation', 'radius',
-				'lengths','distance', 'spacing', 'map')
+		ignore=('ivec', 'jvec', 'bond', 'fixpoint', 'fixcoord', 'coord1', 
+				'coord2', 'origin', 'in', 'out', 'up', 'down', 'rotation', 
+				'radius', 'lengths','distance', 'spacing', 'map')
 		for i in required:
 			if not check_opt(grid,i):
 				print err % (i,arg)
@@ -285,18 +298,34 @@ def check_grid(grid):
 			if check_opt(grid,i):
 				print warn % (i,arg)
 	elif arg == 'bond':
-		required=('height', 'width', 'distance')
+		required=('in', 'out', 'up', 'down', 'distance')
 		ignore=('file','ivec', 'jvec', 'lengths')
 		for i in required:
 			if not check_opt(grid,i):
 				print err % (i,arg)
 				sys.exit(1)
-		if check_opt(grid,'atoms'):
+		if check_opt(grid, 'origin'):
+			print "Error: Keyword 'origin' incompatible with 'bond' grids"
+			sys.exit(1)
+		if not (check_opt(grid, 'fixpoint') or check_opt(grid, 'fixcoord')):
+			print "Error: Either fixpoint or fixcoord must be specified"
+			sys.exit(1)
+		if check_opt(grid,'bond'):
 			if check_opt(grid,'coord1') or check_opt(grid,'coord2'):
-				print "Error: Both atoms and coord(s) have been specified"
+				print "Error: Both bond and coord(s) have been specified"
 				sys.exit(1)
-		elif check_opt(grid,'coord1') and check_opt(grid,'coord2'):
-			if check_opt(grid,'atoms'):
+		elif check_opt(grid,'coord1'):
+			if not check_opt(grid,'coord2'): 
+				print "Error: coord2 not specified"
+				sys.exit(1)
+			if check_opt(grid,'bond'):
+				print "Error: Both atom(s) and coord(s) have been specified"
+				sys.exit(1)
+		elif check_opt(grid,'coord2'):
+			if not check_opt(grid,'coord1'): 
+				print "Error: coord1 not specified"
+				sys.exit(1)
+			if check_opt(grid,'bond'):
 				print "Error: Both atom(s) and coord(s) have been specified"
 				sys.exit(1)
 		else:

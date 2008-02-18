@@ -133,27 +133,34 @@ contains
 		real(DP), dimension(2) :: lh, ht
 		real(DP) :: l3
 
-		if (keyword_is_set(input, 'grid.atoms')) then
-			call getkw(input, 'grid.atoms', atoms)
+		if (keyword_is_set(input, 'grid.bond')) then
+			call getkw(input, 'grid.bond', atoms(1:2))
 			call get_atom(mol, atoms(1), atom)
 			call get_coord(atom, self%basv(:,1))
 			call get_atom(mol, atoms(2), atom)
 			call get_coord(atom, self%basv(:,2))
-			call get_atom(mol, atoms(3), atom)
-			call get_coord(atom, self%origin)
 		else
 			call getkw(input, 'grid.coord1', self%basv(:,1))
 			call getkw(input, 'grid.coord2', self%basv(:,2))
-        	call getkw(input, 'grid.coord3', self%origin)
 		end if
- 		!defaults, etc.
 
+		if (keyword_is_set(input,'grid.fixpoint')) then
+			call getkw(input, 'grid.fixpoint', atoms(3))
+			call get_atom(mol, atoms(3), atom)
+			call get_coord(atom, self%origin)
+		else
+        	call getkw(input, 'grid.fixcoord', self%origin)
+		end if
+
+ 		!defaults, etc.
 		l3=-1.d0
 		lh=-1.d0
 		ht=-1.d0
 		call getkw(input, 'grid.distance', l3)
-		call getkw(input, 'grid.width', lh)
-		call getkw(input, 'grid.height', ht)
+		call getkw(input, 'grid.in', lh(1))
+		call getkw(input, 'grid.out', lh(2))
+		call getkw(input, 'grid.up', ht(1))
+		call getkw(input, 'grid.down', ht(2))
 		self%l=(/sum(lh), sum(ht), 0.d0/)
 
 		if ( l3 < 0.d0 ) then
@@ -161,11 +168,11 @@ contains
 			stop 
 		end if
 		if ( sum(lh) < 0.d0 ) then
-			call msg_critical('grid.width < 0!')
+			call msg_critical('Grid width < 0!')
 			stop 
 		end if
 		if ( sum(ht) < 0.d0 ) then
-			call msg_critical('grid.heigth < 0!')
+			call msg_critical('Grid heigth < 0!')
 			stop 
 		end if
 
@@ -770,6 +777,8 @@ contains
 		real(DP), dimension(2) :: lh, ht
 		real(DP) :: l3, r1, r2
 
+		call msg_critical("Sorry, you just stumbled upon a piece of dead &
+			&code. Better luck next time.")
 		l3=-1.d0
 		lh=-1.d0
 		ht=-1.d0

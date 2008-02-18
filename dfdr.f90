@@ -13,7 +13,6 @@ module dfdr_class
 		type(molecule_t), pointer :: mol
 		real(DP), dimension(:,:), pointer :: dr
 		real(DP), dimension(:,:), pointer :: sdr
-		real(DP), dimension(3) :: r
 	end type
 
 	private
@@ -31,11 +30,9 @@ contains
 		type(dfdr_t) :: self
 		type(molecule_t), target :: mol
 
-
 		allocate(self%dr(get_nccgto(mol),3))
 		if (spherical) allocate(self%sdr(get_ncgto(mol),3))
 		self%mol=>mol
-		self%r=INITRV
 	end subroutine
 
 	subroutine del_dfdr(self)
@@ -54,14 +51,7 @@ contains
 
 		integer(I4), dimension(99) :: posvec
 		integer(I4) :: idx1, idx2
-
-		! Check if we already have the result
-		if (r(1)==self%r(1) .and. r(2)==self%r(2) .and. r(3)==self%r(3)) then 
-			drv=>self%dr
-			return
-		end if
 		
-		self%r=r
 		natoms=get_natoms(self%mol)
 		
 		idx=1

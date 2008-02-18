@@ -61,6 +61,7 @@ contains
 		vdcao=D0
 		do i=1,cc%npf
 			q=ncc(i)*exp(-xp(i)*rr2)
+!            if (abs(q) < 1.d-20) cycle
 			vcao=vcao+q
 			vdcao=vdcao+xp(i)*q
 		end do
@@ -82,8 +83,9 @@ contains
 		cc=>ctr
 		q=cao()
 		do i=1,Ctr%nccomp 
-			p=product(r**f(:,i))
-			val(i)=p*q
+			p=product(r**f(:,i))*q
+!            if (abs(p) > 1.d-20) val(i)=p
+			val(i)=p
 		end do
 	end subroutine
 	
@@ -102,14 +104,12 @@ contains
 		rr2=sum(r**2)
 		
 		call get_gto_nlm(ctr%l,f)
-		cc=>Ctr
+		cc=>ctr
 		call cao2(bfval, dbfval)
-		do i=1,Ctr%nccomp 
+		do i=1,ctr%nccomp 
 			df=f(:,i)
 			df(ax)=df(ax)-1.d0
-			if (df(ax) < D0) then
-				df(ax)=D0
-			end if
+			if (df(ax) < D0) df(ax)=D0
 			down=f(ax,i)*product(r**df)*bfval
 			up=2.d0*r(ax)*product(r**f(:,i))*dbfval
 			val(i)=down-up
