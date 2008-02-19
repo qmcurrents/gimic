@@ -7,7 +7,7 @@ module globals_m
 	use getkw_class
 	implicit none 
 
-	character(16), parameter :: GIMIC_VERSION='2.0pre2'
+	character(16), parameter :: GIMIC_VERSION='2.0pre3'
 
 	! file descriptors
 	integer, parameter :: BASFD=42

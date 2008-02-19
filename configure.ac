@@ -4,7 +4,7 @@
 # Written by Jonas Juselius <jonas@iki.fi>
 #
 
-AC_INIT([GIMIC],[2.0pre2],[jonas@iki.fi])
+AC_INIT([GIMIC],[2.0pre3],[jonas@iki.fi])
 
 AC_CONFIG_SRCDIR(gimic.f90)
 AC_CONFIG_HEADER(config.h)

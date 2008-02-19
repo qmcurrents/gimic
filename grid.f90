@@ -275,12 +275,12 @@ contains
 			if (self%npts(i) > 0) then
 				allocate(self%gdata(i)%pts(self%npts(i)))
 				allocate(self%gdata(i)%wgt(self%npts(i)))
-				call setup_lobby(0.d0, self%l(i), order, self%gdata(i))
+				call setup_gauss_data(0.d0, self%l(i), order, self%gdata(i))
 			else
 				self%npts(i)=1
 				allocate(self%gdata(i)%pts(1))
 				allocate(self%gdata(i)%wgt(1))
-				call setup_lobby(0.d0, self%l(i), 1, self%gdata(i))
+				call setup_gauss_data(0.d0, self%l(i), 1, self%gdata(i))
 			end if
 		end do
 	end subroutine

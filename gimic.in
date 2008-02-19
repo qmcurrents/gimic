@@ -38,6 +38,8 @@ def main():
 		   help='dryrun without actually calculating anything')
 	cmdln.add_option('-V','--version', action='store_true', dest='version',
 		   help='print version number')
+	cmdln.add_option('-k','--keep', action='store_true', dest='keep',
+		   help='keep temp input file')
 	(opts, args)=cmdln.parse_args()
 
 	if opts.version:
@@ -254,7 +256,8 @@ def main():
 
 	fd.close()
 	os.system('gimic.x < ' + infile)
-	os.unlink(infile)
+	if not opts.keep:
+		os.unlink(infile)
 
 # sanity check
 def check_opt(sect,key):

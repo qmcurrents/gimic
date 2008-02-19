@@ -628,7 +628,7 @@ contains
 
 		call copy_grid(g,lgrid)
 		do i=1,3
-        	call setup_lobby(0.d0, lgrid%l(i), ngp(i), lgrid%gdata(i))
+        	call setup_gauss_data(0.d0, lgrid%l(i), ngp(i), lgrid%gdata(i))
 		end do
 
 		call get_grid_size(g, p1, p2)

@@ -7,8 +7,8 @@ module gaussint_m
 		real(DP), dimension(:), pointer :: pts, wgt
 	end type 
 
-	public gdata_t, gaussl, lobatomy, legendrep, lobogrid, gauscale
-	public setup_lobby
+	public gdata_t, gaussl, lobatomy, legendrep, gaussgrid, gauscale
+	public setup_gauss_data
 	
 	private
 	real(DP), parameter :: EPS=3.0d-12
@@ -33,7 +33,7 @@ contains
 		do i=1,m
 			z=cos(PII*(i-0.25)/(n+0.5))
 			do iter=1,NEWTON_MAX_ITER
-				call legendrep(z,n,lp,dlp)
+				call legendrep1(z,n,lp,dlp)
 				z1=z
 				z=z1-lp/dlp
 				
@@ -83,7 +83,7 @@ contains
 			! Better inital guess needed, this one is for P not P'
 			z=cos(PII*(i-0.25)/(n+0.5)) 
 			do iter=1,NEWTON_MAX_ITER
-				call legendrep(z,n-1,lp,dlp,d2lp)
+				call legendrep2(z,n-1,lp,dlp,d2lp)
 				z1=z
 				z=z1-dlp/d2lp
 				! damping... 
@@ -106,11 +106,78 @@ contains
 		end do
 	end subroutine lobatomy
 
-	subroutine legendrep(x, n, y, dy, d2y)
+	subroutine legendrep(x, n, y)
 		real(DP), intent(in) :: x
 		integer(I4), intent(in) :: n
 		real(DP), intent(out) :: y
-		real(DP), intent(out), optional :: dy, d2y
+
+		real(DP) :: c1, c2, c4, ym, yp, dym, dyp, d2ym, d2yp
+		integer(I4) :: i
+
+		if ( n < 0 .or. abs(x) > 1.0 ) then
+			write(str_g,'(a,i3,d19.12)') 'legendrep(): bad argument:', n, x
+			call msg_error(str_g)
+		end if
+
+		y = 1.d0
+		if (n == 0) return
+
+		y = x
+		if (n == 1) return
+
+		yp = 1.d0
+		do i=2,n
+			c1 = real(i)
+			c2 = c1 * 2.0 - 1.0
+			c4 = c1 - 1.0
+			ym = y
+			y = (c2 * x * y - c4 * yp) / c1
+			yp = ym
+		end do
+	end subroutine
+
+	subroutine legendrep1(x, n, y, dy)
+		real(DP), intent(in) :: x
+		integer(I4), intent(in) :: n
+		real(DP), intent(out) :: y
+		real(DP), intent(out) :: dy
+
+		real(DP) :: c1, c2, c4, ym, yp, dym, dyp, d2ym, d2yp
+		integer(I4) :: i
+
+		if ( n < 0 .or. abs(x) > 1.0 ) then
+			write(str_g,'(a,i3,d19.12)') 'legendrep(): bad argument:', n, x
+			call msg_error(str_g)
+		end if
+
+		y = 1.d0
+		dy = 0.d0
+		if (n == 0) return
+
+		y = x
+		dy = 1.d0
+		if (n == 1) return
+
+		yp = 1.d0
+		dyp = 0.d0
+		do i=2,n
+			c1 = real(i)
+			c2 = c1 * 2.0 - 1.0
+			c4 = c1 - 1.0
+			ym = y
+			y = (c2 * x * y - c4 * yp) / c1
+			yp = ym
+			dym = dy
+			dy = (c2 * x * dy - c4 * dyp + c2 * yp) / c1
+			dyp = dym
+		end do
+	end subroutine
+
+	subroutine legendrep2(x, n, y, dy, d2y)
+		real(DP), intent(in) :: x
+		integer(I4), intent(in) :: n
+		real(DP), intent(out) :: y
+		real(DP), intent(out) :: dy, d2y
 
 		real(DP) :: c1, c2, c4, ym, yp, dym, dyp, d2ym, d2yp
 		integer(I4) :: i
@@ -140,20 +207,16 @@ contains
 			ym = y
 			y = (c2 * x * y - c4 * yp) / c1
 			yp = ym
-			if (present(dy)) then
-				dym = dy
-				dy = (c2 * x * dy - c4 * dyp + c2 * yp) / c1
-				dyp = dym
-				if (present(d2y)) then
-					d2ym = d2y
-					d2y = (c2 * x * d2y - c4 * d2yp + c2 * 2.0 * dyp) / c1
-					d2yp = d2ym
-				end if
-			end if
+			dym = dy
+			dy = (c2 * x * dy - c4 * dyp + c2 * yp) / c1
+			dyp = dym
+			d2ym = d2y
+			d2y = (c2 * x * d2y - c4 * d2yp + c2 * 2.0 * dyp) / c1
+			d2yp = d2ym
 		end do
 	end subroutine
 
-	subroutine lobogrid(a, b, ngp, xvec, wvec)
+	subroutine gaussgrid(a, b, ngp, xvec, wvec)
 		real(DP), intent(in) :: a, b
 		integer(I4), intent(in) :: ngp
 		real(DP), dimension(:), intent(out) :: xvec, wvec
@@ -167,7 +230,7 @@ contains
 		allocate(wgt(ngp))
 
 		if (mod(npts,ngp) /= 0) then
-			call msg_critical('lobogrid(): npts is not dividable by ngp!')
+			call msg_critical('gaussgrid(): npts is not dividable by ngp!')
 			stop
 		end if
 
@@ -177,7 +240,8 @@ contains
 		step=(b-a)/real(nblock)
 
 		! set up unscaled Lobato points and weights ( interval [-1,1])
-		call lobatomy(-1.d0, 1.d0, pts, wgt)
+!        call lobatomy(-1.d0, 1.d0, pts, wgt)
+		call gaussl(-1.d0, 1.d0, pts, wgt)
 
 		k=0
 		pos=a
@@ -195,7 +259,7 @@ contains
 		deallocate(pts, wgt)
 	end subroutine
 
-	subroutine setup_lobby(a, b, ngp, gdata) 
+	subroutine setup_gauss_data(a, b, ngp, gdata) 
 		real(DP), intent(in) :: a, b
 		integer(I4), intent(in) :: ngp
 		type(gdata_t), intent(inout) :: gdata
@@ -213,7 +277,7 @@ contains
 		end if
 
 		if (mod(npts,ngp) /= 0) then
-			call msg_critical('lobogrid(): npts is not dividable by ngp!')
+			call msg_critical('gaussgrid(): npts is not dividable by ngp!')
 			stop
 		end if
 
@@ -227,7 +291,8 @@ contains
 		allocate(tpts(ngp))
 		allocate(twgt(ngp))
 
-		call lobatomy(-1.d0, 1.d0, tpts, twgt)
+!        call lobatomy(-1.d0, 1.d0, tpts, twgt)
+		call gaussl(-1.d0, 1.d0, tpts, twgt)
 		foo=1
 		do i=1,nblock
 			gdata%pts(foo:foo+ngp-1)=tpts*xl+real(i-1)*step+xl
