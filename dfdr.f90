@@ -33,6 +33,7 @@ contains
 		allocate(self%dr(get_nccgto(mol),3))
 		if (spherical) allocate(self%sdr(get_ncgto(mol),3))
 		self%mol=>mol
+!        call dfdr(self, (/0.d0, 0.d0, 0.d0/), self%dr)
 	end subroutine
 
 	subroutine del_dfdr(self)
@@ -40,8 +41,6 @@ contains
 
 		deallocate(self%dr)
 		if (spherical) deallocate(self%sdr)
-		nullify(self%dr)
-		nullify(self%sdr)
 	end subroutine
 
 	subroutine dfdr(self, r, drv)
@@ -54,7 +53,6 @@ contains
 		
 		natoms=get_natoms(self%mol)
 		
-		idx=1
 		idx2=0
 		self%dr=0.d0
 		do i=1,natoms
@@ -68,7 +66,7 @@ contains
 				call get_contraction(atom, j, ctr)
 				idx=idx2+get_ctridx(basis, j)
 				do axis=1,3
-					call dcgto(rr, axis, ctr, self%dr(idx:, axis))
+					call dcgto(rr, ctr, axis, self%dr(idx:, axis))
 				end do
 			end do
 			idx2=idx2+get_ncgto(basis)

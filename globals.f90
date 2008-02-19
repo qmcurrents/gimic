@@ -7,8 +7,6 @@ module globals_m
 	use getkw_class
 	implicit none 
 
-!    intrinsic hostnm
-
 	character(16), parameter :: GIMIC_VERSION='2.0pre2'
 
 	! file descriptors
@@ -82,39 +80,6 @@ module globals_m
 	character, dimension(0:7), parameter :: shell_names = &
     	& (/'s','p','d','f','g','h','i','j'/)
 
-! The atom_t type holds _individual_ atom data. atom%basis is therefore a 
-! pointer to a basis_t type, so that we don't have to duplicate the basis 
-! for every atom, if it is the same.
-	type atom_t
-		character(2) :: symbol
-		character(2) :: id     
-		real(DP), dimension(3) :: coord
-		real(DP) :: charge
-		type(basis_t), pointer :: basis  
-	end type
-
-	type basis_t
-		integer(I4) :: lmax, nctr, nshells, ncgto, ngto
-		integer, dimension(MAX_L+1) :: nctrps ! contractions per shell
-		type(contraction_t), dimension(:), pointer :: ctr ! s_n, p_n...
-		real(DP), dimension(:), pointer :: thrs ! screening
-		integer(I4), dimension(:), pointer :: pos ! starting idx for n:th ctr
-	end type
-
-	type contraction_t
-		integer(I4) :: npf,ncf,l,ncomp,nccomp ! n prims, n contrs, l-qnumber
-		real(DP), dimension(:), pointer :: xp
-		real(DP), dimension(:), pointer :: cc ! cc:s
-		real(DP), dimension(:), pointer :: ncc ! norm cc:s
-	end type
-
-	type molecule_t
-		integer(I4) :: natoms
-		type(atom_t), dimension(:), pointer :: atoms
-		integer(I4) :: ngto, ncgto, nccgto
-		type(cao2sao_t), pointer :: c2s
-	end type
-
 	type cao2sao_t
 		real(DP), dimension(:,:), pointer :: po
 	end type
@@ -126,6 +91,39 @@ module globals_m
 
 	type vector_t
 		real(DP), dimension(3) :: v
+	end type
+
+	type contraction_t
+		integer(I4) :: npf,ncf,l,ncomp,nccomp ! n prims, n contrs, l-qnumber
+		real(DP), dimension(:), pointer :: xp
+		real(DP), dimension(:), pointer :: cc ! cc:s
+		real(DP), dimension(:), pointer :: ncc ! norm cc:s
+	end type
+
+	type basis_t
+		integer(I4) :: lmax, nctr, nshells, ncgto, ngto
+		integer, dimension(MAX_L+1) :: nctrps ! contractions per shell
+		type(contraction_t), dimension(:), pointer :: ctr ! s_n, p_n...
+		real(DP), dimension(:), pointer :: thrs ! screening
+		integer(I4), dimension(:), pointer :: pos ! starting idx for n:th ctr
+	end type
+
+! The atom_t type holds _individual_ atom data. atom%basis is therefore a 
+! pointer to a basis_t type, so that we don't have to duplicate the basis 
+! for every atom, if it is the same.
+	type atom_t
+		character(2) :: symbol
+		character(2) :: id     
+		real(DP), dimension(3) :: coord
+		real(DP) :: charge
+		type(basis_t), pointer :: basis  
+	end type
+
+	type molecule_t
+		integer(I4) :: natoms
+		type(atom_t), dimension(:), pointer :: atoms
+		integer(I4) :: ngto, ncgto, nccgto
+		type(cao2sao_t), pointer :: c2s
 	end type
 
 	interface copy_tensor

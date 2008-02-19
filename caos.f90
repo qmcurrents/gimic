@@ -14,61 +14,11 @@ module caos_m
 	private
 
 	real(DP) :: rr2
-	type(contraction_t), pointer :: cc
 
 contains
-	
-	! Evaluate one contracted CAO 
-	function cao() result(ff)
-		real(DP) :: ff
-
-		integer(I4) :: i
-		real(DP), dimension(:), pointer :: ncc, xp
-		ncc=>cc%ncc
-		xp=>cc%xp
-		
-		ff=D0
-		do i=1,cc%npf
-			ff=ff+ncc(i)*exp(-xp(i)*rr2)
-		end do
-	end function
-	
-	! Evaluate one differentiated CAO
-	function dcao() result(ff)
-		real(DP) :: ff
-
-		integer(I4) :: i
-		real(DP), dimension(:), pointer :: ncc, xp
-		ncc=>cc%ncc
-		xp=>cc%xp
-		
-		ff=D0
-		do i=1,cc%npf
-			ff=ff-xp(i)*ncc(i)*exp(-xp(i)*rr2)
-		end do
-	end function
-
-	subroutine cao2(vcao, vdcao)
-		real(DP), intent(out) :: vcao, vdcao
-		
-		integer(I4) :: i
-		real(DP) :: q
-		real(DP), dimension(:), pointer :: ncc, xp
-		ncc=>cc%ncc
-		xp=>cc%xp
-		
-		vcao=D0
-		vdcao=D0
-		do i=1,cc%npf
-			q=ncc(i)*exp(-xp(i)*rr2)
-!            if (abs(q) < 1.d-20) cycle
-			vcao=vcao+q
-			vdcao=vdcao+xp(i)*q
-		end do
-	end subroutine 
 
 	subroutine cgto(r, ctr, val)
-		real(DP), dimension(3), intent(in) :: r
+		real(DP), dimension(:), intent(in) :: r
 		type(contraction_t), intent(in), target :: ctr
 		real(DP), dimension(:), intent(out) :: val
 
@@ -80,19 +30,18 @@ contains
 		rr2=sum(r**2)
 
 		call get_gto_nlm(ctr%l, f)
-		cc=>ctr
-		q=cao()
-		do i=1,Ctr%nccomp 
+		q=cao(ctr)
+		do i=1,ctr%nccomp 
 			p=product(r**f(:,i))*q
 !            if (abs(p) > 1.d-20) val(i)=p
 			val(i)=p
 		end do
 	end subroutine
 	
-	subroutine dcgto(r, ax, ctr, val)
-		real(DP), dimension(3), intent(in) :: r
+	subroutine dcgto(r, ctr, ax, val)
+		real(DP), dimension(:), intent(in) :: r
+		type(contraction_t), intent(in), target :: ctr
 		integer(I4), intent(in) :: ax
-		type(contraction_t), intent(in), target :: Ctr
 		real(DP), dimension(:), intent(out) :: val
 
 		real(DP) :: bfval, dbfval
@@ -104,8 +53,7 @@ contains
 		rr2=sum(r**2)
 		
 		call get_gto_nlm(ctr%l,f)
-		cc=>ctr
-		call cao2(bfval, dbfval)
+		call cao2(ctr, bfval, dbfval)
 		do i=1,ctr%nccomp 
 			df=f(:,i)
 			df(ax)=df(ax)-1.d0
@@ -115,5 +63,48 @@ contains
 			val(i)=down-up
 		end do
 	end subroutine
+	
+	! Evaluate one contracted CAO 
+	function cao(cc) result(ff)
+		type(contraction_t), intent(in)  :: cc
+		real(DP) :: ff
+
+		integer(I4) :: i
+		
+		ff=D0
+		do i=1,cc%npf
+			ff=ff+cc%ncc(i)*exp(-cc%xp(i)*rr2)
+		end do
+	end function
+	
+	! Evaluate one differentiated CAO
+	function dcao(cc) result(ff)
+		type(contraction_t), intent(in) :: cc
+		real(DP) :: ff
+
+		integer(I4) :: i
+		
+		ff=D0
+		do i=1,cc%npf
+			ff=ff-cc%xp(i)*cc%ncc(i)*exp(-cc%xp(i)*rr2)
+		end do
+	end function
+
+	subroutine cao2(cc, vcao, vdcao)
+		type(contraction_t), intent(in)  :: cc
+		real(DP), intent(out) :: vcao, vdcao
+		
+		integer(I4) :: i
+		real(DP) :: q
+		
+		vcao=D0
+		vdcao=D0
+		do i=1,cc%npf
+			q=cc%ncc(i)*exp(-cc%xp(i)*rr2)
+!            if (abs(q) < 1.d-20) cycle
+			vcao=vcao+q
+			vdcao=vdcao+cc%xp(i)*q
+		end do
+	end subroutine 
 
 end module

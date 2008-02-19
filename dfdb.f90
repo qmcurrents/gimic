@@ -43,7 +43,7 @@ contains
 	
 	subroutine dfdb(self, r, bfvec, dbop, dbv)
 		type(dfdb_t) :: self
-		real(DP), dimension(3), intent(in) :: r
+		real(DP), dimension(:), intent(in) :: r
 		real(DP), dimension(:), intent(in) :: bfvec
 		real(DP), dimension(:,:), intent(in) :: dbop
 		real(DP), dimension(:,:), pointer :: dbv
@@ -53,8 +53,6 @@ contains
 		integer(I4) :: i, j, k, natoms, ncgto
 
 		natoms=get_natoms(self%mol)
-!        call mkdbop(self%dop,r, dbop)
-!        call bfeval(self%bfv, r, bfvec)
 		
 		j=1
 		do k=1,natoms

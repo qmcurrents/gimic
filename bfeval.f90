@@ -59,6 +59,7 @@ contains
 		idx=1
 		idx2=0
 		self%bf=0.d0
+		if (spherical) self%sbf=0.d0
 		do i=1,natoms
 			call get_atom(self%mol,i,atom)
 			call get_coord(atom, coord)
@@ -83,14 +84,13 @@ contains
 		else
 			ans=>self%bf
 		end if
-!        call bfeval_ns(self, r, ans, ptn)
+!        call bfeval_ns(self, r, ans)
 	end subroutine 
 
-	subroutine bfeval_ns(self, r, ans, ptn)
+	subroutine bfeval_ns(self, r, ans)
 		type(bfeval_t) :: self
 		real(DP), dimension(3), intent(in) :: r
 		real(DP), dimension(:), pointer :: ans
-		integer(I4), intent(in) :: ptn
 
 		integer(I4), dimension(99) :: posvec
 		integer(I4) :: idx1, idx2
@@ -117,7 +117,6 @@ contains
 			end do
 			idx2=idx2+get_ncgto(basis)
 		end do
-		stop
 		if (spherical) then
 			call cao2sao(self%mol%c2s, self%bf, self%sbf)
 			ans=>self%sbf

@@ -247,8 +247,8 @@ contains
 !
 ! Print atom and basis info
 !
-	subroutine print_atom_data(Atm, num)
-		type(atom_t), intent(in) :: Atm
+	subroutine print_atom_data(atm, num)
+		type(atom_t), intent(in) :: atm
 		integer(I4), intent(in) :: num
 
 		type(basis_t), pointer :: abas
@@ -265,7 +265,7 @@ contains
 		write(str_g, 77) '      Nuclear charge:          ', atm%charge
 		call msg_out(str_g)
 		write(str_g, 66) '      Highest angular momentum:', abas%lmax,' (', &
-			& shell_names(abas%lmax),')'
+			 shell_names(abas%lmax),')'
 		call msg_out(str_g)
 		call nl
 		
@@ -338,7 +338,6 @@ contains
 			atm=>self%atoms(i)
 			call del_ctr(atm%basis)
 			deallocate(atm%basis)
-			nullify(atm%basis)
 		end do
 		deallocate(self%atoms)
 		nullify(self%atoms)
