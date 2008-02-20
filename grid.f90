@@ -13,7 +13,7 @@ module grid_class
 	implicit none
 
 	type grid_t
-		logical :: lobato  ! integration grid, 1,2 or 3-D
+		logical :: gauss  ! integration grid, 1,2 or 3-D
 		real(DP), dimension(3,3) :: basv   ! grid basis vectors
 		real(DP), dimension(3) :: l        ! |v|
 		real(DP), dimension(3) :: origin, ortho
@@ -27,7 +27,7 @@ module grid_class
 	public grid_t
 	public init_grid, del_grid, gridpoint, get_grid_normal
 	public get_grid_size, get_weight, write_grid, read_grid
-	public get_grid_length, is_lobo_grid, realpoint, copy_grid
+	public get_grid_length, is_gauss_grid, realpoint, copy_grid
 	public grid_center, plot_grid_xyz, get_basvec, get_ortho
 
 	interface get_basvec
@@ -85,9 +85,11 @@ contains
 		i=len(trim(self%gtype))
 		select case (self%gtype(1:i))
 			case ('even')
-				call setup_even_gdata(self)
+				call setup_even_grid(self)
 			case ('gauss')
-				call setup_gauss_gdata(self)
+				call setup_gauss_grid(self, 'gauss')
+			case ('lobato')
+				call setup_gauss_grid(self, 'lobato')
 			case default
 				call msg_error('Unknown grid type: ' // trim(self%gtype))
 				stop
@@ -229,8 +231,9 @@ contains
 	end subroutine
 
 
-	subroutine setup_gauss_gdata(self)
+	subroutine setup_gauss_grid(self, quadr)
 		type(grid_t) :: self
+		character(*), intent(in) :: quadr
 
 		integer(I4) ::  i, rem, order
 		real(DP), dimension(3) :: spc
@@ -270,27 +273,29 @@ contains
 			call msg_info(str_g)
 		end if
 
-		self%lobato=.true.
+		self%gauss=.true.
 		do i=1,3
 			if (self%npts(i) > 0) then
 				allocate(self%gdata(i)%pts(self%npts(i)))
 				allocate(self%gdata(i)%wgt(self%npts(i)))
-				call setup_gauss_data(0.d0, self%l(i), order, self%gdata(i))
+				call setup_gauss_data(0.d0, self%l(i), order, &
+					self%gdata(i), quadr)
 			else
 				self%npts(i)=1
 				allocate(self%gdata(i)%pts(1))
 				allocate(self%gdata(i)%wgt(1))
-				call setup_gauss_data(0.d0, self%l(i), 1, self%gdata(i))
+				call setup_gauss_data(0.d0, self%l(i), 1, &
+					self%gdata(i), quadr)
 			end if
 		end do
 	end subroutine
 
-	subroutine setup_even_gdata(self)
+	subroutine setup_even_grid(self)
 		type(grid_t), intent(inout) :: self
 
 		integer(I4) :: i, n
 
-		self%lobato=.false.
+		self%gauss=.false.
 		self%npts(1)=nint(self%l(1)/self%step(1))+1
 		self%npts(2)=nint(self%l(2)/self%step(2))+1
 		if (self%l(3) == 0.d0 .or. self%step(3) == 0.d0) then
@@ -315,7 +320,7 @@ contains
 
 		integer(I4) :: i, n
 
-		g2%lobato=self%lobato
+		g2%gauss=self%gauss
 		g2%basv=self%basv
 		g2%l=self%l
 		g2%origin=self%origin
@@ -398,11 +403,11 @@ contains
 		w=self%gdata(d)%wgt(i)
 	end function
 
-	function is_lobo_grid(self) result(r)
+	function is_gauss_grid(self) result(r)
 		type(grid_t), intent(in) :: self
 		logical :: r
 		
-		r=self%lobato
+		r=self%gauss
 	end function
 
 	function get_grid_length(self) result(l)
@@ -679,7 +684,7 @@ contains
 		integer(I4) :: i
 
 		write(fd, *) self%mode
-		write(fd, *) self%lobato
+		write(fd, *) self%gauss
 		write(fd, *) self%basv
 		write(fd, *) self%l
 		write(fd, *) self%origin
@@ -699,7 +704,7 @@ contains
 
 		integer(I4) :: i
 
-		read(fd, *) self%lobato
+		read(fd, *) self%gauss
 		read(fd, *) self%basv
 		read(fd, *) self%l
 		read(fd, *) self%origin

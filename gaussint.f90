@@ -259,15 +259,17 @@ contains
 		deallocate(pts, wgt)
 	end subroutine
 
-	subroutine setup_gauss_data(a, b, ngp, gdata) 
+	subroutine setup_gauss_data(a, b, ngp, gdata, quadr) 
 		real(DP), intent(in) :: a, b
 		integer(I4), intent(in) :: ngp
 		type(gdata_t), intent(inout) :: gdata
+		character(*), intent(in) :: quadr
 
 		integer(I4) :: nblock, i, ngau, npts, foo
 		real(DP), dimension(:), allocatable :: tpts, twgt
 		real(DP) :: xl, step
-
+		logical :: lobato
+		
 		npts=size(gdata%pts)
 
 		if (npts == 1) then
@@ -291,8 +293,15 @@ contains
 		allocate(tpts(ngp))
 		allocate(twgt(ngp))
 
-!        call lobatomy(-1.d0, 1.d0, tpts, twgt)
-		call gaussl(-1.d0, 1.d0, tpts, twgt)
+		select case (quadr)
+			case ('gauss')
+				call gaussl(-1.d0, 1.d0, tpts, twgt)
+			case ('lobato')
+				call lobatomy(-1.d0, 1.d0, tpts, twgt)
+			case default
+				call msg_error('Invalid quadrature type: ' // quadr)
+				stop
+		end select 
 		foo=1
 		do i=1,nblock
 			gdata%pts(foo:foo+ngp-1)=tpts*xl+real(i-1)*step+xl
