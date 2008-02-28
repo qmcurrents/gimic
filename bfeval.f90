@@ -58,6 +58,7 @@ contains
 		
 		idx=1
 		idx2=0
+		posvec=0
 		self%bf=0.d0
 		if (spherical) self%sbf=0.d0
 		do i=1,natoms
@@ -66,15 +67,11 @@ contains
 			call get_basis(atom, basis)
 			rr=r-coord
 			call filter_screened(basis, rr, posvec, nctr)
-!            write(88,*) 'atm', i, rr
 			do k=1,nctr 
 				j=posvec(k)
 				call get_contraction(atom, j, ctr)
 				idx=idx2+get_ctridx(basis, j)
 				call cgto(rr, ctr, self%bf(idx:))
-!                write(88,*) j,idx
-!                write(88,*) self%bf(idx:idx+ctr%nccomp-1)
-!                write(88,*)
 			end do
 			idx2=idx2+get_ncgto(basis)
 		end do
@@ -84,7 +81,6 @@ contains
 		else
 			ans=>self%bf
 		end if
-!        call bfeval_ns(self, r, ans)
 	end subroutine 
 
 	subroutine bfeval_ns(self, r, ans)

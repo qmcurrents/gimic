@@ -9,7 +9,7 @@ module magnet_m
 contains
 	subroutine get_magnet(g,mag)
 		type(grid_t) :: g
-		real(DP), dimension(3), intent(out) :: mag
+		real(DP), dimension(:), intent(out) :: mag
 
 		character(2) :: axis
 		real(DP), dimension(3) :: i, j, k, v
@@ -58,12 +58,13 @@ contains
 		end if
 
 		if (ortho) then
-			call get_basvec(g, 2, v)
+!            call get_basvec(g, 2, v)
+			continue
 		else
 			call get_basvec(g, 3, v)
+			call check_field(v,mag)
 		end if
 
-		call check_field(v,mag)
 		write(str_g, '(a,3f10.5)') '   Magnetic field <x,y,z> =', mag
 		call msg_out(str_g)
 		call nl

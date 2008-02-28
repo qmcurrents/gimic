@@ -63,12 +63,11 @@ contains
 		type(contraction_t), pointer :: ctr
 
 		integer(I4), dimension(99) :: posvec
-		integer(I4) :: l, idx1, idx2
+		integer(I4) :: l, idx1
 		
 		natoms=get_natoms(self%mol)
 		
 		idx=1
-		idx2=0
 		self%d2=0.d0
 		do i=1,natoms
 			call get_atom(self%mol,i,atom)
@@ -78,14 +77,11 @@ contains
 			ror2=coord(2)
 			ror3=coord(3)
 			call get_basis(atom, basis)
-			call filter_screened(basis, coord, posvec, nctr)
-			do l=1,nctr
-				j=posvec(l)
+			nctr=get_nctr(basis)
+			do j=1,nctr
 				call get_contraction(atom, j, ctr)
-				idx=idx2+get_ctridx(basis, j)
 				ncomp=get_ncomp(ctr)
 				do k=1,ncomp
-!                    call self_comp(self%d2, idx)
 
 					! dBx
 					self%d2(idx,1)=drvec(idx,1)*dbov(1)                  ! dx
@@ -104,7 +100,6 @@ contains
 					idx=idx+1
 				end do
 			end do
-			idx2=idx2+get_ncgto(basis)
 		end do
 		selfv=>self%d2
 	end subroutine 

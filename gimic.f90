@@ -1,4 +1,4 @@
-! 
+!! @brief kuk 
 ! GIMIC - a pretty advanced 'Hello World!' program.
 !
 

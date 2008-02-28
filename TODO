@@ -1,17 +1,19 @@
+o documentation
+o doxygenize
+o fix/check quadrature
+o add height/width keywords with interval
 + fix configure / paths
 + release and version control
 + install tools
-o documentation
 + parallel magnetic field
 + normalize magnetic field
 + fix turbo2mol.py two letter atoms
-o add magnet direction to xyz files
 + add para- diamag check
 + add dryrun option
+- add magnet direction to xyz files
 
 CLEAN UP:
 o debian pack
 - move basis set out of molecule_t
-o jfield should not be a class
 + "classify" proper classes
 

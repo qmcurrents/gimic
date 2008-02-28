@@ -25,7 +25,11 @@ contains
 		real(DP) :: z, z1, xm, xl, lp, dlp
 
 		n=size(pts)
-		m=(n+1)/2
+		if (mod(n,2) == 0) then
+			m=n/2
+		else
+			m=(n+1)/2
+		end if
 
 		xm=(b+a)*0.5
 		xl=(b-a)*0.5

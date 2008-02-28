@@ -11,8 +11,9 @@ debug=1           # debug print level
 diamag=on           # turn on/off diamagnetic contributions
 paramag=on          # turn on/off paramagnetic contributions
 openshell=false   
+show_axis=true    # plot direction of "up" axis in xyz files
 screening=on      # use screening to speed 
-screen_thrs=1.d-6
+screen_thrs=1.d-8
 # calc=[cdens]      # what to calculate, and in which order
 calc=[cdens, integral]
 # calc=[integral]
@@ -53,7 +54,7 @@ cdens {
 integral {
 	magnet_axis=T 
 #	magnet=[0.0, -1.0, 0.0]   
-	modulus=on                      # calculate the |J| integral
+#     modulus=on                      # calculate the |J| integral
 	grid(bond) {                     # define grid orthogonal to a bond 
 		type=gauss                   # gauss distribution of grid points
         bond=[2,3]      # define a bond
@@ -64,13 +65,15 @@ integral {
 		distance=1.096               # place grid 'distance' between atoms
         ## Either grid_points or spacing can be specified. The number of grid
         ## points will be rounded upwards to nearest multiple of gauss_order
-		gauss_order=9                # order for gauss quadrature
+		gauss_order=8                # order for gauss quadrature
 	   grid_points=[40,40,0]        # number of gridpoints on grid (i,j,k)
 #         spacing=[0.1, 0.1, 0.1]      # spacing of points on grid (i,j,k)
-		up=6.0            # hight of grid above and below the center
-		down=6.0
-		in=6.0             # width of grid in and out from the center
-		out=6.0
+#          height=[-3.0, 3.0]
+#          width=[-3.0, 3.0]
+		up=0.0            # hight of grid above and below the center
+		down=3.0
+		in=3.0             # width of grid in and out from the center
+		out=3.0
 		rotation=[0.0,0.0,0.0]          # Rotation of (i,j,k) -> (i',j',k') 
 #		radius=3.0                   # round grid: cut off at radius
 	}

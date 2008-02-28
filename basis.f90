@@ -93,12 +93,12 @@ contains
 		do i=1,basis%nctr
 			min_xp=1.d+15
 			x=1.d+15
+			dist=0.d0
 			l=basis%ctr(i)%l
 			do j=1,basis%ctr(i)%npf
 				xp=basis%ctr(i)%xp(j)
 				if ( xp < min_xp) min_xp=xp
 			end do
-			dist=0.d0
 			do while (x > SCREEN_THRS)
 				dist=dist+0.25
 				x=dist**l*exp(-min_xp*dist**2)
