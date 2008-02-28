@@ -132,7 +132,7 @@ contains
 		real(DP), dimension(3) :: normv
 		integer(I4), dimension(3) :: atoms
 		real(DP), dimension(3) :: v1, v2, v3, oo
-		real(DP), dimension(2) :: lh, ht
+		real(DP), dimension(2) :: hgt, wdt
 		real(DP) :: l3
 
 		if (keyword_is_set(input, 'grid.bond')) then
@@ -156,26 +156,30 @@ contains
 
  		!defaults, etc.
 		l3=-1.d0
-		lh=-1.d0
-		ht=-1.d0
+		wdt=-1.d0
+		hgt=-1.d0
 		call getkw(input, 'grid.distance', l3)
-		call getkw(input, 'grid.in', lh(1))
-		call getkw(input, 'grid.out', lh(2))
-		call getkw(input, 'grid.up', ht(1))
-		call getkw(input, 'grid.down', ht(2))
-		self%l=(/sum(lh), sum(ht), 0.d0/)
+		if (keyword_is_set(input, 'grid.height')) then
+			call getkw(input, 'grid.height', hgt)
+			call getkw(input, 'grid.width', wdt)
+			hgt(1)=-hgt(1)
+			wdt(1)=-wdt(1)
+		else
+			call getkw(input, 'grid.in', wdt(1))
+			call getkw(input, 'grid.out', wdt(2))
+			call getkw(input, 'grid.up', hgt(1))
+			call getkw(input, 'grid.down', hgt(2))
+		end if
+		self%l=(/sum(hgt), sum(wdt), 0.d0/)
 
 		if ( l3 < 0.d0 ) then
-			call msg_critical('grid.distance < 0!')
-			stop 
+			call msg_warn('grid.distance < 0!')
 		end if
-		if ( sum(lh) < 0.d0 ) then
+		if ( sum(wdt) < 0.d0 ) then
 			call msg_critical('Grid width < 0!')
-			stop 
 		end if
-		if ( sum(ht) < 0.d0 ) then
+		if ( sum(hgt) < 0.d0 ) then
 			call msg_critical('Grid heigth < 0!')
-			stop 
 		end if
 
 		! figure out "orthogonal" axis for magnetic field
@@ -188,17 +192,16 @@ contains
 			stop
 		end if
 		self%ortho=norm(self%ortho)
+	
+		v3=norm(v2-v1)
+		v1=-self%ortho
+		v2=norm(cross_product(v3, v1))
+		oo=self%basv(:,1)+l3*v3
+		self%origin=oo-wdt(2)*v2-hgt(2)*v1
 
-		! set up basis vectors for actual grid
-		v1=norm(self%basv(:,1)-self%basv(:,2))
-		oo=self%basv(:,1)-l3*v1
-		v3=norm(cross_product(v1, self%origin-oo))
-		v2=cross_product(v1, v3)
-		self%origin=oo-lh(1)*v2-ht(2)*v3
-
-        self%basv(:,1)=v2
-        self%basv(:,2)=v3
-		self%basv(:,3)=cross_product(v2,v3) 
+		self%basv(:,1)=v1
+		self%basv(:,2)=v2
+		self%basv(:,3)=v3
 
 		call nl
 		call msg_out('Integration grid data')
@@ -212,6 +215,8 @@ contains
 		write(str_g, '(a,3f12.6)') 'basv2  ', self%basv(:,2)
 		call msg_out(str_g)
 		write(str_g, '(a,3f12.6)') 'basv3  ', self%basv(:,3)
+		call msg_out(str_g)
+		write(str_g, '(a,3f12.6)') 'lenghts', self%l
 		call msg_out(str_g)
 		write(str_g, '(a,3f12.6)') 'magnet ', self%ortho
 		call msg_out(str_g)
@@ -517,18 +522,40 @@ contains
 		real(DP), dimension(3) :: r, coord
 		character(2) :: symbol
 		type(atom_t), pointer :: atom
-		
+		logical :: show_axis
+
+
 		natoms=get_natoms(mol)
 		
 		call get_grid_size(self,p1,p2,p3)
+		call getkw(input, 'show_axis', show_axis)
+		i=0
+		if (show_axis) i=1
+
 
 		write(str_g, '(2a)') 'Grid plot in ', trim(fname)
 		call msg_note(str_g)
 		open(77,file=trim(fname))
 
 		if (p3 > 1) then
-			write(77,*) natoms+8
+			write(77,*) natoms+8+i
 			write(77,*)
+		else if (p3 == 1) then
+			write(77,*) natoms+4+i
+			write(77,*)
+		else 
+			write(77,*) natoms
+			write(77,*)
+		end if
+
+		do i=1,natoms
+			call get_atom(mol, i, atom)
+			call get_symbol(atom, symbol)
+			call get_coord(atom, coord)
+			write(77,'(a, 3f16.10)') symbol, coord*au2a
+		end do
+
+		if (p3 > 1) then
 			r=gridpoint(self,1,1,1)
 			write(77,'(a,3f16.10)') 'X ', r*au2a
 			r=gridpoint(self,p1,1,1)
@@ -546,8 +573,6 @@ contains
 			r=gridpoint(self,p1,p2,p3)
 			write(77,'(a,3f16.10)') 'X ', r*au2a
 		else if (p3 == 1) then
-			write(77,*) natoms+4
-			write(77,*)
 			r=gridpoint(self,1,1,1)
 			write(77,'(a,3f16.10)') 'X ', r*au2a
 			r=gridpoint(self,p1,1,1)
@@ -556,18 +581,19 @@ contains
 			write(77,'(a,3f16.10)') 'X ', r*au2a
 			r=gridpoint(self,p1,p2,1)
 			write(77,'(a,3f16.10)') 'X ', r*au2a
-		else 
-			write(77,*) natoms
-			write(77,*)
 		end if
-	
 
-		do i=1,natoms
-			call get_atom(mol, i, atom)
-			call get_symbol(atom, symbol)
-			call get_coord(atom, coord)
-			write(77,'(a, 3f16.10)') symbol, coord*au2a
-		end do
+		if (show_axis) then
+			select case (trim(self%mode))
+				case ('std','base')
+					write(77,'(a,3f16.10)') 'X ', &
+						(self%origin+self%basv(:,3))*au2a
+				case ('bond')
+					write(77,'(a,3f16.10)') 'X ', &
+						(self%origin+self%ortho)*au2a
+			end select
+		end if
+		
 		close(77)
 	end subroutine
 
@@ -918,6 +944,45 @@ contains
 		real(DP), dimension(3), intent(out) :: v
 		v=self%ortho
 	end subroutine
+	
+	subroutine quadrant()
+		integer(I4) :: i, j, k
+		real(DP), dimension(3) :: v1, v2, v3
+		integer, dimension(3,3) :: vtab2, vtab1 = reshape((/ &
+		1,0,0, &
+		0,1,0, &
+		0,0,1/), (/3,3/))
+
+		vtab2=vtab1
+		do i=1,3
+			do j=i+1,3
+				v3=cross_product(dble(vtab1(:,i)), dble(vtab2(:,j)))
+				print '(3i4,a,3i4,a,3f6.2)', vtab1(:,i), ':', vtab2(:,j), &
+				' => ', v3
+			end do
+		end do
+		print *
+		vtab2=-vtab1
+		do i=1,3
+			do j=i+1,3
+				v3=cross_product(dble(vtab1(:,i)), dble(vtab2(:,j)))
+				print '(3i4,a,3i4,a,3f6.2)', vtab1(:,i), ':', vtab2(:,j), &
+				' => ', v3
+			end do
+		end do
+		print *
+		vtab1=-vtab1
+		do i=1,3
+			do j=i+1,3
+				v3=cross_product(dble(vtab1(:,i)), dble(vtab2(:,j)))
+				print '(3i4,a,3i4,a,3f6.2)', vtab1(:,i), ':', vtab2(:,j), &
+				' => ', v3
+			end do
+		end do
+!        stop
+
+	end subroutine
+
 end module
 
 !    function gridmap(self, i, j) result(r)
