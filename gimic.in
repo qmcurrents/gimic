@@ -71,7 +71,7 @@ def main():
 	top.add_kw('diamag', 'BOOL', (True,))
 	top.add_kw('paramag', 'BOOL', (True,))
 	top.add_kw('calc', 'STR', None)
-	top.add_kw("show_axis", 'BOOL', (True,))
+	top.add_kw("show_up_axis", 'BOOL', (True,))
 
 	plot=getkw.Section('plot')
 	plot.set_arg('BOOL', (True, ))
@@ -279,7 +279,7 @@ def check_grid(grid):
 		return
 	arg=grid.get_arg().arg[0]
 	if (arg == 'std' or arg == 'base'):
-		required=('origin', 'ivec', 'jvec', 'lengths', 'spacing')
+		required=('origin', 'ivec', 'jvec', 'lengths')
 		ignore=('file', 'bond', 'coord1', 'coord2', 'width', 'height',
 				'in', 'out', 'up', 'down', 'radius')
 		for i in required:
@@ -289,6 +289,18 @@ def check_grid(grid):
 		for i in ignore:
 			if check_opt(grid,i):
 				print warn % (i,arg)
+		flag=0
+		if check_opt(grid, 'spacing'):
+			flag=1
+		if check_opt(grid, 'grid_points'):
+			flag=flag+2
+		if flag == 0:
+			print "Error: Either spacing or grid_points must be set"
+			sys.exit(1)
+		if flag == 3:
+			print "Error: Both spacing and grid_points set!"
+			sys.exit(1)
+
 	elif arg == 'file': 
 		required=('file',)
 		ignore=('ivec', 'jvec', 'bond', 'fixpoint', 'fixcoord', 'coord1', 

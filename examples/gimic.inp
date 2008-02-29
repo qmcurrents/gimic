@@ -1,26 +1,25 @@
 # NEW INPUT
 
-	
 dryrun=off        # don't actually calculate (good for tuning grids, etc.)
 mpirun=off        # run in parallel mode
-title="CO2"
-basis="mol"
-density="XDENS"
+title=""
+basis="mol"       # Name of MOL file with coordinates and basis sets
+density="XDENS"   # File with AO density and perturbed densities
 spherical=off     # don't touch, unless you REALLY know what you are doing
 debug=1           # debug print level
 diamag=on           # turn on/off diamagnetic contributions
 paramag=on          # turn on/off paramagnetic contributions
-openshell=false   
-show_axis=true    # plot direction of "up" axis in xyz files
-screening=on      # use screening to speed 
-screen_thrs=1.d-8
-# calc=[cdens]      # what to calculate, and in which order
-calc=[cdens, integral]
-# calc=[integral]
+openshell=false 
+screening=on        # use screening to speed up 
+screen_thrs=1.d-8   # Screening threshold
+show_up_axis=true   # mark "up" axis in .xyz files
+# calc=[cdens]      
+calc=[cdens, integral]  # what to calculate, and in which order
+# calc=[cdens, integral]
 # calc=[cdens, integral, divj, edens]
 
-cdens { 
-	magnet_axis=y #[-] i,j,k or x,y,z or T -> align magnet along axis
+cdens {           
+	magnet_axis=-z #[-] i,j,k || x,y,z -> align magnet along axis
 #	magnet=[0.0, -1.0, 0.0]   # magnet vector
 	scale_vectors=1.0
 	spin_density=off          
@@ -28,14 +27,14 @@ cdens {
 	jvector="JVECTOR"   # file name for the current vectors
 	grid(base) {    # grid type can be: base/std, bond or file (see below)
 		type=even   # even spaced or gauss quadrature distribution on interval
-		origin=[-4.0,  0.0, -4.0]  # origin of grid
+		origin=[-8.0, -8.0, 0.0]  # origin of grid
 		ivec=[1.0, 0.0, 0.0]       # basis vector i
-		jvec=[ 0.0, 0.0, 1.0]      # basis vector j ( k = i x j )
-		lengths=[8.0, 8.0, 0.0]    # lenthts of (i,j,k)
-		spacing=[0.5, 0.5, 0.5]    # spacing of points on grid (i,j,k)
-#     grid_points=[5,5,0]      # number of gridpoints on grid (i,j,k)
-		rotation=[0.0,0.0,0.0]    # Rotation of (i,j,k) -> (i',j',k') in degrees
-							   # Euler angles, x-y-z convention
+		jvec=[ 0.0, 1.0, 0.0]      # basis vector j ( k = i x j )
+		lengths=[16.0, 16.0, 0.0]    # lenthts of (i,j,k)
+		spacing=[0.5, 0.5, 0.5] # spacing of points on grid (i,j,k)
+#         grid_points=[50,50,0]   # number of gridpoints on grid (i,j,k)
+		rotation=[0.0,0.0,0.0]  # Rotation of (i,j,k) -> (i',j',k') in degrees
+								   # Euler angles, x-y-z convention
 	}
 	plot(on) {          # file names for plots
 		vector="JVEC"   
@@ -44,36 +43,41 @@ cdens {
 		gopenmol="jmod.plt"
 		projection="JPRJ"
 	}
+}
+	
+
 ## Read in grid from external file. Use the source, Luke.
 # grid(file) {   
 #     file=myspecialgrid.grd
 # }
 
-}
 
 integral {
 	magnet_axis=T 
 #	magnet=[0.0, -1.0, 0.0]   
-#     modulus=on                      # calculate the |J| integral
+	modulus=off                      # calculate the |J| integral
 	grid(bond) {                     # define grid orthogonal to a bond 
 		type=gauss                   # gauss distribution of grid points
-        bond=[2,3]      # define a bond
-#         coord1=[0.0, 0.0, 2.145166]  # "atom" coordinates
-#         coord2=[0.0, 0.0, -2.145166] 
-#         fixpoint=1      # fix magnetic field
-		fixcoord=[0.0, 1.0, 0.0] 
-		distance=1.096               # place grid 'distance' between atoms
+#         origin=[0.0, 0.0, 0.0]     # fix grid orientation
+#         bond=[1,2]                  # atom indeces for bond
+#         fixpoint=5
+		bond=[1,2]                  # atom indeces for bond
+		fixpoint=5
+#		coord1=[0.0, 0.0, 2.145166]  # "atom" coordinates
+#		coord2=[0.0, 0.0, -2.145166] 
+#		fixcoord=[0.0, 0.0, 0.0]
+		distance=1.5               # place grid 'distance' between atoms
         ## Either grid_points or spacing can be specified. The number of grid
         ## points will be rounded upwards to nearest multiple of gauss_order
-		gauss_order=8                # order for gauss quadrature
-	   grid_points=[40,40,0]        # number of gridpoints on grid (i,j,k)
+		gauss_order=9                # order for gauss quadrature
+	   grid_points=[30,30,0]        # number of gridpoints on grid (i,j,k)
 #         spacing=[0.1, 0.1, 0.1]      # spacing of points on grid (i,j,k)
-#          height=[-3.0, 3.0]
-#          width=[-3.0, 3.0]
-		up=0.0            # hight of grid above and below the center
-		down=3.0
-		in=3.0             # width of grid in and out from the center
-		out=3.0
+		up=4.0
+		down=4.0
+		in=1.0
+		out=6.0
+#         height=[-5.0, 5.0]
+#         width=[-5.0, 5.0]
 		rotation=[0.0,0.0,0.0]          # Rotation of (i,j,k) -> (i',j',k') 
 #		radius=3.0                   # round grid: cut off at radius
 	}
@@ -87,13 +91,16 @@ divj {
 	magnet_axis=y 
 #	magnet=[0.0, -1.0, 0.0]   
 	gopenmol='divj.plt'
-	grid(base) { 
-		type=even
-		origin=[-4.0, 0.0, -4.0]
-		ivec=[1.0, 0.0, 0.0]
-		jvec=[ 0.0, 0.0, 1.0]
-		lengths=[10.0, 10.0, 0.0]
-		spacing=[0.5, 0.5, 0.5]
+	grid(base) {    # grid type can be: base/std, bond or file (see below)
+		type=even   # even spaced or gauss quadrature distribution on interval
+		origin=[-8.0, -8.0, 0.0]  # origin of grid
+		ivec=[1.0, 0.0, 0.0]       # basis vector i
+		jvec=[ 0.0, 1.0, 0.0]      # basis vector j ( k = i x j )
+		lengths=[16.0, 16.0, 0.0]    # lenthts of (i,j,k)
+		spacing=[0.5, 0.5, 0.5] # spacing of points on grid (i,j,k)
+	#	grid_points=[50,50,0]   # number of gridpoints on grid (i,j,k)
+		rotation=[0.0,0.0,0.0]  # Rotation of (i,j,k) -> (i',j',k') in degrees
+								   # Euler angles, x-y-z convention
 	}
 }
 
@@ -101,14 +108,15 @@ edens {
 	density='EDENS'
 	density_plot='edens_plt.txt'
 	gopenmol='edens.plt'
-	grid(base) {    
-		type=even   
-		origin=[-4.0,  0.0, -4.0]  
-		ivec=[1.0, 0.0, 0.0]       
-		jvec=[ 0.0, 0.0, 1.0]      
-		lengths=[8.0, 8.0, 0.0]    
-		spacing=[0.5, 0.5, 0.5]    
-#     grid_points=[5,5,0]      
-		rotation=[0.0,0.0,0.0]    
+	grid(base) {    # grid type can be: base/std, bond or file (see below)
+		type=even   # even spaced or gauss quadrature distribution on interval
+		origin=[-8.0, -8.0, 0.0]  # origin of grid
+		ivec=[1.0, 0.0, 0.0]       # basis vector i
+		jvec=[ 0.0, 1.0, 0.0]      # basis vector j ( k = i x j )
+		lengths=[16.0, 16.0, 0.0]    # lenthts of (i,j,k)
+		spacing=[0.5, 0.5, 0.5] # spacing of points on grid (i,j,k)
+	#	grid_points=[50,50,0]   # number of gridpoints on grid (i,j,k)
+		rotation=[0.0,0.0,0.0]  # Rotation of (i,j,k) -> (i',j',k') in degrees
+								   # Euler angles, x-y-z convention
 	}
 }

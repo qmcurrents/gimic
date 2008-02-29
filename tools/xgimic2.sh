@@ -48,7 +48,7 @@ case "$1" in
 		xvdint
 		xcphf
 		xjoda
-		xcpdens_sym.x
+		xcpdens
 		cleaner
 	;;
 	--mbpt)
@@ -73,7 +73,7 @@ case "$1" in
 		echo "*** xvdint"; xvdint
 		echo "*** xsdcc"; xsdcc
 		echo "*** xjoda"; xjoda
-		xcpdens_sym.x
+		xcpdens
 		cleaner
 	;;
 	--cc)
@@ -98,7 +98,7 @@ case "$1" in
 		echo "*** xvdint"; xvdint
 		echo "*** xsdcc"; xsdcc
 		echo "*** xjoda"; xjoda
-		xcpdens_sym.x
+		xcpdens
 		cleaner
 	;;
 	*)

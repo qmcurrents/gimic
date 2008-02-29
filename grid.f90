@@ -115,9 +115,14 @@ contains
 		call getkw(input, 'grid.origin', self%origin)
 		call getkw(input, 'grid.ivec', self%basv(:,1))
 		call getkw(input, 'grid.jvec', self%basv(:,2))
-		call getkw(input, 'grid.spacing', self%step)
 		call getkw(input, 'grid.lengths', self%l)
-! grid_points
+
+		if (keyword_is_set(input, 'grid.spacing')) then
+			call getkw(input, 'grid.spacing', self%step)
+		else
+			call getkw(input, 'grid.grid_points', self%npts)
+			self%step=self%l/(self%npts-1)
+		end if
 
 		self%basv(:,3)=cross_product(self%basv(:,1),self%basv(:,2)) 
 	end subroutine
@@ -528,7 +533,7 @@ contains
 		natoms=get_natoms(mol)
 		
 		call get_grid_size(self,p1,p2,p3)
-		call getkw(input, 'show_axis', show_axis)
+		call getkw(input, 'show_up_axis', show_axis)
 		i=0
 		if (show_axis) i=1
 

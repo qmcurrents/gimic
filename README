@@ -9,7 +9,7 @@ list please use the source, Luke.
 o For instructions how to compile and install this program refer to
   the INSTALL file in the top level directory. 
 o For more detailed information on how to use the program read the documents 
-  found in the Documentation directory. Note that the manual is obsolete.
+  found in the Documentation directory. 
 o There is an annotated example input in the examples/ directory. 
 o For information on command line flags available run: 'gimic --help'
 
