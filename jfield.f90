@@ -336,7 +336,7 @@ contains
 					jmod=sqrt(sum(foo**2))
 					jprj=dot_product(norm,foo)
 					if (jmod_plt /= '') then
-						write(MODFD, '(3e19.12)') rr, jmod
+						write(MODFD, '(4e18.10)') rr, jmod
 					end if
 					if (jvec_plt /= '') then
 						write(JVPFD, '(6f11.7)')  rr, foo*AU2A

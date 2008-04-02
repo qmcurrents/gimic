@@ -1,72 +1,76 @@
 #!/usr/bin/env python
 
 import string, math, sys, re
+from getopt import getopt
 
-tol=3.0
-mint=1.e-2
-amin=0.e10
-amax=0.e0
+vmin=0.0
+vmax=1.e10
 scale=1.e0
-foo=[3.0]
+fd=None
+ofd=sys.stdout
 
-defvals="""tol=3.0
-mint=1.e-2
-amin=0.e10
-amax=0.e0
-scale=1.e0
-foo=[3.0]"""
+def setup():
+	global scale, vmin, vmax, fd, ofd
+	jvecf="JVEC.txt"
+	outfile=None
+	try:
+		(opts,args)=getopt(sys.argv[1:], "o:s:m:M:h")
+	except Exception, inst:
+		print "Error: ", inst
+		sys.exit(1)
 
-try:
-	execfile('jfilter.inp')
-except:
-	fd=open('jfilter.inp','w')
-	fd.write(defvals)
-	fd.close()
-	pass
+	for i in opts:
+		if i[0] == '-o':
+			outfile=i[1]
+			continue 
+		if i[0] == '-s':
+			scale=float(i[1])
+			continue 
+		if i[0] == '-M':
+			vmin=float(i[1])
+			continue 
+		if i[0] == '-m':
+			vmax=float(i[1])
+			continue 
+		if i[0] == '-h':
+			print "usage: %s [-s scale] [-M min] [-m max] [file]" % (
+					sys.argv[0])
+			sys.exit(1)
+
+	if len(args) != 0:
+		jvecf=args[0]
+
+	fd=open(jvecf,'r')
+	if outfile is not None:
+		ofd=open(outfile,'w')
 
 def main():
-    	jvecf=sys.argv[1]
-	fd=open(jvecf,'r')
-	while 1: 
-		t=fd.tell()
-	    	l=fd.readline()
-		if not re.search(r'^\s*#', l):
-		    fd.seek(t)
-		    break
-	l=fd.readlines()
-	global amax, amin
+	global scale, vmin, vmax, fd, ofd
+	setup()
+	amin=0.e10
+	amax=0.e0
 
-	print amax, amin, scale
+	tmp=fd.readlines()
+	lines=[] 
+	for i in tmp:
+		if re.search(r'^\s*#', i):
+			continue
+		lines.append(i)
 
-	fds=[]
-
-	for i in range(len(foo)):
-		fds.append(open(jvecf+'.'+str(i+1),'w'))
-
-	for i in l:
+	for i in lines:
 		(x,y,z,a,b,c)=map(float, string.split(i))
 		xlen=math.sqrt(a**2+b**2+c**2)
 		if xlen > amax:
 			amax=xlen
 		if xlen < amin:
 			amin=xlen
-		if (xlen > tol or xlen < mint):
-			a=0.e0; b=0.e0; c=0.e0 
-			print >> fds[0], x, y, z, a, b, c
-			continue
-		ff=1
-		for j in foo: 
-			if xlen <= j:
-				#n=ff/scale
-				#n=j/scale
-				n=1/scale
-				print >> fds[ff-1], x, y, z, a/n, b/n, c/n
-				break
-			ff+=1
+		xlen=xlen*scale
+		if (xlen < vmax and xlen > vmin):
+			print >> ofd, x, y, z, a*scale, b*scale, c*scale
 
-	print >> sys.stderr, "%f (%f)" % (amax, amax*scale)
+	print >> sys.stderr, "max: %f (%f)" % (amax, amax*scale)
 
-	for i in fds:
-		i.close()
+	fd.close()
+	ofd.close()
 
 main()
