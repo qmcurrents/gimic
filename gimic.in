@@ -71,7 +71,7 @@ def main():
 	top.add_kw('diamag', 'BOOL', (True,))
 	top.add_kw('paramag', 'BOOL', (True,))
 	top.add_kw('calc', 'STR', None)
-	top.add_kw("show_up_axis", 'BOOL', (True,))
+	top.add_kw("show_up_axis", 'BOOL', (False,))
 
 	plot=getkw.Section('plot')
 	plot.set_arg('BOOL', (True, ))
