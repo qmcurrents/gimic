@@ -352,6 +352,9 @@ contains
 						write(JPRJFD, '(3e19.12)') rr, jprj
 					end if
 				end do
+				if (jvec_plt /= '') then
+					write(JVPFD,*)
+				end if
 				if (jmod_plt /= '') then
 					write(MODFD,*)
 				end if
