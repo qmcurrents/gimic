@@ -340,11 +340,13 @@ contains
 					end if
 					if (jvec_plt /= '') then
 						write(JVPFD, '(6f11.7)')  rr, foo*AU2A
-!                        write(JVPFD, '(6f12.7)')  mr, foo
 					end if
 					if (njvec_plt /= '') then
-						write(NJVFD, '(6f11.7)')  rr, foo/nfac*AU2A
-!                        write(NJVFD, '(5e19.12)') mr, foo/nfac*0.15d0
+						if (nfac < 1.d-15) then
+							write(NJVFD, '(6f11.7)')  rr, 0.d0, 0.d0, 0.d0
+						else 
+							write(NJVFD, '(6f11.7)')  rr, foo/nfac*AU2A
+						end if
 					end if
 					if (jprj_plt /= '') then
 						write(JPRJFD, '(3e19.12)') rr, jprj
