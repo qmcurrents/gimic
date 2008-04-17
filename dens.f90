@@ -110,6 +110,12 @@ contains
         return
 
 42      bert_is_evil=.true. 
+		call get_debug_level(b) 
+		if (debug_level < 10) then
+        	call msg_critical('Density file not found!')
+			stop
+		end if
+			
         call msg_error('Density file not found, all densities set to 1')
 		call nl
 		dens=>self%da
@@ -305,6 +311,10 @@ contains
 		return
 
 42      bert_is_evil=.true. 
+		if (debug_level < 10) then
+        	call msg_critical('MO file not found!')
+			stop
+		end if
 		call msg_error('MO file not found, densitiy set to 1.d0')
 		dens(:,:,0)=1.d0
 	end subroutine
