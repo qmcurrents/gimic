@@ -120,7 +120,12 @@ contains
 		normal=get_grid_normal(self%grid)
 
 		bound=1.d+10
-		call getkw(input, 'integral.radius', bound)
+		call getkw(input, 'integral.grid.radius', bound)
+		if (bound < 1.d+10) then
+			write(str_g, *) 'Integration bound set to radius ', bound
+			call msg_out(str_g)
+		end if
+		
 		call grid_center(self%grid,center)
 
 		call schedule(p2, lo, hi)
@@ -210,7 +215,11 @@ contains
 		normal=get_grid_normal(self%grid)
 
 		bound=1.d+10
-		call getkw(input, 'integral.radius', bound)
+		call getkw(input, 'integral.grid.radius', bound)
+		if (bound < 1.d+10) then
+			write(str_g, *) 'Integration bound set to radius ', bound
+			call msg_out(str_g)
+		end if
 		call grid_center(self%grid,center)
 
 		call schedule(p2, lo, hi)
@@ -468,7 +477,11 @@ contains
 		normal=get_grid_normal(grid)
 
 		bound=1.d+10
-		call getkw(input, 'integral.radius', bound)
+		call getkw(input, 'integral.grid.radius', bound)
+		if (bound < 1.d+10) then
+			write(str_g, *) 'Integration bound set to radius ', bound
+			call msg_out(str_g)
+		end if
 		call grid_center(grid,center)
 
 		xsum3=0.d0
@@ -547,7 +560,11 @@ contains
 		normal=get_grid_normal(grid)
 
 		bound=1.d+10
-		call getkw(input, 'integral.radius', bound)
+		call getkw(input, 'integral.grid.radius', bound)
+		if (bound < 1.d+10) then
+			write(str_g, *) 'Integration bound set to radius ', bound
+			call msg_out(str_g)
+		end if
 		call grid_center(grid,center)
 
 		call get_jvectors(jf, 1, jvec)

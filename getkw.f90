@@ -120,12 +120,11 @@ module getkw_class
     type section_t
         private
         logical :: set
-		integer(SP) :: nsect, nkw, nmulti
+		integer(SP) :: nsect, nkw
         character(MAXID) :: id
         type(keyword_t), pointer :: arg
         type(keyword_t), pointer :: kw
 		type(section_t), pointer :: sects
-		type(section_t), pointer :: multi
 		type(section_t), pointer :: next
     end type
 

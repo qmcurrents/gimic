@@ -5,7 +5,6 @@ module kinds_m
 	integer, parameter :: DP = kind(0.0d0)
 #ifdef HAVE_QP
  	integer, parameter :: QP = kind(0.0q0)
-#else
 	integer, parameter :: QP = 16
 #endif
 	integer, parameter :: I2 = 2
