@@ -115,6 +115,7 @@ contains
 		logical :: xdens_p, modens_p, dryrun_p, imod_p
 		character(LINELEN), dimension(:), pointer :: cstr
 
+
 		divj_p=.false.; int_p=.false.
 		cdens_p=.false.; edens_p=.false.; dryrun_p=.false.
 		xdens_p=.false.; modens_p=.false.; imod_p=.false.
@@ -133,6 +134,7 @@ contains
 			call msg_info('Closed-shell calculation')
 		end if
 		call nl
+
 		
 		! figure out work order
 		nullify(cstr)
