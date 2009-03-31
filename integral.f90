@@ -110,24 +110,6 @@ contains
 		real(DP) :: xsum, xsum2, xsum3
 		type(vector_t) :: jvec
 		type(tensor_t) :: jt
-		character(5) :: spin='total'
-
-		if (uhf_p) then
-			call getkw(input,'integral.spin', spin)
-			select case(spin)
-				case('total')
-					spin='total'
-				case('alpha')
-					spin='alpha'
-					call msg_note("Integrating alpha density")
-				case('beta')
-					spin='beta'
-					call msg_note("Integrating beta density")
-				case default
-					call msg_error("Invalid spin: " // spin)
-					stop
-			end select
-		end if
 		
 		call get_grid_size(self%grid, p1, p2, p3)
 		call push_section(input, 'integral')
@@ -162,7 +144,7 @@ contains
 				do i=1,p1
 					rr=gridpoint(self%grid, i, j, k)
 					r=sqrt(sum((rr-center)**2))
-					call ctensor(self%jt, rr, jt, spin)
+					call ctensor(self%jt, rr, jt, 'total')
 					jvec%v=matmul(jt%t,bb)
 					if ( r > bound ) then
 						w=0.d0
@@ -224,25 +206,7 @@ contains
 		real(DP) :: xsum, xsum2, xsum3
 		type(vector_t) :: jvec
 		type(tensor_t) :: jt
-		character(5) :: spin='total'
-
-		if (uhf_p) then
-			call getkw(input, 'integral.spin', spin)
-			select case(spin)
-				case('total')
-					spin='total'
-				case('alpha')
-					spin='alpha'
-					call msg_note("Integrating alpha density")
-				case('beta')
-					spin='beta'
-					call msg_note("Integrating beta density")
-				case default
-					call msg_error("Invalid spin: " // spin)
-					stop
-			end select
-		end if
-
+		
 		call get_grid_size(self%grid, p1, p2, p3)
 		call push_section(input, 'integral')
 		call get_magnet(self%grid, bb)
@@ -275,7 +239,7 @@ contains
 				do i=1,p1
 					rr=gridpoint(self%grid, i, j, k)
 					r=sqrt(sum((rr-center)**2))
-					call ctensor(self%jt, rr, jt, spin)
+					call ctensor(self%jt, rr, jt, 'total')
 					jvec%v=matmul(jt%t,bb)
 					if ( r > bound ) then
 						w=0.d0

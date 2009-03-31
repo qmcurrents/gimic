@@ -63,18 +63,11 @@ contains
 		call init_dfdr(self%dfr, self%mol)
 		call init_d2fdrdb(self%d2f, self%mol)
 
-		giao_p=.true.
 		diamag_p=.true.
 		paramag_p=.true.
 		spin_density=.false.
-		call getkw(input, 'GIAO', giao_p)
 		call getkw(input, 'diamag', diamag_p)
 		call getkw(input, 'paramag', paramag_p)
-		
-		if (.not.giao_p) then
-			call msg_info('GIAOs not used!')
-			call nl
-		end if
 		if (uhf_p) call getkw(input, 'cdens.spin_density', spin_density)
 
 		if (.not.diamag_p) then
@@ -248,12 +241,10 @@ contains
 		rho=DP50*r ! needed for diamag. contr.
 
 		call bfeval(self%bfv, r, bfvec)
-        call mkdbop(self%dop, r, dbop)
 		call dfdr(self%dfr, r, drvec)
-		if (giao_p) then
-			call dfdb(self%dbt, r, bfvec, dbop, dbvec)
-			call d2fdrdb(self%d2f, r, bfvec, drvec, dbop, d2fvec)
-		end if
+        call mkdbop(self%dop, r, dbop)
+		call dfdb(self%dbt, r, bfvec, dbop, dbvec)
+		call d2fdrdb(self%d2f, r, bfvec, drvec, dbop, d2fvec)
 
 		call contract(self, j%t, spin)
 
@@ -286,10 +277,8 @@ contains
 		call bfeval(self%bfv, r, bfvec)
 		call dfdr(self%dfr, r, drvec)
         call mkdbop(self%dop, r, dbop)
-		if (giao_p) then
-			call dfdb(self%dbt, r, bfvec, dbop, dbvec)
-			call d2fdrdb(self%d2f, r, bfvec, drvec, dbop, d2fvec)
-		end if
+		call dfdb(self%dbt, r, bfvec, dbop, dbvec)
+		call d2fdrdb(self%d2f, r, bfvec, drvec, dbop, d2fvec)
 
 		call contract2(self, pj%t, dj%t, spin)
 
@@ -329,8 +318,8 @@ contains
 				prsp1=-dot_product(self%dendb, drvec(:,j))    ! (-i)**2=-1 
 				prsp2=dot_product(self%denbf, d2fvec(:,k))
 				ppd=dot_product(self%pdbf, drvec(:,j))
-				ctp(j,i)=ZETA*ppd
-				if (giao_p) ctp(j,i)=ctp(j,i)+ZETA*(prsp1+prsp2)
+				ctp(j,i)=ZETA*(ppd+prsp1+prsp2)
+!                ctp(j,i)=ZETA*ppd
 				k=k+1
 			end do
 		end do
@@ -378,8 +367,8 @@ contains
 				prsp1=-dot_product(self%dendb, drvec(:,m))    ! (-i)**2=-1 
 				prsp2=dot_product(self%denbf, d2fvec(:,k))
 				ppd=dot_product(self%pdbf, drvec(:,m))
-				ct(m,b)=ZETA*ppd
-				if (giao_p) ct(m,b)=ct(m,b)+ZETA*(prsp1+prsp2)
+!                ct(m,b)=ZETA*ppd
+				ct(m,b)=ZETA*(ppd+prsp1+prsp2)
 !                print *, m,b
 !                print *, ppd, prsp1, prsp2
 				k=k+1

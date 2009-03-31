@@ -76,7 +76,6 @@ module globals_m
 	logical :: mpirun_p=.false.
 	logical :: master_p=.false.
 	logical :: uhf_p=.false.
-	logical :: giao_p=.true.
 
 	type(getkw_t), save :: input
 

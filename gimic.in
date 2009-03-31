@@ -68,7 +68,6 @@ def main():
 	top.add_kw('spherical', 'BOOL', (True,))
 	top.add_kw('dryrun', 'BOOL', (False,))
 	top.add_kw('openshell', 'BOOL', (False,))
-	top.add_kw('GIAO', 'BOOL', (True,))
 	top.add_kw('diamag', 'BOOL', (True,))
 	top.add_kw('paramag', 'BOOL', (True,))
 	top.add_kw('calc', 'STR', None)
@@ -177,7 +176,6 @@ def main():
 	divgrid.add_kw("gauss_order", 'INT', 1)
 
 	integral=getkw.Section('integral')
-	integral.add_kw('spin', 'STR', ('total',))
 	integral.add_kw('lip_order', 'INT', (10,))
 	integral.add_kw('interpolate', 'BOOL', (False,))
 	integral.add_kw('tensor', 'BOOL', (False,))

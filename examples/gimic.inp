@@ -56,7 +56,6 @@ integral {
 	magnet_axis=T 
 #	magnet=[0.0, -1.0, 0.0]   
 	modulus=off                      # calculate the |J| integral
-	spin=total                       # total, alpha, beta
 	grid(bond) {                     # define grid orthogonal to a bond 
 		type=gauss                   # gauss distribution of grid points
 #         origin=[0.0, 0.0, 0.0]     # fix grid orientation
