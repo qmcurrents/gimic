@@ -332,6 +332,7 @@ contains
 						case(4)
 							foo=jf%vsd(i,j)%v
 					end select
+					foo=foo*AU2A
 					nfac=sqrt(sum(foo(:)**2))
 					jmod=sqrt(sum(foo**2))
 					jprj=dot_product(norm,foo)
@@ -339,13 +340,13 @@ contains
 						write(MODFD, '(4e18.10)') rr, jmod
 					end if
 					if (jvec_plt /= '') then
-						write(JVPFD, '(6f11.7)')  rr, foo*AU2A
+						write(JVPFD, '(6f11.7)')  rr, foo
 					end if
 					if (njvec_plt /= '') then
 						if (nfac < 1.d-15) then
 							write(NJVFD, '(6f11.7)')  rr, 0.d0, 0.d0, 0.d0
 						else 
-							write(NJVFD, '(6f11.7)')  rr, foo/nfac*AU2A
+							write(NJVFD, '(6f11.7)')  rr, foo/nfac
 						end if
 					end if
 					if (jprj_plt /= '') then
