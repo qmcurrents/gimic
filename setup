@@ -1,31 +1,23 @@
 #!/bin/sh
 
-snykov() {
-BLASDIR=/opt/intel/cmkl/9.1.023/lib/64
-INSTDIR=$HOME/gimic
-case $* in 
-	--mpi) 
-	MPIFC=scampif90 ./configure --prefix=${INSTDIR} --with-blas-dir=$BLASDIR \
-	--with-aces2=$HOME/aces2/lib --enable-mpi=scali
-	;;
-	*)
-	./configure --prefix=${INSTDIR} --with-aces2=$HOME/aces2/lib \
-	--with-blas-dir=$BLASDIR
-	;;
-esac
-}
+PREFIX="$HOME/gimic"
+CFOUR=""
 
 stallo() {
-INSTDIR=$HOME/gimic
-case $* in 
-	--mpi) 
-	FC=ifort ./configure --prefix=${INSTDIR} \
-	--enable-mpi=openmpi --with-aces2=$HOME/aces2/lib
-	;;
-	*)
-	FC=ifort ./configure --prefix=${INSTDIR} --with-aces2=$HOME/aces2/lib
-	;;
-esac
+	if [ -f /etc/profile.d/modules.sh ]; then
+		. /etc/profile.d/modules.sh
+		module load python
+	fi
+	BLASDIR="/opt/intel/mkl/10.0.011"
+	PYTHON="--with-python=/global/apps/python/2.5.1"
+	for i in $*; do
+		case $i in
+			--para*|mpi) PARAFLAGS="--enable-mpi=openmpi" ;;
+			--prefix=*) PREFIX=$i ;;
+			--cfour=*) CFOUR="--with-aces2=${i#cfour=}" ;;
+		esac
+	done
+	CC=icc FC=ifort ./configure $PREFIX $PARAFLAGS $CFOUR
 }
 
 snowflake() {
@@ -43,10 +35,39 @@ case $* in
 esac
 }
 
-case `hostname` in 
-	compute-0-6.*) snykov $* ;;
-	stallo-*) stallo $* ;;
-	snowflake*) snowflake $* ;;
-	*) echo "unknown machine..."; exit 0 ;;
+macosx() {
+	PREFIX="--prefix=/opt/gimic"
+	for i in $*; do
+		case $i in
+			--para*|mpi) PARAFLAGS="--enable-mpi=openmpi" ;;
+			--prefix=*) PREFIX=$i ;;
+			--cfour=*) CFOUR="--with-aces2=${i#cfour=}" ;;
+		esac
+	done	
+	FC=gfortran ./configure $PREFIX $PARAFLAGS $CFOUR	
+}
+
+case `hostname` in
+	stallo*) stallo $*; exit 0 ;;
 esac
 
+case `uname` in
+	Linux*)
+	if [ -f /etc/lsb-release ]; then
+		. /etc/lsb-release
+	else
+		echo "/etc/lsb-release not found. Unknown host type, run configure by hand."
+	fi
+
+	case $DISTRIB_ID in
+		*buntu*) 
+		   [ $DISTRIB_RELEASE = "8.10" ] && intrepid $* 
+		   [ $DISTRIB_RELEASE = "9.04" ] && intrepid $* 
+		;;
+		*) echo "Unknown distribution: $DISTRIB_DESCRIPTION"; exit 1 ;;
+	esac
+	;;
+	Darwin)
+		macosx $*
+	;;
+esac

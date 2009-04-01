@@ -1,31 +1,31 @@
 module aces2_m
-	use kinds_m
-	implicit double precision (a-h,o-z)
+	use kinds
 	integer, parameter :: ABEL=8
 
 	public
 
 contains
 
+!
+! THIS ROUTINE EXPANDS THE A COMPRESSED MATRIX A(P,Q)
+! P >= Q TO AN ARRAY A(PQ) WITH P,Q. NOTE THIS ROUTINE 
+! EXPECTS THAT THE ARRAY A IS SYMMETRY PACKED.
+!
+!  INPUT : IRREP  ...  THE IRREP OF THE CORRESPONDING PART OF A
+!          NUM ......  POPULATION VECTOR FOR I AND J
+!          DISSIZE ..  DISTRIBUTION SIZE OF A
+!          A     ....  THE MATRIX A
+!          IANTI ..... 0 FOR SYMMETRIC AND 1 FOR ANTISYMMETRIC
+!                      MATRICES
+!
+!  OUTPUT : B .......  THE EXPANDED MATRIX A
+!
+!END
+!
+! CODED JG JAN/91
+!
 	subroutine matexp(irrep,num,a,b,ianti)
-	!
-	! THIS ROUTINE EXPANDS THE A COMPRESSED MATRIX A(P,Q)
-	! P >= Q TO AN ARRAY A(PQ) WITH P,Q. NOTE THIS ROUTINE 
-	! EXPECTS THAT THE ARRAY A IS SYMMETRY PACKED.
-	!
-	!  INPUT : IRREP  ...  THE IRREP OF THE CORRESPONDING PART OF A
-	!          NUM ......  POPULATION VECTOR FOR I AND J
-	!          DISSIZE ..  DISTRIBUTION SIZE OF A
-	!          A     ....  THE MATRIX A
-	!          IANTI ..... 0 FOR SYMMETRIC AND 1 FOR ANTISYMMETRIC
-	!                      MATRICES
-	!
-	!  OUTPUT : B .......  THE EXPANDED MATRIX A
-	!
-	!END
-	!
-	! CODED JG JAN/91
-	!
+		implicit double precision (a-h,o-z)
 		real(DP), dimension(:) :: a, b
 		real(DP), dimension(ABEL) :: num
 		dimension ipold(ABEL),ipnew(ABEL)
@@ -141,10 +141,11 @@ contains
 		endif
 	end subroutine
 
-	subroutine readpd(ddens,scr,noca,nvrta,nbas,inumber,ib,irrepx, ispin)
 !
 ! read the correlation contribution to the perturbed density from JOBARC
 !
+	subroutine readpd(ddens,scr,noca,nvrta,nbas,inumber,ib,irrepx, ispin)
+		implicit double precision (a-h,o-z)
 		integer pop,vrt,dirprd
 		dimension ddens(*),scr(*),ioffo(8),ioffv(8)
 
@@ -228,7 +229,6 @@ contains
 		end do
 	end subroutine
 
-	subroutine reordc(a,scr,nbast,pop,vrt,nbas)
 !
 !   THIS SUBROUTINE REORDERS A GIVEN MATRIX IN SUCH A WAY THAT
 !   ABACUS (CALCULATOR AND IN THE FUTURE CRAY) CAN HANDLE THE
@@ -245,6 +245,7 @@ contains
 !
 ! CODED OCT/90 JG
 !
+	subroutine reordc(a,scr,nbast,pop,vrt,nbas)
 		implicit double precision(a-h,o-z)
 		integer dirprd,pop,vrt
 		dimension a(nbast*nbast),scr(nbast*nbast)
@@ -291,7 +292,6 @@ contains
 		end do
 	end subroutine
 
-	subroutine symc(cfull,csym,nbast,nbas,scf,ispin)
 !
 !  THIS SUBROUTINE RETURNS THE SYMMETRY PACKED LIST OF THE INPUT
 !  MATRIX CFULL. IT IS USED IN THE INTEGRAL DERIVATIVE CODE TO
@@ -313,6 +313,7 @@ contains
 !
 !   CODED OCT/90   JG
 !
+	subroutine symc(cfull,csym,nbast,nbas,scf,ispin)
 		implicit double precision(a-h,o-z)
 		integer dirprd,pop,popfull,vrt
 		logical scf
@@ -343,7 +344,6 @@ contains
 		end do
 	end subroutine
 
-	subroutine symc2(cfull,csym,nbast,nbas,scf,ispin,irrepx)
 !
 !  THIS SUBROUTINE RETURNS THE SYMMETRY PACKED LIST OF THE INPUT
 !  MATRIX CFULL. IT IS USED IN THE INTEGRAL DERIVATIVE CODE TO
@@ -365,6 +365,7 @@ contains
 !
 !   CODED OCT/90   JG
 !
+	subroutine symc2(cfull,csym,nbast,nbas,scf,ispin,irrepx)
 		implicit double precision(a-h,o-z)
 		integer dirprd,pop,popfull,vrt
 		logical scf
@@ -411,14 +412,18 @@ program xcpdens_sym
 ! J. Juselius, University of Tromsø, 2007
 !
 	use aces2_m
-
 	implicit double precision(a-h,o-z)
+
+#ifdef MPI
+    include 'mpif.h'
+#endif
 	integer, parameter :: maxcor=2000000, alpha=1, beta=2
-	logical :: debug
+	logical :: debug, magn
 	real(8), dimension(maxcor) :: scr
 	integer, dimension(3) :: irrepb
 	integer, dimension(8) :: ioffmo,ioffdmo, nbasi, ip
 	integer :: dirprd,pop,vrt
+	real(8), dimension(:,:), pointer :: dmat
 
 	common/machsp/iintln,ifltln,iintfp,ialone,ibitwd
 	common/syminf/nstart,nirrep,irreps(255,2),dirprd(8,8)
@@ -437,21 +442,68 @@ program xcpdens_sym
 	integer :: uhf, ispin
 
 	! INIT ACES2 MODULE
+#ifdef MPI
+    call initenv('MODULE')
+#endif
 	call crapsi(scr,iuhf,0)
-	debug=.true.
+	debug=.false.
 
 	if (debug) print *, '/machsp/', iintfp, iintln
 
-    open(42, file='XDENS', status='unknown')
+	select case(iflags(18))
+		case(3,4,5,6,15,16,17)
+			magn=.true.
+		case default
+			magn=.false.
+	end select
+	
+	if (magn) then
+		open(42, file='XDENS', status='unknown')
+	else
+		open(42, file='CAODENS', status='unknown')
+	end if
 
 	do ispin=1,iuhf+1
 		call gendens(ispin)
 	end do
 	close(42)
 
+	if (.not.magn) then
+		nbas=noca+nvrta
+		allocate(dmat(nbas,nbas))
+		call wrtltdm(dmat)
+		deallocate(dmat)
+	end if
+
+
 	! ALL DONE, CALL CRAPSO
 	call crapso()
+    call finalize()
 contains
+!
+!  Write the lower triangular CAO density matrix
+!
+	subroutine wrtltdm(dmat)
+		real(8), dimension(:,:), intent(out) :: dmat
+
+		integer(4) :: i, j, nbas
+		
+		nbas=size(dmat(:,1))
+		
+		open(42, file='CAODENS', status='unknown')
+		read(42,*) dmat
+		close(42)
+
+		open(42, file='CAODENS2', status='unknown')
+		write(42,*) nbas
+		do j=1,nbas
+			do i=j,nbas
+				write(42,'(f)') dmat(i,j)
+			end do
+		end do
+		close(42)
+	end subroutine
+	
 	subroutine gendens(ispin)
 		integer, intent(in) :: ispin
 !
@@ -467,8 +519,8 @@ contains
 ! GET NUMBER OF BASIS FUNCTIONS CONSIDERING A CARTESIAN BASIS
 !
 		ione=1
-		call getrec(20,'JOBARC','NAOBASFN',ione,nbasc)
-		if (debug) print *, 'NBAS[C]', nbas, nbasc
+		CALL GETREC(20,'JOBARC','NAOBASFN',IONE,NBASC)
+		if (debug) print *, 'NBAS[C]', NBAS, NBASC
 !
 ! SYMMETRY STUFF, NUMBER OF BASIS FUNCTIONS PER IRREP 
 !
@@ -490,21 +542,21 @@ contains
 !  READ AO-DENSITY FROM JOBARC
 !
 			if (ispin == 1) then
-				CALL GETREC(20,'JOBARC','SCFDENSA',NBAS2*IINTFP,SCR(IDENS))
+				call getrec(20,'JOBARC','SCFDENSA',nbas2*iintfp,scr(idens))
 			else
-				CALL GETREC(20,'JOBARC','SCFDENSB',NBAS2*IINTFP,SCR(IDENS))
+				call getrec(20,'JOBARC','SCFDENSB',nbas2*iintfp,scr(idens))
 			end if
 !
 ! SAO --> CAO TRANSFORMATION; TWO XGEMM CALLS
 !
 			istart2=istart
 			istart3=istart2+nbas*nbasc
-			CALL GETREC(20,'JOBARC','CMP2ZMAT',NBAS*NBASC*IINTFP,&
-			SCR(ISTART2))
-			CALL XGEMM('N','N',NBASC,NBAS,NBAS,1.D0,SCR(ISTART2), &
-			NBASC,SCR(IDENS),NBAS,0.D0,SCR(ISTART3),NBASC)
-			CALL XGEMM('N','T',NBASC,NBASC,NBAS,1.D0,SCR(ISTART3),NBASC,&
-			SCR(ISTART2),NBASC,0.D0,SCR(IDENS),NBASC)
+			call getrec(20,'JOBARC','CMP2ZMAT',nbas*nbasc*iintfp,&
+			scr(istart2))
+			call xgemm('N','N',nbasc,nbas,nbas,1.d0,scr(istart2), &
+			nbasc,scr(idens),nbas,0.d0,scr(istart3),nbasc)
+			call xgemm('N','T',nbasc,nbasc,nbas,1.d0,scr(istart3),nbasc,&
+			scr(istart2),nbasc,0.d0,scr(idens),nbasc)
 
 !
 ! PRINT OUT AO HF-SCF DENSITY MATRIX ...
@@ -533,9 +585,9 @@ contains
 !  READ TOTAL MO-DENSITY FROM JOBARC
 !
 			if (ispin == 1) then
-				CALL GETREC(20,'JOBARC','RELDENSA',NBAS2*IINTFP,SCR(IDENS))
+				call getrec(20,'JOBARC','RELDENSA',nbas2*iintfp,scr(idens))
 			else
-				CALL GETREC(20,'JOBARC','RELDENSB',NBAS2*IINTFP,SCR(IDENS))
+				call getrec(20,'JOBARC','RELDENSB',nbas2*iintfp,scr(idens))
 			endif
 !
 ! PRINT OUT MO DENSITY MATRIX ...
@@ -556,9 +608,9 @@ contains
 			istart2=istart
 
 			if (ispin == 1) then
-				CALL GETREC(20,'JOBARC','SCFEVCA0',NBAS2*IINTFP,SCR(IMO)) 
+				call getrec(20,'JOBARC','SCFEVCA0',nbas2*iintfp,scr(imo)) 
 			else
-				CALL GETREC(20,'JOBARC','SCFEVCB0',NBAS2*IINTFP,SCR(IMO)) 
+				call getrec(20,'JOBARC','SCFEVCB0',nbas2*iintfp,scr(imo)) 
 			endif
 
 !
@@ -581,8 +633,8 @@ contains
 ! SAO --> CAO TRANSFORMATION; TWO XGEMM CALLS
 !
 			istart3=istart2+nbasc*nbas
-			CALL GETREC(20,'JOBARC','CMP2ZMAT',NBAS*NBASC*IINTFP,&
-			&               SCR(ISTART2))
+			call getrec(20,'JOBARC','CMP2ZMAT',nbas*nbasc*iintfp,&
+			&               scr(istart2))
 			call xgemm('n','n',nbasc,nbas,nbas,1.d0,scr(istart2),&
 			nbasc,scr(idens),nbas,0.d0,scr(istart3),nbasc)
 			call xgemm('n','t',nbasc,nbasc,nbas,1.d0,scr(istart3),nbasc,&
@@ -607,6 +659,10 @@ contains
 			write(42,*) 
 
 		endif
+
+!! return here if we don't have perturbed densities
+	if (.not.magn) return
+
 !
 ! PERTURBED DENSITY MATRIX .... MORE TO DO
 ! ****************************************
@@ -617,9 +673,9 @@ contains
 		istart=imo+nbas*nbas
 
 		if (ispin == 1) then
-			CALL GETREC(20,'JOBARC','SCFEVCA0',NBAS2*IINTFP,SCR(ISTART)) 
+			call getrec(20,'JOBARC','SCFEVCA0',nbas2*iintfp,scr(istart)) 
 		else
-			CALL GETREC(20,'JOBARC','SCFEVCB0',NBAS2*IINTFP,SCR(ISTART)) 
+			call getrec(20,'JOBARC','SCFEVCB0',nbas2*iintfp,scr(istart)) 
 		endif
 
 !
@@ -635,7 +691,7 @@ contains
 ! GET MAGNETIC FIELD INFORMATION                    
 !
 !        print *, '/kusse/', ntpert
-		CALL GETREC(20,'JOBARC','NSYMPERT',27,NTPERT)                             
+		call getrec(20,'JOBARC','NSYMPERT',27,ntpert)                             
 !
 ! IRREPS OF B-FIELD COMPONENTS
 !
@@ -793,8 +849,8 @@ contains
 
 			istart2=istart
 			istart3=istart2+nbasc*nbas
-			CALL GETREC(20,'JOBARC','CMP2ZMAT',NBAS*NBASC*IINTFP,&
-			SCR(ISTART2))
+			call getrec(20,'JOBARC','CMP2ZMAT',nbas*nbasc*iintfp,&
+			scr(istart2))
 			call xgemm('n','n',nbasc,nbas,nbas,1.d0,scr(istart2),&
 			nbasc,scr(iddens),nbas,0.d0,scr(istart3),nbasc)
 			call xgemm('n','t',nbasc,nbasc,nbas,1.d0,scr(istart3),nbasc,&
@@ -804,8 +860,8 @@ contains
 ! *******************************
 !
 			if(iflags(2).eq.0.or.debug) then
-				write(*,*) ' final perturbed HF-SCF density matrix dD(mu,nu)/dx'
-				call output(scr(iddens),1,nbasc,1,nbasc,nbasc,nbasc,1)
+			write(*,*) ' final perturbed HF-SCF density matrix dD(mu,nu)/dx'
+!                call output(scr(iddens),1,nbasc,1,nbasc,nbasc,nbasc,1)
 			endif
 
 			if (iflags(2).eq.0) then
@@ -861,7 +917,7 @@ contains
 !
 ! ADD CORRELATION CONTRIBUTION TO HF PART
 !
-                call saxpy(nbasc*nbasc,1.d0,scr(iscr1),1,scr(iddens),1)
+				call saxpy(nbasc*nbasc,1.d0,scr(iscr1),1,scr(iddens),1)
 !
 ! ANTISYMMETRIZE PERTURBED DENSITY MATRIX: D(mu,nu) = 1/2 (D(mu,nu) - D(nu,mu))
 !

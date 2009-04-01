@@ -83,6 +83,7 @@ LAPACK_LIBS=@LAPACK_LIBS@ $(BLAS_LIBS)
 BLAS95=@F90_LIBS_blas95@
 LAPACK95=@F90_LIBS_lapack95@
 LIBMPI_F90=@F90_LIBS_mpi_f90@
+CFOURLIBS=@F90_LIBS_cfour@
 
 #Fortran flags
 fcflags:=@fcflags@

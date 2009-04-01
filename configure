@@ -702,10 +702,10 @@ FCFLAGS_f90
 FC_MODEXT
 FC_MODCASE
 BLAS_LIBS
-F90_HEADER_aces2
-F90_MODULE_aces2
-F90_LDFLAGS_aces2
-F90_LIBS_aces2
+F90_HEADER_cfour
+F90_MODULE_cfour
+F90_LDFLAGS_cfour
+F90_LIBS_cfour
 PYTHON_BIN
 CPP
 GREP
@@ -1314,7 +1314,7 @@ Optional Packages:
   --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
   --with-blas=LIB         use BLAS library LIB
   --with-blas-dir=DIR     look for BLAS library in DIR
-  --with-aces2=PATH       specify search path form aces2 module and library
+  --with-cfour=PATH       specify search path form cfour module and library
 
 Some influential environment variables:
   CC          C compiler command
@@ -2445,6 +2445,11 @@ case $host in
 		try_cc="gcc icc cc"
 		try_fort="ifort ifc gfortran pgf90 f90"
 		build_type="ia64_linux"
+		;;
+	*i*86*-darwin*)
+		try_cc="gcc icc cc"
+		try_fort="ifort gfortran f90"
+		build_type="darwin_x86"
 		;;
 	*alpha*-linux*)
 		try_cc="ccc cc gcc"
@@ -6575,15 +6580,15 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
 ax_save_LIBS="$LIBS"
-{ echo "$as_me:$LINENO: Checking if ACES2 libraries are available" >&5
-echo "$as_me: Checking if ACES2 libraries are available" >&6;}
+{ echo "$as_me:$LINENO: Checking if CFOUR libraries are available" >&5
+echo "$as_me: Checking if CFOUR libraries are available" >&6;}
 
 
-# Check whether --with-aces2 was given.
-if test "${with_aces2+set}" = set; then
-  withval=$with_aces2; if test x${withval} = xno ; then
-     { echo "$as_me:$LINENO: WARNING: aces2 disabled at user option" >&5
-echo "$as_me: WARNING: aces2 disabled at user option" >&2;}
+# Check whether --with-cfour was given.
+if test "${with_cfour+set}" = set; then
+  withval=$with_cfour; if test x${withval} = xno ; then
+     { echo "$as_me:$LINENO: WARNING: cfour disabled at user option" >&5
+echo "$as_me: WARNING: cfour disabled at user option" >&2;}
     fi
 else
   withval="$FC_SEARCH_PATH"
@@ -6593,8 +6598,8 @@ fi
 
 
 
-{ echo "$as_me:$LINENO: checking aces2 fortran 90 header" >&5
-echo $ECHO_N "checking aces2 fortran 90 header... $ECHO_C" >&6; }
+{ echo "$as_me:$LINENO: checking cfour fortran 90 header" >&5
+echo $ECHO_N "checking cfour fortran 90 header... $ECHO_C" >&6; }
 ac_ext=${ac_fc_srcext-f}
 ac_compile='$FC -c $FCFLAGS $ac_fcflags_srcext conftest.$ac_ext >&5'
 ac_link='$FC -o conftest$ac_exeext $FCFLAGS $LDFLAGS $ac_fcflags_srcext conftest.$ac_ext $LIBS >&5'
@@ -6673,12 +6678,12 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 { echo "$as_me:$LINENO: result: $ax_f90_headmod_" >&5
 echo "${ECHO_T}$ax_f90_headmod_" >&6; }
 if test "$ax_f90_headmod_" = "not found"; then
- F90_HEADER_aces2=""
+ F90_HEADER_cfour=""
 
 else
- F90_HEADER_aces2="$ax_f90_headmod_"
+ F90_HEADER_cfour="$ax_f90_headmod_"
 
-      FCFLAGS="$FCFLAGS $F90_HEADER_aces2"
+      FCFLAGS="$FCFLAGS $F90_HEADER_cfour"
 
 fi
 
@@ -6691,8 +6696,8 @@ fi
 
 
 
-{ echo "$as_me:$LINENO: checking aces2 fortran 90 module" >&5
-echo $ECHO_N "checking aces2 fortran 90 module... $ECHO_C" >&6; }
+{ echo "$as_me:$LINENO: checking cfour fortran 90 module" >&5
+echo $ECHO_N "checking cfour fortran 90 module... $ECHO_C" >&6; }
 ac_ext=${ac_fc_srcext-f}
 ac_compile='$FC -c $FCFLAGS $ac_fcflags_srcext conftest.$ac_ext >&5'
 ac_link='$FC -o conftest$ac_exeext $FCFLAGS $LDFLAGS $ac_fcflags_srcext conftest.$ac_ext $LIBS >&5'
@@ -6771,12 +6776,12 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 { echo "$as_me:$LINENO: result: $ax_f90_headmod_" >&5
 echo "${ECHO_T}$ax_f90_headmod_" >&6; }
 if test "$ax_f90_headmod_" = "not found"; then
- F90_MODULE_aces2=""
+ F90_MODULE_cfour=""
 
 else
- F90_MODULE_aces2="$ax_f90_headmod_"
+ F90_MODULE_cfour="$ax_f90_headmod_"
 
-      FCFLAGS="$FCFLAGS $F90_MODULE_aces2"
+      FCFLAGS="$FCFLAGS $F90_MODULE_cfour"
 
 fi
 
@@ -6787,16 +6792,16 @@ fi
 
 
 
-{ echo "$as_me:$LINENO: checking aces2 fortran 90 library" >&5
-echo $ECHO_N "checking aces2 fortran 90 library... $ECHO_C" >&6; }
+{ echo "$as_me:$LINENO: checking cfour fortran 90 library" >&5
+echo $ECHO_N "checking cfour fortran 90 library... $ECHO_C" >&6; }
 ac_ext=${ac_fc_srcext-f}
 ac_compile='$FC -c $FCFLAGS $ac_fcflags_srcext conftest.$ac_ext >&5'
 ac_link='$FC -o conftest$ac_exeext $FCFLAGS $LDFLAGS $ac_fcflags_srcext conftest.$ac_ext $LIBS >&5'
 ac_compiler_gnu=$ac_cv_fc_compiler_gnu
 
-ax_f90_ldflags_aces2=""
-ax_f90_library_aces2_ok="no"
-ax_f90_libs_aces2="not found"
+ax_f90_ldflags_cfour=""
+ax_f90_library_cfour_ok="no"
+ax_f90_libs_cfour="not found"
 
 if test "x$withval" = x ; then
   ax_search=""
@@ -6821,7 +6826,7 @@ ax_save_LDFLAGS="$LDFLAGS"
 ax_save_LIBS="$LIBS"
 
 for ax_base in `echo $ax_search | tr ':' '\012'` ; do
- if test "$ax_f90_libs_aces2" = "not found" ; then
+ if test "$ax_f90_libs_cfour" = "not found" ; then
    for ax_lib in "" `find $ax_base -follow -name 'liblibr.a' -print` ; do
      if test "x$ax_lib" != x ; then
               ax_dir=`echo $ax_lib | sed 's,/[^/]*$,,'`
@@ -6829,16 +6834,16 @@ for ax_base in `echo $ax_search | tr ':' '\012'` ; do
               case "$ax_lib" in
          lib*)
                       ax_lib="`echo $ax_lib | sed 's,lib\(.*\)\.[^.]*$,\1,'`"
-                      ax_f90_ldflags_aces2="-L$ax_dir"
-           ax_f90_libs_aces2="-l$ax_lib"
+                      ax_f90_ldflags_cfour="-L$ax_dir"
+           ax_f90_libs_cfour="-l$ax_lib"
            ;;
          *)
-           ax_f90_ldflags_aces2=""
-           ax_f90_libs_aces2="$ax_lib"
+           ax_f90_ldflags_cfour=""
+           ax_f90_libs_cfour="$ax_lib"
            ;;
        esac
-       LDFLAGS="$ax_save_LDFLAGS $ax_f90_ldflags_aces2"
-       LIBS="$ax_f90_libs_aces2 $ax_save_LIBS"
+       LDFLAGS="$ax_save_LDFLAGS $ax_f90_ldflags_cfour"
+       LIBS="$ax_f90_libs_cfour $ax_save_LIBS"
        cat >conftest.$ac_ext <<_ACEOF
 program conftest_program
 call crapsi
@@ -6868,8 +6873,8 @@ else
   echo "$as_me: failed program was:" >&5
 sed 's/^/| /' conftest.$ac_ext >&5
 
-	ax_f90_ldflags_aces2=""
-          ax_f90_libs_aces2="not found"
+	ax_f90_ldflags_cfour=""
+          ax_f90_libs_cfour="not found"
 
 fi
 
@@ -6885,19 +6890,19 @@ ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
 ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
 ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
-{ echo "$as_me:$LINENO: result: $ax_f90_ldflags_aces2 $ax_f90_libs_aces2" >&5
-echo "${ECHO_T}$ax_f90_ldflags_aces2 $ax_f90_libs_aces2" >&6; }
-if test "$ax_f90_libs_aces2" = "not found"; then
- F90_LDFLAGS_aces2=""
- F90_LIBS_aces2=""
+{ echo "$as_me:$LINENO: result: $ax_f90_ldflags_cfour $ax_f90_libs_cfour" >&5
+echo "${ECHO_T}$ax_f90_ldflags_cfour $ax_f90_libs_cfour" >&6; }
+if test "$ax_f90_libs_cfour" = "not found"; then
+ F90_LDFLAGS_cfour=""
+ F90_LIBS_cfour=""
 
-    LDFLAGS="$LDFLAGS $F90_LDFLAGS_aces2"
-    LIBS="$F90_LIBS_aces2 $LIBS"
+    LDFLAGS="$LDFLAGS $F90_LDFLAGS_cfour"
+    LIBS="$F90_LIBS_cfour $LIBS"
 
 else
- F90_LDFLAGS_aces2=$ax_f90_ldflags_aces2
- F90_LIBS_aces2=$ax_f90_libs_aces2
- ax_f90_library_aces2_ok="yes"
+ F90_LDFLAGS_cfour=$ax_f90_ldflags_cfour
+ F90_LIBS_cfour=$ax_f90_libs_cfour
+ ax_f90_library_cfour_ok="yes"
 
 fi
 
@@ -7556,7 +7561,7 @@ done
 echo $ECHO_N "checking for python build information... $ECHO_C" >&6; }
 { echo "$as_me:$LINENO: result: " >&5
 echo "${ECHO_T}" >&6; }
-for python in python2.4 python2.3 python2.2 python2.1 python; do
+for python in python2.5 python2.4 python2.3 python2.2 python2.1 python; do
 for ac_prog in $python
 do
   # Extract the first word of "$ac_prog", so it can be a program name with args.
@@ -8672,10 +8677,10 @@ FCFLAGS_f90!$FCFLAGS_f90$ac_delim
 FC_MODEXT!$FC_MODEXT$ac_delim
 FC_MODCASE!$FC_MODCASE$ac_delim
 BLAS_LIBS!$BLAS_LIBS$ac_delim
-F90_HEADER_aces2!$F90_HEADER_aces2$ac_delim
-F90_MODULE_aces2!$F90_MODULE_aces2$ac_delim
-F90_LDFLAGS_aces2!$F90_LDFLAGS_aces2$ac_delim
-F90_LIBS_aces2!$F90_LIBS_aces2$ac_delim
+F90_HEADER_cfour!$F90_HEADER_cfour$ac_delim
+F90_MODULE_cfour!$F90_MODULE_cfour$ac_delim
+F90_LDFLAGS_cfour!$F90_LDFLAGS_cfour$ac_delim
+F90_LIBS_cfour!$F90_LIBS_cfour$ac_delim
 PYTHON_BIN!$PYTHON_BIN$ac_delim
 CPP!$CPP$ac_delim
 GREP!$GREP$ac_delim

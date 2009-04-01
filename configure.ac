@@ -53,6 +53,11 @@ case $host in
 		try_fort="ifort ifc gfortran pgf90 f90"
 		build_type="ia64_linux"
 		;;
+	*i*86*-darwin*)
+		try_cc="gcc icc cc"
+		try_fort="ifort gfortran f90"
+		build_type="darwin_x86"
+		;;
 	*alpha*-linux*)
 		try_cc="ccc cc gcc"
 		try_fort="fort f90"
@@ -158,8 +163,8 @@ ACX_BLAS(,AC_MSG_WARN([No working blas library found!]))
 AC_LANG_POP([Fortran])
 
 ax_save_LIBS="$LIBS"
-AC_MSG_NOTICE([Checking if ACES2 libraries are available])
-AX_F90_LIBRARY_SETUP([aces2],[],[],[liblibr.a],[call crapsi],[$FC_SEARCH_PATH])
+AC_MSG_NOTICE([Checking if CFOUR libraries are available])
+AX_F90_LIBRARY_SETUP([cfour],[],[],[liblibr.a],[call crapsi],[$FC_SEARCH_PATH])
 LIBS="$ax_save_LIBS"
 
 AX_PYTHON

@@ -21,8 +21,7 @@ INST_DATA:=gimic.run
 # module names are listed in smallcaps and wihtout any .mod extension
 INST_MODULES:=
 
-ACES2LIBS=@F90_LIBS_aces2@
-ifneq ($(ACES2LIBS),)
+ifneq ($(CFOURLIBS),)
 INST_PROGS+=xcpdens 
 endif
 
@@ -47,7 +46,7 @@ gimic.x: $(gimic_objs)
 	$(FC) $(FLDFLAGS) -o $@ $+ $(gimic_libs) 
 
 xcpdens: xcpdens.o
-	$(FC) $(FLDFLAGS) -o $@ $+ $(ACES2LIBS) $(BLAS_LIBS)
+	$(FC) $(FLDFLAGS) -o $@ $+ $(CFOURLIBS) $(BLAS_LIBS)
 
 tools/MOL2mol.sh: tools/MOL2mol.sh.in
 	sed 's/@inst_bindir@/$(subst /,\/,$(inst_bindir))/' $< > $@
