@@ -41,7 +41,7 @@ module jtensor_class
 	real(DP), dimension(:), pointer :: bfvec
 	real(DP), dimension(:,:), pointer :: dbvec, drvec, d2fvec, dbop
 	real(DP), dimension(:,:), pointer :: aodens, pdens
-	logical :: diamag_p, paramag_p, spin_density
+	logical :: diamag_p, paramag_p
 	integer(I4), parameter :: NOTIFICATION=1000
 
 contains
@@ -66,7 +66,6 @@ contains
 		giao_p=.true.
 		diamag_p=.true.
 		paramag_p=.true.
-		spin_density=.false.
 		call getkw(input, 'GIAO', giao_p)
 		call getkw(input, 'diamag', diamag_p)
 		call getkw(input, 'paramag', paramag_p)
@@ -75,7 +74,6 @@ contains
 			call msg_info('GIAOs not used!')
 			call nl
 		end if
-		if (uhf_p) call getkw(input, 'cdens.spin_density', spin_density)
 
 		if (.not.diamag_p) then
 			call msg_info( 'Diamagnetic contributions not calculated!')

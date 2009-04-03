@@ -25,7 +25,7 @@ module globals_m
 	integer, parameter :: GOPFD2=56
 	integer, parameter :: GRIDFD=57
 	integer, parameter :: JTFD=70
-	integer, parameter :: JVECFD=80
+	integer, parameter :: JVECFD=30
 
 	
 	integer, parameter :: MAX_L=5 ! Max angular momentum in basis (h)
@@ -79,6 +79,7 @@ module globals_m
 	logical :: giao_p=.true.
 
 	type(getkw_t), save :: input
+	integer(4), dimension(100), private, save :: afd=0
 
 	character, dimension(0:7), parameter :: shell_names = &
     	& (/'s','p','d','f','g','h','i','j'/)
@@ -258,5 +259,59 @@ contains
 		end do
 
 	end subroutine
+
+	subroutine getfd(fd) 
+		integer(4), intent(out) :: fd
+
+		integer(4) :: i
+
+		do i=81,100
+			if (afd(i) == 0) then
+				afd(i) = i
+				fd=i
+				return 
+			end if
+		end do
+		write(str_g, '(a)') 'getfd(): File descriptor table full!'
+		call msg_error(str_g)
+		stop 1
+	end subroutine
+
+	subroutine freefd(fd)
+		integer(4), intent(inout) :: fd
+
+		if (fd == 0) return
+
+		if (fd < 80 .or. fd > 100) then
+			write(str_g, '(a,i4)') &
+			  'freefd(): File descriptor out of bounds: ', fd
+			call msg_warn(str_g)
+		else 
+			if (afd(fd) /= 0) then
+				afd(fd) = 0
+				fd=0
+			else
+				write(str_g, '(a,i4)') &
+				  'freefd(): Invalid file descriptor: ', fd
+				call msg_warn(str_g)
+			end if
+		end if
+	end subroutine
+
+	subroutine closefd(fd)
+		integer(4), intent(inout) :: fd
+
+		integer(4) :: ffd
+
+		if (fd == 0) return
+		ffd=fd
+		call freefd(fd)
+		if (fd == 0) then
+			close(ffd)
+		end if
+
+	end subroutine
+
+
 end module
 

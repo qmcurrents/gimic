@@ -29,6 +29,7 @@ module grid_class
 	public get_grid_size, get_weight, write_grid, read_grid
 	public get_grid_length, is_gauss_grid, realpoint, copy_grid
 	public grid_center, plot_grid_xyz, get_basvec, get_ortho
+	public get_grid_range
 
 	interface get_basvec
 		module procedure get_basv1
@@ -987,6 +988,15 @@ contains
 !        stop
 
 	end subroutine
+
+	function get_grid_range(self,crd) result(r)
+		type(grid_t) :: self
+		integer(SP), intent(in) :: crd
+		real(DP), dimension(2) :: r
+
+		r(1)=self%gdata(crd)%pts(1)
+		r(2)=self%gdata(crd)%pts(self%npts(crd))
+	end function
 
 end module
 

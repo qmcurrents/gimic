@@ -31,7 +31,7 @@ gimic_objs=kinds.o getkw.o globals.o teletype.o intgrl.o  \
 	lip.o gtodefs.o cao2sao.o basis.o reorder.o caos.o dbop.o gaussint.o \
     bfeval.o parallel.o grid.o tensor.o dens.o dfdb.o dfdr.o d2fdrdb.o  \
     jtensor.o timer.o jfield.o divj.o integral.o edens.o factorial.o \
-	gimic.o magnet.o
+	gimic.o magnet.o cubeplot.o
 
 gimic_src=$(wildcard *.f90 *.c)
 gimic_libs:=$(LIBS) 

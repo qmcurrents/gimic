@@ -113,19 +113,6 @@ contains
 			access='direct', recl=jvrecl)
 		end if
 
-		plot_p=.false.
-		jvec_file =''
-		jmod_plt=''
-		jvec_plt=''
-		njvec_plt=''
-		jprj_plt=''
-		call getkw(input, 'plot', plot_p)
-		if (plot_p) then
-			call getkw(input, 'plot.vector', jvec_plt)
-			call getkw(input, 'plot.nvector', njvec_plt)
-			call getkw(input, 'plot.modulus', jmod_plt)
-			call getkw(input, 'plot.projection', jprj_plt)
-		end if
 	end subroutine
 
 	subroutine del_jfield(f)
@@ -261,116 +248,159 @@ contains
 		end do
 	end subroutine
 
+	subroutine wrt_jvec(rr,v,fd)
+		real(DP), dimension(:), intent(in) :: rr, v
+		integer(I4), intent(in) :: fd
+
+		if (fd == 0) return
+
+		write(fd, '(6f11.7)')  rr, v
+	end subroutine	
+
+	subroutine wrt_njvec(rr,v,fd)
+		real(DP), dimension(:), intent(in) :: rr, v
+		integer(I4), intent(in) :: fd
+
+		real(DP) :: nfac
+
+		if (fd == 0) return
+
+		nfac=sqrt(sum(v(:)**2))
+		if (nfac < 1.d-15) then
+			write(fd, '(6f11.7)')  rr, 0.d0, 0.d0, 0.d0
+		else 
+			write(fd, '(6f11.7)')  rr, v/nfac
+		end if
+	end subroutine	
+
+	subroutine wrt_jproj(rr,v,grid,fd)
+		real(DP), dimension(:), intent(in) :: rr, v
+		type(grid_t) :: grid
+		integer(I4), intent(in) :: fd
+
+		real(DP) :: jprj
+		real(DP), dimension(3) :: norm
+
+		if (fd == 0) return
+		norm=get_grid_normal(grid)
+
+		jprj=dot_product(norm,v)
+		write(fd, '(3e19.12)') rr, jprj
+	end subroutine	
+
+	subroutine wrt_jmod(rr,v,fd)
+		real(DP), dimension(:), intent(in) :: rr, v
+		integer(I4), intent(in) :: fd
+
+		real(DP) :: jmod
+
+		if (fd == 0) return
+
+		jmod=sqrt(sum(v**2))
+		write(fd, '(6f11.7)')  rr, jmod
+	end subroutine	
+
+	function getvecs(jf, spin) result(jv)
+		type(jfield_t), intent(inout) :: jf
+		integer(I4) :: spin
+
+		type(vector_t), dimension(:,:), pointer :: jv
+		select case(spin)
+			case(1)
+				jv=>jf%vv
+			case(2)
+				jv=>jf%vva
+			case(3)
+				jv=>jf%vvb
+			case(4)
+				jv=>jf%vsd
+		end select
+	end function
+
+	function open_plot(kname, spin) result(fd)
+		character(*), intent(in) :: kname
+		integer(I4), intent(in) :: spin
+
+		integer(I4) :: fd
+		character(132) :: fname
+
+		fd=0
+		if (.not.master_p) return
+		call getkw(input, kname, fname)
+		if (trim(fname) == '') return
+
+		call getfd(fd)
+		if (fd == 0) then
+			stop 1
+		end if
+
+		select case(spin)
+			case(1)
+				fname=trim(fname)//'.txt'
+			case(2)
+				fname=trim(fname)//'_a'//'.txt'
+			case(3)
+				fname=trim(fname)//'_b'//'.txt'
+			case(4)
+				fname=trim(fname)//'_sd'//'.txt'
+		end select
+
+		write(str_g, *) 'Writing ', trim(kname), ' in ', trim(fname)
+		call msg_note(str_g)
+		open(fd,file=trim(fname),status='unknown')
+
+		return 
+
+	end function
+
 	subroutine jvector_plot(jf)
 		type(jfield_t), intent(inout) :: jf
 
 		integer(I4) :: i, j, k, p1, p2, p3, spin, ispin
-		integer(I4), dimension(:), pointer :: z
-		real(DP), dimension(3) :: foo, norm, rr
-		real(DP), dimension(2) :: mr
-		real(DP) :: jmod, jprj, nfac
-		character(BUFLEN+20+5) :: tfil
-		character(2) :: scase
-
-		call get_grid_size(jf%grid, p1, p2, p3)
-		norm=get_grid_normal(jf%grid)
+		integer(I4) :: fd1, fd2, fd3, fd4
+		real(DP), dimension(3) :: v, rr
+		type(vector_t), dimension(:,:), pointer :: jv
 
 		spin=1
 		if (uhf_p) then
 			spin=4
 		end if
 
+		call push_section(input, 'cdens.plot')
+		call get_grid_size(jf%grid, p1, p2, p3)
+
 		do ispin=1,spin
-			select case(ispin)
-				case(1)
-					scase=''
-				case(2)
-					scase='a'
-				case(3)
-					scase='b'
-				case(4)
-					scase='sd'
-			end select
-			if (jvec_plt /= '') then
-				tfil=trim(jvec_plt)//trim(scase)//'.txt' 
-				call msg_note('Writing j in        : '//trim(tfil))
-				open(JVPFD, file=trim(tfil))
-				write(JVPFD, *) '#********************************************#'
-				write(JVPFD, *) '#                                            #'
-				write(JVPFD, *) '#    GIMIC - THE HELLO WORLD PROGRAM         #'
-				write(JVPFD, *) '#                                            #'
-				write(JVPFD, *) '#********************************************#'
-			end if
-			if (jmod_plt /= '') then
-				tfil=trim(jmod_plt)//trim(scase)//'.txt'
-				call msg_note('Writing |j| in      : '//trim(tfil))
-				open(MODFD, file=trim(tfil))
-			end if
-			if (njvec_plt /= '') then
-				tfil=trim(njvec_plt)//trim(scase)//'.txt'
-				call msg_note('Writing j/|j| in    : ' //trim(tfil))
-				open(NJVFD, file=trim(tfil))
-			end if
-			if (jprj_plt /= '') then
-				tfil=trim(jprj_plt)//trim(scase)//'.txt'
-				call msg_note('Writing (j;n) in    : '//trim(tfil))
-				open(JPRJFD, file=trim(tfil))
-			end if
+			fd1= open_plot('vector',ispin)
+			fd2= open_plot('modulus',ispin)
+			fd3= open_plot('projection',ispin)
+			fd4= open_plot('nvector',ispin)
 
 			call jvec_io(jf, 1, 'r')
+			jv=>getvecs(jf,ispin)
 			jf%zpos_v=1
 			do j=1,p2
 				do i=1,p1
 					rr=gridpoint(jf%grid, i,j,1)*AU2A
-					select case(ispin)
-						case(1)
-							foo=jf%vv(i,j)%v
-						case(2)
-							foo=jf%vva(i,j)%v
-						case(3)
-							foo=jf%vvb(i,j)%v
-						case(4)
-							foo=jf%vsd(i,j)%v
-					end select
-					foo=foo*AU2A
-					nfac=sqrt(sum(foo(:)**2))
-					jmod=sqrt(sum(foo**2))
-					jprj=dot_product(norm,foo)
-					if (jmod_plt /= '') then
-						write(MODFD, '(4e18.10)') rr, jmod
-					end if
-					if (jvec_plt /= '') then
-						write(JVPFD, '(6f11.7)')  rr, foo
-					end if
-					if (njvec_plt /= '') then
-						if (nfac < 1.d-15) then
-							write(NJVFD, '(6f11.7)')  rr, 0.d0, 0.d0, 0.d0
-						else 
-							write(NJVFD, '(6f11.7)')  rr, foo/nfac
-						end if
-					end if
-					if (jprj_plt /= '') then
-						write(JPRJFD, '(3e19.12)') rr, jprj
-					end if
+					v=jv(i,j)%v*AU2A
+					call wrt_jvec(rr,v,fd1)
+					call wrt_jmod(rr,v,fd2)
+					call wrt_jproj(rr,v,jf%grid,fd3)
+					call wrt_njvec(rr,v,fd4)
 				end do
-				if (jvec_plt /= '') then
-					write(JVPFD,*)
-				end if
-				if (jmod_plt /= '') then
-					write(MODFD,*)
-				end if
-				if (jprj_plt /= '') then
-					write(JPRJFD,*)
-				end if
+				if (fd1 /= 0) write(fd1, *)
+				if (fd2 /= 0) write(fd2, *)
+				if (fd3 /= 0) write(fd3, *)
+				if (fd4 /= 0) write(fd4, *)
 			end do
 
-			if (jmod_plt /= '') close(MODFD)
-			if (jvec_plt /= '') close(JVPFD)
-			if (njvec_plt /= '') close(NJVFD)
-			if (jprj_plt /= '')  close(JPRJFD)
-			call nl
+			call closefd(fd1)
+			call closefd(fd2)
+			call closefd(fd3)
+			call closefd(fd4)
+			call jmod_cubeplot(jf,ispin)
 		end do
 		call jmod_gopenmol(jf)
+		call pop_section(input)
 	end subroutine
 
 	subroutine jfield(jf)
@@ -488,6 +518,121 @@ contains
 		print *
 		print '(a,e19.12)', ' Trace:', jt(1,1)+jt(2,2)+jt(3,3)
 	end subroutine
+
+	subroutine jmod_cubeplot(jf, spin)
+		type(jfield_t) :: jf
+		integer(I4), intent(in) :: spin
+
+		integer(I4) :: p1, p2, p3, fd1, fd2, fd3
+		integer(I4) :: i, j, k, l
+		real(DP), dimension(3) :: qmin, qmax
+		real(DP), dimension(3) :: norm, step
+		real(DP) :: maxi, mini, val, sgn 
+		integer(I4), dimension(3) :: npts
+		type(vector_t), dimension(:,:), pointer :: buf
+		character(BUFLEN) :: fname
+
+		buf=>jf%vv
+		fname=''
+
+		call get_grid_size(jf%grid, p1, p2, p3)
+		npts=(/p1,p2,p3/)
+		norm=get_grid_normal(jf%grid)
+		qmin=gridpoint(jf%grid,1,1,1)*AU2A
+		qmax=gridpoint(jf%grid,p1,p2,p3)*AU2A
+
+		step=(qmax-qmin)/(npts-1)
+
+		call getkw(input, 'cube_mod', fname)
+		fd1=opencube(trim(fname), spin, qmin, step, npts)
+!        call getkw(input, 'cube_mordi', fname)
+!        fd2=opencube(trim(fname)//'+', spin, qmin, step, npts)
+!        fd3=opencube(trim(fname)//'-', spin, qmin, step, npts)
+
+
+		maxi=0.d0
+		mini=0.d0
+		l=0
+		do k=1,p3
+			call jvec_io(jf, k, 'r')
+			do j=1,p2
+				do i=1,p1
+					sgn=dot_product(norm,buf(i,j)%v)
+					val=(sqrt(sum(buf(i,j)%v**2)))
+					if (val > maxi) maxi=val
+					if (val < mini) mini=val
+
+					if (fd1 /= 0) then 
+						write(fd1,'(f12.6)',advance='no') val
+						if (mod(l,6) == 5) write(fd1,*)
+					end if
+!                    if (fd2 /= 0) then 
+!                        if (sgn > 0 ) then
+!                            write(fd2,'(f12.6)',advance='no') val
+!                        else
+!                            write(fd2,'(f12.6)',advance='no') 0.d0
+!                        end if
+!                        if (mod(l,6) == 5) write(fd2,*)
+!                    end if
+!                    if (fd3 /= 0) then 
+!                        if (sgn < 0 ) then
+!                            write(fd3,'(f12.6)',advance='no') -1.d0*val
+!                        else
+!                            write(fd3,'(f12.6)',advance='no') 0.d0
+!                        end if
+!                        if (mod(l,6) == 5) write(fd3,*)
+!                    end if
+					l=l+1
+				end do
+			end do
+		end do
+		print *, 'maximini:', maxi, mini
+	end subroutine
+
+	function opencube(kname, spin, origin, step, npts) result(fd)
+		character(*), intent(in) :: kname
+		integer(I4), intent(in) :: spin
+		real(DP), dimension(3), intent(in) :: origin, step
+		integer(I4), dimension(3), intent(in) :: npts
+
+		integer(I4) :: fd
+		character(132) :: fname
+
+		fd=0
+		fname=kname
+		if (.not.master_p) return
+		if (trim(fname) == '') return
+
+		call getfd(fd)
+		if (fd == 0) then
+			stop 1
+		end if
+
+		select case(spin)
+			case(1)
+				fname=trim(fname)//'.cube'
+			case(2)
+				fname=trim(fname)//'a'//'.cube'
+			case(3)
+				fname=trim(fname)//'b'//'.cube'
+			case(4)
+				fname=trim(fname)//'sd'//'.cube'
+		end select
+
+		write(str_g, *) 'Writing ', trim(kname), ' in ', trim(fname)
+		call msg_note(str_g)
+
+		open(fd,file=trim(fname),form='formatted',status='unknown')
+		write(fd,*) 'Gaussian cube data, generated by genpot'
+		write(fd,*) 
+		write(fd, '(i5,3f12.6)') 0, origin
+		write(fd, '(i5,3f12.6)') npts(1), step(1), 0.d0, 0.d0
+		write(fd, '(i5,3f12.6)') npts(2), 0.d0, step(2), 0.d0
+		write(fd, '(i5,3f12.6)') npts(3), 0.d0, 0.d0, step(3)
+
+		return 
+
+	end function
 
 	subroutine jmod_gopenmol(jf)
 		type(jfield_t) :: jf

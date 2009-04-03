@@ -115,7 +115,6 @@ def main():
 	cdens.add_kw('magnet_axis', 'STR', ('T',))
 	cdens.add_kw('magnet', 'DBL_ARRAY', (0.0, 0.0, 0.0))
 	cdens.add_kw('scale_vectors', 'DBL', (1.0,))
-	cdens.add_kw('spin_density', 'BOOL', (False,))
 	cdens.add_sect(cgrid)
 	cdens.add_sect(plot)
 
@@ -177,8 +176,8 @@ def main():
 	divgrid.add_kw("gauss_order", 'INT', 1)
 
 	integral=getkw.Section('integral')
-	integral.add_kw('spin', 'STR', ('total',))
 	integral.add_kw('lip_order', 'INT', (10,))
+	integral.add_kw('spin', 'STR', ('total',))
 	integral.add_kw('interpolate', 'BOOL', (False,))
 	integral.add_kw('tensor', 'BOOL', (False,))
 	integral.add_kw('modulus', 'BOOL', (False,))

@@ -28,6 +28,7 @@ module integral_class
 	
 	private 
 	
+	character(5) :: spin='total'
 	integer(I4) :: nlip
 contains
 	subroutine init_integral(self, jt, jf, grid)
@@ -35,6 +36,8 @@ contains
 		type(jtensor_t), target :: jt
 		type(jfield_t),  target :: jf
 		type(grid_t), target :: grid
+		
+		call getkw(input, 'integral.spin', spin)
 		
 		self%jf=>jf
 		self%jt=>jt
@@ -110,19 +113,17 @@ contains
 		real(DP) :: xsum, xsum2, xsum3
 		type(vector_t) :: jvec
 		type(tensor_t) :: jt
-		character(5) :: spin='total'
 
 		if (uhf_p) then
-			call getkw(input,'integral.spin', spin)
 			select case(spin)
 				case('total')
-					spin='total'
+					call msg_note("Integrating total density")
 				case('alpha')
-					spin='alpha'
 					call msg_note("Integrating alpha density")
 				case('beta')
-					spin='beta'
 					call msg_note("Integrating beta density")
+				case('spindens')
+					call msg_note("Integrating spin density")
 				case default
 					call msg_error("Invalid spin: " // spin)
 					stop
@@ -224,19 +225,17 @@ contains
 		real(DP) :: xsum, xsum2, xsum3
 		type(vector_t) :: jvec
 		type(tensor_t) :: jt
-		character(5) :: spin='total'
 
 		if (uhf_p) then
-			call getkw(input, 'integral.spin', spin)
 			select case(spin)
 				case('total')
-					spin='total'
+					call msg_note("Integrating total density")
 				case('alpha')
-					spin='alpha'
 					call msg_note("Integrating alpha density")
 				case('beta')
-					spin='beta'
 					call msg_note("Integrating beta density")
+				case('spindens')
+					call msg_note("Integrating spin density")
 				case default
 					call msg_error("Invalid spin: " // spin)
 					stop
