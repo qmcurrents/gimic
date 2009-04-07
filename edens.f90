@@ -11,6 +11,7 @@ module edens_class
 	use grid_class
 	use teletype_m
 	use parallel_m
+	use cubeplot_m
 	implicit none
 	
 	public init_edens, del_edens, edens_t
@@ -46,7 +47,7 @@ contains
 		self%grid=>grid
 
 		if (master_p) then
-			call getkw(input, 'edens.density_matrix', str_g)
+			call getkw(input, 'edens.density', str_g)
 			open(EDFD, file=trim(str_g), access='direct', recl=p1*p2*DP)
 		end if
 	end subroutine
@@ -97,6 +98,7 @@ contains
 		write(str_g, '(a,e19.12)') 'Max electronic density:', amax
 		call msg_info(str_g)
 		call edens_gopenmol(self)
+		call edens_cube(self)
 	end subroutine
 
 	subroutine edens_direct(self, k)
@@ -199,5 +201,28 @@ contains
 		end do
 
 		close(GOPFD)
+	end subroutine
+
+	subroutine edens_cube(self)
+		type(edens_t) :: self
+
+		integer(I4) :: p1, p2, p3
+		integer(I4) ::  k
+		real(DP), dimension(:,:,:), allocatable :: buf
+		character(BUFLEN) :: fname
+
+		fname=''
+		call getkw(input, 'edens.cube',fname)
+		if (trim(fname) == '') return
+
+		call get_grid_size(self%grid, p1, p2, p3)
+
+		allocate(buf(p1,p2,p3))
+		do k=1,p3
+			read(EDFD, rec=k) buf(:,:,k)
+		end do
+		call write_cubeplot(fname,self%grid,buf)
+		deallocate(buf)
+
 	end subroutine
 end module

@@ -81,6 +81,7 @@ def main():
 	plot.add_kw('projection','STR', ('',))
 	plot.add_kw('nvector','STR', ('',))
 	plot.add_kw('gopenmol','STR', ('',))
+	plot.add_kw('cube_mod','STR', ('',))
 
 	cgrid=getkw.Section('grid', callback=check_grid)
 	cgrid.set_arg('STR', ('std',))
@@ -222,7 +223,8 @@ def main():
 	edens=getkw.Section('edens', req=False)
 	edens.add_kw('density', 'STR', ('EDENS',))
 	edens.add_kw('density_plot', 'STR', ('edens.txt',))
-	edens.add_kw('gopenmol', 'STR', ('edens.plt',))
+	edens.add_kw('gopenmol', 'STR', ('',))
+	edens.add_kw('cube', 'STR', ('',))
 	edens.add_sect(egrid)
 
 	top.add_sect(cdens)

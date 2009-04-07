@@ -14,6 +14,7 @@ module jfield_class
 	use teletype_m
 	use parallel_m
 	use magnet_m
+	use tensor_m
 	implicit none
 
 	type jfield_t
@@ -248,6 +249,33 @@ contains
 		end do
 	end subroutine
 
+	subroutine read_jvecs(buf, spin)
+		type(vector_t), dimension(:,:,:), intent(out) :: buf
+		integer(I4), intent(in) :: spin
+
+		integer(I4) :: i, j, k, l, p1, p2, p3 
+
+		p1=size(buf(:,1,1))
+		p2=size(buf(1,:,1))
+		p3=size(buf(1,1,:))
+
+		if (spin > 1 .and. .not.uhf_p) then
+			call msg_error("read_jvecs(): requested spin component for  & 
+			&closed-shell!")
+			stop 1
+		end if
+
+		l=1
+		do k=1,p3
+			do j=1,p2
+				do i=1,p1
+					read(JVECFD+spin-1, rec=l) buf(i,j,k)%v
+					l=l+1
+				end do
+			end do
+		end do
+	end subroutine
+
 	subroutine wrt_jvec(rr,v,fd)
 		real(DP), dimension(:), intent(in) :: rr, v
 		integer(I4), intent(in) :: fd
@@ -366,14 +394,14 @@ contains
 			spin=4
 		end if
 
-		call push_section(input, 'cdens.plot')
+		call push_section(input, 'cdens')
 		call get_grid_size(jf%grid, p1, p2, p3)
 
 		do ispin=1,spin
-			fd1= open_plot('vector',ispin)
-			fd2= open_plot('modulus',ispin)
-			fd3= open_plot('projection',ispin)
-			fd4= open_plot('nvector',ispin)
+			fd1= open_plot('plot.vector',ispin)
+			fd2= open_plot('plot.modulus',ispin)
+			fd3= open_plot('plot.projection',ispin)
+			fd4= open_plot('plot.nvector',ispin)
 
 			call jvec_io(jf, 1, 'r')
 			jv=>getvecs(jf,ispin)
@@ -526,66 +554,73 @@ contains
 		integer(I4) :: p1, p2, p3, fd1, fd2, fd3
 		integer(I4) :: i, j, k, l
 		real(DP), dimension(3) :: qmin, qmax
-		real(DP), dimension(3) :: norm, step
+		real(DP), dimension(3) :: norm, step, mag, v, rr
 		real(DP) :: maxi, mini, val, sgn 
 		integer(I4), dimension(3) :: npts
-		type(vector_t), dimension(:,:), pointer :: buf
+		type(vector_t), dimension(:,:,:), allocatable :: buf
 		character(BUFLEN) :: fname
 
-		buf=>jf%vv
 		fname=''
 
 		call get_grid_size(jf%grid, p1, p2, p3)
 		npts=(/p1,p2,p3/)
 		norm=get_grid_normal(jf%grid)
-		qmin=gridpoint(jf%grid,1,1,1)*AU2A
-		qmax=gridpoint(jf%grid,p1,p2,p3)*AU2A
+		qmin=gridpoint(jf%grid,1,1,1)
+		qmax=gridpoint(jf%grid,p1,p2,p3)
 
 		step=(qmax-qmin)/(npts-1)
 
-		call getkw(input, 'cube_mod', fname)
+
+        call get_magnet(jf%grid, mag)
+
+		call getkw(input, 'plot.cube_mod', fname)
 		fd1=opencube(trim(fname), spin, qmin, step, npts)
-!        call getkw(input, 'cube_mordi', fname)
-!        fd2=opencube(trim(fname)//'+', spin, qmin, step, npts)
-!        fd3=opencube(trim(fname)//'-', spin, qmin, step, npts)
+		!call getkw(input, 'plot.cube_mordi', fname)
+		fd2=opencube(trim(fname)//'_p', spin, qmin, step, npts)
+		fd3=opencube(trim(fname)//'_n', spin, qmin, step, npts)
 
 
+		allocate(buf(p1,p2,p3))
+		call read_jvecs(buf,spin)
 		maxi=0.d0
 		mini=0.d0
 		l=0
-		do k=1,p3
-			call jvec_io(jf, k, 'r')
+		do i=1,p1
 			do j=1,p2
-				do i=1,p1
-					sgn=dot_product(norm,buf(i,j)%v)
-					val=(sqrt(sum(buf(i,j)%v**2)))
+				do k=1,p3
+					v=buf(i,j,k)%v
+					rr=gridpoint(jf%grid,i,j,k)
+					val=(sqrt(sum(v**2)))
+					rr=rr-dot_product(mag,rr)*mag
+					norm=cross_product(mag,rr)
+					sgn=dot_product(norm,v)
 					if (val > maxi) maxi=val
 					if (val < mini) mini=val
-
 					if (fd1 /= 0) then 
 						write(fd1,'(f12.6)',advance='no') val
 						if (mod(l,6) == 5) write(fd1,*)
 					end if
-!                    if (fd2 /= 0) then 
-!                        if (sgn > 0 ) then
-!                            write(fd2,'(f12.6)',advance='no') val
-!                        else
-!                            write(fd2,'(f12.6)',advance='no') 0.d0
-!                        end if
-!                        if (mod(l,6) == 5) write(fd2,*)
-!                    end if
-!                    if (fd3 /= 0) then 
-!                        if (sgn < 0 ) then
-!                            write(fd3,'(f12.6)',advance='no') -1.d0*val
-!                        else
-!                            write(fd3,'(f12.6)',advance='no') 0.d0
-!                        end if
-!                        if (mod(l,6) == 5) write(fd3,*)
-!                    end if
+					if (fd2 /= 0) then 
+						if (sgn >= 0.d0 ) then
+							write(fd2,'(f12.6)',advance='no') val
+						else
+							write(fd2,'(f12.6)',advance='no') 0.d0
+						end if
+						if (mod(l,6) == 5) write(fd2,*)
+					end if
+					if (fd3 /= 0) then 
+						if (sgn < 0.d0 ) then
+							write(fd3,'(f12.6)',advance='no') -1.d0*val
+						else
+							write(fd3,'(f12.6)',advance='no') 0.d0
+						end if
+						if (mod(l,6) == 5) write(fd3,*)
+					end if
 					l=l+1
 				end do
 			end do
 		end do
+		deallocate(buf)
 		print *, 'maximini:', maxi, mini
 	end subroutine
 
