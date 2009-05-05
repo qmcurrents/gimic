@@ -1,4 +1,3 @@
 load "koord.xyz"
-#isosurface ed1 cutoff 0.05 "edens.cube" color 1.0 29.0 "jmod.cube" translucent
-#isosurface ed2 cutoff 0.05 "edens.cube" color 1.0 29.0 "jmod_p.cube" translucent
-isosurface ed3 cutoff 0.05 "edens.cube" color 1.0 29.0 "jmod_n.cube" translucent
+isosurface ed3 cutoff 0.04 "jmod.cube" color -1.0 1.0 "jmod_quasi.cube" translucent
+#isosurface ed3 cutoff 0.05 "edens.cube" color -1.0 1.0 "jmod_quasi.cube" translucent

@@ -551,7 +551,7 @@ contains
 		type(jfield_t) :: jf
 		integer(I4), intent(in) :: spin
 
-		integer(I4) :: p1, p2, p3, fd1, fd2, fd3
+		integer(I4) :: p1, p2, p3, fd1, fd2
 		integer(I4) :: i, j, k, l
 		real(DP), dimension(3) :: qmin, qmax
 		real(DP), dimension(3) :: norm, step, mag, v, rr
@@ -576,8 +576,7 @@ contains
 		call getkw(input, 'plot.cube_mod', fname)
 		fd1=opencube(trim(fname), spin, qmin, step, npts)
 		!call getkw(input, 'plot.cube_mordi', fname)
-		fd2=opencube(trim(fname)//'_p', spin, qmin, step, npts)
-		fd3=opencube(trim(fname)//'_n', spin, qmin, step, npts)
+		fd2=opencube(trim(fname)//'_quasi', spin, qmin, step, npts)
 
 
 		allocate(buf(p1,p2,p3))
@@ -604,17 +603,9 @@ contains
 						if (sgn >= 0.d0 ) then
 							write(fd2,'(f12.6)',advance='no') val
 						else
-							write(fd2,'(f12.6)',advance='no') 0.d0
+							write(fd2,'(f12.6)',advance='no') -1.d0*val
 						end if
 						if (mod(l,6) == 5) write(fd2,*)
-					end if
-					if (fd3 /= 0) then 
-						if (sgn < 0.d0 ) then
-							write(fd3,'(f12.6)',advance='no') -1.d0*val
-						else
-							write(fd3,'(f12.6)',advance='no') 0.d0
-						end if
-						if (mod(l,6) == 5) write(fd3,*)
 					end if
 					l=l+1
 				end do
