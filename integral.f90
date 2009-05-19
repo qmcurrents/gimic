@@ -28,7 +28,7 @@ module integral_class
 	
 	private 
 	
-	character(5) :: spin='total'
+	character(8) :: spin='total'
 	integer(I4) :: nlip
 contains
 	subroutine init_integral(self, jt, jf, grid)
