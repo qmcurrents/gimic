@@ -1,30 +1,30 @@
-dnl @synopsis AX_F90_INTERNAL_HEADMOD(MESSAGE, FILE-REGEXP, FLAG, FUNCTION-BODY, OUTPUT-VAR[, SEARCH-PATH [, ACTION-IF-FOUND[, ACTION-IF-NOT-FOUND]]])
-dnl
-dnl Internal macro used by AX_F90_HEADER and AC_F90_MODULE.
-dnl
-dnl @category Fortran
-dnl @author Luc Maisonobe <luc@spaceroots.org>
-dnl @version 2005-01-14
-dnl @license AllPermissive
+# ===========================================================================
+#     http://www.nongnu.org/autoconf-archive/ax_f90_internal_headmod.html
+# ===========================================================================
+#
+# SYNOPSIS
+#
+#   AX_F90_INTERNAL_HEADMOD(MESSAGE, FILE-REGEXP, FLAG, FUNCTION-BODY, OUTPUT-VAR[, SEARCH-PATH [, ACTION-IF-FOUND[, ACTION-IF-NOT-FOUND]]])
+#
+# DESCRIPTION
+#
+#   Internal macro used by AX_F90_HEADER and AX_F90_MODULE.
+#
+# LICENSE
+#
+#   Copyright (c) 2009 Luc Maisonobe <luc@spaceroots.org>
+#
+#   Copying and distribution of this file, with or without modification, are
+#   permitted in any medium without royalty provided the copyright notice
+#   and this notice are preserved.
 
 AC_DEFUN([AX_F90_INTERNAL_HEADMOD],[
-AS_VAR_PUSHDEF([ax_include],[ax_f90_headmod_$2])
+AS_VAR_PUSHDEF([ax_include],[ax_cv_f90_headmod_$2])
 AC_MSG_CHECKING([$1])
 AC_LANG_PUSH(Fortran)
 AS_VAR_SET(ax_include,"not found")
-
 if test "x$6" = x ; then
-  ax_search=""
-else
-  ax_search="$6"
-fi
-
-if test "$prefix" = "NONE"; then
-  ax_search="$ax_search:$ac_default_prefix"
-else
-  ax_search="$ax_search:$prefix:$ac_default_prefix"
-fi
-
+ax_search="$prefix:$ac_default_prefix"
 for ax_base in "" `echo $LD_LIBRARY_PATH | tr ':' '\012'` ; do
   if test "x$ax_base" != x ; then
     changequote(,)dnl
@@ -33,6 +33,9 @@ for ax_base in "" `echo $LD_LIBRARY_PATH | tr ':' '\012'` ; do
     ax_search="${ax_search}:${ax_base}"
   fi
 done
+else
+ax_search="$6"
+fi
 for ax_base in `echo $ax_search | tr ':' '\012'` ; do
  if test "AS_VAR_GET(ax_include)" = "not found" ; then
    for ax_mod in "" `find $ax_base -follow -name $2 -print` ; do
