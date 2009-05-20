@@ -96,12 +96,15 @@ case $host in
 		;;
 esac
 
+ax_save_CFLAGS="$CFLAGS"
+ax_save_FCFLAGS="$FCFLAGS"
+
 AC_PROG_CC([$try_cc])
 AC_PROG_FC([$try_fort])
 
 # clear the default compiler flags. we don't want them!
-FCFLAGS=""
-CFLAGS=""
+FCFLAGS="$ax_save_FCFLAGS"
+CFLAGS="$ax_save_CFLAGS"
 ACX_SUBST_BUILD_FLAGS([$build_type])
 
 MPI_TYPE="serial"
@@ -171,6 +174,7 @@ AX_PYTHON
 
 AC_CACHE_SAVE
 
+AC_SUBST(FLDFLAGS, $FLDFLAGS)
 AC_SUBST(ACES2LIBS, $ACES2LIBS)
 AC_SUBST(top_bindir,['$(topdir)'])
 AC_SUBST(top_includedir,['$(topdir)/include'])
