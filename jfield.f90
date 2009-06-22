@@ -425,7 +425,7 @@ contains
 			call closefd(fd2)
 			call closefd(fd3)
 			call closefd(fd4)
-			call jmod_cubeplot(jf,ispin)
+			if (p3 > 1) call jmod_cubeplot(jf,ispin)
 		end do
 		call jmod_gopenmol(jf)
 		call pop_section(input)

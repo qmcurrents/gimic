@@ -98,7 +98,7 @@ contains
 		write(str_g, '(a,e19.12)') 'Max electronic density:', amax
 		call msg_info(str_g)
 		call edens_gopenmol(self)
-		call edens_cube(self)
+		if (p3 > 1) call edens_cube(self)
 	end subroutine
 
 	subroutine edens_direct(self, k)

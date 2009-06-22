@@ -1,7 +1,17 @@
-#!/bin/sh
+#!/bin/bash 
 
-PREFIX="$HOME/gimic"
-CFOUR=""
+PREFIX="--prefix=`pwd`"
+PARAFLAGS=""
+
+getflgs () {
+	for i in $*; do
+		case $i in
+			--nopara*) PARAFLAGS=""
+			--para*) PARAFLAGS="--enable-mpi=openmpi" ;;
+			--prefix*) PREFIX=$i ;;
+		esac
+	done	
+}
 
 stallo() {
 	if [ -f /etc/profile.d/modules.sh ]; then
@@ -9,65 +19,73 @@ stallo() {
 		module load python
 	fi
 	BLASDIR="/opt/intel/mkl/10.0.011"
+	BLAS="--with-blasdir=$BLASDIR/lib/em64t"
 	PYTHON="--with-python=/global/apps/python/2.5.1"
-	for i in $*; do
-		case $i in
-			--para*|mpi) PARAFLAGS="--enable-mpi=openmpi" ;;
-			--prefix=*) PREFIX=$i ;;
-			--cfour=*) CFOUR="--with-aces2=${i#cfour=}" ;;
-		esac
-	done
-	CC=icc FC=ifort ./configure $PREFIX $PARAFLAGS $CFOUR
+	CC=icc FC=ifort ./configure $PREFIX $PYTHON $PARAFLAGS $BLAS
 }
 
-snowflake() {
-BLASDIR=/opt/lib
-INSTDIR=/opt/aces2
-case $* in
-	--mpi) 
-	FC=gfortran ./configure --prefix=${INSTDIR}.par --enable-mpi=openmpi
-	;;
-	*)
-	./configure --prefix=${INSTDIR} --with-blas-dir=$BLASDIR \
-	--with-fc-search-path=/opt/flibs \
-	--with-aces2=$HOME/software/mainz/aces2/lib
-	;;
-esac
+linux() {
+	CC=gcc FC=gfortran ./configure $PREFIX $PYTHON $PARAFLAGS $BLAS
+}
+
+generic () {
+	./configure $PREFIX $PYTHON $PARAFLAGS $BLAS
+}
+
+fedora() {
+	BLAS="--with-blasdir=/usr/lib/atlas"
+	CC=gcc FC=gfortran ./configure $PREFIX $PYTHON $PARAFLAGS $BLAS
+}
+
+ubuntu () {
+	CC=gcc FC=gfortran ./configure $PREFIX $PYTHON $PARAFLAGS $BLAS
 }
 
 macosx() {
-	PREFIX="--prefix=/opt/gimic"
-	for i in $*; do
-		case $i in
-			--para*|mpi) PARAFLAGS="--enable-mpi=openmpi" ;;
-			--prefix=*) PREFIX=$i ;;
-			--cfour=*) CFOUR="--with-aces2=${i#cfour=}" ;;
-		esac
-	done	
-	FC=gfortran ./configure $PREFIX $PARAFLAGS $CFOUR	
+	BLAS="--with-blasdir=/opt/local/lib" 
+	CC=gcc FC=gfortran ./configure $PREFIX $PYTHON $PARAFLAGS $BLAS
 }
 
+getflgs $*
+
+# First we try specific hosts
 case `hostname` in
 	stallo*) stallo $*; exit 0 ;;
 esac
 
 case `uname` in
 	Linux*)
-	if [ -f /etc/lsb-release ]; then
-		. /etc/lsb-release
-	else
-		echo "/etc/lsb-release not found. Unknown host type, run configure by hand."
-	fi
+		if [ -f /etc/lsb-release ]; then
+			. /etc/lsb-release
+		else if [ -f /etc/system-release ]; then
+			grep -q Fedora /etc/system-release
+			if [ $? = 0 ]; then
+				DISTRIB_ID="Fedora"
+			else 
+				echo "Unknown Linux distribution. Using generic config."
+				DISTRIB_ID="Linux"
+			fi
+		fi; fi
 
-	case $DISTRIB_ID in
-		*buntu*) 
-		   [ $DISTRIB_RELEASE = "8.10" ] && intrepid $* 
-		   [ $DISTRIB_RELEASE = "9.04" ] && intrepid $* 
-		;;
-		*) echo "Unknown distribution: $DISTRIB_DESCRIPTION"; exit 1 ;;
-	esac
+		case $DISTRIB_ID in
+			*buntu*) 
+			   ubuntu $*; exit 0;
+			;;
+			*edora*) 
+			   fedora $*; exit 0;
+			;;
+			Linux) 
+			   linux $*; exit 0;
+			;;
+		esac
 	;;
 	Darwin)
-		macosx $*
+		macosx $*; exit 0;
 	;;
 esac
+
+echo "Unknown host type. Trying generic configuration." 
+echo "  Press enter to continue."
+read a
+
+generic $*
