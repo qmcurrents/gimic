@@ -673,10 +673,10 @@ contains
 
 		buf=>jf%vv
 		gopen_file=''
-		call getkw(input, 'cdens.plot.gopenmol', gopen_file)
+		call getkw(input, 'plot.gopenmol', gopen_file)
 		if (trim(gopen_file) == '') return
-		open(GOPFD,file=trim(gopen_file),access='direct',recl=1)
-		open(GOPFD2,file=trim('prj_'//gopen_file),access='direct',recl=1)
+		open(GOPFD,file=trim(gopen_file),access='direct',recl=4)
+		open(GOPFD2,file=trim('prj_'//gopen_file),access='direct',recl=4)
 
 		surface=200
 		rank=3
@@ -698,17 +698,17 @@ contains
 		write(GOPFD,rec=10) qmin(1);  write(GOPFD2,rec=10) qmin(1)
 		write(GOPFD,rec=11) qmax(1);  write(GOPFD2,rec=11) qmax(1)
 
-		print *, rank;     
-		print *, surface;  
-		print *, p3;       
-		print *, p2;       
-		print *, p1;       
-		print *, qmin(3);  
-		print *, qmax(3);  
-		print *, qmin(2);  
-		print *, qmax(2);  
-		print *, qmin(1); 
-		print *, qmax(1); 
+!        print *, rank;     
+!        print *, surface;  
+!        print *, p3;       
+!        print *, p2;       
+!        print *, p1;       
+!        print *, qmin(3);  
+!        print *, qmax(3);  
+!        print *, qmin(2);  
+!        print *, qmax(2);  
+!        print *, qmin(1); 
+!        print *, qmax(1); 
 
 		maxi=0.d0
 		mini=0.d0
