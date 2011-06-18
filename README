@@ -18,7 +18,7 @@ To run gimic you need to have at least three files: The gimic input file
 structure file (mol). Copy the example gimic.inp to your work directory and
 edit to your needs. To produce the mol and XDENS files: 
 
-  ACES2: Do a normal NMR calculation and then run the 'xcpdens' program
+  CFOUR: Do a normal NMR calculation and then run the 'xcpdens' program
     distributed with GIMIC to make the XDENS file. Then run the MOL2mol.sh 
     script to produce the mol file. 
 

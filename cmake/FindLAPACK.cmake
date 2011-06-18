@@ -111,6 +111,7 @@ find_lapack()
 
 if(LAPACK_LIBRARIES)
    set(LAPACK_FOUND TRUE)
+   add_definitions(-DHAVE_LAPACK)
 endif()
 
 unset(lapack_h)

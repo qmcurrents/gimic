@@ -116,6 +116,7 @@ find_blas()
 
 if(BLAS_LIBRARIES)
    set(BLAS_FOUND TRUE)
+   add_definitions(-DHAVE_BLAS)
 endif()
 
 unset(blas_h)

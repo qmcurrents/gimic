@@ -22,11 +22,11 @@ endif()
 # try to find the best library using environment variables
 if(NOT MATH_FOUND)
 	find_package(BLAS)
-	find_package(LAPACK)
-	if(BLAS_FOUND AND LAPACK_FOUND)
+	#find_package(LAPACK)
+	if(BLAS_FOUND) #AND LAPACK_FOUND)
 		set(MATH_LIBS
 			${BLAS_LIBRARIES}
-			${LAPACK_LIBRARIES}
+			#${LAPACK_LIBRARIES}
 			)
 		set(MATH_FOUND TRUE)
 	endif()
