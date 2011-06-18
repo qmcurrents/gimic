@@ -1,4 +1,4 @@
-module
+module gopenmol_m
 	use globals_m
 	use grid_class
 	implicit none
@@ -14,7 +14,6 @@ contains
 		real(SP), dimension(3) :: qmin, qmax
 		real(DP), dimension(3) :: norm
 
-		vv
 		open(GOPFD,file=trim(fname),access='direct',recl=4)
 
 		surface=200

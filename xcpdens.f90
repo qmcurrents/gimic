@@ -1,5 +1,5 @@
 module aces2_m
-	use kinds
+	use kinds_m
 	integer, parameter :: ABEL=8
 
 	public
@@ -498,7 +498,7 @@ contains
 		write(42,*) nbas
 		do j=1,nbas
 			do i=j,nbas
-				write(42,'(f)') dmat(i,j)
+				write(42,*) dmat(i,j)
 			end do
 		end do
 		close(42)
@@ -569,9 +569,9 @@ contains
 			atol=1.d-32
 			do ijj=idens,idens+nbasc*nbasc-1
 				if (dabs(scr(ijj)) < atol) then
-					write(42,'(d)') 0.d0
+					write(42,*) 0.d0
 				else
-					write(42,'(d)') scr(ijj)
+					write(42,*) scr(ijj)
 				end if
 			end do
 			write(42,*) 
@@ -651,9 +651,9 @@ contains
 			atol=1.d-32
 			do ijj=idens,idens+nbasc*nbasc-1
 				if (dabs(scr(ijj)) < atol) then
-					write(42,'(d)') 0.d0
+					write(42,*) 0.d0
 				else
-					write(42,'(d)') scr(ijj)
+					write(42,*) scr(ijj)
 				end if
 			end do
 			write(42,*) 
@@ -867,9 +867,9 @@ contains
 			if (iflags(2).eq.0) then
 				do ijj=iddens,iddens+nbasc*nbasc-1
 					if (dabs(scr(ijj)) < atol) then
-						write(42,'(d)') 0.d0
+						write(42,*) 0.d0
 					else
-						write(42,'(d)') scr(ijj)
+						write(42,*) scr(ijj)
 					end if
 				end do
 				write(42,*)
@@ -942,9 +942,9 @@ contains
 
 				do ijj=iddens,iddens+nbasc*nbasc-1
 					if (dabs(scr(ijj)) < atol) then
-						write(42,'(d)') 0.d0
+						write(42,*) 0.d0
 					else
-						write(42,'(d)') scr(ijj)
+						write(42,*) scr(ijj)
 					end if
 				end do
 				write(42,*) 

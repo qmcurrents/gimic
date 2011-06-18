@@ -34,6 +34,7 @@ option(ENABLE_CODE_COVERAGE  "Enable code coverage"          OFF)
 option(ENABLE_MPI            "Enable MPI parallelization"    OFF)
 option(ENABLE_OMP            "Enable OpenMP parallelization" OFF)
 #option(ENABLE_CUDA           "Enable CUDA GPU acceleration"  OFF)
+option(ENABLE_CFOUR          "Enable the CFOUR interface" OFF)
 
 include(Archs)
 include(Compilers)
@@ -82,22 +83,21 @@ set(CMAKE_Fortran_MODULE_DIRECTORY
     )
 
 # This is the "developer" driver
-set (INST_LIBDIR ${CMAKE_SOURCE_DIR}/python)
+set (INST_LIBDIR ${CMAKE_SOURCE_DIR})
 set (GIMIC_EXECUTABLE ${CMAKE_BINARY_DIR}/gimic.x)
 configure_file(${CMAKE_SOURCE_DIR}/gimic.in
-	${CMAKE_BINARY_DIR}/gimic.py)
+	${CMAKE_BINARY_DIR}/gimic)
 execute_process(COMMAND
 	chmod 755 ${CMAKE_BINARY_DIR}/gimic OUTPUT_QUIET)
 
 # This is the "installed" driver
 set (INST_LIBDIR ${CMAKE_INSTALL_PREFIX}/lib/gimic)
 set (GIMIC_EXECUTABLE ${CMAKE_INSTALL_PREFIX}/bin/gimic.x)
-
 configure_file(${CMAKE_SOURCE_DIR}/gimic.in
-	${CMAKE_BINARY_DIR}/gimic)
+	${CMAKE_BINARY_DIR}/bin/gimic)
 execute_process(COMMAND
 	chmod 755
-	${CMAKE_BINARY_DIR}/gimic
+	${CMAKE_BINARY_DIR}/bin/gimic
 	OUTPUT_QUIET)
 
 install(PROGRAMS gimic 
@@ -140,16 +140,26 @@ add_executable(gimic.x
 	timer.f90
 	)
 
-#add_executable(xcpdens 
-#    xcpdens.f90
-#    )
-
 install(PROGRAMS gimic.x
 	DESTINATION bin
 	CONFIGURATIONS Release
 	)
 
-#install(PROGRAMS xcpdens
-#    DESTINATION bin
-#    CONFIGURATIONS Release
-#    )
+if (ENABLE_CFOUR)
+	link_directories(${CFOUR_LIBRARY_DIR})
+	add_executable(xcpdens 
+		xcpdens.f90
+		)
+	target_link_libraries(xcpdens lib)
+
+	install(PROGRAMS xcpdens
+		DESTINATION bin
+		CONFIGURATIONS Release
+		)
+endif()
+
+
+add_executable(gomdiff 
+    gomdiff.f90
+    )
+

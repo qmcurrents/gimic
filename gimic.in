@@ -1,4 +1,4 @@
-#!/usr/bin/env @python_bin@
+#!@PYTHON_EXECUTABLE@
 # -*- coding: utf-8 -*-
 # vim:filetype=python:
 #
@@ -7,8 +7,8 @@
 #
 
 import sys,os
-sys.path.append("@inst_libdir@")
-os.environ['PATH']=".:@inst_bindir@:"+os.environ['PATH']
+sys.path.append("@INST_LIBDIR@")
+GIMIC_EXECUTABLE="@GIMIC_EXECUTABLE@"
 
 #from subprocess import Popen, PIPE
 import re
@@ -259,7 +259,7 @@ def main():
 	print >>fd, inkw
 
 	fd.close()
-	os.system('gimic.x < ' + infile)
+	os.system(GIMIC_EXECUTABLE + ' < ' + infile)
 	if not opts.keep:
 		os.unlink(infile)
 
