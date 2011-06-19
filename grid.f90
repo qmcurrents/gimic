@@ -773,29 +773,53 @@ contains
 		write(str_g, '(a,3f9.5)') 'Rotation is: ', rad
 		call msg_info(str_g)
 
+!ol rotations according to right hand rule
+
 ! z-mat
 		x=rad(3)
 		rot(1,1)=cos(x)
 		rot(2,2)=cos(x)
 		rot(3,3)=1.d0
-		rot(1,2)=sin(x)
-		rot(2,1)=-sin(x)
+		!jj rot(1,2)=sin(x)
+		!jj rot(2,1)=-sin(x)
+
+		!ol begin
+		rot(1,2)=-sin(x)
+    rot(2,1)=sin(x)
+		!ol end
+
 ! y-mat
 		x=rad(2)
 		euler(1,1)=cos(x)
 		euler(2,2)=1.d0
 		euler(3,3)=cos(x)
-		euler(1,3)=-sin(x)
-		euler(3,1)=sin(x)
+		!jj euler(1,3)=-sin(x)
+		!jj euler(3,1)=sin(x)
+	
+		!ol begin
+		euler(1,3)=sin(x)
+		euler(3,1)=-sin(x)
+		!ol end
 
 		euler=matmul(euler,rot)
+
 ! x-mat
 		x=rad(1)
+		!jj rot(1,1)=1.d0
+		!jj rot(2,2)=cos(x)
+		!jj rot(3,3)=cos(x)
+		!jj rot(1,2)=sin(x)
+		!jj rot(2,1)=-sin(x)
+
+		!ol begin
+		rot=0.d0
 		rot(1,1)=1.d0
 		rot(2,2)=cos(x)
 		rot(3,3)=cos(x)
-		rot(1,2)=sin(x)
-		rot(2,1)=-sin(x)
+		rot(2,3)=-sin(x)
+		rot(3,2)=sin(x)
+		!ol end
+
 
 		euler=matmul(rot,euler)
 
