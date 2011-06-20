@@ -100,7 +100,7 @@ execute_process(COMMAND
 	${CMAKE_BINARY_DIR}/bin/gimic
 	OUTPUT_QUIET)
 
-install(PROGRAMS gimic 
+install(PROGRAMS bin/gimic 
 	DESTINATION bin
 	CONFIGURATIONS Release
 	)
