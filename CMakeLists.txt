@@ -2,6 +2,10 @@ cmake_minimum_required(VERSION 2.6)
 project(GIMIC)
 enable_language(Fortran)
 
+set(GIMIC_VERSION_MAJOR 1)
+set(GIMIC_VERSION_MINOR 2)
+set(GIMIC_VERSION_PATCH 3)
+
 set(CMAKE_MODULE_PATH
     ${CMAKE_MODULE_PATH}
     ${CMAKE_SOURCE_DIR}/cmake
@@ -71,6 +75,7 @@ endif ()
 find_package(PythonInterp REQUIRED)
 
 include_directories(
+    ${PROJECT_BINARY_DIR}
     ${PROJECT_BINARY_DIR}/modules
     )
 
@@ -84,7 +89,7 @@ set(CMAKE_Fortran_MODULE_DIRECTORY
 
 # This is the "developer" driver
 set (INST_LIBDIR ${CMAKE_SOURCE_DIR})
-set (GIMIC_EXECUTABLE ${CMAKE_BINARY_DIR}/gimic.x)
+set (GIMIC_EXECUTABLE ${CMAKE_BINARY_DIR}/gimic.bin)
 configure_file(${CMAKE_SOURCE_DIR}/gimic.in
 	${CMAKE_BINARY_DIR}/gimic)
 execute_process(COMMAND
@@ -92,7 +97,6 @@ execute_process(COMMAND
 
 # This is the "installed" driver
 set (INST_LIBDIR ${CMAKE_INSTALL_PREFIX}/lib/gimic)
-set (GIMIC_EXECUTABLE ${CMAKE_INSTALL_PREFIX}/bin/gimic.x)
 configure_file(${CMAKE_SOURCE_DIR}/gimic.in
 	${CMAKE_BINARY_DIR}/bin/gimic)
 execute_process(COMMAND
@@ -100,12 +104,10 @@ execute_process(COMMAND
 	${CMAKE_BINARY_DIR}/bin/gimic
 	OUTPUT_QUIET)
 
-install(PROGRAMS bin/gimic 
-	DESTINATION bin
-	CONFIGURATIONS Release
-	)
+configure_file(${CMAKE_SOURCE_DIR}/config.h.in
+	${CMAKE_BINARY_DIR}/config.h)
 
-add_executable(gimic.x
+add_executable(gimic.bin
 	basis.f90
 	bfeval.f90
 	cao2sao.f90
@@ -140,7 +142,12 @@ add_executable(gimic.x
 	timer.f90
 	)
 
-install(PROGRAMS gimic.x
+install(PROGRAMS ${CMAKE_BINARY_DIR}/bin/gimic 
+	DESTINATION bin
+	CONFIGURATIONS Release
+	)
+
+install(TARGETS gimic.bin
 	DESTINATION bin
 	CONFIGURATIONS Release
 	)
@@ -158,8 +165,29 @@ if (ENABLE_CFOUR)
 		)
 endif()
 
-
 add_executable(gomdiff 
     gomdiff.f90
     )
 
+# Packaging. Currently tgz, but zip, rmp, deb, dmg, nsis, etc. possible.
+include(InstallRequiredSystemLibraries)
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY
+	"GIMIC -- Gauge-Including Magnetically Induced Currents")
+set(CPACK_PACKAGE_VENDOR "njj")
+set(CPACK_PACKAGE_DESCRIPTION_FILE
+	"${CMAKE_CURRENT_SOURCE_DIR}/INSTALL")
+set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/COPYING")
+set(CPACK_PACKAGE_VERSION_MAJOR "${GIMIC_VERSION_MAJOR}")
+set(CPACK_PACKAGE_VERSION_MINOR "${GIMIC_VERSION_MINOR}")
+set(CPACK_PACKAGE_VERSION_PATCH "${GIMIC_VERSION_PATCH}")
+set(CPACK_PACKAGE_INSTALL_DIRECTORY
+	"gimic/${GIMIC_VERSION_MAJOR}.${GIMIC_VERSION_MINOR}.${GIMIC_VERSION_PATCH}")
+set(CPACK_STRIP_FILES FALSE)
+set(CPACK_SOURCE_STRIP_FILES FALSE)
+set(CPACK_PACKAGE_EXECUTABLES "gimic" "GIMIC driver executable")
+set(CPACK_GENERATOR TGZ)
+set(CPACK_SOURCE_GENERATOR TGZ)
+set(CPACK_SOURCE_IGNORE_FILES "/CVS/;/.svn/;/.bzr/;/.hg/;/.git.*/;.swp$;.#;/#")
+set(CPACK_SOURCE_IGNORE_FILES
+	"/(Build|build|BUILD)-?.*/;/(Release|release|RELEASE)-?.*/;/(Debug|debug|DEBUG)-?.*/;${CPACK_SOURCE_IGNORE_FILES}")
+include(CPack)

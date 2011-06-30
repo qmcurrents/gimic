@@ -15,11 +15,12 @@ import re
 import optparse
 import getkw
 
-package_version="1.5.1"
+version="@GIMIC_VERSION_MAJOR@.@GIMIC_VERSION_MINOR@.@GIMIC_VERSION_PATCH@"
 
 def main():
 	usage="%prog [options] [config]"
-	cmdln=optparse.OptionParser(usage=usage)
+	cmdln=optparse.OptionParser(usage=usage, 
+		version="%prog {0}".format(version))
 	cmdln.add_option('-t', action='store', dest='title',
 			help='title of job')
 	cmdln.add_option('-d','--debug', action='store', dest='debug',
@@ -36,15 +37,9 @@ def main():
 		   help='be quiet')
 	cmdln.add_option('-y','--dryrun', action='store_true', dest='dryrun',
 		   help='dryrun without actually calculating anything')
-	cmdln.add_option('-V','--version', action='store_true', dest='version',
-		   help='print version number')
 	cmdln.add_option('-k','--keep', action='store_true', dest='keep',
 		   help='keep temp input file')
 	(opts, args)=cmdln.parse_args()
-
-	if opts.version:
-		print "GIMIC", package_version
-		sys.exit(0)
 
 	inpfil=None
 	if (len(args) == 0):
