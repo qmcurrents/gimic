@@ -298,7 +298,6 @@ def check_grid(grid):
 		if flag == 3:
 			print "Error: Both spacing and grid_points set!"
 			sys.exit(1)
-
 	elif arg == 'file': 
 		required=('file',)
 		ignore=('ivec', 'jvec', 'bond', 'fixpoint', 'fixcoord', 'coord1', 
@@ -311,6 +310,7 @@ def check_grid(grid):
 		for i in ignore:
 			if check_opt(grid,i):
 				print warn % (i,arg)
+		return
 	elif arg == 'bond':
 #        required=('in', 'out', 'up', 'down', 'distance')
 		required=('distance',)

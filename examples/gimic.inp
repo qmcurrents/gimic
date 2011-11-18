@@ -36,6 +36,11 @@ cdens {
 		rotation=[0.0,0.0,0.0]  # Rotation of (i,j,k) -> (i',j',k') in degrees
 								   # Euler angles, x-y-z convention
 	}
+## Read in grid from external file. 
+# grid(file) {   
+#     file=gridfile.grd
+# }
+
 	plot {          # file names for plots
 		vector="JVEC"   
 		modulus="JMOD"
@@ -45,11 +50,6 @@ cdens {
 	}
 }
 	
-
-## Read in grid from external file. Use the source, Luke.
-# grid(file) {   
-#     file=myspecialgrid.grd
-# }
 
 
 integral {
