@@ -60,18 +60,13 @@ endif()
 
 include(ConfigGitRevision)
 
-configure_file (
-	${PROJECT_SOURCE_DIR}/config.h.in
-	${PROJECT_BINARY_DIR}/config.h
-	)
-
 if (EXISTS ${CMAKE_SOURCE_DIR}/cmake/ConfigPackaging.cmake)
 	include(ConfigPackaging) 
 endif()
 
 # This is the "developer" driver
 set (INST_LIBDIR ${CMAKE_SOURCE_DIR})
-set (GIMIC_EXECUTABLE ${CMAKE_BINARY_DIR}/gimic.x)
+set (GIMIC_EXECUTABLE ${CMAKE_BINARY_DIR}/gimic.bin)
 configure_file(${CMAKE_SOURCE_DIR}/gimic.in
 	${CMAKE_BINARY_DIR}/gimic)
 execute_process(COMMAND
@@ -79,7 +74,6 @@ execute_process(COMMAND
 
 # This is the "installed" driver
 set (INST_LIBDIR ${CMAKE_INSTALL_PREFIX}/lib/gimic)
-set (GIMIC_EXECUTABLE ${CMAKE_INSTALL_PREFIX}/bin/gimic.x)
 configure_file(${CMAKE_SOURCE_DIR}/gimic.in
 	${CMAKE_BINARY_DIR}/bin/gimic)
 execute_process(COMMAND
@@ -87,12 +81,12 @@ execute_process(COMMAND
 	${CMAKE_BINARY_DIR}/bin/gimic
 	OUTPUT_QUIET)
 
-install(PROGRAMS bin/gimic 
-	DESTINATION bin
-	CONFIGURATIONS Release
+configure_file (
+	${PROJECT_SOURCE_DIR}/config.h.in
+	${PROJECT_BINARY_DIR}/config.h
 	)
 
-add_executable(gimic.x
+add_executable(gimic.bin
 	basis.f90
 	bfeval.f90
 	cao2sao.f90
@@ -127,7 +121,12 @@ add_executable(gimic.x
 	timer.f90
 	)
 
-install(PROGRAMS gimic.x
+install(PROGRAMS ${CMAKE_BINARY_DIR}/bin/gimic 
+	DESTINATION bin
+	CONFIGURATIONS Release
+	)
+
+install(TARGETS gimic.bin
 	DESTINATION bin
 	CONFIGURATIONS Release
 	)
@@ -144,7 +143,6 @@ if (ENABLE_CFOUR)
 		CONFIGURATIONS Release
 		)
 endif()
-
 
 add_executable(gomdiff 
     gomdiff.f90

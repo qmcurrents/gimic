@@ -2,6 +2,8 @@
 ! GIMIC - a pretty advanced 'Hello World!' program.
 !
 
+#include "config.h"
+
 program gimic
 	use globals_m  
 	use teletype_m
@@ -345,7 +347,8 @@ contains
 call nl
 call msg_out('****************************************************************')
 call msg_out('***                                                          ***')
-call msg_out('***           GIMIC '// GIMIC_VERSION // '                         ***')
+call msg_out('***           GIMIC '// GIMIC_VERSION // &
+                                      '                                    ***')
 call msg_out('***              Written by Jonas Juselius                   ***')
 call msg_out('***                                                          ***')
 call msg_out('***  This software is copyright (c) 2003 by Jonas Juselius,  ***')
