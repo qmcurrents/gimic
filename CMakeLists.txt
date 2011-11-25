@@ -1,48 +1,23 @@
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required(VERSION 2.8)
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/cmake)
+
 project(GIMIC)
 enable_language(Fortran)
-
-set(CMAKE_MODULE_PATH
-    ${CMAKE_MODULE_PATH}
-    ${CMAKE_SOURCE_DIR}/cmake
-    )
-
-if(NOT CMAKE_BUILD_TYPE)
-    set(CMAKE_BUILD_TYPE
-		Release
-        CACHE STRING
-        "Choose the type of build, options are: None Debug Release."
-        FORCE
-        )
-endif()
-
-string(TOLOWER "${CMAKE_BUILD_TYPE}" cmake_build_type_tolower)
-if(    NOT cmake_build_type_tolower STREQUAL "debug"
-		AND NOT cmake_build_type_tolower STREQUAL "release"
-		AND NOT cmake_build_type_tolower STREQUAL "relwithdebinfo")
-	message(FATAL_ERROR "Unknown build type \"${CMAKE_BUILD_TYPE}\".
-	Allowed values are Debug, Release, RelWithDebInfo (case-insensitive).")
-endif()
-
-# uncomment this to not rebuild if rules (compiler flags) change
-# this has advantages and disadvantages
-# set(CMAKE_SKIP_RULE_DEPENDENCY TRUE)
 
 option(ENABLE_PROFILING      "Enable profiling"              OFF)
 option(ENABLE_BOUNDS_CHECK   "Enable bounds check"           OFF)
 option(ENABLE_CODE_COVERAGE  "Enable code coverage"          OFF)
 option(ENABLE_MPI            "Enable MPI parallelization"    OFF)
 option(ENABLE_OMP            "Enable OpenMP parallelization" OFF)
-#option(ENABLE_CUDA           "Enable CUDA GPU acceleration"  OFF)
 option(ENABLE_CFOUR          "Enable the CFOUR interface" OFF)
 
-include(Archs)
-include(Compilers)
+include(ConfigProjectVersion)
+include(ConfigSafeGuards)
+include(ConfigFortranCompilerFlags)
+include(ConfigCCompilerFlags)
 
 set(LIBS)
-
-include(Math)
-if (MATH_FOUND)
+if (BLAS_FOUND)
 	add_definitions(-DHAVE_BLAS)
 endif()
 
@@ -50,7 +25,6 @@ if(ENABLE_MPI)
     find_package(MPI)
     if(MPI_FOUND)
 		add_definitions(-DHAVE_MPI)
-        set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} ${MPI_COMPILE_FLAGS}")
         include_directories(${MPI_INCLUDE_PATH})
     endif()
 endif()
@@ -64,13 +38,9 @@ if(ENABLE_OMP)
     endif()
 endif()
 
-if (ENABLE_CUDA)
-	find_package(CUDA)
-endif ()
-
 find_package(PythonInterp REQUIRED)
-
 include_directories(
+	${PROJECT_BINARY_DIR}
     ${PROJECT_BINARY_DIR}/modules
     )
 
@@ -81,6 +51,23 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY
 set(CMAKE_Fortran_MODULE_DIRECTORY
     ${PROJECT_BINARY_DIR}/modules
     )
+
+if (ENABLE_TESTS)
+	set (PROJECT_REPOSITORY "git@repo.ctcc.no:gimic.git")
+	include(ConfigTesting)
+	add_subdirectory(tests)
+endif()
+
+include(ConfigGitRevision)
+
+configure_file (
+	${PROJECT_SOURCE_DIR}/config.h.in
+	${PROJECT_BINARY_DIR}/config.h
+	)
+
+if (EXISTS ${CMAKE_SOURCE_DIR}/cmake/ConfigPackaging.cmake)
+	include(ConfigPackaging) 
+endif()
 
 # This is the "developer" driver
 set (INST_LIBDIR ${CMAKE_SOURCE_DIR})

@@ -76,6 +76,7 @@ macro(cache_math_result math_type _service)
 	unset(${_service}_include_dirs)
 	unset(${_service}_libraries)
 
+    set(${_SERVICE}_FIND_QUIETLY TRUE)
 	if (${_SERVICE}_H)
 		find_package_handle_standard_args(${_SERVICE}
 			"Could NOT find ${math_type} ${_SERVICE}"
@@ -86,6 +87,7 @@ macro(cache_math_result math_type _service)
 	endif()
 
 	if (${_SERVICE}_FOUND)
+		message("-- ${math_type} ${_SERVICE} found")
 		set(HAVE_${_SERVICE} ON CACHE INTERNAL "Defined if ${_SERVICE} is available")
 		set(${_SERVICE}_LIBRARIES ${${_SERVICE}_LIBRARIES} CACHE STRING "${_SERVICE} libraries")
 		mark_as_advanced(${_SERVICE}_LIBRARIES)

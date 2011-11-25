@@ -13,7 +13,7 @@
 #  BLAS_H Name of BLAS header file
 #
 # None of the above will be defined unless BLAS can be found.
-#
+# 
 #=============================================================================
 # Copyright 2011 Jonas Juselius <jonas.juselius@uit.no>
 #
@@ -71,14 +71,25 @@ function(find_blas)
 	endforeach()
 endfunction()
 
-function(find_default)
-	set(path_suffixes lib)
+macro(find_default)
+	if(${CMAKE_HOST_SYSTEM_PROCESSOR} STREQUAL "x86_64")
+	    if(LINUX_UBUNTU)
+                # apparently ubuntu throws everything into lib
+	        set(path_suffixes lib)
+	    else()
+	        set(path_suffixes lib64)
+	    endif()
+	else()
+	    set(path_suffixes lib)
+	endif()
+	set(blas_libs blas)
+
 	find_math_header(blas)
 	find_math_libs(blas)
 	cache_math_result(default blas)
-endfunction()
+endmacro()
 
-function(find_atlas)
+macro(find_atlas)
 	set(path_suffixes lib lib/atlas)
 	if (MATH_LANG STREQUAL "C")
 		set(blas_libs cblas atlas f77blas)
@@ -89,9 +100,9 @@ function(find_atlas)
 	find_math_header(blas)
 	find_math_libs(blas)
 	cache_math_result(Atlas blas)
-endfunction()
+endmacro()
 
-function(find_mkl)
+macro(find_mkl)
 	if (MATH_LANG STREQUAL "C")
 		set(blas_h mkl_cblas.h)
 	endif()
@@ -110,13 +121,12 @@ function(find_mkl)
 		set(blas_libraries -Wl,--start-group ${blas_libraries} -Wl,--end-group )
 	endif()
 	cache_math_result(MKL blas)
-endfunction()
+endmacro()
 
 find_blas()
 
 if(BLAS_LIBRARIES)
    set(BLAS_FOUND TRUE)
-   add_definitions(-DHAVE_BLAS)
 endif()
 
 unset(blas_h)
