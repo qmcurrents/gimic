@@ -130,10 +130,17 @@ macro(find_mkl)
 	if(${CMAKE_HOST_SYSTEM_PROCESSOR} STREQUAL "x86_64")
             set(path_suffixes lib/intel64 lib/em64t)
             if(ENABLE_64BIT_INTEGERS)
+<<<<<<< HEAD
                 set(blas_libs mkl_core mkl_intel_ilp64 mkl_sequential
 					guide pthread m)
             else()
                 set(blas_libs mkl_core mkl_intel_lp64 mkl_sequential
+=======
+                set(blas_libs mkl_core mkl_intel_ilp64 mkl_sequential 
+					guide pthread m)
+            else()
+                set(blas_libs mkl_core mkl_intel_lp64 mkl_sequential 
+>>>>>>> ac65e1f7db7877a6b63112e1488c59108de49336
 					guide pthread m)
             endif()
 	else()
