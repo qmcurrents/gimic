@@ -80,6 +80,30 @@ contains
 		
         call init_basis(mol,molfil)
 
+		call getkw(input, 'GIAO', giao_p)
+		call getkw(input, 'diamag', diamag_p)
+		call getkw(input, 'paramag', paramag_p)
+		
+		if (.not.giao_p) then
+			call msg_info('GIAOs not used!')
+			call nl
+		end if
+
+		if (.not.diamag_p) then
+			call msg_info( 'Diamagnetic contributions not calculated!')
+			call nl
+		end if
+		if (.not.paramag_p) then
+			call msg_info( 'Paramagnetic contributions not calculated!')
+			call nl
+		end if
+		if ((.not.diamag_p).and.(.not.paramag_p)) then
+			call msg_out( '    ...this does not make sense...')
+			call nl
+			call msg_critical( '    PLEASE SEEK PROFESSIONAL HELP, ASAP!  ')
+			call nl
+			stop
+		end if
 	end subroutine
 
 	subroutine finalize()

@@ -75,6 +75,8 @@ module globals_m
 	logical :: master_p=.false.
 	logical :: uhf_p=.false.
 	logical :: giao_p=.true.
+	logical :: diamag_p=.true.
+	logical :: paramag_p=.true.
 
 	type(getkw_t), save :: input
 	integer(4), dimension(100), private, save :: afd=0

@@ -41,7 +41,6 @@ module jtensor_class
 	real(DP), dimension(:), pointer :: bfvec
 	real(DP), dimension(:,:), pointer :: dbvec, drvec, d2fvec, dbop
 	real(DP), dimension(:,:), pointer :: aodens, pdens
-	logical :: diamag_p, paramag_p
 	integer(I4), parameter :: NOTIFICATION=1000
 
 contains
@@ -63,33 +62,6 @@ contains
 		call init_dfdr(self%dfr, self%mol)
 		call init_d2fdrdb(self%d2f, self%mol)
 
-		giao_p=.true.
-		diamag_p=.true.
-		paramag_p=.true.
-		call getkw(input, 'GIAO', giao_p)
-		call getkw(input, 'diamag', diamag_p)
-		call getkw(input, 'paramag', paramag_p)
-		
-		if (.not.giao_p) then
-			call msg_info('GIAOs not used!')
-			call nl
-		end if
-
-		if (.not.diamag_p) then
-			call msg_info( 'Diamagnetic contributions not calculated!')
-			call nl
-		end if
-		if (.not.paramag_p) then
-			call msg_info( 'Paramagnetic contributions not calculated!')
-			call nl
-		end if
-		if ((.not.diamag_p).and.(.not.paramag_p)) then
-			call msg_out( '    ...this does not make sense...')
-			call nl
-			call msg_critical( '    PLEASE SEEK PROFESSIONAL HELP, ASAP!  ')
-			call nl
-			stop
-		end if
 		! intermediates
 		allocate(self%denbf(ncgto))
 		allocate(self%dendb(ncgto))
