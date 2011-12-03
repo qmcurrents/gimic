@@ -88,13 +88,21 @@ macro(cache_math_result math_type _service)
 
 	if (${_SERVICE}_FOUND)
 		message("-- ${math_type} ${_SERVICE} found")
-		set(HAVE_${_SERVICE} ON CACHE INTERNAL "Defined if ${_SERVICE} is available")
-		set(${_SERVICE}_LIBRARIES ${${_SERVICE}_LIBRARIES} CACHE STRING "${_SERVICE} libraries")
+		add_definitions(-DHAVE_${math_type}_${_SERVICE})
+		set(HAVE_${_SERVICE} ON CACHE INTERNAL
+			"Defined if ${_SERVICE} is available"
+			)
+		set(${_SERVICE}_LIBRARIES ${${_SERVICE}_LIBRARIES} CACHE STRING
+			"${_SERVICE} libraries"
+			)
 		mark_as_advanced(${_SERVICE}_LIBRARIES)
 		if (${_SERVICE}_H)
-			set(${_SERVICE}_H ${${_SERVICE}_H} CACHE STRING "Name of ${_SERVICE} header")
+			set(${_SERVICE}_H ${${_SERVICE}_H} CACHE STRING
+				"Name of ${_SERVICE} header"
+				)
 			set(${_SERVICE}_INCLUDE_DIRS ${${_SERVICE}_INCLUDE_DIRS}
-				CACHE STRING "${_SERVICE} include directory")
+				CACHE STRING "${_SERVICE} include directory"
+				)
 			mark_as_advanced(${_SERVICE}_INCLUDE_DIRS ${_SERVICE}_H)
 		endif()
 	endif()

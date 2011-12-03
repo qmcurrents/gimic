@@ -13,7 +13,7 @@ import sys
 import string
 import re
 from argparse import ArgumentParser
-import subprocess 
+import subprocess
 
 project_version = "@PROJECT_VERSION@"
 current_version = map(int, string.split(project_version, '.'))
@@ -64,7 +64,7 @@ def parse_version(vstr):
 		try:
 			ver[i] = int(ver[i])
 		except:
-			verror(vstr)	
+			verror(vstr)
 	return ver
 
 def check_version(ver):
@@ -105,7 +105,7 @@ def update_version(clist, ver):
 		if p != None:
 			clist[i] = patch.sub(r'\1 {0}'.format(ver[2]), clist[i])
 	return clist
-	
+
 def new_branch(ver):
 	p = subprocess.Popen(['git', 'branch', '--no-color'],
 			stdin=subprocess.PIPE,
@@ -129,7 +129,7 @@ def new_branch(ver):
 	if not 'error: pathspec' in result[0]:
 		print "Error: Branch {0} already exists!".format(branch)
 		sys.exit(1)
-	p = subprocess.Popen('git checkout -b ' + branch, 
+	p = subprocess.Popen('git checkout -b ' + branch,
 			shell=True,
 			stdin=subprocess.PIPE,
 			stdout=subprocess.PIPE)
@@ -177,8 +177,8 @@ def main():
 	cmake.close()
 
 	print "Files modified successfully. version bumped to {0}".format(
-			args.ver[0]) 
-	
+			args.ver[0])
+
 	if args.commit:
 		commit_branch()
 	if args.update_master:

@@ -6,7 +6,7 @@ if (CMAKE_COMPILER_IS_GNUCXX)
 	set (CMAKE_CXX_FLAGS_DEBUG "-O0 -g3 -DDEBUG")
 	set (CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG -Wno-unused")
 	if (ENABLE_CODE_COVERAGE)
-		set (CMAKE_CXX_FLAGS 
+		set (CMAKE_CXX_FLAGS
 			"${CMAKE_CXX_FLAGS} -fprofile-arcs -ftest-coverage")
 		set (CMAKE_CXX_LINK_FLAGS "-fprofile-arcs -ftest-coverage")
 	endif()

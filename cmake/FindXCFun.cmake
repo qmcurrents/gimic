@@ -8,7 +8,7 @@
 #  XCFUN_FOUND, If false, do not try to use XCfun.
 # also defined, but not for general use are
 # None of the above will be defined unles XCFun can be found.
-# 
+#
 
 #=============================================================================
 # Copyright 2010 Jonas Juselius <jonas.juselius@uit.no>

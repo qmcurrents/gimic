@@ -13,7 +13,7 @@
 #  BLAS_H Name of BLAS header file
 #
 # None of the above will be defined unless BLAS can be found.
-# 
+#
 #=============================================================================
 # Copyright 2011 Jonas Juselius <jonas.juselius@uit.no>
 #
@@ -41,6 +41,15 @@ if (EXISTS $ENV{BLAS_ROOT})
 	endif()
 endif()
 
+# BLAS and LAPACK often go together
+if (NOT DEFINED BLAS_ROOT})
+	if (DEFINED LAPACK_ROOT})
+		set(BLAS_ROOT ${LAPACK_ROOT})
+	elseif (EXISTS $ENV{LAPACK_ROOT})
+		set(BLAS_ROOT $ENV{LAPACK_ROOT})
+	endif()
+endif()
+
 if (MATH_LANG STREQUAL "C")
 	set(blas_h cblas.h)
 	set(blas_libs cblas)
@@ -53,7 +62,7 @@ if (BLAS_INCLUDE_DIRS AND BLAS_LIBRARIES)
 endif ()
 
 if (NOT BLAS_FIND_COMPONENTS)
-	set(BLAS_FIND_COMPONENTS MKL Atlas default)
+	set(BLAS_FIND_COMPONENTS MKL Atlas ACML default)
 endif()
 
 function(find_blas)
@@ -62,6 +71,8 @@ function(find_blas)
 			find_mkl()
 		elseif (${blas} MATCHES "Atlas")
 			find_atlas()
+		elseif (${blas} MATCHES "ACML")
+			find_acml()
 		else()
 			find_default()
 		endif()
@@ -89,6 +100,15 @@ macro(find_default)
 	cache_math_result(default blas)
 endmacro()
 
+macro(find_acml)
+    set(path_suffixes lib libso)
+    set(blas_libs acml)
+
+	find_math_header(blas)
+	find_math_libs(blas)
+	cache_math_result(ACML blas)
+endmacro()
+
 macro(find_atlas)
 	set(path_suffixes lib lib/atlas)
 	if (MATH_LANG STREQUAL "C")
@@ -108,8 +128,14 @@ macro(find_mkl)
 	endif()
 
 	if(${CMAKE_HOST_SYSTEM_PROCESSOR} STREQUAL "x86_64")
-		set(path_suffixes lib/intel64 lib/em64t)
-		set(blas_libs mkl_core mkl_intel_lp64 mkl_sequential guide pthread m)
+            set(path_suffixes lib/intel64 lib/em64t)
+            if(ENABLE_64BIT_INTEGERS)
+                set(blas_libs mkl_core mkl_intel_ilp64 mkl_sequential
+					guide pthread m)
+            else()
+                set(blas_libs mkl_core mkl_intel_lp64 mkl_sequential
+					guide pthread m)
+            endif()
 	else()
 		set(path_suffixes lib/ia32 lib/32)
 		set(blas_libs mkl_core mkl_intel mkl_sequential guide pthread m)
@@ -118,7 +144,7 @@ macro(find_mkl)
 	find_math_header(blas)
 	find_math_libs(blas)
 	if(blas_libraries)
-		set(blas_libraries -Wl,--start-group ${blas_libraries} -Wl,--end-group )
+		set(blas_libraries -Wl,--start-group ${blas_libraries} -Wl,--end-group)
 	endif()
 	cache_math_result(MKL blas)
 endmacro()
