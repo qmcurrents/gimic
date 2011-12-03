@@ -2,7 +2,7 @@ include(SaveCompilerFlags)
 
 if (NOT DEFINED HAVE_Fortran_FLAGS)
 if(CMAKE_Fortran_COMPILER_ID MATCHES GNU) # this is gfortran
-    set(CMAKE_Fortran_FLAGS         "")
+    set(CMAKE_Fortran_FLAGS         "-cpp")
     set(CMAKE_Fortran_FLAGS_DEBUG   "-O0 -g -fbacktrace")
     set(CMAKE_Fortran_FLAGS_RELEASE "-w -O3 -ffast-math -funroll-loops -ftree-vectorize")
     if(ENABLE_BOUNDS_CHECK)

@@ -40,17 +40,26 @@ if(ENABLE_OMP)
 endif()
 
 find_package(PythonInterp REQUIRED)
+
 include_directories(
 	${PROJECT_BINARY_DIR}
     ${PROJECT_BINARY_DIR}/modules
     )
 
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY
+	${CMAKE_BINARY_DIR}/bin
+    )
+
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY
-    ${PROJECT_BINARY_DIR}/lib
+	${CMAKE_BINARY_DIR}/lib
+    )
+
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY
+	${CMAKE_BINARY_DIR}/lib
     )
 
 set(CMAKE_Fortran_MODULE_DIRECTORY
-    ${PROJECT_BINARY_DIR}/modules
+	${PROJECT_BINARY_DIR}/modules
     )
 
 include(ConfigGitRevision)

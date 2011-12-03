@@ -1,19 +1,19 @@
 # This is the "developer" driver
-set (INST_LIBDIR ${CMAKE_SOURCE_DIR})
-set (GIMIC_EXECUTABLE ${CMAKE_BINARY_DIR}/gimic.bin)
+set (INST_LIBDIR ${CMAKE_CURRENT_SOURCE_DIR})
+set (GIMIC_EXECUTABLE ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/gimic.bin)
 
-configure_file(${CMAKE_SOURCE_DIR}/gimic.in
-	${CMAKE_BINARY_DIR}/gimic)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/gimic.in
+	${PROJECT_BINARY_DIR}/gimic)
 execute_process(COMMAND
-	chmod 755 ${CMAKE_BINARY_DIR}/gimic OUTPUT_QUIET)
+	chmod 755 ${PROJECT_BINARY_DIR}/gimic OUTPUT_QUIET)
 
 # This is the "installed" driver
 set (INST_LIBDIR ${CMAKE_INSTALL_PREFIX}/lib/gimic)
-configure_file(${CMAKE_SOURCE_DIR}/gimic.in
-	${CMAKE_BINARY_DIR}/bin/gimic)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/gimic.in
+	${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/gimic)
 execute_process(COMMAND
 	chmod 755
-	${CMAKE_BINARY_DIR}/bin/gimic
+	${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/gimic
 	OUTPUT_QUIET)
 
 add_library(gimic STATIC
@@ -53,7 +53,7 @@ add_library(gimic STATIC
 add_executable(gimic.bin gimic.f90)
 target_link_libraries(gimic.bin gimic)
 
-install(PROGRAMS ${CMAKE_BINARY_DIR}/bin/gimic 
+install(PROGRAMS ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/gimic 
 	DESTINATION bin
 	CONFIGURATIONS Release
 	)
