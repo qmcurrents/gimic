@@ -12,7 +12,7 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY
     )
 
 if (CMAKE_Fortran_COMPILER_WORKS)
-    set(CMAKE_Fortran_MODULE_DIRECTOR
+    set(CMAKE_Fortran_MODULE_DIRECTORY
         ${PROJECT_BINARY_DIR}/modules
         )
     include_directories(${PROJECT_BINARY_DIR}/modules)
