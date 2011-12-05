@@ -54,7 +54,3 @@ if (ENABLE_CFOUR)
         )
 endif()
 
-add_executable(gomdiff 
-    gomdiff.f90
-    )
-
