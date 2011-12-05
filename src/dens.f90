@@ -52,9 +52,9 @@ contains
 
     end subroutine
 
-    subroutine read_dens(self)
+    subroutine read_dens(self, xdens_file)
         type(dens_t), intent(inout) :: self
-        character(80) :: xdens_file
+        character(80), intent(in) :: xdens_file
 
         integer(I4) :: b, mo, ispin, s
         type(reorder_t) :: bofh
@@ -68,8 +68,6 @@ contains
             call msg_error('read_dens(): beta dens not allocated!')
             call exit(1)
         end if
-
-        call getkw(input, 'density', xdens_file)
 
         open(XDFD, file=xdens_file, status='old', err=42)
 
@@ -219,9 +217,10 @@ contains
         end do
     end subroutine
 
-    subroutine moco(self, mos, spin)
+    subroutine moco(self, mos, morange, spin)
         type(dens_t) :: self
         real(DP), dimension(:,:) :: mos
+        integer(I4), dimension(2), optional :: morange
         integer(I4), optional :: spin
 
         integer(I4), dimension(2) :: moran
@@ -240,7 +239,9 @@ contains
         end if
         ncgto=get_ncgto(self%mol)
         moran=0
-        call getkw(input, 'edens.mos', moran)
+        if (present(morange)) then
+            moran = morange
+        end if
 
         if (moran(1) < 1 .or. moran(2) < 1) then
             call msg_error('Invalid MO range!')
@@ -266,24 +267,25 @@ contains
         dens(:,:,0)=dens(:,:,0)*2.d0
     end subroutine
 
-    subroutine read_modens(self)
+    subroutine read_modens(self, dens_file, mofile, morange)
         type(dens_t) :: self
+        character(*), intent(in) :: dens_file
+        character(*), intent(in) :: mofile
+        integer(I4), dimension(2), optional :: morange
         
         integer(4) :: n, i,j
         real(DP), dimension(:,:), allocatable :: mos
         type(reorder_t) :: bofh
-        character(BUFLEN) :: mofile
 
         if (.not.turbomole_p) then
-            call read_dens(self)
+            call read_dens(self, dens_file)
             return
         end if
 
         dens=>self%da
         dens(:,:,0)=D0
-        call getkw(input, 'edens.mofile', mofile)
         if (trim(mofile) == '') then
-            call read_dens(self)
+            call read_dens(self, dens_file)
         end if
         open(XDFD, file=trim(mofile), status='old', err=42)
         read(XDFD, *) 
@@ -299,7 +301,11 @@ contains
         end do
         close(XDFD)
 
-        call moco(self, mos)
+        if (present(morange)) then
+            call moco(self, mos, morange)
+        else
+            call moco(self, mos)
+        end if
 
         call init_reorder(bofh, self%mol)
         call msg_info('Reordering densities [TURBOMOLE]')

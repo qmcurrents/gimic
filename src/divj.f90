@@ -74,8 +74,9 @@ contains
         write(DIVJFD, rec=k) self%buf
     end subroutine
 
-    subroutine divj_plot(self)
+    subroutine divj_plot(self, gopen_file)
         type(divj_t), intent(inout) :: self
+        character(*), intent(in) :: gopen_file
         
         integer(I4) :: i,j,p1,p2,p3
         real(DP) :: amax
@@ -101,7 +102,7 @@ contains
         close(DJPFD)
         write(str_g, '(a,e19.12)') 'Max divergence:', amax
         call msg_info(str_g)
-        call divj_gopenmol(self)
+        call divj_gopenmol(self, gopen_file)
     end subroutine
 
     subroutine divj_direct_plt(self)
@@ -249,18 +250,16 @@ contains
         div=djx+djy+djz
     end subroutine
 
-    subroutine divj_gopenmol(self)
+    subroutine divj_gopenmol(self, gopen_file)
         type(divj_t) :: self
+        character(*), intent(in) :: gopen_file
 
         integer(I4) :: surface, rank, p1, p2, p3
         integer(I4) :: i, j, k, l
         real(SP), dimension(3) :: qmin, qmax
         real(DP), dimension(:,:), pointer :: buf
-        character(BUFLEN) :: gopen_file
 
         buf=>self%buf
-        gopen_file=''
-        call getkw(input, 'divj.gopenmol', gopen_file)
         if (trim(gopen_file) == '') return
         open(GOPFD,file=trim(gopen_file),access='direct',recl=4)
 

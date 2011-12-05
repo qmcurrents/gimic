@@ -25,13 +25,15 @@ module basis_class
 
     private
 contains
-    subroutine init_basis(self, molfil)
+    subroutine init_basis(self, molfil, screening_thrs)
         type(molecule_t) :: self
         character(*) :: molfil
+        real(DP), optional :: screening_thrs
 
         integer(I4) :: i, natoms
         logical :: screen=.true.
         type(atom_t), dimension(:), pointer :: atoms
+        real(DP) :: screening = SCREEN_THRS
 
         call read_intgrl(molfil,self%atoms, natoms)
         call setup_gtos()
@@ -59,33 +61,33 @@ contains
         call msg_out(str_g)
         call nl
 
-        call getkw(input, 'screening', screen)
-        if (.not.screen) then
+        if (present(screening_thrs)) then
+            screening = screening_thrs
+        end if
+
+        if (screening <= 0.0) then
             call msg_info('Screening is not used')
             do i=1,natoms
                 atoms(i)%basis%thrs=1.d10
             end do
         else
             call msg_note('Calculating screening coefficients')
-            if (keyword_is_set(input, 'screen_thrs')) then
-                call getkw(input, 'screen_thrs', SCREEN_THRS)	
-            end if
-            write(str_g, '(a,e12.4)') 'Screening threshold: ', SCREEN_THRS
+            write(str_g, '(a,e12.4)') 'Screening threshold: ', screening
             call msg_info(str_g)
             call nl
             do i=1,natoms
-                call setup_screening(atoms(i)%basis)
+                call setup_screening(atoms(i)%basis, screening)
             end do
         end if
-
 
 77		format(a,i4)
     end subroutine
 !
 ! Loop over ctr and set up screening thresholds
 ! 
-    subroutine setup_screening(basis)
+    subroutine setup_screening(basis, thrs)
         type(basis_t), intent(inout) :: basis
+        real(DP), intent(in) :: thrs
 
         integer(I4) :: i,j,l
         real(DP) :: xp, min_xp, x, dist
@@ -99,7 +101,7 @@ contains
                 xp=basis%ctr(i)%xp(j)
                 if ( xp < min_xp) min_xp=xp
             end do
-            do while (x > SCREEN_THRS)
+            do while (x > thrs)
                 dist=dist+0.25
                 x=dist**l*exp(-min_xp*dist**2)
             end do

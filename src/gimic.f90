@@ -46,6 +46,9 @@ contains
         character(4) :: rankdir
         real(DP), dimension(3) :: center
 
+        logical :: screen
+        real(DP) :: screening_thrs = SCREEN_THRS
+
         spherical=.false.
         call getkw(input, 'spherical', spherical)
         call getkw(input, 'basis', molfil)
@@ -78,7 +81,13 @@ contains
         call msg_out(' TITLE: '// trim(title))
         call nl
         
-        call init_basis(mol,molfil)
+        call getkw(input, 'screen', screen)
+        if (screen) then
+            call getkw(input, 'screen_thrs', screening_thrs)
+        else
+            screening_thrs = -1.0 ! disable screening
+        end if
+        call init_basis(mol, molfil, screening_thrs)
 
         call getkw(input, 'GIAO', giao_p)
         call getkw(input, 'diamag', diamag_p)
@@ -141,6 +150,9 @@ contains
         logical :: xdens_p, modens_p, dryrun_p, imod_p
         character(LINELEN), dimension(:), pointer :: cstr
 
+        character(80) :: fname, mofile
+        integer, dimension(2) :: morange
+
 
         divj_p=.false.; int_p=.false.
         cdens_p=.false.; edens_p=.false.; dryrun_p=.false.
@@ -187,12 +199,16 @@ contains
         end do
 
         if (xdens_p) then
+            call getkw(input, 'density', fname)
             call init_dens(xdens, mol)
-            call read_dens(xdens)
+            call read_dens(xdens, fname)
         end if
         if (modens_p) then
+            call getkw(input, 'density', fname)
+            call getkw(input, 'edens.mofile', mofile)
+            call getkw(input, 'edens.mos', morange)
             call init_dens(modens, mol, modens_p)
-            call read_modens(modens)
+            call read_modens(modens, fname, mofile, morange)
         end if
 
 
@@ -243,7 +259,10 @@ contains
                 call init_divj(dj, dgrid, jt)
                 if (dryrun_p) cycle
                 call divj(dj)
-                if (master_p) call divj_plot(dj)
+                if (master_p) then 
+                    call getkw(input, 'divj.gopenmol', fname)
+                    call divj_plot(dj, fname)
+                end if
             case(EDENS_TAG)
                 call msg_out('Calculating charge density')
                 call msg_out('*****************************************')
