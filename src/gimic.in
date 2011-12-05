@@ -431,3 +431,4 @@ def check_cdens(cdens):
 if __name__ == '__main__':
     main()
 
+# vim:et:sw=4:

@@ -1046,3 +1046,5 @@ end module
 !        r=self%map+q1*m1+q2*m2 
 !    end function 
 
+
+! vim:et:sw=4:ts=4

@@ -310,3 +310,5 @@ contains
         close(GOPFD)
     end subroutine
 end module
+
+! vim:et:sw=4:ts=4

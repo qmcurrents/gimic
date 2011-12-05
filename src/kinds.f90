@@ -8,3 +8,5 @@ module kinds_m
     integer, parameter :: I4 = 4
     integer, parameter :: I8 = 8
 end module 
+
+! vim:et:sw=4:ts=4

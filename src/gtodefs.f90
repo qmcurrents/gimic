@@ -176,3 +176,5 @@ contains
         n=GTO_MAP(i,j,k)
     end function
 end module	
+
+! vim:et:sw=4:ts=4

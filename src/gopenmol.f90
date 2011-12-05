@@ -51,3 +51,5 @@ contains
         close(GOPFD2)
     end subroutine
 end module
+
+! vim:et:sw=4:ts=4

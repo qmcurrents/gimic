@@ -117,3 +117,5 @@ contains
     end subroutine
 
 end program
+
+! vim:et:sw=4:ts=4
