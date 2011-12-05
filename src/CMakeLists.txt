@@ -1,3 +1,17 @@
+add_subdirectory(libgimic)
+
+add_executable(gimic.bin 
+    gimic.f90
+    getkw.f90  
+    gopenmol.f90  
+    integral.f90  
+    magnet.f90
+    cubeplot.f90   
+    grid.f90	    
+    jfield.f90	  
+    )
+target_link_libraries(gimic.bin gimic)
+
 # This is the "developer" driver
 set (INST_LIBDIR ${CMAKE_CURRENT_SOURCE_DIR})
 set (GIMIC_EXECUTABLE ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/gimic.bin)
@@ -15,43 +29,6 @@ execute_process(COMMAND
     chmod 755
     ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/gimic
     OUTPUT_QUIET)
-
-add_library(gimic STATIC
-    basis.f90
-    bfeval.f90
-    cao2sao.f90
-    caos.f90
-    cubeplot.f90
-    d2fdrdb.f90
-    dbop.f90
-    dens.f90
-    dfdb.f90
-    dfdr.f90
-    divj.f90
-    edens.f90
-    factorial.f90
-    gaussint.f90
-    getkw.f90
-    globals.f90
-    gopenmol.f90
-    grid.f90
-    gtodefs.f90
-    integral.f90
-    intgrl.f90
-    jfield.f90
-    jtensor.f90
-    kinds.f90
-    lip.f90
-    magnet.f90
-    parallel.f90
-    reorder.f90
-    teletype.f90
-    tensor.f90
-    timer.f90
-    )
-
-add_executable(gimic.bin gimic.f90)
-target_link_libraries(gimic.bin gimic)
 
 install(PROGRAMS ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/gimic 
     DESTINATION bin
@@ -79,5 +56,4 @@ endif()
 add_executable(gomdiff 
     gomdiff.f90
     )
-
 
