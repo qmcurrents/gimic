@@ -5,7 +5,7 @@ module dbop_class
     use teletype_m
     implicit none
     
-    public init_dbop, del_dbop, mkdbop, dbop_t
+    public new_dbop, del_dbop, mkdbop, dbop_t
 
     type dbop_t 
         type(molecule_t), pointer :: mol
@@ -14,14 +14,14 @@ module dbop_class
     private
 
 contains
-    subroutine init_dbop(this, mol)
+    subroutine new_dbop(this, mol)
         type(dbop_t) :: this
         type(molecule_t), target :: mol
 
         nullify(this%db)
 
         if (associated(this%db)) then
-            call msg_warn('init_dbop(): already allocated!')
+            call msg_warn('new_dbop(): already allocated!')
         else
             allocate(this%db(3,get_natoms(mol)))
         end if

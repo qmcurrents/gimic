@@ -25,7 +25,7 @@ module grid_class
     end type grid_t
 
     public grid_t
-    public init_grid, del_grid, gridpoint, get_grid_normal
+    public new_grid, del_grid, gridpoint, get_grid_normal
     public get_grid_size, get_weight, write_grid, read_grid
     public get_grid_length, is_gauss_grid, realpoint, copy_grid
     public grid_center, plot_grid_xyz, get_basvec, get_ortho
@@ -40,7 +40,7 @@ module grid_class
     real(DP), parameter :: DPTOL=1.d-10
 contains
 
-    subroutine init_grid(this, mol)
+    subroutine new_grid(this, mol)
         type(grid_t) :: this
         type(molecule_t) :: mol
 
@@ -366,7 +366,7 @@ contains
             tvec=tvec/sqrt(sum(tvec**2))
             this%basv(:,2)=tvec
             call normalise(this%basv)
-            call msg_info( 'init_grid():&
+            call msg_info( 'new_grid():&
                 & You specified a nonorthogonal coordinate system.' )
             call nl
             call msg_out('    New unit coordinate system is:')

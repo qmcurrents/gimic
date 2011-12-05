@@ -392,7 +392,7 @@ contains
 !            allocate(weight(ngrid))
 !
 !            call lobogrid(-10.d0, 10.d0, np, pts, weight)
-!            lobby=init_lobby(-10.d0, 10.d0, np, ngrid)
+!            lobby=new_lobby(-10.d0, 10.d0, np, ngrid)
 !
 !            ss=0.d0
 !            do i=1,ngrid
@@ -416,7 +416,7 @@ contains
 !!        allocate(weight(ngrid))
 !!
 !!        call lobogrid(-5.d0, 5.d0, np, pts, weight)
-!!        lobby=init_lobby(-5.d0, 5.d0, np, ngrid)
+!!        lobby=new_lobby(-5.d0, 5.d0, np, ngrid)
 !!
 !!        do i=1,ngrid
 !!            qq=lobopoint(i,lobby)

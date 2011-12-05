@@ -14,7 +14,7 @@ module edens_class
     use cubeplot_m
     implicit none
     
-    public init_edens, del_edens, edens_t
+    public new_edens, del_edens, edens_t
     public edens_direct, edens, edens_plot, edens_gopenmol, edens_cube
     
     type edens_t
@@ -29,7 +29,7 @@ module edens_class
 
 contains
     ! set up memory (once) for the different components
-    subroutine init_edens(this, mol, dens, grid, densfile)
+    subroutine new_edens(this, mol, dens, grid, densfile)
         type(edens_t) :: this
         type(molecule_t) :: mol
         type(dens_t), target :: dens
@@ -44,7 +44,7 @@ contains
         n=get_ncgto(mol)
         allocate(this%tmp(n))
         allocate(this%buf(p1,p2))
-        call init_bfeval(this%bf, mol)
+        call new_bfeval(this%bf, mol)
         this%grid=>grid
 
         if (master_p) then

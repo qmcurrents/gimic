@@ -15,7 +15,7 @@ module cao2sao_class
     use basis_class
     implicit none
     
-    public init_c2sop, del_c2sop, cao2sao
+    public new_c2sop, del_c2sop, cao2sao
     private
 
     integer(I4), dimension(0:MAX_L, -MAX_L:MAX_L) :: sphmap
@@ -65,7 +65,7 @@ contains
         end do
     end subroutine
 
-    subroutine init_c2sop(c2s, mol)
+    subroutine new_c2sop(c2s, mol)
         type(cao2sao_t), target :: c2s
         type(molecule_t) :: mol
         

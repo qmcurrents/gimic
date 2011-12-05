@@ -87,7 +87,7 @@ contains
         else
             screening_thrs = -1.0 ! disable screening
         end if
-        call init_basis(mol, molfil, screening_thrs)
+        call new_basis(mol, molfil, screening_thrs)
 
         call getkw(input, 'GIAO', giao_p)
         call getkw(input, 'diamag', diamag_p)
@@ -161,7 +161,7 @@ contains
         call getkw(input,'dryrun', dryrun_p)
 
         if (spherical) then
-            call init_c2sop(c2s,mol)
+            call new_c2sop(c2s,mol)
             call set_c2sop(mol, c2s)
         end if
 
@@ -200,19 +200,19 @@ contains
 
         if (xdens_p) then
             call getkw(input, 'density', fname)
-            call init_dens(xdens, mol)
+            call new_dens(xdens, mol)
             call read_dens(xdens, fname)
         end if
         if (modens_p) then
             call getkw(input, 'density', fname)
             call getkw(input, 'edens.mofile', mofile)
             call getkw(input, 'edens.mos', morange)
-            call init_dens(modens, mol, modens_p)
+            call new_dens(modens, mol, modens_p)
             call read_modens(modens, fname, mofile, morange)
         end if
 
 
-        call init_jtensor(jt,mol,xdens)
+        call new_jtensor(jt,mol,xdens)
 
         if (dryrun_p) then
             call msg_note('Dry run, not calculating...')
@@ -225,7 +225,7 @@ contains
                 call msg_out('Calculating current density')
                 call msg_out('*****************************************')
                 call setup_grid(calc(i), cgrid)
-                call init_jfield(jf, jt, cgrid)
+                call new_jfield(jf, jt, cgrid)
                 if (dryrun_p) cycle
                 call jfield(jf)
                     ! Contract the tensors with B
@@ -237,7 +237,7 @@ contains
                 call msg_out('Integrating current density')
                 call msg_out('*****************************************')
                 call setup_grid(calc(i), igrid)
-                call init_integral(it, jt, jf, igrid)
+                call new_integral(it, jt, jf, igrid)
                 if (dryrun_p) cycle
                 call int_s_direct(it)
                 call nl
@@ -256,7 +256,7 @@ contains
                 call msg_out('Calculating divergence')
                 call msg_out('*****************************************')
                 call setup_grid(calc(i), dgrid)
-                call init_divj(dj, dgrid, jt)
+                call new_divj(dj, dgrid, jt)
                 if (dryrun_p) cycle
                 call divj(dj)
                 if (master_p) then 
@@ -268,7 +268,7 @@ contains
                 call msg_out('*****************************************')
                 call setup_grid(calc(i), egrid)
                 call getkw(input, 'edens.density', fname)
-                call init_edens(ed, mol, modens, egrid, fname)
+                call new_edens(ed, mol, modens, egrid, fname)
                 if (dryrun_p) cycle
                 call edens(ed)
                 if (master_p) then 
@@ -321,7 +321,7 @@ contains
         select case(calc)
             case(CDENS_TAG)
                 call push_section(input, 'cdens')
-                call init_grid(grid, mol)
+                call new_grid(grid, mol)
                 call grid_center(grid,center)
                 call pop_section(input)
                 if (master_p) then
@@ -335,7 +335,7 @@ contains
                     p=section_is_set(input, 'divj.grid')
                     if (p) then
                         call push_section(input, 'divj')
-                        call init_grid(grid, mol)
+                        call new_grid(grid, mol)
                         call grid_center(grid,center)
                         call pop_section(input)
                     else
@@ -349,7 +349,7 @@ contains
                 p=keyword_is_set(input, 'integral.grid')
                 if (p) then
                     call push_section(input, 'integral')
-                    call init_grid(grid, mol)
+                    call new_grid(grid, mol)
                     call grid_center(grid,center)
                     call pop_section(input)
                 else
@@ -363,7 +363,7 @@ contains
                 p=keyword_is_set(input, 'edens.grid')
                 if (p) then
                     call push_section(input, 'edens')
-                    call init_grid(grid, mol)
+                    call new_grid(grid, mol)
                     call grid_center(grid,center)
                     call pop_section(input)
                 else

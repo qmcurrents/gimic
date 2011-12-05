@@ -26,7 +26,7 @@ module jfield_class
         type(grid_t), pointer :: grid
     end type
 
-    public init_jfield, del_jfield, jfield, jvectors, jfield_direct
+    public new_jfield, del_jfield, jfield, jvectors, jfield_direct
     public jfield_t, get_jvectors, get_jtensors, jvector_plot
     public set_jtensors
     
@@ -37,7 +37,7 @@ module jfield_class
     character(BUFLEN) :: jtensor_file, jvec_file
     character(BUFLEN) :: jmod_plt, jvec_plt, njvec_plt, jprj_plt
 contains
-    subroutine init_jfield(f, jt, g)
+    subroutine new_jfield(f, jt, g)
         type(jfield_t) :: f
         type(jtensor_t), target :: jt
         type(grid_t), target :: g

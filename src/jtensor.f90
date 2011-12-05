@@ -29,7 +29,7 @@ module jtensor_class
         real(DP), dimension(:), pointer :: pdbf, denbf, dendb
     end type
 
-    public init_jtensor, del_jtensor, jtensor, jtensor2, jvector
+    public new_jtensor, del_jtensor, jtensor, jtensor2, jvector
     public ctensor, ctensor2
     public qtensor, qtensor2
     public jtensor_t, jdebug, eta
@@ -45,7 +45,7 @@ module jtensor_class
 
 contains
     ! set up memory (once) for the different components
-    subroutine init_jtensor(this, mol, xdens)
+    subroutine new_jtensor(this, mol, xdens)
         type(jtensor_t) :: this
         type(molecule_t), target :: mol
         type(dens_t), target :: xdens
@@ -53,14 +53,14 @@ contains
         
         ncgto=get_ncgto(mol)
         
-!        call init_dens(ddens)
+!        call new_dens(ddens)
         this%mol=>mol
         this%xdens=>xdens
-        call init_bfeval(this%bfv, this%mol)
-        call init_dbop(this%dop, this%mol)
-        call init_dfdb(this%dbt, this%mol)
-        call init_dfdr(this%dfr, this%mol)
-        call init_d2fdrdb(this%d2f, this%mol)
+        call new_bfeval(this%bfv, this%mol)
+        call new_dbop(this%dop, this%mol)
+        call new_dfdb(this%dbt, this%mol)
+        call new_dfdr(this%dfr, this%mol)
+        call new_d2fdrdb(this%d2f, this%mol)
 
         ! intermediates
         allocate(this%denbf(ncgto))

@@ -21,7 +21,7 @@ module divj_class
         real(DP), dimension(3) :: bb
     end type
 
-    public divj_direct, divj_direct_plt, init_divj, del_divj
+    public divj_direct, divj_direct_plt, new_divj, del_divj
     public divj_plot, set_divj, divj_t, divj
     private
     
@@ -32,7 +32,7 @@ module divj_class
     real(DP), parameter :: hz=1.d0/(24.d0*step)
 
 contains
-    subroutine init_divj(this, grid, jt)
+    subroutine new_divj(this, grid, jt)
         type(divj_t), intent(inout) :: this
         type(grid_t), target :: grid
         type(jtensor_t), target :: jt

@@ -7,7 +7,7 @@ module dfdr_class
     use cao2sao_class
     implicit none
 
-    public init_dfdr, del_dfdr, dfdr, dfdr_t
+    public new_dfdr, del_dfdr, dfdr, dfdr_t
 
     type dfdr_t
         type(molecule_t), pointer :: mol
@@ -26,7 +26,7 @@ module dfdr_class
         
 contains
 
-    subroutine init_dfdr(this, mol)
+    subroutine new_dfdr(this, mol)
         type(dfdr_t) :: this
         type(molecule_t), target :: mol
 

@@ -22,7 +22,7 @@ module integral_class
         real(DP), dimension(3,3) :: tint
     end type
 
-    public init_integral, del_integral, integral_t
+    public new_integral, del_integral, integral_t
     public integrate, int_t_direct, int_s_direct, int_t_2d, lipton
     public write_integral, int_mod_direct
     
@@ -31,7 +31,7 @@ module integral_class
     character(8) :: spin='total'
     integer(I4) :: nlip
 contains
-    subroutine init_integral(this, jt, jf, grid)
+    subroutine new_integral(this, jt, jf, grid)
         type(integral_t) :: this
         type(jtensor_t), target :: jt
         type(jfield_t),  target :: jf

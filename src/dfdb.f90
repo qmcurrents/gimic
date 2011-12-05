@@ -7,7 +7,7 @@ module dfdb_class
     use teletype_m
     implicit none
     
-    public init_dfdb, del_dfdb, dfdb
+    public new_dfdb, del_dfdb, dfdb
     public dfdb_t
     type dfdb_t
         type(molecule_t), pointer :: mol
@@ -18,14 +18,14 @@ module dfdb_class
     real(DP), dimension(:,:), allocatable, target, save :: xvec
 
 contains
-    subroutine init_dfdb(this, mol)
+    subroutine new_dfdb(this, mol)
         type(dfdb_t) :: this
         type(molecule_t), target :: mol
 
         nullify(this%db)
 
         if (associated(this%db)) then
-            call msg_warn('init_dfdb(): already allocated!')
+            call msg_warn('new_dfdb(): already allocated!')
         else
             allocate(this%db(get_ncgto(mol),3))
         end if

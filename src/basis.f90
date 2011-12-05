@@ -13,7 +13,7 @@ module basis_class
     use gtodefs_m
     implicit none 
 
-    public del_basis, init_basis, print_seg
+    public del_basis, new_basis, print_seg
     public get_natoms, get_ngto, get_ncgto, set_c2sop, get_c2sop
     public get_coord, get_symbol, get_basis, get_atom, get_nctr
     public get_contraction, get_ncomp, get_nccomp, get_nccgto
@@ -25,7 +25,7 @@ module basis_class
 
     private
 contains
-    subroutine init_basis(this, molfil, screening_thrs)
+    subroutine new_basis(this, molfil, screening_thrs)
         type(molecule_t) :: this
         character(*) :: molfil
         real(DP), optional :: screening_thrs

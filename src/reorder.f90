@@ -36,7 +36,7 @@ contains
         vec=bofh%tmp
     end subroutine
 
-    subroutine init_reorder(bofh, mol)
+    subroutine new_reorder(bofh, mol)
         type(reorder_t) :: bofh
         type(molecule_t), target :: mol
 

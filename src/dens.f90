@@ -5,7 +5,7 @@ module dens_class
     use reorder_class
     implicit none
 
-    public init_dens, read_dens, set_dens, set_pdens
+    public new_dens, read_dens, set_dens, set_pdens
     public get_dens, get_pdens, del_dens, dens_t
     public read_modens
     
@@ -20,7 +20,7 @@ module dens_class
     
     real(DP), dimension(:,:,:), pointer :: dens
 contains
-    subroutine init_dens(this, mol, modens_p)
+    subroutine new_dens(this, mol, modens_p)
         type(dens_t) :: this
         type(molecule_t), target :: mol
         logical, optional :: modens_p
@@ -97,7 +97,7 @@ contains
         end if
 
         if (turbomole_p) then
-            call init_reorder(bofh, this%mol)
+            call new_reorder(bofh, this%mol)
             call msg_info('Reordering densities [TURBOMOLE]')
             call turbo_reorder(bofh)
             call reorder_dens(bofh, this)
@@ -307,7 +307,7 @@ contains
             call moco(this, mos)
         end if
 
-        call init_reorder(bofh, this%mol)
+        call new_reorder(bofh, this%mol)
         call msg_info('Reordering densities [TURBOMOLE]')
         call turbo_reorder(bofh)
         call reorder_dens(bofh, this)

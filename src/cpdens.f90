@@ -226,14 +226,14 @@ module mocoef
     use sympack
     implicit none
     
-    public init_mos, del_mos, getmos
+    public new_mos, del_mos, getmos
     
     private
     real(DP), dimension(:,:), pointer :: mos
     logical :: debug=.false.
 contains
 
-    subroutine init_mos
+    subroutine new_mos
         real(DP), dimension(:,:), allocatable :: scfevca0
         real(DP), dimension(:), allocatable :: foo
 
@@ -499,7 +499,7 @@ module pdensmat
     implicit none
     intrinsic sqrt
     
-    public init_pdens, del_pdens, getpdens, getpmos, psigma
+    public new_pdens, del_pdens, getpdens, getpmos, psigma
 
     private
     real(DP), parameter :: FACT=26.62568098450085d+00
@@ -511,7 +511,7 @@ module pdensmat
 
 contains
     
-    subroutine init_pdens
+    subroutine new_pdens
         allocate(uai(nvrta,noca))
         allocate(uij(noca,noca))
         allocate(dmo(nbas,noca))
@@ -857,8 +857,8 @@ program cpdens
     end if
 
     call setup_commons
-    call init_mos()
-    call init_pdens()
+    call new_mos()
+    call new_pdens()
     
     ! get unperturbed (electron-correlated) density matrix and MOs
     call getdens(dens)

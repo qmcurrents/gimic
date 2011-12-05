@@ -8,7 +8,7 @@ module d2fdrdb_class
     use teletype_m
     implicit none
 
-    public init_d2fdrdb, del_d2fdrdb, d2fdrdb, d2fdrdb_t
+    public new_d2fdrdb, del_d2fdrdb, d2fdrdb, d2fdrdb_t
 
     type d2fdrdb_t
         type(molecule_t), pointer :: mol
@@ -22,14 +22,14 @@ module d2fdrdb_class
     
 contains
 
-    subroutine init_d2fdrdb(this, mol)
+    subroutine new_d2fdrdb(this, mol)
         type(d2fdrdb_t) :: this
         type(molecule_t), target :: mol
 
         nullify(this%d2)
 
         if (associated(this%d2)) then
-            call msg_warn('init_thisdrdb(): already allocated!')
+            call msg_warn('new_thisdrdb(): already allocated!')
         else
             allocate(this%d2(get_ncgto(mol),9))
         end if

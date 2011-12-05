@@ -10,7 +10,7 @@ module bfeval_class
     use cao2sao_class
     implicit none
 
-    public bfeval, init_bfeval, del_bfeval, bfeval_t
+    public bfeval, new_bfeval, del_bfeval, bfeval_t
 
     type bfeval_t
         type(molecule_t), pointer :: mol
@@ -28,7 +28,7 @@ module bfeval_class
         
 contains
 
-    subroutine init_bfeval(this, mol)
+    subroutine new_bfeval(this, mol)
         type(bfeval_t) :: this
         type(molecule_t), target :: mol
         
