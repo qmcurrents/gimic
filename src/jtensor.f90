@@ -433,14 +433,12 @@ contains
 !        jj=q
 !    end function
     
-    subroutine jdebug(this)
+    subroutine jdebug(this, r)
         type(jtensor_t) :: this
+        real(DP), dimension(3), intent(in) :: r
 
         integer(I4) :: i, b
         integer(I4), save :: notify=1
-        real(DP), dimension(3) :: r
-
-        call getkw(input, 'grid.origin', r)
 
         call bfeval(this%bfv, r, bfvec)
         call dfdr(this%dfr, r, drvec)
