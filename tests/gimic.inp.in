@@ -14,10 +14,7 @@ openshell=false
 screening=on        # use screening to speed up 
 screen_thrs=1.d-8   # Screening threshold
 show_up_axis=true   # mark "up" axis in .xyz files
-calc=[cdens]      
-# calc=[cdens, integral]  # what to calculate, and in which order
-#calc=[integral]
-# calc=[cdens, integral, divj, edens]
+calc=[]             # cdens, integral, edens, divj
 
 cdens {           
 	magnet_axis=-z #[-] i,j,k || x,y,z -> align magnet along axis

@@ -27,16 +27,22 @@ if (NOT EXISTS ${CMAKE_CURRENT_BINARY_DIR}/gimic.inp)
 endif()
 
 # Configure script
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/test.sh.in
-    ${CMAKE_CURRENT_BINARY_DIR}/test.sh @ONLY
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/test.py.in
+    ${CMAKE_CURRENT_BINARY_DIR}/test.py @ONLY
     )
 execute_process(
-    COMMAND chmod 755 ${CMAKE_CURRENT_BINARY_DIR}/test.sh 
+    COMMAND chmod 755 ${CMAKE_CURRENT_BINARY_DIR}/test.py 
     OUTPUT_QUIET
     ) 
 
-add_test(NAME ExampleTests 
-    COMMAND ${CMAKE_CURRENT_BINARY_DIR}/test.sh 
+# Add tests
+add_test(NAME Vectors
+    COMMAND ${CMAKE_CURRENT_BINARY_DIR}/test.py vectors
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    )
+
+add_test(NAME BondIntegral
+    COMMAND ${CMAKE_CURRENT_BINARY_DIR}/test.py bond_integral
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     )
 

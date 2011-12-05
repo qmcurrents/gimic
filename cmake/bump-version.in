@@ -1,12 +1,11 @@
 #!@PYTHON_EXECUTABLE@
-# vim:ft=python
+# vim:ft=python:
 # Simple script to bump the version number before a release
 #
 # jonas juselius <jonas.juselius@uit.no>
 #
 # TODO: Docstrings
 #
-# vim:ft=python:
 
 import os
 import sys

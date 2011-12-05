@@ -1,0 +1,101 @@
+#!@PYTHON_EXECUTABLE@
+# vim:ft=python:
+#
+# jonas juselius <jonas.juselius@uit.no>
+#
+# Script wrapper for running "non-trivial" tests
+#
+
+import os
+import sys
+import string
+import re
+from argparse import ArgumentParser
+import subprocess
+
+if sys.version < '2.4':
+    print('requires python version >= 2.4')
+    sys.exit(1)
+
+work_dir = '@CMAKE_CURRENT_BINARY_DIR@'
+ref_dir = '@CMAKE_CURRENT_SOURCE_DIR@'
+project_version = '@PROJECT_VERSION@'
+
+gimic = os.path.join('@CMAKE_CURRENT_BINARY_DIR@', 'gimic-test')
+if not os.path.exists(gimic):
+    print "Could not find program: ", work_dir
+
+parser = ArgumentParser(description="Run GIMIC tests",
+        epilog="Version @PROJECT_VERSION@")
+parser.add_argument('name',
+        action='store',
+        nargs=1,
+        help='test name')
+
+args = parser.parse_args()
+
+def gen_test_inp(calc, fname):
+    f=open(fname, 'w')
+    for i in open('gimic.inp', 'r'):
+        i = i.replace('calc=[]', 'calc=[{0}]'.format(calc))
+        f.write(i)
+    f.close()
+
+def run_gimic(name):
+    fout = open(name + '.out', 'w')
+    ferr = open(name + '.err', 'w')
+    p = subprocess.Popen([gimic, name + '.inp'],
+            stdout=fout,
+            stderr=ferr)
+    result = p.wait()
+    fout.close()
+    ferr.close()
+    if result != 0:
+        return False
+    return True
+
+def test_vectors():
+    gen_test_inp('cdens', 'vectors.inp')
+    if not run_gimic('vectors'):
+        return False
+    ref = os.path.join(ref_dir, 'JVEC.txt')
+    p = subprocess.Popen(['cmp', 'JVEC.txt', ref])
+    result = p.wait()
+    if result != 0:
+        return False
+    return True
+
+def test_bond_integral():
+    gen_test_inp('integral', 'integral.inp')
+    if not run_gimic('integral'):
+        return False
+    f = open('integral.out', 'r')
+    intgrl = -1.e10
+    for line in f:
+        if 'Induced current (nA/T)  :' in line:
+            intgrl = float(line[30:])
+    f.close()
+    if abs(intgrl - 16.2535) > 0.0:
+        print "Invalid integral", intgrl
+        return False
+    return True
+
+def main():
+    if not os.path.exists(work_dir):
+        print "No such directory: ", work_dir
+    os.chdir(work_dir)
+    if args.name[0] == 'vectors':
+        result = test_vectors()
+    elif args.name[0] == 'bond_integral':
+        result = test_bond_integral()
+    else:
+        print "Invalid test: ", args.name[0]
+        return False
+    return result
+
+if __name__ == '__main__':
+    if main():
+        sys.exit(0)
+    sys.exit(1)
+
+# vim:et:ts=4:sw=4:

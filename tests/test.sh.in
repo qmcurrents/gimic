@@ -1,8 +1,0 @@
-#!/bin/sh
-#
-# Example shell script wrapper for running "non-trivial" tests
-#
-
-cd @CMAKE_CURRENT_BINARY_DIR@
-./gimic-test 
-cmp JVEC.txt @CMAKE_CURRENT_SOURCE_DIR@/JVEC.txt
