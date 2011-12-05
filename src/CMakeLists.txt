@@ -3,13 +3,13 @@ add_subdirectory(libgimic)
 add_executable(gimic.bin 
     edens.f90
     gimic.f90
-    gopenmol.f90  
     integral.f90  
     magnet.f90
     cubeplot.f90   
     grid.f90	    
     jfield.f90	  
     divj_field.f90
+    parallel.f90
     )
 target_link_libraries(gimic.bin gimic)
 

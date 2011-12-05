@@ -449,7 +449,6 @@ contains
             !call closefd(fd4)
             if (p3 > 1) call jmod_cubeplot(this, 'jmod', ispin)
         end do
-        call jmod_gopenmol(this, 'jmod')
     end subroutine
 
     subroutine jfield(this)
@@ -674,77 +673,6 @@ contains
         return 
 
     end function
-
-    subroutine jmod_gopenmol(this, fname)
-        type(jfield_t) :: this
-        character(*), intent(in) :: fname
-
-        integer(I4) :: surface, rank, p1, p2, p3
-        integer(I4) :: i, j, k, l
-        real(SP), dimension(3) :: qmin, qmax
-        real(DP), dimension(3) :: norm
-        real(SP) :: maxi, mini, val
-        type(vector_t), dimension(:,:), pointer :: buf
-
-        if (trim(fname) == '') return
-
-        buf=>this%vv
-        open(GOPFD,file=trim(fname)//'.plt', access='direct', recl=4)
-        open(GOPFD2,file=trim(fname)//'_prj.plt',access='direct',recl=4)
-
-        surface=200
-        rank=3
-
-        call get_grid_size(this%grid, p1, p2, p3)
-        norm=get_grid_normal(this%grid)
-        qmin=real(gridpoint(this%grid,1,1,1)*AU2A)
-        qmax=real(gridpoint(this%grid,p1,p2,p3)*AU2A)
-
-        write(GOPFD,rec=1) rank;      write(GOPFD2,rec=1) rank
-        write(GOPFD,rec=2) surface;   write(GOPFD2,rec=2) surface
-        write(GOPFD,rec=3) p3;        write(GOPFD2,rec=3) p3
-        write(GOPFD,rec=4) p2;        write(GOPFD2,rec=4) p2
-        write(GOPFD,rec=5) p1;        write(GOPFD2,rec=5) p1
-        write(GOPFD,rec=6) qmin(3);   write(GOPFD2,rec=6) qmin(3)
-        write(GOPFD,rec=7) qmax(3);   write(GOPFD2,rec=7) qmax(3)
-        write(GOPFD,rec=8) qmin(2);   write(GOPFD2,rec=8) qmin(2)
-        write(GOPFD,rec=9) qmax(2);   write(GOPFD2,rec=9) qmax(2)
-        write(GOPFD,rec=10) qmin(1);  write(GOPFD2,rec=10) qmin(1)
-        write(GOPFD,rec=11) qmax(1);  write(GOPFD2,rec=11) qmax(1)
-
-!        print *, rank;     
-!        print *, surface;  
-!        print *, p3;       
-!        print *, p2;       
-!        print *, p1;       
-!        print *, qmin(3);  
-!        print *, qmax(3);  
-!        print *, qmin(2);  
-!        print *, qmax(2);  
-!        print *, qmin(1); 
-!        print *, qmax(1); 
-
-        maxi=0.d0
-        mini=0.d0
-        l=12
-        do k=1,p3
-            call jvec_io(this, k, 'r')
-            do j=1,p2
-                do i=1,p1
-                    val=real(sqrt(sum(buf(i,j)%v**2)))
-                    write(GOPFD,rec=l) val
-                    if (val > maxi) maxi=val
-                    if (val < mini) mini=val
-                    write(GOPFD2,rec=l) real(dot_product(norm,buf(i,j)%v))
-                    l=l+1
-                end do
-            end do
-        end do
-        print *, 'maximini:', maxi, mini
-
-        close(GOPFD)
-        close(GOPFD2)
-    end subroutine
 
 !    subroutine read_jdata(f, g) 
 !        type(jfield_t), intent(inout) :: f

@@ -100,7 +100,6 @@ contains
         close(EDPFD)
         write(str_g, '(a,e19.12)') 'Max electronic density:', amax
         call msg_info(str_g)
-        call edens_gopenmol(this, basename)
         call edens_cube(this, basename)
     end subroutine
 
@@ -156,55 +155,6 @@ contains
             call gather_data(this%buf, this%buf(:,lo:hi))
             if (master_p) write(EDFD, rec=k) this%buf
         end do
-    end subroutine
-
-    subroutine edens_gopenmol(this, basename)
-        type(edens_t) :: this
-        character(*), intent(in) :: basename
-
-        integer(I4) :: surface, rank, p1, p2, p3
-        integer(I4) :: i, j, k, l
-        real(SP), dimension(3) :: qmin, qmax
-        real(DP), dimension(:,:), pointer :: buf
-        character(BUFLEN) :: fname
-
-        if (trim(basename) == '') return
-        fname = trim(basename)//'.plt'
-
-        buf=>this%buf
-        open(GOPFD,file=trim(fname),access='direct',recl=I4)
-
-        surface=200
-        rank=3
-
-        call get_grid_size(this%grid, p1, p2, p3)
-        qmin=real(gridpoint(this%grid,1,1,1)*AU2A)
-        qmax=real(gridpoint(this%grid,p1,p2,p3)*AU2A)
-
-        write(GOPFD,rec=1) rank
-        write(GOPFD,rec=2) surface
-        write(GOPFD,rec=3) p3
-        write(GOPFD,rec=4) p2
-        write(GOPFD,rec=5) p1
-        write(GOPFD,rec=6) qmin(3)
-        write(GOPFD,rec=7) qmax(3)
-        write(GOPFD,rec=8) qmin(2)
-        write(GOPFD,rec=9) qmax(2)
-        write(GOPFD,rec=10) qmin(1)
-        write(GOPFD,rec=11) qmax(1)
-
-        l=12
-        do k=1,p3
-            read(EDFD, rec=k) buf
-            do j=1,p2
-                do i=1,p1
-                    write(GOPFD,rec=l) real(buf(i,j))
-                    l=l+1
-                end do
-            end do
-        end do
-
-        close(GOPFD)
     end subroutine
 
     subroutine edens_cube(this, basename)

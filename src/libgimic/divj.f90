@@ -8,7 +8,6 @@ module divj_m
     use globals_m
     use jtensor_class
     use teletype_m
-    use parallel_m
     implicit none
 
     public divj
