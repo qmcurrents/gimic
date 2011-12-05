@@ -15,7 +15,7 @@ module edens_class
     implicit none
     
     public init_edens, del_edens, edens_t
-    public edens_direct, edens, edens_plot
+    public edens_direct, edens, edens_plot, edens_gopenmol, edens_cube
     
     type edens_t
         real(DP), dimension(:), pointer :: tmp
@@ -29,11 +29,12 @@ module edens_class
 
 contains
     ! set up memory (once) for the different components
-    subroutine init_edens(self, mol, dens, grid)
+    subroutine init_edens(self, mol, dens, grid, densfile)
         type(edens_t) :: self
         type(molecule_t) :: mol
         type(dens_t), target :: dens
         type(grid_t), target :: grid
+        character(*), intent(in) :: densfile
 
         integer(I4) :: n
         integer(I4) :: p1, p2
@@ -47,8 +48,7 @@ contains
         self%grid=>grid
 
         if (master_p) then
-            call getkw(input, 'edens.density', str_g)
-            open(EDFD, file=trim(str_g), access='direct', recl=p1*p2*DP)
+            open(EDFD, file=trim(densfile), access='direct', recl=p1*p2*DP)
         end if
     end subroutine
 
@@ -71,8 +71,9 @@ contains
         write(EDFD, rec=k) self%buf
     end subroutine
 
-    subroutine edens_plot(self)
+    subroutine edens_plot(self, pltfile)
         type(edens_t), intent(inout) :: self
+        character(*), intent(in) :: pltfile
         
         integer(I4) :: i,j,p1,p2,p3
         real(DP) :: amax
@@ -84,8 +85,7 @@ contains
 
         amax=D0
         read(EDFD, rec=1) self%buf
-        call getkw(input, 'edens.density_plot', str_g)
-        open(EDPFD, file=trim(str_g))
+        open(EDPFD, file=trim(pltfile))
         do j=1,p2
             do i=1,p1
                 rr=gridpoint(self%grid, i, j, 1)
@@ -97,8 +97,6 @@ contains
         close(EDPFD)
         write(str_g, '(a,e19.12)') 'Max electronic density:', amax
         call msg_info(str_g)
-        call edens_gopenmol(self)
-        if (p3 > 1) call edens_cube(self)
     end subroutine
 
     subroutine edens_direct(self, k)
@@ -155,8 +153,9 @@ contains
         end do
     end subroutine
 
-    subroutine edens_gopenmol(self)
+    subroutine edens_gopenmol(self, pltfile)
         type(edens_t) :: self
+        character(*), intent(in) :: pltfile
 
         integer(I4) :: surface, rank, p1, p2, p3
         integer(I4) :: i, j, k, l
@@ -165,10 +164,8 @@ contains
         character(BUFLEN) :: gopen_file
 
         buf=>self%buf
-        gopen_file=''
-        call getkw(input, 'edens.gopenmol', gopen_file)
-        if (trim(gopen_file) == '') return
-        open(GOPFD,file=trim(gopen_file),access='direct',recl=I4)
+        if (trim(pltfile) == '') return
+        open(GOPFD,file=trim(pltfile),access='direct',recl=I4)
 
         surface=200
         rank=3
@@ -203,25 +200,25 @@ contains
         close(GOPFD)
     end subroutine
 
-    subroutine edens_cube(self)
+    subroutine edens_cube(self, pltfile)
         type(edens_t) :: self
+        character(*), intent(in) :: pltfile
 
         integer(I4) :: p1, p2, p3
         integer(I4) ::  k
         real(DP), dimension(:,:,:), allocatable :: buf
         character(BUFLEN) :: fname
 
-        fname=''
-        call getkw(input, 'edens.cube',fname)
-        if (trim(fname) == '') return
+        if (trim(pltfile) == '') return
 
         call get_grid_size(self%grid, p1, p2, p3)
+        if (p3 < 2) return
 
         allocate(buf(p1,p2,p3))
         do k=1,p3
             read(EDFD, rec=k) buf(:,:,k)
         end do
-        call write_cubeplot(fname,self%grid,buf)
+        call write_cubeplot(pltfile, self%grid, buf)
         deallocate(buf)
 
     end subroutine

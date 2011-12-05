@@ -267,10 +267,18 @@ contains
                 call msg_out('Calculating charge density')
                 call msg_out('*****************************************')
                 call setup_grid(calc(i), egrid)
-                call init_edens(ed, mol, modens, egrid)
+                call getkw(input, 'edens.density', fname)
+                call init_edens(ed, mol, modens, egrid, fname)
                 if (dryrun_p) cycle
                 call edens(ed)
-                if (master_p) call edens_plot(ed)
+                if (master_p) then 
+                    call getkw(input, 'edens.density_plot', fname)
+                    call edens_plot(ed, fname)
+                    call getkw(input, 'edens.gopenmol', fname)
+                    call edens_gopenmol(ed, fname)
+                    call getkw(input, 'edens.cube', fname)
+                    call edens_cube(ed, fname)
+                end if
             case default
                 call msg_error('gimic(): Unknown operation!')
             end select
