@@ -1,23 +1,15 @@
-include(LocalBuildTree)
+#include(LocalBuildTree)
 include_directories (${PROJECT_SOURCE_DIR}/src)
 
-add_custom_target(tests ALL 
-    DEPENDS test.bin
-    )
-
-# Configure test.bin
-add_executable(test.bin ${PROJECT_SOURCE_DIR}/src/gimic.f90)
-target_link_libraries(test.bin gimic)
-
 # Configure driver
-set (GIMIC_EXECUTABLE ${CMAKE_CURRENT_BINARY_DIR}/test.bin)
+set (GIMIC_EXECUTABLE ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/gimic.bin)
 set (INST_LIBDIR ${PROJECT_SOURCE_DIR}/src)
 
 configure_file(${CMAKE_SOURCE_DIR}/src/gimic.in
-    ${CMAKE_CURRENT_BINARY_DIR}/gimic-test @ONLY
+    ${CMAKE_CURRENT_BINARY_DIR}/gimic @ONLY
     )
 execute_process(COMMAND 
-    chmod 755 ${CMAKE_CURRENT_BINARY_DIR}/gimic-test OUTPUT_QUIET) 
+    chmod 755 ${CMAKE_CURRENT_BINARY_DIR}/gimic OUTPUT_QUIET) 
 
 # Configure input
 if (NOT EXISTS ${CMAKE_CURRENT_BINARY_DIR}/gimic.inp) 

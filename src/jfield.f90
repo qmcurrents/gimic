@@ -26,7 +26,7 @@ module jfield_class
     end type
 
     public new_jfield, del_jfield, jfield, jvectors, jfield_direct
-    public jfield_t, get_jvectors, get_jtensors, jvector_plot
+    public jfield_t, get_jvectors, get_jtensors, jvector_plot, jfield_eta
     public set_jtensors
     
     private
@@ -36,32 +36,32 @@ module jfield_class
     character(BUFLEN) :: jtensor_file, jvec_file
     character(BUFLEN) :: jmod_plt, jvec_plt, njvec_plt, jprj_plt
 contains
-    subroutine new_jfield(f, jt, g, magnet)
-        type(jfield_t) :: f
+    subroutine new_jfield(this, jt, g, magnet)
+        type(jfield_t) :: this
         type(jtensor_t), target :: jt
         type(grid_t), target :: g
         real(DP), dimension(3), intent(in) :: magnet
 
         integer(I4) :: i, j, k
 
-        f%b=magnet
-        f%jt=>jt
-        f%grid=>g
+        this%b=magnet
+        this%jt=>jt
+        this%grid=>g
 
         if (master_p) then
-            call setup_files(f)
+            call setup_files(this)
         end if
 
         call get_grid_size(g,i,j,k)
-        allocate(f%jj(i,j))
-        allocate(f%vv(i,j))
+        allocate(this%jj(i,j))
+        allocate(this%vv(i,j))
         if (uhf_p) then
-            allocate(f%jja(i,j))
-            allocate(f%jjb(i,j))
-            allocate(f%jsd(i,j))
-            allocate(f%vva(i,j))
-            allocate(f%vvb(i,j))
-            allocate(f%vsd(i,j))
+            allocate(this%jja(i,j))
+            allocate(this%jjb(i,j))
+            allocate(this%jsd(i,j))
+            allocate(this%vva(i,j))
+            allocate(this%vvb(i,j))
+            allocate(this%vsd(i,j))
         end if
 
 !        call getkw(input, 'scale_vectors', vec_scale)
@@ -73,8 +73,8 @@ contains
 
     end subroutine
 
-    subroutine setup_files(jf)
-        type(jfield_t) :: jf
+    subroutine setup_files(this)
+        type(jfield_t) :: this
     
         logical :: plot_p
         integer(I4) :: jtrecl, jvrecl
@@ -85,42 +85,42 @@ contains
         jtrecl=9*DP
         jvrecl=3*DP
         
-        open(JTFD, file=trim(jtensor_file) // '.dat', &
+        open(JTFD, file=trim(jtensor_file) // '.bin', &
             access='direct', recl=jtrecl)
-        open(JVECFD, file=trim(jvector_file) // '.dat', &
+        open(JVECFD, file=trim(jvector_file) // '.bin', &
             access='direct', recl=jvrecl)
         if (uhf_p) then
-            open(JTFD+1, file=trim(jtensor_file) // '_A.dat', &
+            open(JTFD+1, file=trim(jtensor_file) // '_A.bin', &
             access='direct', recl=jtrecl)
-            open(JTFD+2, file=trim(jtensor_file) // '_B.dat', &
+            open(JTFD+2, file=trim(jtensor_file) // '_B.bin', &
             access='direct', recl=jtrecl)
-            open(JTFD+3, file=trim(jtensor_file) // '_SD.dat', &
+            open(JTFD+3, file=trim(jtensor_file) // '_SD.bin', &
             access='direct', recl=jtrecl)
-            open(JVECFD+1, file=trim(jvec_file) // '_A.dat', &
+            open(JVECFD+1, file=trim(jvec_file) // '_A.bin', &
             access='direct', recl=jvrecl)
-            open(JVECFD+2, file=trim(jvec_file) // '_B.dat', &
+            open(JVECFD+2, file=trim(jvec_file) // '_B.bin', &
             access='direct', recl=jvrecl)
-            open(JVECFD+3, file=trim(jvec_file) // '_SD.dat', &
+            open(JVECFD+3, file=trim(jvec_file) // '_SD.bin', &
             access='direct', recl=jvrecl)
         end if
 
     end subroutine
 
-    subroutine del_jfield(f)
-        type(jfield_t), intent(inout) :: f
+    subroutine del_jfield(this)
+        type(jfield_t), intent(inout) :: this
         
-        f%b=0.d0
-        deallocate(f%jj)
-        deallocate(f%vv)
-        nullify(f%jj)
-        nullify(f%vv)
+        this%b=0.d0
+        deallocate(this%jj)
+        deallocate(this%vv)
+        nullify(this%jj)
+        nullify(this%vv)
         if (uhf_p) then
-            deallocate(f%jja)
-            deallocate(f%jjb)
-            deallocate(f%jsd)
-            deallocate(f%vva)
-            deallocate(f%vvb)
-            deallocate(f%vsd)
+            deallocate(this%jja)
+            deallocate(this%jjb)
+            deallocate(this%jsd)
+            deallocate(this%vva)
+            deallocate(this%vvb)
+            deallocate(this%vsd)
         end if
         
         if (master_p) then
@@ -137,62 +137,62 @@ contains
         end if
     end subroutine
     
-    subroutine jvectors(jf)
-        type(jfield_t), intent(inout) :: jf
+    subroutine jvectors(this)
+        type(jfield_t), intent(inout) :: this
 
         integer(I4) :: i, j, k, p1, p2, p3
 
-        call get_grid_size(jf%grid, p1, p2, p3)
+        call get_grid_size(this%grid, p1, p2, p3)
 
         call msg_note( 'Contracting j-tensors with magnetic field.')
         call msg_note( 'Writing j-vectors in: ' // trim(jvec_file))
         call nl
 
         do k=1,p3
-            call jtens_io(jf, k, 'r')
-            jf%zpos_j=k
+            call jtens_io(this, k, 'r')
+            this%zpos_j=k
             do j=1,p2
                 do i=1,p1
-                    jf%vv(i,j)%v=matmul(jf%jj(i,j)%t, jf%b)
+                    this%vv(i,j)%v=matmul(this%jj(i,j)%t, this%b)
                     if (uhf_p) then
-                        jf%vva(i,j)%v=matmul(jf%jja(i,j)%t, jf%b)
-                        jf%vvb(i,j)%v=matmul(jf%jjb(i,j)%t, jf%b)
-                        jf%vsd(i,j)%v=matmul(jf%jsd(i,j)%t, jf%b)
+                        this%vva(i,j)%v=matmul(this%jja(i,j)%t, this%b)
+                        this%vvb(i,j)%v=matmul(this%jjb(i,j)%t, this%b)
+                        this%vsd(i,j)%v=matmul(this%jsd(i,j)%t, this%b)
                     end if
                 end do
             end do
-            call jvec_io(jf, k, 'w')
-            jf%zpos_v=k
+            call jvec_io(this, k, 'w')
+            this%zpos_v=k
         end do
 
     end subroutine
 
-    subroutine jtens_io(jf, p3, op)
-        type(jfield_t), intent(inout) :: jf
+    subroutine jtens_io(this, p3, op)
+        type(jfield_t), intent(inout) :: this
         integer(I4), intent(in) :: p3
         character(1), intent(in) :: op
 
         integer(I4) :: i, j, k, p1, p2 
 
-        call get_grid_size(jf%grid, p1, p2)
+        call get_grid_size(this%grid, p1, p2)
 
         k=p1*p2*(p3-1)+1
         do j=1, p2
             do i=1, p1
                 select case(op)
                 case('r')
-                    read(JTFD, rec=k) jf%jj(i,j)%t
+                    read(JTFD, rec=k) this%jj(i,j)%t
                     if (uhf_p) then
-                        read(JTFD+1, rec=k) jf%jja(i,j)%t
-                        read(JTFD+2, rec=k) jf%jjb(i,j)%t
-                        read(JTFD+3, rec=k) jf%jsd(i,j)%t
+                        read(JTFD+1, rec=k) this%jja(i,j)%t
+                        read(JTFD+2, rec=k) this%jjb(i,j)%t
+                        read(JTFD+3, rec=k) this%jsd(i,j)%t
                     end if
                 case('w')
-                    write(JTFD, rec=k) jf%jj(i,j)%t
+                    write(JTFD, rec=k) this%jj(i,j)%t
                     if (uhf_p) then
-                        write(JTFD+1, rec=k) jf%jja(i,j)%t
-                        write(JTFD+2, rec=k) jf%jjb(i,j)%t
-                        write(JTFD+3, rec=k) jf%jsd(i,j)%t
+                        write(JTFD+1, rec=k) this%jja(i,j)%t
+                        write(JTFD+2, rec=k) this%jjb(i,j)%t
+                        write(JTFD+3, rec=k) this%jsd(i,j)%t
                     end if
                 case default
                     call msg_error('jtens_io(): Invalid operation: ' // op)
@@ -203,32 +203,64 @@ contains
         end do
     end subroutine
 
-    subroutine jvec_io(jf, p3, op)
-        type(jfield_t), intent(inout) :: jf
+    subroutine jfield_eta(this, fac)
+        type(jfield_t) :: this
+        real(DP), intent(in), optional :: fac
+
+        integer(I4) :: i, j, p1, p2, p3
+        type(tensor_t) :: foo
+        real(DP) :: delta_t
+        real(4) :: tim1, tim2
+        real(4), dimension(2) :: times
+        real(DP), dimension(3) :: bar=(/D1,D1,D1/)
+        real(DP), dimension(3) :: foobar
+        real(DP), parameter :: SC=0.25d0
+        
+        call get_grid_size(this%grid, p1, p2, p3)
+        
+        call etime(times, tim1)
+        tim1=times(1)
+        do i=1,100
+            call jtensor(this%jt, (/i*SC, i*SC, i*SC/), foo, spin_a)
+            foobar=matmul(bar,foo%t)
+        end do
+        call etime(times, tim2)
+        tim2=times(1)
+        
+        delta_t=tim2-tim1
+        if ( present(fac) ) delta_t=delta_t*fac
+        write(str_g, '(a,f9.2,a)') 'Estimated CPU time for &
+            &calculation: ', delta_t*real(p1*p2*p3)/100.d0, ' sec'
+        call msg_info(str_g)
+        call nl
+    end subroutine	
+
+    subroutine jvec_io(this, p3, op)
+        type(jfield_t), intent(inout) :: this
         integer(I4), intent(in) :: p3
         character(1), intent(in) :: op
 
         integer(I4) :: i, j, k, p1, p2 
 
-        call get_grid_size(jf%grid, p1, p2)
+        call get_grid_size(this%grid, p1, p2)
 
         k=p1*p2*(p3-1)+1
         do j=1,p2
             do i=1,p1
                 select case(op)
                 case('r')
-                    read(JVECFD, rec=k) jf%vv(i,j)%v
+                    read(JVECFD, rec=k) this%vv(i,j)%v
                     if (uhf_p) then
-                        read(JVECFD+1, rec=k) jf%vva(i,j)%v
-                        read(JVECFD+2, rec=k) jf%vvb(i,j)%v
-                        read(JVECFD+3, rec=k) jf%vsd(i,j)%v
+                        read(JVECFD+1, rec=k) this%vva(i,j)%v
+                        read(JVECFD+2, rec=k) this%vvb(i,j)%v
+                        read(JVECFD+3, rec=k) this%vsd(i,j)%v
                     end if
                 case('w')
-                    write(JVECFD, rec=k) jf%vv(i,j)%v
+                    write(JVECFD, rec=k) this%vv(i,j)%v
                     if (uhf_p) then
-                        write(JVECFD+1, rec=k) jf%vva(i,j)%v
-                        write(JVECFD+2, rec=k) jf%vvb(i,j)%v
-                        write(JVECFD+3, rec=k) jf%vsd(i,j)%v
+                        write(JVECFD+1, rec=k) this%vva(i,j)%v
+                        write(JVECFD+2, rec=k) this%vvb(i,j)%v
+                        write(JVECFD+3, rec=k) this%vsd(i,j)%v
                     end if
                 case default
                     call msg_error('jvec_io(): Invalid operation: ' // op)
@@ -318,20 +350,20 @@ contains
         write(fd, '(6f11.7)')  rr, jmod
     end subroutine	
 
-    function getvecs(jf, spin) result(jv)
-        type(jfield_t), intent(inout) :: jf
+    function getvecs(this, spin) result(jv)
+        type(jfield_t), intent(inout) :: this
         integer(I4) :: spin
 
         type(vector_t), dimension(:,:), pointer :: jv
         select case(spin)
             case(1)
-                jv=>jf%vv
+                jv=>this%vv
             case(2)
-                jv=>jf%vva
+                jv=>this%vva
             case(3)
-                jv=>jf%vvb
+                jv=>this%vvb
             case(4)
-                jv=>jf%vsd
+                jv=>this%vsd
         end select
     end function
 
@@ -370,8 +402,8 @@ contains
 
     end function
 
-    subroutine jvector_plot(jf)
-        type(jfield_t), intent(inout) :: jf
+    subroutine jvector_plot(this)
+        type(jfield_t), intent(inout) :: this
 
         integer(I4) :: i, j, k, p1, p2, p3, spin, ispin
         integer(I4) :: fd1, fd2, fd3, fd4
@@ -383,7 +415,7 @@ contains
             spin=4
         end if
 
-        call get_grid_size(jf%grid, p1, p2, p3)
+        call get_grid_size(this%grid, p1, p2, p3)
 
         do ispin=1,spin
             fd1= open_plot('jvec',ispin)
@@ -392,16 +424,16 @@ contains
             !fd4= open_plot('jvec_normalzied',ispin)
 
             do k=1,p3
-                call jvec_io(jf, k, 'r')
-                jv=>getvecs(jf,ispin)
-                jf%zpos_v=k
+                call jvec_io(this, k, 'r')
+                jv=>getvecs(this,ispin)
+                this%zpos_v=k
                 do j=1,p2
                     do i=1,p1
-                        rr=gridpoint(jf%grid, i,j,k)*AU2A
+                        rr=gridpoint(this%grid, i,j,k)*AU2A
                         v=jv(i,j)%v*AU2A
                         call wrt_jvec(rr,v,fd1)
                         call wrt_jmod(rr,v,fd2)
-                        !call wrt_jproj(rr,v,jf%grid,fd3)
+                        !call wrt_jproj(rr,v,this%grid,fd3)
                         !call wrt_njvec(rr,v,fd4)
                     end do
                     if (fd1 /= 0) write(fd1, *)
@@ -415,49 +447,49 @@ contains
             call closefd(fd2)
             !call closefd(fd3)
             !call closefd(fd4)
-            if (p3 > 1) call jmod_cubeplot(jf, 'jmod', ispin)
+            if (p3 > 1) call jmod_cubeplot(this, 'jmod', ispin)
         end do
-        call jmod_gopenmol(jf, 'jmod')
+        call jmod_gopenmol(this, 'jmod')
     end subroutine
 
-    subroutine jfield(jf)
-        type(jfield_t) :: jf
+    subroutine jfield(this)
+        type(jfield_t) :: this
 
         integer(I4) :: i, j, k, p1, p2, p3
         real(DP), dimension(3) :: rr
         character(10) :: op
         integer(I4) :: lo, hi, npts
 
-        call eta(jf%jt,jf%grid)
-        call get_grid_size(jf%grid, p1, p2, p3)
+        call jfield_eta(this)
+        call get_grid_size(this%grid, p1, p2, p3)
 
         call schedule(p2, lo, hi)
     
         do k=1,p3
             do j=lo,hi
                 do i=1,p1
-                    rr=gridpoint(jf%grid, i, j, k)
-                    call ctensor(jf%jt, rr, jf%jj(i,j), 'total')
+                    rr=gridpoint(this%grid, i, j, k)
+                    call ctensor(this%jt, rr, this%jj(i,j), 'total')
                     if (uhf_p) then
-                        call ctensor(jf%jt, rr, jf%jja(i,j), 'alpha')
-                        call ctensor(jf%jt, rr, jf%jjb(i,j), 'beta')
-                        call ctensor(jf%jt, rr, jf%jsd(i,j), 'spindens')
+                        call ctensor(this%jt, rr, this%jja(i,j), 'alpha')
+                        call ctensor(this%jt, rr, this%jjb(i,j), 'beta')
+                        call ctensor(this%jt, rr, this%jsd(i,j), 'spindens')
                     end if
                 end do
             end do
-            call gather_data(jf%jj,jf%jj(:,lo:hi))
+            call gather_data(this%jj,this%jj(:,lo:hi))
             if (uhf_p) then
-                call gather_data(jf%jja,jf%jja(:,lo:hi))
-                call gather_data(jf%jjb,jf%jjb(:,lo:hi))
-                call gather_data(jf%jsd,jf%jsd(:,lo:hi))
+                call gather_data(this%jja,this%jja(:,lo:hi))
+                call gather_data(this%jjb,this%jjb(:,lo:hi))
+                call gather_data(this%jsd,this%jsd(:,lo:hi))
             end if
-            if (master_p) call jtens_io(jf, k, 'w')
-            jf%zpos_j=k
+            if (master_p) call jtens_io(this, k, 'w')
+            this%zpos_j=k
         end do
     end subroutine 
 
-    subroutine jfield_direct(jf, k)
-        type(jfield_t) :: jf
+    subroutine jfield_direct(this, k)
+        type(jfield_t) :: this
         integer(I4), intent(in) :: k
 
         integer(I4) :: i, j, p1, p2
@@ -465,62 +497,62 @@ contains
         real(DP), dimension(3) :: rr
         type(tensor_t), dimension(:,:), pointer :: jj
         
-        call get_grid_size(jf%grid, p1, p2)
-        jj=>jf%jj
+        call get_grid_size(this%grid, p1, p2)
+        jj=>this%jj
 
         call schedule(p2, lo, hi)
 
         do j=lo,hi
             do i=1,p1
-                rr=gridpoint(jf%grid, i, j, k)
-                call ctensor(jf%jt, rr, jf%jj(i,j), 'total')
+                rr=gridpoint(this%grid, i, j, k)
+                call ctensor(this%jt, rr, this%jj(i,j), 'total')
                 if (uhf_p) then
-                    call ctensor(jf%jt, rr, jf%jja(i,j), 'alpha')
-                    call ctensor(jf%jt, rr, jf%jjb(i,j), 'beta')
-                    call ctensor(jf%jt, rr, jf%jsd(i,j), 'spindens')
+                    call ctensor(this%jt, rr, this%jja(i,j), 'alpha')
+                    call ctensor(this%jt, rr, this%jjb(i,j), 'beta')
+                    call ctensor(this%jt, rr, this%jsd(i,j), 'spindens')
                 end if
             end do
         end do
-        call gather_data(jf%jj,jf%jj(:,lo:hi))
+        call gather_data(this%jj,this%jj(:,lo:hi))
         if (uhf_p) then
-            call gather_data(jf%jja,jf%jja(:,lo:hi))
-            call gather_data(jf%jjb,jf%jjb(:,lo:hi))
-            call gather_data(jf%jsd,jf%jsd(:,lo:hi))
+            call gather_data(this%jja,this%jja(:,lo:hi))
+            call gather_data(this%jjb,this%jjb(:,lo:hi))
+            call gather_data(this%jsd,this%jsd(:,lo:hi))
         end if
     end subroutine 
 
-    subroutine get_jtensors(jf,z,jt)
-        type(jfield_t), intent(inout) :: jf
+    subroutine get_jtensors(this,z,jt)
+        type(jfield_t), intent(inout) :: this
         integer(I4), intent(in) :: z
         type(tensor_t), dimension(:,:), pointer :: jt
 
-        if (jf%zpos_j /= z) then
-            call jtens_io(jf, z, 'r')
+        if (this%zpos_j /= z) then
+            call jtens_io(this, z, 'r')
         end if
 
-        jt=>jf%jj
+        jt=>this%jj
     end subroutine 
 
-    subroutine set_jtensors(jf,z,jt)
-        type(jfield_t), intent(inout) :: jf
+    subroutine set_jtensors(this,z,jt)
+        type(jfield_t), intent(inout) :: this
         integer(I4), intent(in) :: z
         type(tensor_t), dimension(:,:) :: jt
 
-        jf%jj=jt
-        call jtens_io(jf, z, 'w')
-        jf%zpos_j=z
+        this%jj=jt
+        call jtens_io(this, z, 'w')
+        this%zpos_j=z
     end subroutine 
 
-    subroutine get_jvectors(jf,z,jvec)
-        type(jfield_t), intent(inout) :: jf
+    subroutine get_jvectors(this,z,jvec)
+        type(jfield_t), intent(inout) :: this
         integer(I4), intent(in) :: z
         type(vector_t), dimension(:,:), pointer :: jvec
 
-        if (jf%zpos_v /= z) then
-            call jvec_io(jf, z, 'r')
+        if (this%zpos_v /= z) then
+            call jvec_io(this, z, 'r')
         end if
 
-        jvec=>jf%vv
+        jvec=>this%vv
     end subroutine 
 
     subroutine print_jt(rr, jt)
@@ -536,8 +568,8 @@ contains
         print '(a,e19.12)', ' Trace:', jt(1,1)+jt(2,2)+jt(3,3)
     end subroutine
 
-    subroutine jmod_cubeplot(jf, fname, spin)
-        type(jfield_t) :: jf
+    subroutine jmod_cubeplot(this, fname, spin)
+        type(jfield_t) :: this
         character(*), intent(in) :: fname
         integer(I4), intent(in) :: spin
 
@@ -549,18 +581,18 @@ contains
         integer(I4), dimension(3) :: npts
         type(vector_t), dimension(:,:,:), allocatable :: buf
 
-        call get_grid_size(jf%grid, p1, p2, p3)
+        call get_grid_size(this%grid, p1, p2, p3)
         npts=(/p1,p2,p3/)
-        norm=get_grid_normal(jf%grid)
-        qmin=gridpoint(jf%grid,1,1,1)
-        qmax=gridpoint(jf%grid,p1,p2,p3)
+        norm=get_grid_normal(this%grid)
+        qmin=gridpoint(this%grid,1,1,1)
+        qmax=gridpoint(this%grid,p1,p2,p3)
 
         step=(qmax-qmin)/(npts-1)
 
         fd1=opencube(trim(fname), spin, qmin, step, npts)
         fd2=opencube(trim(fname)//'_quasi', spin, qmin, step, npts)
 
-        mag = jf%b
+        mag = this%b
 
         allocate(buf(p1,p2,p3))
         call read_jvecs(buf,spin)
@@ -571,7 +603,7 @@ contains
             do j=1,p2
                 do k=1,p3
                     v=buf(i,j,k)%v
-                    rr=gridpoint(jf%grid,i,j,k)
+                    rr=gridpoint(this%grid,i,j,k)
                     val=(sqrt(sum(v**2)))
                     rr=rr-dot_product(mag,rr)*mag
                     norm=cross_product(mag,rr)
@@ -643,8 +675,8 @@ contains
 
     end function
 
-    subroutine jmod_gopenmol(jf, fname)
-        type(jfield_t) :: jf
+    subroutine jmod_gopenmol(this, fname)
+        type(jfield_t) :: this
         character(*), intent(in) :: fname
 
         integer(I4) :: surface, rank, p1, p2, p3
@@ -656,17 +688,17 @@ contains
 
         if (trim(fname) == '') return
 
-        buf=>jf%vv
+        buf=>this%vv
         open(GOPFD,file=trim(fname)//'.plt', access='direct', recl=4)
         open(GOPFD2,file=trim(fname)//'_prj.plt',access='direct',recl=4)
 
         surface=200
         rank=3
 
-        call get_grid_size(jf%grid, p1, p2, p3)
-        norm=get_grid_normal(jf%grid)
-        qmin=real(gridpoint(jf%grid,1,1,1)*AU2A)
-        qmax=real(gridpoint(jf%grid,p1,p2,p3)*AU2A)
+        call get_grid_size(this%grid, p1, p2, p3)
+        norm=get_grid_normal(this%grid)
+        qmin=real(gridpoint(this%grid,1,1,1)*AU2A)
+        qmax=real(gridpoint(this%grid,p1,p2,p3)*AU2A)
 
         write(GOPFD,rec=1) rank;      write(GOPFD2,rec=1) rank
         write(GOPFD,rec=2) surface;   write(GOPFD2,rec=2) surface
@@ -696,7 +728,7 @@ contains
         mini=0.d0
         l=12
         do k=1,p3
-            call jvec_io(jf, k, 'r')
+            call jvec_io(this, k, 'r')
             do j=1,p2
                 do i=1,p1
                     val=real(sqrt(sum(buf(i,j)%v**2)))

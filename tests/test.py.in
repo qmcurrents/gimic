@@ -21,7 +21,7 @@ work_dir = '@CMAKE_CURRENT_BINARY_DIR@'
 ref_dir = '@CMAKE_CURRENT_SOURCE_DIR@'
 project_version = '@PROJECT_VERSION@'
 
-gimic = os.path.join('@CMAKE_CURRENT_BINARY_DIR@', 'gimic-test')
+gimic = os.path.join('@CMAKE_CURRENT_BINARY_DIR@', 'gimic')
 if not os.path.exists(gimic):
     print "Could not find program: ", work_dir
 
@@ -60,9 +60,9 @@ def test_vectors():
     gen_test_inp('cdens', 'vectors.inp')
     if not run_gimic('vectors'):
         return False
-    ref = os.path.join(ref_dir, 'JVEC.txt')
+    ref = os.path.join(ref_dir, 'jvec.txt')
     ref = open(ref, 'r')
-    for j in open('JVEC.txt'):
+    for j in open('jvec.txt'):
         r = ref.readline()
         if comment.match(j):
             continue

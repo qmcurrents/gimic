@@ -1,5 +1,6 @@
 add_library(gimic STATIC
     globals.f90
+    getkw.f90  
     basis.f90
     bfeval.f90
     cao2sao.f90
@@ -10,7 +11,6 @@ add_library(gimic STATIC
     dfdb.f90
     dfdr.f90
     divj.f90
-    edens.f90
     factorial.f90
     gaussint.f90
     gtodefs.f90

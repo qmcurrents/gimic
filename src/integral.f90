@@ -75,7 +75,7 @@ contains
         real(DP), dimension(3,3) :: xsum
         type(tensor_t), dimension(:), allocatable  :: jt1, jt2, jt3
         
-        call eta(this%jt,this%grid)
+        call jfield_eta(this%jf)
         call get_grid_size(this%grid, p1, p2, p3)
 
         call schedule(p2, lo, hi)
@@ -134,7 +134,7 @@ contains
         call push_section(input, 'integral')
         call get_magnet(this%grid, bb)
         call pop_section(input)
-        call eta(this%jt,this%grid)
+        call jfield_eta(this%jf)
 
         normal=get_grid_normal(this%grid)
 

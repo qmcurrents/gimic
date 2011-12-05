@@ -12,7 +12,7 @@ module jtensor_class
     use dfdr_class
     use d2fdrdb_class
     use dbop_class
-    use grid_class
+    !use grid_class
     use teletype_m
     implicit none
 
@@ -32,7 +32,7 @@ module jtensor_class
     public new_jtensor, del_jtensor, jtensor, jtensor2, jvector
     public ctensor, ctensor2
     public qtensor, qtensor2
-    public jtensor_t, jdebug, eta
+    public jtensor_t, jdebug
     
     private
     
@@ -380,38 +380,6 @@ contains
 
     end subroutine
 
-    subroutine eta(this, grid, fac)
-        type(jtensor_t) :: this
-        type(grid_t) :: grid
-        real(DP), intent(in), optional :: fac
-
-        integer(I4) :: i, j, p1, p2, p3
-        type(tensor_t) :: foo
-        real(DP) :: delta_t
-        real(4) :: tim1, tim2
-        real(4), dimension(2) :: times
-        real(DP), dimension(3) :: bar=(/D1,D1,D1/)
-        real(DP), dimension(3) :: foobar
-        real(DP), parameter :: SC=0.25d0
-        
-        call get_grid_size(grid, p1, p2, p3)
-        
-        call etime(times, tim1)
-        tim1=times(1)
-        do i=1,100
-            call jtensor(this, (/i*SC, i*SC, i*SC/), foo, spin_a)
-            foobar=matmul(bar,foo%t)
-        end do
-        call etime(times, tim2)
-        tim2=times(1)
-        
-        delta_t=tim2-tim1
-        if ( present(fac) ) delta_t=delta_t*fac
-        write(str_g, '(a,f9.2,a)') 'Estimated CPU time for &
-            &calculation: ', delta_t*real(p1*p2*p3)/100.d0, ' sec'
-        call msg_info(str_g)
-        call nl
-    end subroutine	
 
 ! Debug function...
 !    function contract_killer(nuc, mag, k) result(jj)

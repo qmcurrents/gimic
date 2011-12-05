@@ -132,14 +132,14 @@ contains
         use grid_class
         use gaussint_m
         use integral_class
-        use divj_class
+        use divj_field_class
         use edens_class
 
         type(jfield_t) :: jf
         type(grid_t) :: cgrid, igrid, dgrid, egrid
         type(jtensor_t) :: jt
         type(dens_t) :: xdens, modens
-        type(divj_t) :: dj
+        type(divj_field_t) :: dj
         type(edens_t) :: ed
         type(integral_t) :: it
         type(cao2sao_t) :: c2s
@@ -260,9 +260,9 @@ contains
                 call msg_out('Calculating divergence')
                 call msg_out('*****************************************')
                 call setup_grid(calc(i), dgrid)
-                call new_divj(dj, dgrid, jt)
+                call new_divj_field(dj, dgrid, magnet)
                 if (dryrun_p) cycle
-                call divj(dj)
+                call divj_field(dj)
                 if (master_p) then 
                     call divj_plot(dj, 'divj')
                 end if
@@ -287,7 +287,7 @@ contains
             call del_grid(igrid)
         end if
         if (divj_p) then
-            call del_divj(dj)
+            call del_divj_field(dj)
             call del_grid(dgrid)
         end if
         if (cdens_p) then
