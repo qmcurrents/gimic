@@ -4,7 +4,5 @@
 #
 
 cd @CMAKE_CURRENT_BINARY_DIR@
-[ ! -d out ] && mkdir out
-echo "@CMAKE_CURRENT_BINARY_DIR@ " > out/test.out
-./test.bin >> out/test.out
-
+./gimic-test 
+cmp JVEC.txt @CMAKE_CURRENT_SOURCE_DIR@/JVEC.txt

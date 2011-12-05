@@ -8,8 +8,9 @@ option(ENABLE_PROFILING      "Enable profiling"              OFF)
 option(ENABLE_BOUNDS_CHECK   "Enable bounds check"           OFF)
 option(ENABLE_CODE_COVERAGE  "Enable code coverage"          OFF)
 option(ENABLE_MPI            "Enable MPI parallelization"    OFF)
-option(ENABLE_OMP            "Enable OpenMP parallelization" OFF)
+#option(ENABLE_OMP            "Enable OpenMP parallelization" OFF)
 option(ENABLE_CFOUR          "Enable the CFOUR interface" OFF)
+option(ENABLE_TESTS          "Enable the test suite" ON)
 
 include(ConfigProjectVersion)
 include(ConfigSafeGuards)
@@ -41,27 +42,7 @@ endif()
 
 find_package(PythonInterp REQUIRED)
 
-include_directories(
-    ${PROJECT_BINARY_DIR}
-    ${PROJECT_BINARY_DIR}/modules
-    )
-
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY
-    ${CMAKE_BINARY_DIR}/bin
-    )
-
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY
-    ${CMAKE_BINARY_DIR}/lib
-    )
-
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY
-    ${CMAKE_BINARY_DIR}/lib
-    )
-
-set(CMAKE_Fortran_MODULE_DIRECTORY
-    ${PROJECT_BINARY_DIR}/modules
-    )
-
+include(CommonBuildTree)
 include(ConfigGitRevision)
 
 configure_file (

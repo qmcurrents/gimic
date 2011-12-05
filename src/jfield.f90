@@ -403,22 +403,24 @@ contains
             fd3= open_plot('plot.projection',ispin)
             fd4= open_plot('plot.nvector',ispin)
 
-            call jvec_io(jf, 1, 'r')
-            jv=>getvecs(jf,ispin)
-            jf%zpos_v=1
-            do j=1,p2
-                do i=1,p1
-                    rr=gridpoint(jf%grid, i,j,1)*AU2A
-                    v=jv(i,j)%v*AU2A
-                    call wrt_jvec(rr,v,fd1)
-                    call wrt_jmod(rr,v,fd2)
-                    call wrt_jproj(rr,v,jf%grid,fd3)
-                    call wrt_njvec(rr,v,fd4)
+            do k=1,p3
+                call jvec_io(jf, k, 'r')
+                jv=>getvecs(jf,ispin)
+                jf%zpos_v=k
+                do j=1,p2
+                    do i=1,p1
+                        rr=gridpoint(jf%grid, i,j,k)*AU2A
+                        v=jv(i,j)%v*AU2A
+                        call wrt_jvec(rr,v,fd1)
+                        call wrt_jmod(rr,v,fd2)
+                        call wrt_jproj(rr,v,jf%grid,fd3)
+                        call wrt_njvec(rr,v,fd4)
+                    end do
+                    if (fd1 /= 0) write(fd1, *)
+                    if (fd2 /= 0) write(fd2, *)
+                    if (fd3 /= 0) write(fd3, *)
+                    if (fd4 /= 0) write(fd4, *)
                 end do
-                if (fd1 /= 0) write(fd1, *)
-                if (fd2 /= 0) write(fd2, *)
-                if (fd3 /= 0) write(fd3, *)
-                if (fd4 /= 0) write(fd4, *)
             end do
 
             call closefd(fd1)
