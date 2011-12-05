@@ -32,25 +32,25 @@
 # -------------------------------------------------------------------------
 
 if (DEFINED ENV{PROJECT_NAME})
-	set (PROJECT_NAME $ENV{PROJECT_NAME})
+    set (PROJECT_NAME $ENV{PROJECT_NAME})
 endif()
 
 if (NOT DEFINED PROJECT_NAME)
-	message(FATAL_ERROR "PROJECT_NAME not set!")
+    message(FATAL_ERROR "PROJECT_NAME not set!")
 endif()
 
 if (DEFINED ENV{PROJECT_REPOSITORY})
-	set (PROJECT_REPOSITORY $ENV{PROJECT_REPOSITORY})
+    set (PROJECT_REPOSITORY $ENV{PROJECT_REPOSITORY})
 endif()
 
 if (NOT DEFINED PROJECT_REPOSITORY)
-	message(FATAL_ERROR "PROJECT_REPOSITORY not set!")
+    message(FATAL_ERROR "PROJECT_REPOSITORY not set!")
 endif()
 
 if (DEFINED ENV{DASHBOARD_DIR})
-	set (DASHBOARD_DIR $ENV{DASHBOARD_DIR}/${PROJECT_NAME})
+    set (DASHBOARD_DIR $ENV{DASHBOARD_DIR}/${PROJECT_NAME})
 else()
-	set (DASHBOARD_DIR "/tmp/${PROJECT_NAME}")
+    set (DASHBOARD_DIR "/tmp/${PROJECT_NAME}")
 endif()
 
 set (CTEST_COMMAND ctest)
@@ -60,9 +60,9 @@ set (CTEST_CMAKE_GENERATOR "Unix Makefiles")
 # -- Initialize the CTest environment
 # -------------------------------------------------------------------------
 if (DEFINED ENV{CMAKE_CONFIG_TYPE})
-	set (BUILD_TYPE $ENV{CMAKE_CONFIG_TYPE})
+    set (BUILD_TYPE $ENV{CMAKE_CONFIG_TYPE})
 else()
-	set (BUILD_TYPE Debug)
+    set (BUILD_TYPE Debug)
 endif()
 
 find_program(CTEST_GIT_COMMAND NAMES git)
@@ -81,9 +81,9 @@ set (ENABLE_OMP FALSE)
 set (ENABLE_MEMCHECK TRUE)
 set (ENABLE_COVERAGE TRUE)
 execute_process(COMMAND ${HOSTNAME_COMMAND} 
-	OUTPUT_VARIABLE CTEST_SITE
-	ERROR_QUIET
-	)
+    OUTPUT_VARIABLE CTEST_SITE
+    ERROR_QUIET
+    )
 string(STRIP ${CTEST_SITE} CTEST_SITE)
 # -------------------------------------------------------------------------
 # -- Given a variable VAR and a string FOO=bar -> set (VAR "bar")
@@ -104,49 +104,49 @@ macro(parse_args)
 string(REPLACE "," " " arglist ${CTEST_SCRIPT_ARG})
 separate_arguments(arglist)
 foreach(arg ${arglist})
-	if ("${arg}" MATCHES "branch=")
-		set_var_from_str(BRANCH ${arg})
-	endif()
+    if ("${arg}" MATCHES "branch=")
+        set_var_from_str(BRANCH ${arg})
+    endif()
 
-	if ("${arg}" MATCHES "model=")
-		set_var_from_str(TEST_MODEL ${arg})
-	endif()
+    if ("${arg}" MATCHES "model=")
+        set_var_from_str(TEST_MODEL ${arg})
+    endif()
 
-	if ("${arg}" MATCHES "toolchain_name=")
-		set_var_from_str(TOOLCHAIN_NAME ${arg})
-	endif()
+    if ("${arg}" MATCHES "toolchain_name=")
+        set_var_from_str(TOOLCHAIN_NAME ${arg})
+    endif()
 
-	if ("${arg}" MATCHES "cxx=")
-		set_var_from_str(CXX ${arg})
-	endif()
+    if ("${arg}" MATCHES "cxx=")
+        set_var_from_str(CXX ${arg})
+    endif()
 
-	if ("${arg}" MATCHES "cc=")
-		set_var_from_str(CC ${arg})
-	endif()
+    if ("${arg}" MATCHES "cc=")
+        set_var_from_str(CC ${arg})
+    endif()
 
-	if ("${arg}" MATCHES "fc=")
-		set_var_from_str(FC ${arg})
-	endif()
+    if ("${arg}" MATCHES "fc=")
+        set_var_from_str(FC ${arg})
+    endif()
 
-	if ("${arg}" MATCHES "mpi=")
-		set_var_from_str(ENABLE_MPI ${arg})
-	endif()
+    if ("${arg}" MATCHES "mpi=")
+        set_var_from_str(ENABLE_MPI ${arg})
+    endif()
 
-	if ("${arg}" MATCHES "omp=")
-		set_var_from_str(ENABLE_OMP ${arg})
-	endif()
+    if ("${arg}" MATCHES "omp=")
+        set_var_from_str(ENABLE_OMP ${arg})
+    endif()
 
-	if ("${arg}" MATCHES "memcheck=(no|off|false|False)")
-		set (ENABLE_MEMCHECK FALSE)
-	endif()
+    if ("${arg}" MATCHES "memcheck=(no|off|false|False)")
+        set (ENABLE_MEMCHECK FALSE)
+    endif()
 
-	if ("${arg}" MATCHES "coverage=(no|off|false|False)")
-		set (ENABLE_COVERAGE FALSE)
-	endif()
+    if ("${arg}" MATCHES "coverage=(no|off|false|False)")
+        set (ENABLE_COVERAGE FALSE)
+    endif()
 
-	if ("${arg}" MATCHES "site=")
-		set_var_from_str(CTEST_SITE ${arg})
-	endif()
+    if ("${arg}" MATCHES "site=")
+        set_var_from_str(CTEST_SITE ${arg})
+    endif()
 endforeach()
 unset(arglist)
 unset(arg)
@@ -158,25 +158,25 @@ parse_args()
 # -- Initialize directories
 # 
 set (CTEST_SOURCE_DIRECTORY 
-	${DASHBOARD_DIR}/source/${BRANCH}
-	)
+    ${DASHBOARD_DIR}/source/${BRANCH}
+    )
 set (CTEST_BINARY_DIRECTORY 
-	${DASHBOARD_DIR}/build/${BRANCH}
-	)
-	endif()
+    ${DASHBOARD_DIR}/build/${BRANCH}
+    )
+    endif()
 
 if(NOT EXISTS ${CTEST_SOURCE_DIRECTORY})
-	execute_process(COMMAND ${CTEST_GIT_COMMAND} 
-		clone ${PROJECT_REPOSITORY} ${CTEST_SOURCE_DIRECTORY}
-		OUTPUT_QUIET
-		)
-	if (NOT (${BRANCH} STREQUAL master))
-		execute_process(COMMAND ${CTEST_GIT_COMMAND} checkout 
-			-b ${BRANCH} origin/${BRANCH}
-			WORKING_DIRECTORY ${CTEST_SOURCE_DIRECTORY}
-			OUTPUT_QUIET
-			)
-	endif()
+    execute_process(COMMAND ${CTEST_GIT_COMMAND} 
+        clone ${PROJECT_REPOSITORY} ${CTEST_SOURCE_DIRECTORY}
+        OUTPUT_QUIET
+        )
+    if (NOT (${BRANCH} STREQUAL master))
+        execute_process(COMMAND ${CTEST_GIT_COMMAND} checkout 
+            -b ${BRANCH} origin/${BRANCH}
+            WORKING_DIRECTORY ${CTEST_SOURCE_DIRECTORY}
+            OUTPUT_QUIET
+            )
+    endif()
 endif()
 
 # -------------------------------------------------------------------------
@@ -190,7 +190,7 @@ string(STRIP ${cpu} cpu)
 
 set(${name} "${osname}-${cpu}")
 foreach(arg ${ARGN})
-	set(${name} "${${name}}-${arg}")
+    set(${name} "${${name}}-${arg}")
 endforeach()
 unset(osname)
 unset(cpu)
@@ -202,7 +202,7 @@ endmacro()
 # -------------------------------------------------------------------------
 macro(append_to_var name)
 foreach(arg ${ARGN})
-	set(${name} "${${name}}${arg}")
+    set(${name} "${${name}}${arg}")
 endforeach()
 unset(arg)
 endmacro()
@@ -231,68 +231,68 @@ get_build_name(CTEST_BUILD_NAME ${BRANCH})
 set (SETUP_FLAGS --enable-tests --show)
 
 if (${BUILD_TYPE} STREQUAL Debug)
-	set (SETUP_FLAGS ${SETUP_FLAGS} --debug)
-	append_to_var(CTEST_BUILD_NAME "-dbg")
+    set (SETUP_FLAGS ${SETUP_FLAGS} --debug)
+    append_to_var(CTEST_BUILD_NAME "-dbg")
 elseif (${BUILD_TYPE} STREQUAL Release)
-	set (SETUP_FLAGS ${SETUP_FLAGS} --release)
-	append_to_var(CTEST_BUILD_NAME "-rel")
+    set (SETUP_FLAGS ${SETUP_FLAGS} --release)
+    append_to_var(CTEST_BUILD_NAME "-rel")
 endif()
-		
+        
 if (ENABLE_MPI)
-	set (SETUP_FLAGS ${SETUP_FLAGS} --mpi)
-	append_to_var(CTEST_BUILD_NAME "-mpi")
-	set(MPI_NUMPROC ${ENABLE_MPI})
+    set (SETUP_FLAGS ${SETUP_FLAGS} --mpi)
+    append_to_var(CTEST_BUILD_NAME "-mpi")
+    set(MPI_NUMPROC ${ENABLE_MPI})
 endif()
 
 if (ENABLE_OMP)
-	set (SETUP_FLAGS ${SETUP_FLAGS} --omp)
-	append_to_var(CTEST_BUILD_NAME "-omp")
-	set(OMP_NUM_THREADS ${ENABLE_OMP})
+    set (SETUP_FLAGS ${SETUP_FLAGS} --omp)
+    append_to_var(CTEST_BUILD_NAME "-omp")
+    set(OMP_NUM_THREADS ${ENABLE_OMP})
 endif()
 
 if (ENABLE_COVERAGE)
-	set (SETUP_FLAGS ${SETUP_FLAGS} --coverage)
+    set (SETUP_FLAGS ${SETUP_FLAGS} --coverage)
 endif()
 
 if (DEFINED TOOLCHAIN_NAME)
-	append_to_var(CTEST_BUILD_NAME "-${TOOLCHAIN_NAME}")
+    append_to_var(CTEST_BUILD_NAME "-${TOOLCHAIN_NAME}")
 endif()
 
 if (DEFINED CTEST_SITE)
-	set (SETUP_FLAGS ${SETUP_FLAGS} --host=${CTEST_SITE})
+    set (SETUP_FLAGS ${SETUP_FLAGS} --host=${CTEST_SITE})
 endif()
 
 if (DEFINED CC)
-	set (SETUP_FLAGS ${SETUP_FLAGS} --cc=${CC})
+    set (SETUP_FLAGS ${SETUP_FLAGS} --cc=${CC})
 endif()
 
 if (DEFINED CXX)
-	set (SETUP_FLAGS ${SETUP_FLAGS} --cxx=${CXX})
+    set (SETUP_FLAGS ${SETUP_FLAGS} --cxx=${CXX})
 endif()
 
 if (DEFINED FC)
-	set (SETUP_FLAGS ${SETUP_FLAGS} --fc=${FC})
+    set (SETUP_FLAGS ${SETUP_FLAGS} --fc=${FC})
 endif()
 
 message("${CTEST_SOURCE_DIRECTORY}/setup ${SETUP_FLAGS}")
 execute_process(
-	COMMAND ${CTEST_SOURCE_DIRECTORY}/setup ${SETUP_FLAGS}
+    COMMAND ${CTEST_SOURCE_DIRECTORY}/setup ${SETUP_FLAGS}
     OUTPUT_VARIABLE setup_list
     )
 separate_arguments(setup_list)
 foreach(arg ${setup_list})
-	if("${arg}" MATCHES "-.+=.*")
-		set(CTEST_CONFIGURE_COMMAND "${CTEST_CONFIGURE_COMMAND} ${arg}")
-	elseif("${arg}" MATCHES ".+=.*")
-		set_env_from_string(${arg})
-	else()
-		set(CTEST_CONFIGURE_COMMAND "${CTEST_CONFIGURE_COMMAND} ${arg}")
-	endif()
+    if("${arg}" MATCHES "-.+=.*")
+        set(CTEST_CONFIGURE_COMMAND "${CTEST_CONFIGURE_COMMAND} ${arg}")
+    elseif("${arg}" MATCHES ".+=.*")
+        set_env_from_string(${arg})
+    else()
+        set(CTEST_CONFIGURE_COMMAND "${CTEST_CONFIGURE_COMMAND} ${arg}")
+    endif()
 endforeach()
 
 set (CTEST_CONFIGURE_COMMAND 
-	"${CTEST_CONFIGURE_COMMAND} ${CTEST_SOURCE_DIRECTORY}"
-	)
+    "${CTEST_CONFIGURE_COMMAND} ${CTEST_SOURCE_DIRECTORY}"
+    )
 unset(arg)
 unset(setup_list)
 endmacro()
@@ -305,10 +305,10 @@ ctest_configure()
 ctest_build()
 ctest_test()
 if (ENABLE_COVERAGE AND CTEST_COVERAGE_COMMAND)
-	ctest_coverage()
+    ctest_coverage()
 endif ()
 if (ENABLE_MEMCHECK AND CTEST_MEMORYCHECK_COMMAND)
-	ctest_memcheck()
+    ctest_memcheck()
 endif ()
 endmacro()
 

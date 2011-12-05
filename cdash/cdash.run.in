@@ -19,31 +19,31 @@ dashdir="@DASHBOARD_DIR@"
 site="$site.$USER"
 
 case $site in 
-	stallo*)
-	module load cmake
-	module load boost
-	module load eigen
-	module load google-test
-	module load valgrind
-	export BOOST_ROOT=$BOOSTHOME
-	export MPIEXEC_PREFLAGS="--mca btl self,tcp"
-	toolchain_name=Intel
-	;;
+    stallo*)
+    module load cmake
+    module load boost
+    module load eigen
+    module load google-test
+    module load valgrind
+    export BOOST_ROOT=$BOOSTHOME
+    export MPIEXEC_PREFLAGS="--mca btl self,tcp"
+    toolchain_name=Intel
+    ;;
 esac
 
 if [ "x$PBS_JOBID" != "x" ]; then
-	$dashdir/run_dashboard.py --site=$site
-	$dashdir/run_dashboard.py --site=$site --memcheck=on
+    $dashdir/run_dashboard.py --site=$site
+    $dashdir/run_dashboard.py --site=$site --memcheck=on
 
-	export CXX=mpic++
-	export CC=mpicc
-	export FC=mpif90
-	$dashdir/run_dashboard.py --site=$site --build=Release --mpi=2 --omp=2
+    export CXX=mpic++
+    export CC=mpicc
+    export FC=mpif90
+    $dashdir/run_dashboard.py --site=$site --build=Release --mpi=2 --omp=2
 
-	$dashdir/run_dashboard.py --site=$site --toolchain_name=GNU \
-		--cc=gcc --cxx=g++ --fc=gfortran --coverage --memcheck
+    $dashdir/run_dashboard.py --site=$site --toolchain_name=GNU \
+        --cc=gcc --cxx=g++ --fc=gfortran --coverage --memcheck
 else
-	$dashdir/run_dashboard.py --site=$site
+    $dashdir/run_dashboard.py --site=$site
 fi
 
 # ------ END  ------

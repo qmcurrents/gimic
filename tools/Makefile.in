@@ -22,14 +22,14 @@ include $(topdir)/make.rules
 all: $(INST_PROGS) $(INST_SCRIPTS) 
 
 $(scriptdir)/MOL2mol.sh: MOL2mol.sh.in
-	sed 's/@inst_bindir@/$(subst /,\/,$(inst_bindir))/' $< > $@
-	chmod 755 $@
+    sed 's/@inst_bindir@/$(subst /,\/,$(inst_bindir))/' $< > $@
+    chmod 755 $@
 
 $(scriptdir)/turbo2gimic.py: turbo2gimic.py.in
-	sed 's/@inst_bindir@/$(subst /,\/,$(inst_bindir))/; s/@inst_libdir@/$(subst /,\/,$(inst_libdir))/; s/@python_bin@/$(PYTHON_BIN)/' $< > $@
-	chmod 755 $@
+    sed 's/@inst_bindir@/$(subst /,\/,$(inst_bindir))/; s/@inst_libdir@/$(subst /,\/,$(inst_libdir))/; s/@python_bin@/$(PYTHON_BIN)/' $< > $@
+    chmod 755 $@
 
 $(libdir)/%.py: %.py
-	cp -f $< $@
+    cp -f $< $@
 
 

@@ -24,7 +24,7 @@
 #  License text for the above reference.)
 
 if (XCFUN_INCLUDE_DIRS AND XCFUN_LIBRARIES)
-	set(XCFUN_FIND_QUIETLY TRUE)
+    set(XCFUN_FIND_QUIETLY TRUE)
 endif ()
 
 find_path(XCFUN_INCLUDE_DIRS

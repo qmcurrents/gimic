@@ -10,15 +10,15 @@ cp ../ZMAT ZMAT.sym
 sed 's/SYMMETRY=ON/SYMMETRY=OFF/' ZMAT.sym >ZMAT
 
 if [ -d ../GENBAS ]; then 
-	ln -s ../GENBAS .
+    ln -s ../GENBAS .
 else
-	cp $ACES/basis/GENBAS .
+    cp $ACES/basis/GENBAS .
 fi
 
 if [ -d ../ECPDATA ]; then 
-	ln -s ../ECPDATA .
+    ln -s ../ECPDATA .
 else
-	cp $ACES/basis/ECPDATA .
+    cp $ACES/basis/ECPDATA .
 fi
 
 $ACES2/bin/xjoda

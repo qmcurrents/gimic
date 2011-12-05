@@ -19,13 +19,13 @@ include(ConfigCCompilerFlags)
 
 set(LIBS)
 if (BLAS_FOUND)
-	add_definitions(-DHAVE_BLAS)
+    add_definitions(-DHAVE_BLAS)
 endif()
 
 if(ENABLE_MPI)
     find_package(MPI)
     if(MPI_FOUND)
-		add_definitions(-DHAVE_MPI)
+        add_definitions(-DHAVE_MPI)
         include_directories(${MPI_INCLUDE_PATH})
     endif()
 endif()
@@ -33,7 +33,7 @@ endif()
 if(ENABLE_OMP)
     find_package(OpenMP)
     if(OpenMP_FOUND)
-		add_definitions(-DHAVE_OMP)
+        add_definitions(-DHAVE_OMP)
         set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} ${OpenMP_COMPILE_FLAGS}")
         include_directories(${OpenMP_INCLUDE_PATH})
     endif()
@@ -42,42 +42,42 @@ endif()
 find_package(PythonInterp REQUIRED)
 
 include_directories(
-	${PROJECT_BINARY_DIR}
+    ${PROJECT_BINARY_DIR}
     ${PROJECT_BINARY_DIR}/modules
     )
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY
-	${CMAKE_BINARY_DIR}/bin
+    ${CMAKE_BINARY_DIR}/bin
     )
 
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY
-	${CMAKE_BINARY_DIR}/lib
+    ${CMAKE_BINARY_DIR}/lib
     )
 
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY
-	${CMAKE_BINARY_DIR}/lib
+    ${CMAKE_BINARY_DIR}/lib
     )
 
 set(CMAKE_Fortran_MODULE_DIRECTORY
-	${PROJECT_BINARY_DIR}/modules
+    ${PROJECT_BINARY_DIR}/modules
     )
 
 include(ConfigGitRevision)
 
 configure_file (
-	${PROJECT_SOURCE_DIR}/config.h.in
-	${PROJECT_BINARY_DIR}/config.h
-	)
+    ${PROJECT_SOURCE_DIR}/config.h.in
+    ${PROJECT_BINARY_DIR}/config.h
+    )
 
 add_subdirectory(src)
 
 if (ENABLE_TESTS)
-	set (PROJECT_REPOSITORY "git@repo.ctcc.no:gimic.git")
-	include(ConfigTesting)
-	add_subdirectory(tests)
+    set (PROJECT_REPOSITORY "git@repo.ctcc.no:gimic.git")
+    include(ConfigTesting)
+    add_subdirectory(tests)
 endif()
 
 if (EXISTS ${CMAKE_SOURCE_DIR}/cmake/ConfigPackaging.cmake)
-	include(ConfigPackaging) 
+    include(ConfigPackaging) 
 endif()
 
