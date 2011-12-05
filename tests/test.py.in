@@ -55,14 +55,26 @@ def run_gimic(name):
     return True
 
 def test_vectors():
+    comment = re.compile(r'^[ ]*#.*$')
+    empty = re.compile(r'^[ \t]*$')
     gen_test_inp('cdens', 'vectors.inp')
     if not run_gimic('vectors'):
         return False
     ref = os.path.join(ref_dir, 'JVEC.txt')
-    p = subprocess.Popen(['cmp', 'JVEC.txt', ref])
-    result = p.wait()
-    if result != 0:
-        return False
+    ref = open(ref, 'r')
+    for j in open('JVEC.txt'):
+        r = ref.readline()
+        if comment.match(j):
+            continue
+        if empty.match(j):
+            continue
+        j = map(float, j.split())
+        r = map(float, r.split())
+        v = zip(j, r)
+        for (a, b) in v:
+            if abs(a - b) > 1.e-6:
+                return False
+    ref.close()
     return True
 
 def test_bond_integral():
@@ -75,7 +87,7 @@ def test_bond_integral():
         if 'Induced current (nA/T)  :' in line:
             intgrl = float(line[30:])
     f.close()
-    if abs(intgrl - 16.2535) > 0.0:
+    if abs(intgrl - 16.2535) > 1.e-6:
         print "Invalid integral", intgrl
         return False
     return True
