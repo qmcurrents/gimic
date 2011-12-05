@@ -69,15 +69,6 @@ def main():
     top.add_kw('calc', 'STR', None)
     top.add_kw("show_up_axis", 'BOOL', (False,))
 
-    plot=getkw.Section('plot')
-    plot.set_arg('BOOL', (True, ))
-    plot.add_kw('vector','STR', ('',))
-    plot.add_kw('modulus','STR', ('',))
-    plot.add_kw('projection','STR', ('',))
-    plot.add_kw('nvector','STR', ('',))
-    plot.add_kw('gopenmol','STR', ('',))
-    plot.add_kw('cube_mod','STR', ('',))
-
     cgrid=getkw.Section('grid', callback=check_grid)
     cgrid.set_arg('STR', ('std',))
     cgrid.add_kw("type", 'STR', ('even',))
@@ -106,14 +97,10 @@ def main():
     cgrid.add_kw("gauss_order", 'INT', 1)
 
     cdens=getkw.Section('cdens', req=True, callback=check_cdens)
-    cdens.add_kw('jtensor', 'STR', ('JTENSOR',))
-    cdens.add_kw('jvector', 'STR', ('JVECTOR',))
     cdens.add_kw('magnet_axis', 'STR', ('T',))
     cdens.add_kw('magnet', 'DBL_ARRAY', (0.0, 0.0, 0.0))
     cdens.add_kw('scale_vectors', 'DBL', (1.0,))
     cdens.add_sect(cgrid)
-    cdens.add_sect(plot)
-
 
     intgrid=getkw.Section('grid', callback=check_grid)
     intgrid.set_arg('STR', ('std',))
@@ -185,7 +172,6 @@ def main():
     divj=getkw.Section('divj')
     divj.add_kw('magnet_axis', 'STR', ('T',))
     divj.add_kw('magnet', 'DBL_ARRAY', (0.0, 0.0, 0.0))
-    divj.add_kw('gopenmol', 'STR', ('divj.plt',))
     divj.add_sect(divgrid)
 
     egrid=getkw.Section('grid', callback=check_grid)
@@ -217,9 +203,6 @@ def main():
 
     edens=getkw.Section('edens', req=False)
     edens.add_kw('density', 'STR', ('EDENS',))
-    edens.add_kw('density_plot', 'STR', ('edens.txt',))
-    edens.add_kw('gopenmol', 'STR', ('',))
-    edens.add_kw('cube', 'STR', ('',))
     edens.add_sect(egrid)
 
     top.add_sect(cdens)

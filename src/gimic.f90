@@ -44,7 +44,7 @@ contains
         integer(I4) :: chdir, system
         character(BUFLEN) :: title, fdate, sys, molfil, denfil
         character(4) :: rankdir
-        real(DP), dimension(3) :: center
+        real(DP), dimension(3) :: center, magnet
 
         logical :: screen
         real(DP) :: screening_thrs = SCREEN_THRS
@@ -152,6 +152,7 @@ contains
 
         character(80) :: fname, mofile
         integer, dimension(2) :: morange
+        real(DP), dimension(3) :: magnet
 
 
         divj_p=.false.; int_p=.false.
@@ -225,7 +226,10 @@ contains
                 call msg_out('Calculating current density')
                 call msg_out('*****************************************')
                 call setup_grid(calc(i), cgrid)
-                call new_jfield(jf, jt, cgrid)
+                call push_section(input, 'cdens')
+                call get_magnet(cgrid, magnet)
+                call pop_section(input)
+                call new_jfield(jf, jt, cgrid, magnet)
                 if (dryrun_p) cycle
                 call jfield(jf)
                     ! Contract the tensors with B
@@ -260,8 +264,7 @@ contains
                 if (dryrun_p) cycle
                 call divj(dj)
                 if (master_p) then 
-                    call getkw(input, 'divj.gopenmol', fname)
-                    call divj_plot(dj, fname)
+                    call divj_plot(dj, 'divj')
                 end if
             case(EDENS_TAG)
                 call msg_out('Calculating charge density')
@@ -272,12 +275,7 @@ contains
                 if (dryrun_p) cycle
                 call edens(ed)
                 if (master_p) then 
-                    call getkw(input, 'edens.density_plot', fname)
-                    call edens_plot(ed, fname)
-                    call getkw(input, 'edens.gopenmol', fname)
-                    call edens_gopenmol(ed, fname)
-                    call getkw(input, 'edens.cube', fname)
-                    call edens_cube(ed, fname)
+                    call edens_plot(ed, "edens")
                 end if
             case default
                 call msg_error('gimic(): Unknown operation!')
@@ -402,18 +400,14 @@ call msg_out('***           GIMIC '// GIMIC_VERSION // &
                                       '                                    ***')
 call msg_out('***              Written by Jonas Juselius                   ***')
 call msg_out('***                                                          ***')
-call msg_out('***  This software is copyright (c) 2003 by Jonas Juselius,  ***')
-call msg_out('***  University of Helsinki.                                 ***')
+call msg_out('***  This software is copyright (c) 2003-2011 by             ***')
+call msg_out('***  Jonas Juselius,  University of Tromsø.                  ***')
 call msg_out('***                                                          ***')
 call msg_out('***  You are free to distribute this software under the      ***')
 call msg_out('***  terms of the GNU General Public License                 ***')
 call msg_out('***                                                          ***')
+call msg_out('***  A Pretty Advanced ''Hello World!'' Program              ***')
 call msg_out('****************************************************************')
-call nl
-call msg_out(repeat('=',75))
-call msg_out('Said about GIMIC in the press:')
-call msg_out('  - A Pretty Advanced ''Hello World!'' Program')
-call msg_out(repeat('=',75))
 call nl
     end subroutine
 
@@ -428,7 +422,8 @@ call nl
 
         call random_number(rnd)
         call nl
-        call msg_out(raboof(nint(rnd*5.d0)))
+        !call msg_out(raboof(nint(rnd*5.d0)))
+        call msg_out('done.')
         call nl
     end subroutine
 

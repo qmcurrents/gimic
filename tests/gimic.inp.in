@@ -20,8 +20,6 @@ cdens {
 	magnet_axis=-z #[-] i,j,k || x,y,z -> align magnet along axis
 #	magnet=[0.0, -1.0, 0.0]   # magnet vector
 	scale_vectors=1.0
-	jtensor="JTENSOR"   # file name for the current tensors
-	jvector="JVECTOR"   # file name for the current vectors
 	grid(base) {    # grid type can be: base/std, bond or file (see below)
 		type=even   # even spaced or gauss quadrature distribution on interval
 		origin=[-8.0, -8.0, -2.0]  # origin of grid
@@ -38,13 +36,6 @@ cdens {
 #     file=gridfile.grd
 # }
 
-	plot {          # file names for plots
-		vector="JVEC"   
-		modulus="JMOD"
-		cube_mod="jmod"
-		gopenmol="jmod.plt"
-		#projection="JPRJ"
-	}
 }
 	
 
@@ -88,7 +79,6 @@ integral {
 divj {
 	magnet_axis=y 
 #	magnet=[0.0, -1.0, 0.0]   
-	gopenmol='divj.plt'
 	grid(base) {    # grid type can be: base/std, bond or file (see below)
 		type=even   # even spaced or gauss quadrature distribution on interval
 		origin=[-8.0, -8.0, 0.0]  # origin of grid
@@ -104,9 +94,6 @@ divj {
 
 edens {
 	density='EDENS'
-	density_plot='edens_plt.txt'
-	gopenmol='edens.plt'
-	cube='edens.cube'
 	grid(base) {    # grid type can be: base/std, bond or file (see below)
 		type=even   # even spaced or gauss quadrature distribution on interval
 		origin=[-8.0, -8.0, -8.0]  # origin of grid

@@ -7,7 +7,7 @@ module magnet_m
     public get_magnet
     private
 contains
-    subroutine get_magnet(g,mag)
+    subroutine get_magnet(g, mag)
         type(grid_t) :: g
         real(DP), dimension(:), intent(out) :: mag
 

@@ -13,7 +13,6 @@ module jfield_class
     use basis_class
     use teletype_m
     use parallel_m
-    use magnet_m
     use tensor_m
     implicit none
 
@@ -37,17 +36,18 @@ module jfield_class
     character(BUFLEN) :: jtensor_file, jvec_file
     character(BUFLEN) :: jmod_plt, jvec_plt, njvec_plt, jprj_plt
 contains
-    subroutine new_jfield(f, jt, g)
+    subroutine new_jfield(f, jt, g, magnet)
         type(jfield_t) :: f
         type(jtensor_t), target :: jt
         type(grid_t), target :: g
+        real(DP), dimension(3), intent(in) :: magnet
 
         integer(I4) :: i, j, k
 
+        f%b=magnet
         f%jt=>jt
         f%grid=>g
 
-        call push_section(input, 'cdens')
         if (master_p) then
             call setup_files(f)
         end if
@@ -64,17 +64,13 @@ contains
             allocate(f%vsd(i,j))
         end if
 
-        call getkw(input, 'scale_vectors', vec_scale)
-        if ( vec_scale /= D1 ) then
-            write(str_g, '(a,f7.3)') 'Vector scaling =', vec_scale
-            call msg_note(str_g)
-        end if
-        call nl
-        call pop_section(input)
+!        call getkw(input, 'scale_vectors', vec_scale)
+!        if ( vec_scale /= D1 ) then
+!            write(str_g, '(a,f7.3)') 'Vector scaling =', vec_scale
+!            call msg_note(str_g)
+!        end if
+!        call nl
 
-        call push_section(input, 'cdens')
-        call get_magnet(g, f%b)
-        call pop_section(input)
     end subroutine
 
     subroutine setup_files(jf)
@@ -83,34 +79,28 @@ contains
         logical :: plot_p
         integer(I4) :: jtrecl, jvrecl
 
+        character(*), parameter :: jtensor_file = 'jtensor'
+        character(*), parameter :: jvector_file = 'jvector'
+
         jtrecl=9*DP
         jvrecl=3*DP
         
-        jtensor_file=''
-        call getkw(input, 'jtensor', jtensor_file)
-        if (jtensor_file == '') then
-            call msg_error('setup_files(): No tensor file specified!')
-            stop
-        end if
-        call getkw(input, 'jvector', jvec_file)
-        if (jvec_file == '') then
-            call msg_error('setup_files(): No vector file specified!')
-            stop
-        end if
-        open(JTFD, file=jtensor_file, access='direct', recl=jtrecl)
-        open(JVECFD, file=jvec_file, access='direct', recl=jvrecl)
+        open(JTFD, file=trim(jtensor_file) // '.dat', &
+            access='direct', recl=jtrecl)
+        open(JVECFD, file=trim(jvector_file) // '.dat', &
+            access='direct', recl=jvrecl)
         if (uhf_p) then
-            open(JTFD+1, file=trim(jtensor_file) // '_A', &
+            open(JTFD+1, file=trim(jtensor_file) // '_A.dat', &
             access='direct', recl=jtrecl)
-            open(JTFD+2, file=trim(jtensor_file) // '_B', &
+            open(JTFD+2, file=trim(jtensor_file) // '_B.dat', &
             access='direct', recl=jtrecl)
-            open(JTFD+3, file=trim(jtensor_file) // '_SD', &
+            open(JTFD+3, file=trim(jtensor_file) // '_SD.dat', &
             access='direct', recl=jtrecl)
-            open(JVECFD+1, file=trim(jvec_file) // '_A', &
+            open(JVECFD+1, file=trim(jvec_file) // '_A.dat', &
             access='direct', recl=jvrecl)
-            open(JVECFD+2, file=trim(jvec_file) // '_B', &
+            open(JVECFD+2, file=trim(jvec_file) // '_B.dat', &
             access='direct', recl=jvrecl)
-            open(JVECFD+3, file=trim(jvec_file) // '_SD', &
+            open(JVECFD+3, file=trim(jvec_file) // '_SD.dat', &
             access='direct', recl=jvrecl)
         end if
 
@@ -345,8 +335,8 @@ contains
         end select
     end function
 
-    function open_plot(kname, spin) result(fd)
-        character(*), intent(in) :: kname
+    function open_plot(basename, spin) result(fd)
+        character(*), intent(in) :: basename
         integer(I4), intent(in) :: spin
 
         integer(I4) :: fd
@@ -354,8 +344,7 @@ contains
 
         fd=0
         if (.not.master_p) return
-        call getkw(input, kname, fname)
-        if (trim(fname) == '') return
+        if (trim(basename) == '') return
 
         call getfd(fd)
         if (fd == 0) then
@@ -364,16 +353,16 @@ contains
 
         select case(spin)
             case(1)
-                fname=trim(fname)//'.txt'
+                fname=trim(basename)//'.txt'
             case(2)
-                fname=trim(fname)//'_a'//'.txt'
+                fname=trim(basename)//'_a.txt'
             case(3)
-                fname=trim(fname)//'_b'//'.txt'
+                fname=trim(basename)//'_b.txt'
             case(4)
-                fname=trim(fname)//'_sd'//'.txt'
+                fname=trim(basename)//'_sd.txt'
         end select
 
-        write(str_g, *) 'Writing ', trim(kname), ' in ', trim(fname)
+        write(str_g, *) 'Writing ', trim(basename), ' in ', trim(fname)
         call msg_note(str_g)
         open(fd,file=trim(fname),status='unknown')
 
@@ -394,14 +383,13 @@ contains
             spin=4
         end if
 
-        call push_section(input, 'cdens')
         call get_grid_size(jf%grid, p1, p2, p3)
 
         do ispin=1,spin
-            fd1= open_plot('plot.vector',ispin)
-            fd2= open_plot('plot.modulus',ispin)
-            fd3= open_plot('plot.projection',ispin)
-            fd4= open_plot('plot.nvector',ispin)
+            fd1= open_plot('jvec',ispin)
+            fd2= open_plot('jmod',ispin)
+            !fd3= open_plot('jvec_projected',ispin)
+            !fd4= open_plot('jvec_normalzied',ispin)
 
             do k=1,p3
                 call jvec_io(jf, k, 'r')
@@ -413,24 +401,23 @@ contains
                         v=jv(i,j)%v*AU2A
                         call wrt_jvec(rr,v,fd1)
                         call wrt_jmod(rr,v,fd2)
-                        call wrt_jproj(rr,v,jf%grid,fd3)
-                        call wrt_njvec(rr,v,fd4)
+                        !call wrt_jproj(rr,v,jf%grid,fd3)
+                        !call wrt_njvec(rr,v,fd4)
                     end do
                     if (fd1 /= 0) write(fd1, *)
                     if (fd2 /= 0) write(fd2, *)
-                    if (fd3 /= 0) write(fd3, *)
-                    if (fd4 /= 0) write(fd4, *)
+                    !if (fd3 /= 0) write(fd3, *)
+                    !if (fd4 /= 0) write(fd4, *)
                 end do
             end do
 
             call closefd(fd1)
             call closefd(fd2)
-            call closefd(fd3)
-            call closefd(fd4)
-            if (p3 > 1) call jmod_cubeplot(jf,ispin)
+            !call closefd(fd3)
+            !call closefd(fd4)
+            if (p3 > 1) call jmod_cubeplot(jf, 'jmod', ispin)
         end do
-        call jmod_gopenmol(jf)
-        call pop_section(input)
+        call jmod_gopenmol(jf, 'jmod')
     end subroutine
 
     subroutine jfield(jf)
@@ -549,8 +536,9 @@ contains
         print '(a,e19.12)', ' Trace:', jt(1,1)+jt(2,2)+jt(3,3)
     end subroutine
 
-    subroutine jmod_cubeplot(jf, spin)
+    subroutine jmod_cubeplot(jf, fname, spin)
         type(jfield_t) :: jf
+        character(*), intent(in) :: fname
         integer(I4), intent(in) :: spin
 
         integer(I4) :: p1, p2, p3, fd1, fd2
@@ -560,9 +548,6 @@ contains
         real(DP) :: maxi, mini, val, sgn 
         integer(I4), dimension(3) :: npts
         type(vector_t), dimension(:,:,:), allocatable :: buf
-        character(BUFLEN) :: fname
-
-        fname=''
 
         call get_grid_size(jf%grid, p1, p2, p3)
         npts=(/p1,p2,p3/)
@@ -572,14 +557,10 @@ contains
 
         step=(qmax-qmin)/(npts-1)
 
-
-        call get_magnet(jf%grid, mag)
-
-        call getkw(input, 'plot.cube_mod', fname)
         fd1=opencube(trim(fname), spin, qmin, step, npts)
-        !call getkw(input, 'plot.cube_mordi', fname)
         fd2=opencube(trim(fname)//'_quasi', spin, qmin, step, npts)
 
+        mag = jf%b
 
         allocate(buf(p1,p2,p3))
         call read_jvecs(buf,spin)
@@ -662,8 +643,9 @@ contains
 
     end function
 
-    subroutine jmod_gopenmol(jf)
+    subroutine jmod_gopenmol(jf, fname)
         type(jfield_t) :: jf
+        character(*), intent(in) :: fname
 
         integer(I4) :: surface, rank, p1, p2, p3
         integer(I4) :: i, j, k, l
@@ -671,14 +653,12 @@ contains
         real(DP), dimension(3) :: norm
         real(SP) :: maxi, mini, val
         type(vector_t), dimension(:,:), pointer :: buf
-        character(BUFLEN) :: gopen_file
+
+        if (trim(fname) == '') return
 
         buf=>jf%vv
-        gopen_file=''
-        call getkw(input, 'plot.gopenmol', gopen_file)
-        if (trim(gopen_file) == '') return
-        open(GOPFD,file=trim(gopen_file),access='direct',recl=4)
-        open(GOPFD2,file=trim('prj_'//gopen_file),access='direct',recl=4)
+        open(GOPFD,file=trim(fname)//'.plt', access='direct', recl=4)
+        open(GOPFD2,file=trim(fname)//'_prj.plt',access='direct',recl=4)
 
         surface=200
         rank=3

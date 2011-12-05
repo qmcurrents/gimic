@@ -3,8 +3,8 @@
 dryrun=off        # don't actually calculate (good for tuning grids, etc.)
 mpirun=off        # run in parallel mode
 title=""
-basis="mol"       # Name of MOL file with coordinates and basis sets
-density="XDENS"   # File with AO density and perturbed densities
+basis="@CMAKE_CURRENT_SOURCE_DIR@/mol"
+density="@CMAKE_CURRENT_SOURCE_DIR@/XDENS"
 spherical=off     # don't touch, unless you REALLY know what you are doing
 debug=1           # debug print level
 diamag=on           # turn on/off diamagnetic contributions
@@ -14,24 +14,19 @@ openshell=false
 screening=on        # use screening to speed up 
 screen_thrs=1.d-8   # Screening threshold
 show_up_axis=true   # mark "up" axis in .xyz files
- calc=[cdens,edens]      
-# calc=[cdens, integral]  # what to calculate, and in which order
-#calc=[integral]
-# calc=[cdens, integral, divj, edens]
+calc=[cdens, integral]             # cdens, integral, edens, divj
 
 cdens {           
 	magnet_axis=-z #[-] i,j,k || x,y,z -> align magnet along axis
 #	magnet=[0.0, -1.0, 0.0]   # magnet vector
 	scale_vectors=1.0
-	jtensor="JTENSOR"   # file name for the current tensors
-	jvector="JVECTOR"   # file name for the current vectors
 	grid(base) {    # grid type can be: base/std, bond or file (see below)
 		type=even   # even spaced or gauss quadrature distribution on interval
-		origin=[-8.0, -8.0, -8.0]  # origin of grid
+		origin=[-8.0, -8.0, -2.0]  # origin of grid
 		ivec=[1.0, 0.0, 0.0]       # basis vector i
 		jvec=[ 0.0, 1.0, 0.0]      # basis vector j ( k = i x j )
-		lengths=[16.0, 16.0, 16.0]    # lenthts of (i,j,k)
-		spacing=[0.5, 0.5, 0.5] # spacing of points on grid (i,j,k)
+		lengths=[16.0, 16.0, 4.0]    # lenthts of (i,j,k)
+		spacing=[1.0, 1.0, 1.0] # spacing of points on grid (i,j,k)
 #         grid_points=[50,50,0]   # number of gridpoints on grid (i,j,k)
 		rotation=[0.0,0.0,0.0]  # Rotation of (i,j,k) -> (i',j',k') in degrees
 								   # Euler angles, x-y-z convention
@@ -41,13 +36,6 @@ cdens {
 #     file=gridfile.grd
 # }
 
-	plot {          # file names for plots
-		vector="JVEC"   
-		modulus="JMOD"
-		cube_mod="jmod"
-		gopenmol="jmod.plt"
-		#projection="JPRJ"
-	}
 }
 	
 
@@ -91,7 +79,6 @@ integral {
 divj {
 	magnet_axis=y 
 #	magnet=[0.0, -1.0, 0.0]   
-	gopenmol='divj.plt'
 	grid(base) {    # grid type can be: base/std, bond or file (see below)
 		type=even   # even spaced or gauss quadrature distribution on interval
 		origin=[-8.0, -8.0, 0.0]  # origin of grid
@@ -107,9 +94,6 @@ divj {
 
 edens {
 	density='EDENS'
-	density_plot='edens_plt.txt'
-	gopenmol='edens.plt'
-	cube='edens.cube'
 	grid(base) {    # grid type can be: base/std, bond or file (see below)
 		type=even   # even spaced or gauss quadrature distribution on interval
 		origin=[-8.0, -8.0, -8.0]  # origin of grid

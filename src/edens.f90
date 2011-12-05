@@ -15,7 +15,7 @@ module edens_class
     implicit none
     
     public new_edens, del_edens, edens_t
-    public edens_direct, edens, edens_plot, edens_gopenmol, edens_cube
+    public edens_direct, edens, edens_plot
     
     type edens_t
         real(DP), dimension(:), pointer :: tmp
@@ -71,21 +71,24 @@ contains
         write(EDFD, rec=k) this%buf
     end subroutine
 
-    subroutine edens_plot(this, pltfile)
+    subroutine edens_plot(this, basename)
         type(edens_t), intent(inout) :: this
-        character(*), intent(in) :: pltfile
+        character(*), intent(in) :: basename
         
         integer(I4) :: i,j,p1,p2,p3
         real(DP) :: amax
         real(DP), dimension(3) :: rr
         real(DP), dimension(:,:), pointer :: buf
+        character(BUFLEN) :: fname
+
+        fname = trim(basename) // '.txt'
 
         call get_grid_size(this%grid, p1, p2,p3)
         buf=>this%buf
 
         amax=D0
         read(EDFD, rec=1) this%buf
-        open(EDPFD, file=trim(pltfile))
+        open(EDPFD, file=trim(fname))
         do j=1,p2
             do i=1,p1
                 rr=gridpoint(this%grid, i, j, 1)
@@ -97,6 +100,8 @@ contains
         close(EDPFD)
         write(str_g, '(a,e19.12)') 'Max electronic density:', amax
         call msg_info(str_g)
+        call edens_gopenmol(this, basename)
+        call edens_cube(this, basename)
     end subroutine
 
     subroutine edens_direct(this, k)
@@ -153,19 +158,21 @@ contains
         end do
     end subroutine
 
-    subroutine edens_gopenmol(this, pltfile)
+    subroutine edens_gopenmol(this, basename)
         type(edens_t) :: this
-        character(*), intent(in) :: pltfile
+        character(*), intent(in) :: basename
 
         integer(I4) :: surface, rank, p1, p2, p3
         integer(I4) :: i, j, k, l
         real(SP), dimension(3) :: qmin, qmax
         real(DP), dimension(:,:), pointer :: buf
-        character(BUFLEN) :: gopen_file
+        character(BUFLEN) :: fname
+
+        if (trim(basename) == '') return
+        fname = trim(basename)//'.plt'
 
         buf=>this%buf
-        if (trim(pltfile) == '') return
-        open(GOPFD,file=trim(pltfile),access='direct',recl=I4)
+        open(GOPFD,file=trim(fname),access='direct',recl=I4)
 
         surface=200
         rank=3
@@ -200,16 +207,17 @@ contains
         close(GOPFD)
     end subroutine
 
-    subroutine edens_cube(this, pltfile)
+    subroutine edens_cube(this, basename)
         type(edens_t) :: this
-        character(*), intent(in) :: pltfile
+        character(*), intent(in) :: basename
 
         integer(I4) :: p1, p2, p3
         integer(I4) ::  k
         real(DP), dimension(:,:,:), allocatable :: buf
         character(BUFLEN) :: fname
 
-        if (trim(pltfile) == '') return
+        if (trim(basename) == '') return
+        fname = trim(basename) // '.cube'
 
         call get_grid_size(this%grid, p1, p2, p3)
         if (p3 < 2) return
@@ -218,7 +226,7 @@ contains
         do k=1,p3
             read(EDFD, rec=k) buf(:,:,k)
         end do
-        call write_cubeplot(pltfile, this%grid, buf)
+        call write_cubeplot(trim(fname), this%grid, buf)
         deallocate(buf)
 
     end subroutine
