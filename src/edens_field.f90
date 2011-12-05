@@ -1,36 +1,34 @@
 !
 ! Calulate the electronic density on a grid.
-! Coded by Jonas Juselius <jonas@iki.fi> 2003
+! Coded by Jonas Juselius <jonas@iki.fi> 2003 & 2011
 ! 
 
-module edens_class
+module edens_field_class
     use globals_m
     use basis_class
     use bfeval_class
     use dens_class
     use grid_class
+    use edens_class
     use teletype_m
     use parallel_m
     use cubeplot_m
     implicit none
     
-    public new_edens, del_edens, edens_t
-    public edens_direct, edens, edens_plot
+    public new_edens_field, del_edens_field, edens_field_t
+    public edens_direct, edens_plot, edens_field
     
-    type edens_t
-        real(DP), dimension(:), pointer :: tmp
-        real(DP), dimension(:,:), pointer :: aodens
-        real(DP), dimension(:,:), pointer :: buf
-        type(bfeval_t) :: bf
+    type edens_field_t
+        type(edens_t) :: edens
         type(grid_t), pointer :: grid
+        real(DP), dimension(:,:), pointer :: buf
     end type
 
     private
-
 contains
     ! set up memory (once) for the different components
-    subroutine new_edens(this, mol, dens, grid, densfile)
-        type(edens_t) :: this
+    subroutine new_edens_field(this, mol, dens, grid, densfile)
+        type(edens_field_t) :: this
         type(molecule_t) :: mol
         type(dens_t), target :: dens
         type(grid_t), target :: grid
@@ -39,12 +37,9 @@ contains
         integer(I4) :: n
         integer(I4) :: p1, p2
 
+        call new_edens(this%edens, mol, dens, densfile)
         call get_grid_size(grid, p1, p2)
-        call get_dens(dens, this%aodens)
-        n=get_ncgto(mol)
-        allocate(this%tmp(n))
         allocate(this%buf(p1,p2))
-        call new_bfeval(this%bf, mol)
         this%grid=>grid
 
         if (master_p) then
@@ -52,27 +47,26 @@ contains
         end if
     end subroutine
 
-    subroutine del_edens(this)
-        type(edens_t) :: this
+    subroutine del_edens_field(this)
+        type(edens_field_t) :: this
 
-        if (associated(this%tmp)) deallocate(this%tmp)
         if (associated(this%buf)) deallocate(this%buf)
-        call del_bfeval(this%bf)
-        nullify(this%aodens,this%grid)
+        call del_edens(this%edens)
+        nullify(this%grid)
         if (master_p) then
             close(EDFD)
         end if
     end subroutine
 
     subroutine set_edens(this, k)
-        type(edens_t), intent(in) :: this
+        type(edens_field_t), intent(in) :: this
         integer(I4), intent(in) :: k
 
         write(EDFD, rec=k) this%buf
     end subroutine
 
     subroutine edens_plot(this, basename)
-        type(edens_t), intent(inout) :: this
+        type(edens_field_t), intent(inout) :: this
         character(*), intent(in) :: basename
         
         integer(I4) :: i,j,p1,p2,p3
@@ -104,7 +98,7 @@ contains
     end subroutine
 
     subroutine edens_direct(this, k)
-        type(edens_t) :: this
+        type(edens_field_t) :: this
         integer(I4), intent(in) :: k
 
         integer(I4) :: i, j, p1, p2
@@ -121,16 +115,14 @@ contains
         do j=lo,hi
             do i=1,p1
                 rr=gridpoint(this%grid, i, j, k)
-                call bfeval(this%bf,rr, bfvec)
-                this%tmp=matmul(this%aodens, bfvec)
-                this%buf(i,j)=dot_product(this%tmp, bfvec)
+                this%buf(i,j)=edens(this%edens, rr)
             end do
         end do
         call gather_data(this%buf, this%buf(:,lo:hi))
     end subroutine
 
-    subroutine edens(this)
-        type(edens_t) :: this
+    subroutine edens_field(this)
+        type(edens_field_t) :: this
 
         integer(I4) :: i, j, k, p1, p2, p3
         integer(I4) :: lo, hi
@@ -147,9 +139,7 @@ contains
             do j=lo, hi
                 do i=1,p1
                     rr=gridpoint(this%grid, i, j, k)
-                    call bfeval(this%bf,rr, bfvec)
-                    this%tmp=matmul(this%aodens, bfvec)
-                    this%buf(i,j)=dot_product(this%tmp, bfvec)
+                    this%buf(i,j)=edens(this%edens, rr)
                 end do
             end do
             call gather_data(this%buf, this%buf(:,lo:hi))
@@ -158,7 +148,7 @@ contains
     end subroutine
 
     subroutine edens_cube(this, basename)
-        type(edens_t) :: this
+        type(edens_field_t) :: this
         character(*), intent(in) :: basename
 
         integer(I4) :: p1, p2, p3

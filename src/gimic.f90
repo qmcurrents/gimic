@@ -133,14 +133,14 @@ contains
         use gaussint_m
         use integral_class
         use divj_field_class
-        use edens_class
+        use edens_field_class
 
         type(jfield_t) :: jf
         type(grid_t) :: cgrid, igrid, dgrid, egrid
         type(jtensor_t) :: jt
         type(dens_t) :: xdens, modens
         type(divj_field_t) :: dj
-        type(edens_t) :: ed
+        type(edens_field_t) :: ed
         type(integral_t) :: it
         type(cao2sao_t) :: c2s
 
@@ -271,9 +271,9 @@ contains
                 call msg_out('*****************************************')
                 call setup_grid(calc(i), egrid)
                 call getkw(input, 'edens.density', fname)
-                call new_edens(ed, mol, modens, egrid, fname)
+                call new_edens_field(ed, mol, modens, egrid, fname)
                 if (dryrun_p) cycle
-                call edens(ed)
+                call edens_field(ed)
                 if (master_p) then 
                     call edens_plot(ed, "edens")
                 end if
@@ -295,7 +295,7 @@ contains
             call del_grid(cgrid)
         end if
         if (edens_p) then
-            call del_edens(ed)
+            call del_edens_field(ed)
             call del_grid(egrid)
         end if
         if (xdens_p) call del_dens(xdens)
