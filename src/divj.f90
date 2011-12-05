@@ -32,19 +32,19 @@ module divj_class
     real(DP), parameter :: hz=1.d0/(24.d0*step)
 
 contains
-    subroutine init_divj(self, grid, jt)
-        type(divj_t), intent(inout) :: self
+    subroutine init_divj(this, grid, jt)
+        type(divj_t), intent(inout) :: this
         type(grid_t), target :: grid
         type(jtensor_t), target :: jt
 
         integer(I4) :: djrl, p1, p2
         logical :: foo_p
 
-        self%bb=D0
+        this%bb=D0
         p1=0
         
         call push_section(input, 'divj')
-        call get_magnet(grid, self%bb)
+        call get_magnet(grid, this%bb)
         call pop_section(input)
 
         call get_grid_size(grid, p1, p2)
@@ -53,29 +53,29 @@ contains
             open(DIVJFD, file='DIVJ', access='direct', recl=djrl)
         end if
 
-        self%grid=>grid
-        self%jt=>jt
-        allocate(self%buf(p1,p2))
+        this%grid=>grid
+        this%jt=>jt
+        allocate(this%buf(p1,p2))
     end subroutine
 
-    subroutine del_divj(self)
-        type(divj_t), intent(inout) :: self
+    subroutine del_divj(this)
+        type(divj_t), intent(inout) :: this
 
-        deallocate(self%buf)
+        deallocate(this%buf)
         if (master_p) then
             close(DIVJFD)
         end if
     end subroutine
 
-    subroutine set_divj(self, k)
-        type(divj_t), intent(in) :: self
+    subroutine set_divj(this, k)
+        type(divj_t), intent(in) :: this
         integer(I4), intent(in) :: k
 
-        write(DIVJFD, rec=k) self%buf
+        write(DIVJFD, rec=k) this%buf
     end subroutine
 
-    subroutine divj_plot(self, gopen_file)
-        type(divj_t), intent(inout) :: self
+    subroutine divj_plot(this, gopen_file)
+        type(divj_t), intent(inout) :: this
         character(*), intent(in) :: gopen_file
         
         integer(I4) :: i,j,p1,p2,p3
@@ -83,17 +83,17 @@ contains
         real(DP), dimension(3) :: rr
         real(DP), dimension(:,:), pointer :: buf
 
-        call get_grid_size(self%grid, p1, p2, p3)
+        call get_grid_size(this%grid, p1, p2, p3)
 
-        buf=>self%buf
+        buf=>this%buf
 
         amax=D0
-        read(DIVJFD, rec=1) self%buf
+        read(DIVJFD, rec=1) this%buf
         str_g='DIVJPLT'
         open(DJPFD, file=trim(str_g))
         do j=1,p2
             do i=1,p1
-                rr=gridpoint(self%grid, i, j, 1)
+                rr=gridpoint(this%grid, i, j, 1)
                 write(DJPFD, '(4f19.8)') rr, buf(i,j)
                 if (abs(buf(i,j)) > amax) amax=abs(buf(i,j))
             end do
@@ -102,11 +102,11 @@ contains
         close(DJPFD)
         write(str_g, '(a,e19.12)') 'Max divergence:', amax
         call msg_info(str_g)
-        call divj_gopenmol(self, gopen_file)
+        call divj_gopenmol(this, gopen_file)
     end subroutine
 
-    subroutine divj_direct_plt(self)
-        type(divj_t), intent(inout) :: self
+    subroutine divj_direct_plt(this)
+        type(divj_t), intent(inout) :: this
 
         integer(I4) :: i, j, k, p1, p2, p3
         real(DP) :: div, amax
@@ -116,17 +116,17 @@ contains
             call msg_error('divj_direct_plt(): does not work in parallel')
             stop
         end if
-        call eta(self%jt, self%grid, 12.d0)
-        call get_grid_size(self%grid, p1, p2, p3)
+        call eta(this%jt, this%grid, 12.d0)
+        call get_grid_size(this%grid, p1, p2, p3)
     
         open(DJPFD, file='DIVJPLT')
         amax=D0
         do k=1,p3
             do j=1,p2
                 do i=1,p1
-                    rr=gridpoint(self%grid, i, j, k)
-                    call divergence(self, rr, div)
-!                    call divergence2(self, rr, div)
+                    rr=gridpoint(this%grid, i, j, k)
+                    call divergence(this, rr, div)
+!                    call divergence2(this, rr, div)
                     write(DJPFD, '(4f19.8)') rr, div
                     if (abs(div) > amax) amax=abs(div)
                 end do
@@ -139,8 +139,8 @@ contains
         close(DJPFD)
     end subroutine
 
-    subroutine divj_direct(self, k)
-        type(divj_t) :: self
+    subroutine divj_direct(this, k)
+        type(divj_t) :: this
         integer(I4), intent(in) :: k
 
         integer(I4) :: i, j, p1, p2
@@ -148,50 +148,50 @@ contains
         real(DP), dimension(3) :: rr
         real(DP), dimension(:,:), pointer :: buf
 
-        call get_grid_size(self%grid, p1, p2)
+        call get_grid_size(this%grid, p1, p2)
         call schedule(p2, lo, hi)
 
-        buf=>self%buf
+        buf=>this%buf
 
         do j=1,p2
             do i=1,p1
-                rr=gridpoint(self%grid, i, j, k)
-                call divergence(self,rr,buf(i,j))
-!                call divergence2(self,rr,buf(i,j))
+                rr=gridpoint(this%grid, i, j, k)
+                call divergence(this,rr,buf(i,j))
+!                call divergence2(this,rr,buf(i,j))
             end do
         end do
         call gather_data(buf,buf(:,lo:hi))
     end subroutine
 
-    subroutine divj(self)
-        type(divj_t) :: self
+    subroutine divj(this)
+        type(divj_t) :: this
 
         integer(I4) :: i, j, k, p, p1, p2, p3
         integer(I4) :: lo, hi
         real(DP), dimension(3) :: rr
         real(DP), dimension(:,:), pointer :: buf
 
-        call get_grid_size(self%grid, p1, p2, p3)
+        call get_grid_size(this%grid, p1, p2, p3)
 
         call schedule(p2, lo, hi)
 
-        buf=>self%buf
+        buf=>this%buf
     
         do k=1,p3
             do j=lo, hi
                 do i=1,p1
-                    rr=gridpoint(self%grid, i, j, k)
-                    call divergence(self,rr,buf(i,j))
-!                    call divergence2(self,rr,buf(i,j))
+                    rr=gridpoint(this%grid, i, j, k)
+                    call divergence(this,rr,buf(i,j))
+!                    call divergence2(this,rr,buf(i,j))
                 end do
             end do
             call gather_data(buf,buf(:,lo:hi))
-            if (master_p) write(DIVJFD, rec=k) self%buf
+            if (master_p) write(DIVJFD, rec=k) this%buf
         end do
     end subroutine
 
-    subroutine divergence2(self, rr, div)
-        type(divj_t), intent(in) :: self
+    subroutine divergence2(this, rr, div)
+        type(divj_t), intent(in) :: this
         real(DP), dimension(3), intent(in) :: rr
         real(DP), intent(out) :: div
 
@@ -204,14 +204,14 @@ contains
 
         jx=D0; jy=D0; jz=D0
         do q=-2,2
-            call ctensor2(self%jt, rr+(/step*real(q),D0,D0/), jtxp,jtxd, 'total')
-            call ctensor2(self%jt, rr+(/D0,step*real(q),D0/), jtyp,jtyd, 'total')
-            call ctensor2(self%jt, rr+(/D0,D0,step*real(q)/), jtzp,jtzd, 'total')
-            call jvector(jtxp%t, jtxd%t, self%bb, tvec)
+            call ctensor2(this%jt, rr+(/step*real(q),D0,D0/), jtxp,jtxd, 'total')
+            call ctensor2(this%jt, rr+(/D0,step*real(q),D0/), jtyp,jtyd, 'total')
+            call ctensor2(this%jt, rr+(/D0,D0,step*real(q)/), jtzp,jtzd, 'total')
+            call jvector(jtxp%t, jtxd%t, this%bb, tvec)
             jx(q+3)=tvec(1)
-            call jvector(jtyp%t, jtyd%t, self%bb, tvec)
+            call jvector(jtyp%t, jtyd%t, this%bb, tvec)
             jy(q+3)=tvec(2)
-            call jvector(jtzp%t, jtzd%t, self%bb, tvec)
+            call jvector(jtzp%t, jtzd%t, this%bb, tvec)
             jz(q+3)=tvec(3)
         end do
         djx=hx*sum(wgt*jx)
@@ -220,8 +220,8 @@ contains
         div=djx+djy+djz
     end subroutine
 
-    subroutine divergence(self, rr, div)
-        type(divj_t), intent(in) :: self
+    subroutine divergence(this, rr, div)
+        type(divj_t), intent(in) :: this
         real(DP), dimension(3), intent(in) :: rr
         real(DP), intent(out) :: div
 
@@ -234,14 +234,14 @@ contains
         jx=D0; jy=D0; jz=D0
         do q=-2,2
             if ( q == 0 ) cycle
-            call ctensor(self%jt, rr+(/step*real(q),D0,D0/), jtx, 'total')
-            call ctensor(self%jt, rr+(/D0,step*real(q),D0/), jty, 'total')
-            call ctensor(self%jt, rr+(/D0,D0,step*real(q)/), jtz, 'total')
-            tvec=matmul(jtx%t, self%bb)
+            call ctensor(this%jt, rr+(/step*real(q),D0,D0/), jtx, 'total')
+            call ctensor(this%jt, rr+(/D0,step*real(q),D0/), jty, 'total')
+            call ctensor(this%jt, rr+(/D0,D0,step*real(q)/), jtz, 'total')
+            tvec=matmul(jtx%t, this%bb)
             jx(q+3)=tvec(1)
-            tvec=matmul(jty%t, self%bb)
+            tvec=matmul(jty%t, this%bb)
             jy(q+3)=tvec(2)
-            tvec=matmul(jtz%t, self%bb)
+            tvec=matmul(jtz%t, this%bb)
             jz(q+3)=tvec(3)
         end do
         djx=hx*sum(wgt*jx)
@@ -250,8 +250,8 @@ contains
         div=djx+djy+djz
     end subroutine
 
-    subroutine divj_gopenmol(self, gopen_file)
-        type(divj_t) :: self
+    subroutine divj_gopenmol(this, gopen_file)
+        type(divj_t) :: this
         character(*), intent(in) :: gopen_file
 
         integer(I4) :: surface, rank, p1, p2, p3
@@ -259,16 +259,16 @@ contains
         real(SP), dimension(3) :: qmin, qmax
         real(DP), dimension(:,:), pointer :: buf
 
-        buf=>self%buf
+        buf=>this%buf
         if (trim(gopen_file) == '') return
         open(GOPFD,file=trim(gopen_file),access='direct',recl=4)
 
         surface=200
         rank=3
 
-        call get_grid_size(self%grid, p1, p2, p3)
-        qmin=real(gridpoint(self%grid,1,1,1)*AU2A)
-        qmax=real(gridpoint(self%grid,p1,p2,p3)*AU2A)
+        call get_grid_size(this%grid, p1, p2, p3)
+        qmin=real(gridpoint(this%grid,1,1,1)*AU2A)
+        qmax=real(gridpoint(this%grid,p1,p2,p3)*AU2A)
 
         write(GOPFD,rec=1) rank
         write(GOPFD,rec=2) surface

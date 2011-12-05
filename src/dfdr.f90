@@ -26,37 +26,37 @@ module dfdr_class
         
 contains
 
-    subroutine init_dfdr(self, mol)
-        type(dfdr_t) :: self
+    subroutine init_dfdr(this, mol)
+        type(dfdr_t) :: this
         type(molecule_t), target :: mol
 
-        allocate(self%dr(get_nccgto(mol),3))
-        if (spherical) allocate(self%sdr(get_ncgto(mol),3))
-        self%mol=>mol
-!        call dfdr(self, (/0.d0, 0.d0, 0.d0/), self%dr)
+        allocate(this%dr(get_nccgto(mol),3))
+        if (spherical) allocate(this%sdr(get_ncgto(mol),3))
+        this%mol=>mol
+!        call dfdr(this, (/0.d0, 0.d0, 0.d0/), this%dr)
     end subroutine
 
-    subroutine del_dfdr(self)
-        type(dfdr_t) :: self
+    subroutine del_dfdr(this)
+        type(dfdr_t) :: this
 
-        deallocate(self%dr)
-        if (spherical) deallocate(self%sdr)
+        deallocate(this%dr)
+        if (spherical) deallocate(this%sdr)
     end subroutine
 
-    subroutine dfdr(self, r, drv)
-        type(dfdr_t) :: self
+    subroutine dfdr(this, r, drv)
+        type(dfdr_t) :: this
         real(DP), dimension(3), intent(in) :: r
         real(DP), dimension(:,:), pointer :: drv
 
         integer(I4), dimension(99) :: posvec
         integer(I4) :: idx1, idx2
         
-        natoms=get_natoms(self%mol)
+        natoms=get_natoms(this%mol)
         
         idx2=0
-        self%dr=0.d0
+        this%dr=0.d0
         do i=1,natoms
-            call get_atom(self%mol,i,atom)
+            call get_atom(this%mol,i,atom)
             call get_coord(atom, coord)
             rr=r-coord
             call get_basis(atom, basis)
@@ -66,18 +66,18 @@ contains
                 call get_contraction(atom, j, ctr)
                 idx=idx2+get_ctridx(basis, j)
                 do axis=1,3
-                    call dcgto(rr, ctr, axis, self%dr(idx:, axis))
+                    call dcgto(rr, ctr, axis, this%dr(idx:, axis))
                 end do
             end do
             idx2=idx2+get_ncgto(basis)
         end do
         if (spherical) then
             do axis=1,3
-                call cao2sao(self%mol%c2s, self%dr(:, axis), self%sdr(:,axis))
+                call cao2sao(this%mol%c2s, this%dr(:, axis), this%sdr(:,axis))
             end do
-            drv=>self%sdr
+            drv=>this%sdr
         else
-            drv=>self%dr
+            drv=>this%dr
         end if
     end subroutine 
 end module

@@ -157,12 +157,12 @@ module getkw_class
 
 contains
 
-    subroutine globals(self)
-        type(getkw_t), target :: self
+    subroutine globals(this)
+        type(getkw_t), target :: this
 
-        lun=self%lun
-        main=>self
-        active=>self%active
+        lun=this%lun
+        main=>this
+        active=>this%active
     end subroutine
 
     subroutine new_keyword(key)
@@ -196,8 +196,8 @@ contains
         nullify(sect%next)
     end subroutine
 
-    subroutine delkw(self, path)
-        type(getkw_t) :: self
+    subroutine delkw(this, path)
+        type(getkw_t) :: this
         character(*), intent(in) :: path
 
         logical :: ok
@@ -207,16 +207,16 @@ contains
 
         idx=index(path, '.', back=.true.)
         if (idx > 0) then
-            ok=find_sect(self%active, path(:idx-1), sect)
+            ok=find_sect(this%active, path(:idx-1), sect)
             if (.not.ok) then
                 call msg_error('delkw: no such key: ' // trim(path))
                 return
             end if
         else
-            sect=>self%active
+            sect=>this%active
         end if
 
-        ok=findkw(self%active, path, kw, kw2)
+        ok=findkw(this%active, path, kw, kw2)
         if (.not.ok) then
             call msg_error('delkw: no such key: ' // trim(path))
             return
@@ -230,8 +230,8 @@ contains
         sect%nkw=sect%nkw-1
     end subroutine
 
-    subroutine del_section(self, path)
-        type(getkw_t) :: self
+    subroutine del_section(this, path)
+        type(getkw_t) :: this
         character(*), intent(in) :: path
 
         logical :: ok
@@ -240,13 +240,13 @@ contains
 
         idx=index(path, '.', back=.true.)
         if (idx > 0) then
-            ok=find_sect(self%active, path(:idx-1), ptr)
+            ok=find_sect(this%active, path(:idx-1), ptr)
             if (.not.ok) then
                 call msg_error('delkw: no such section: ' // trim(path))
                 return
             end if
         else
-            ptr=>self%active
+            ptr=>this%active
         end if
 
         ok=find_sect(ptr, path, sect, sect2)
@@ -334,32 +334,32 @@ contains
         typtrack=typtrack-1
     end function
 
-    subroutine new_getkw(self, ilun)
-        type(getkw_t), target :: self
+    subroutine new_getkw(this, ilun)
+        type(getkw_t), target :: this
         integer(SP), optional :: ilun
         
         if (present(ilun)) then
-            self%lun=ilun
+            this%lun=ilun
         end if
 
-        call new_section(self%main)
-        call read_section(self%main)
-        self%active=>self%main
+        call new_section(this%main)
+        call read_section(this%main)
+        this%active=>this%main
 
-!        call print_section(self%main)
-!        call globals(self)
+!        call print_section(this%main)
+!        call globals(this)
     end subroutine
     
 
-    subroutine del_getkw(self)
-        type(getkw_t) :: self
+    subroutine del_getkw(this)
+        type(getkw_t) :: this
         type(section_t), pointer :: main
 
-        if (.not.associated(self%main)) then 
+        if (.not.associated(this%main)) then 
             call msg_error('del_getkw: main section not associated!')
             stop
         end if
-        main=>self%main
+        main=>this%main
         do while (associated(main))
             main=>del_section_t(main)
         end do
@@ -403,8 +403,8 @@ contains
         end if
     end subroutine
 
-    subroutine getkw_ival(self, path, val)
-        type(getkw_t), target :: self
+    subroutine getkw_ival(this, path, val)
+        type(getkw_t), target :: this
         character(*), intent(in) :: path
         integer(SP) :: val
         
@@ -413,9 +413,9 @@ contains
         type(keyword_t), pointer :: ptr
 
         nullify(ptr)
-        call globals(self)
+        call globals(this)
 
-        ok=findkw(self%active, path, ptr)
+        ok=findkw(this%active, path, ptr)
         if (ok) then
             if (.not.ptr%key%set) then
 !                call getkw_errundef(ptr%id)
@@ -431,20 +431,20 @@ contains
         end if
     end subroutine
 
-    subroutine getkw_ivec(self, path, val)
-        type(getkw_t), target :: self
+    subroutine getkw_ivec(this, path, val)
+        type(getkw_t), target :: this
         character(*), intent(in) :: path
         integer(SP), dimension(:) :: val
         
         integer(SP), dimension(:), pointer :: ptr
 
         nullify(ptr)
-        call getkw_ivec_ref(self, path, ptr)
+        call getkw_ivec_ref(this, path, ptr)
         if (associated(ptr)) val=ptr
     end subroutine
 
-    subroutine getkw_ivec_ref(self, path, val)
-        type(getkw_t), target :: self
+    subroutine getkw_ivec_ref(this, path, val)
+        type(getkw_t), target :: this
         character(*), intent(in) :: path
         integer(SP), dimension(:), pointer :: val
         
@@ -452,9 +452,9 @@ contains
         type(keyword_t), pointer :: ptr
 
         nullify(ptr)
-        call globals(self)
+        call globals(this)
 
-        ok=findkw(self%active, path, ptr)
+        ok=findkw(this%active, path, ptr)
         if (ok) then
             if (.not.ptr%key%set) then
 !                call getkw_errundef(ptr%id)
@@ -470,8 +470,8 @@ contains
         end if
     end subroutine
 
-    subroutine getkw_dvec_ref(self, path, val)
-        type(getkw_t), target :: self
+    subroutine getkw_dvec_ref(this, path, val)
+        type(getkw_t), target :: this
         character(*), intent(in) :: path
         real(DP), dimension(:), pointer :: val
         
@@ -479,9 +479,9 @@ contains
         
         type(keyword_t), pointer :: ptr
         nullify(ptr)
-        call globals(self)
+        call globals(this)
 
-        ok=findkw(self%active, path, ptr)
+        ok=findkw(this%active, path, ptr)
         if (ok) then
             if (.not.ptr%key%set) then
 !                call getkw_errundef(ptr%id)
@@ -497,20 +497,20 @@ contains
         end if
     end subroutine
 
-    subroutine getkw_dvec(self, path, val)
-        type(getkw_t), target :: self
+    subroutine getkw_dvec(this, path, val)
+        type(getkw_t), target :: this
         character(*), intent(in) :: path
         real(DP), dimension(:) :: val
         
         real(DP), dimension(:), pointer :: ptr
         nullify(ptr)
 
-        call getkw_dvec_ref(self, path, ptr)
+        call getkw_dvec_ref(this, path, ptr)
         if (associated(ptr)) val=ptr
     end subroutine
 
-    subroutine getkw_lvec_ref(self, path, val)
-        type(getkw_t), target :: self
+    subroutine getkw_lvec_ref(this, path, val)
+        type(getkw_t), target :: this
         character(*), intent(in) :: path
         logical, dimension(:), pointer :: val
         
@@ -518,9 +518,9 @@ contains
         
         type(keyword_t), pointer :: ptr
         nullify(ptr)
-        call globals(self)
+        call globals(this)
 
-        ok=findkw(self%active, path, ptr)
+        ok=findkw(this%active, path, ptr)
         if (ok) then
             if (.not.ptr%key%set) then
 !                call getkw_errundef(ptr%id)
@@ -536,20 +536,20 @@ contains
         end if
     end subroutine
 
-    subroutine getkw_lvec(self, path, val)
-        type(getkw_t), target :: self
+    subroutine getkw_lvec(this, path, val)
+        type(getkw_t), target :: this
         character(*), intent(in) :: path
         logical, dimension(:) :: val
         
         logical, dimension(:), pointer :: ptr
         nullify(ptr)
 
-        call getkw_lvec_ref(self, path, ptr)
+        call getkw_lvec_ref(this, path, ptr)
         if (associated(ptr)) val=ptr
     end subroutine
 
-    subroutine getkw_str_ref(self, path, val)
-        type(getkw_t), target :: self
+    subroutine getkw_str_ref(this, path, val)
+        type(getkw_t), target :: this
         character(*), intent(in) :: path
         character(*), dimension(:), pointer :: val
         
@@ -557,9 +557,9 @@ contains
         
         type(keyword_t), pointer :: ptr
         nullify(ptr)
-        call globals(self)
+        call globals(this)
 
-        ok=findkw(self%active, path, ptr)
+        ok=findkw(this%active, path, ptr)
         if (ok) then
             if (.not.ptr%key%set) then
 !                call getkw_errundef(ptr%id)
@@ -575,28 +575,28 @@ contains
         end if
     end subroutine
 
-    subroutine getkw_str(self, path, val)
-        type(getkw_t), target :: self
+    subroutine getkw_str(this, path, val)
+        type(getkw_t), target :: this
         character(*), intent(in) :: path
         character(LINELEN), dimension(:), pointer :: val
 
-        call getkw_str_ref(self, path, val)
+        call getkw_str_ref(this, path, val)
 !        if (associated(ptr)) val=ptr
     end subroutine
 
-    subroutine getkw_string(self, path, val)
-        type(getkw_t), target :: self
+    subroutine getkw_string(this, path, val)
+        type(getkw_t), target :: this
         character(*), intent(in) :: path
         character(*), intent(out) :: val
 
         character(LINELEN), dimension(:), pointer :: ptr
         nullify(ptr)
-        call getkw_str_ref(self, path, ptr)
+        call getkw_str_ref(this, path, ptr)
         if (associated(ptr)) val=ptr(1)
     end subroutine
     
-    subroutine getkw_dval(self, path, val)
-        type(getkw_t), target :: self
+    subroutine getkw_dval(this, path, val)
+        type(getkw_t), target :: this
         character(*), intent(in) :: path
         real(DP), intent(out) :: val
         
@@ -604,9 +604,9 @@ contains
         
         type(keyword_t), pointer :: ptr
         nullify(ptr)
-        call globals(self)
+        call globals(this)
 
-        ok=findkw(self%active, path, ptr)
+        ok=findkw(this%active, path, ptr)
         if (ok) then
             if (.not.ptr%key%set) then
 !                call getkw_errundef(ptr%id)
@@ -622,8 +622,8 @@ contains
         end if
     end subroutine
 
-    subroutine getkw_lval(self, path, val)
-        type(getkw_t), target :: self
+    subroutine getkw_lval(this, path, val)
+        type(getkw_t), target :: this
         character(*), intent(in) :: path
         logical, intent(out) :: val
         
@@ -631,9 +631,9 @@ contains
         
         type(keyword_t), pointer :: ptr
         nullify(ptr)
-        call globals(self)
+        call globals(this)
 
-        ok=findkw(self%active, path, ptr)
+        ok=findkw(this%active, path, ptr)
         if (ok) then
             if (.not.ptr%key%set) then
 !                call getkw_errundef(ptr%id)
@@ -651,8 +651,8 @@ contains
 
 !::::::::::::::::::::  getkw_ptr  :::::::::::::::::::::::::::
 
-    subroutine getkw_ival_ptr(self, sect, val)
-        type(getkw_t), target :: self
+    subroutine getkw_ival_ptr(this, sect, val)
+        type(getkw_t), target :: this
         type(section_t), pointer :: sect
         integer(SP), intent(out) :: val
         
@@ -660,7 +660,7 @@ contains
         
         type(keyword_t), pointer :: ptr
         nullify(ptr)
-        call globals(self)
+        call globals(this)
 
         ok=findkw(sect, ' ', ptr)
         if (ok) then
@@ -679,8 +679,8 @@ contains
     end subroutine
 
 
-    subroutine getkw_ivec_ptr(self, sect, val)
-        type(getkw_t), target :: self
+    subroutine getkw_ivec_ptr(this, sect, val)
+        type(getkw_t), target :: this
         type(section_t), pointer :: sect
         integer(SP), dimension(:), pointer :: val
         
@@ -688,7 +688,7 @@ contains
         
         type(keyword_t), pointer :: ptr
         nullify(ptr)
-        call globals(self)
+        call globals(this)
 
         ok=findkw(sect, ' ', ptr)
         if (ok) then
@@ -706,8 +706,8 @@ contains
         end if
     end subroutine
 
-    subroutine getkw_dvec_ptr(self, sect, val)
-        type(getkw_t), target :: self
+    subroutine getkw_dvec_ptr(this, sect, val)
+        type(getkw_t), target :: this
         type(section_t), pointer :: sect
         real(DP), dimension(:), pointer :: val
         
@@ -715,7 +715,7 @@ contains
         
         type(keyword_t), pointer :: ptr
         nullify(ptr)
-        call globals(self)
+        call globals(this)
 
         ok=findkw(sect, ' ', ptr)
         if (ok) then
@@ -733,8 +733,8 @@ contains
         end if
     end subroutine
 
-    subroutine getkw_lvec_ptr(self, sect, val)
-        type(getkw_t), target :: self
+    subroutine getkw_lvec_ptr(this, sect, val)
+        type(getkw_t), target :: this
         type(section_t), pointer :: sect
         logical, dimension(:), pointer :: val
         
@@ -742,7 +742,7 @@ contains
         
         type(keyword_t), pointer :: ptr
         nullify(ptr)
-        call globals(self)
+        call globals(this)
 
         ok=findkw(sect, ' ', ptr)
         if (ok) then
@@ -760,8 +760,8 @@ contains
         end if
     end subroutine
 
-    subroutine getkw_str_ptr(self, sect, val)
-        type(getkw_t), target :: self
+    subroutine getkw_str_ptr(this, sect, val)
+        type(getkw_t), target :: this
         type(section_t), pointer :: sect
         character(*), dimension(:), pointer :: val
         
@@ -769,7 +769,7 @@ contains
         
         type(keyword_t), pointer :: ptr
         nullify(ptr)
-        call globals(self)
+        call globals(this)
 
         ok=findkw(sect, ' ', ptr)
         if (ok) then
@@ -787,8 +787,8 @@ contains
         end if
     end subroutine
     
-    subroutine getkw_dval_ptr(self, sect, val)
-        type(getkw_t), target :: self
+    subroutine getkw_dval_ptr(this, sect, val)
+        type(getkw_t), target :: this
         type(section_t), pointer :: sect
         real(DP), intent(out) :: val
         
@@ -796,7 +796,7 @@ contains
         
         type(keyword_t), pointer :: ptr
         nullify(ptr)
-        call globals(self)
+        call globals(this)
 
         ok=findkw(sect, ' ', ptr)
         if (ok) then
@@ -814,8 +814,8 @@ contains
         end if
     end subroutine
 
-    subroutine getkw_lval_ptr(self, sect, val)
-        type(getkw_t), target :: self
+    subroutine getkw_lval_ptr(this, sect, val)
+        type(getkw_t), target :: this
         type(section_t), pointer :: sect
         logical, intent(out) :: val
         
@@ -823,7 +823,7 @@ contains
         
         type(keyword_t), pointer :: ptr
         nullify(ptr)
-        call globals(self)
+        call globals(this)
 
         ok=findkw(sect, ' ', ptr)
         if (ok) then
@@ -916,8 +916,8 @@ contains
         end if
     end function
 
-    subroutine addkw_ival(self, path, val)
-        type(getkw_t), target :: self
+    subroutine addkw_ival(this, path, val)
+        type(getkw_t), target :: this
         character(*), intent(in) :: path
         integer(SP), intent(in) :: val
         
@@ -925,7 +925,7 @@ contains
         
         type(keyword_t), pointer :: kw
 
-        kw=>insert_keyword(self%active, path)
+        kw=>insert_keyword(this%active, path)
         
         if (associated(kw)) then
             kw%key%ival=val
@@ -935,8 +935,8 @@ contains
         end if
     end subroutine
 
-    subroutine addkw_ivec(self, path, val)
-        type(getkw_t), target :: self
+    subroutine addkw_ivec(this, path, val)
+        type(getkw_t), target :: this
         character(*), intent(in) :: path
         integer(SP), dimension(:), intent(in) :: val
         
@@ -944,7 +944,7 @@ contains
         
         type(keyword_t), pointer :: kw
 
-        kw=>insert_keyword(self%active, path)
+        kw=>insert_keyword(this%active, path)
         
         if (associated(kw)) then
                 kw%typ=KW_IVEC
@@ -956,8 +956,8 @@ contains
         end if
     end subroutine
 
-    subroutine addkw_dval(self, path, val)
-        type(getkw_t), target :: self
+    subroutine addkw_dval(this, path, val)
+        type(getkw_t), target :: this
         character(*), intent(in) :: path
         real(DP), intent(in) :: val
         
@@ -965,7 +965,7 @@ contains
         
         type(keyword_t), pointer :: kw
 
-        kw=>insert_keyword(self%active, path)
+        kw=>insert_keyword(this%active, path)
         
         if (associated(kw)) then
                 kw%key%dval=val
@@ -975,8 +975,8 @@ contains
         end if
     end subroutine
 
-    subroutine addkw_dvec(self, path, val)
-        type(getkw_t), target :: self
+    subroutine addkw_dvec(this, path, val)
+        type(getkw_t), target :: this
         character(*), intent(in) :: path
         real(DP), dimension(:), intent(in) :: val
         
@@ -984,7 +984,7 @@ contains
         
         type(keyword_t), pointer :: kw
 
-        kw=>insert_keyword(self%active, path)
+        kw=>insert_keyword(this%active, path)
         
         if (associated(kw)) then
                 kw%typ=KW_DVEC
@@ -996,8 +996,8 @@ contains
         end if
     end subroutine
 
-    subroutine addkw_lval(self, path, val)
-        type(getkw_t), target :: self
+    subroutine addkw_lval(this, path, val)
+        type(getkw_t), target :: this
         character(*), intent(in) :: path
         logical, intent(in) :: val
         
@@ -1005,7 +1005,7 @@ contains
         
         type(keyword_t), pointer :: kw
 
-        kw=>insert_keyword(self%active, path)
+        kw=>insert_keyword(this%active, path)
         
         if (associated(kw)) then
                 kw%key%bool=val
@@ -1015,8 +1015,8 @@ contains
         end if
     end subroutine
 
-    subroutine addkw_lvec(self, path, val)
-        type(getkw_t), target :: self
+    subroutine addkw_lvec(this, path, val)
+        type(getkw_t), target :: this
         character(*), intent(in) :: path
         logical, dimension(:), intent(in) :: val
         
@@ -1024,7 +1024,7 @@ contains
         
         type(keyword_t), pointer :: kw
 
-        kw=>insert_keyword(self%active, path)
+        kw=>insert_keyword(this%active, path)
         
         if (associated(kw)) then
                 kw%typ=KW_LVEC
@@ -1036,8 +1036,8 @@ contains
         end if
     end subroutine
 
-    subroutine addkw_string(self, path, val)
-        type(getkw_t), target :: self
+    subroutine addkw_string(this, path, val)
+        type(getkw_t), target :: this
         character(*), intent(in) :: path
         character(*), intent(in) :: val
         
@@ -1045,7 +1045,7 @@ contains
         
         type(keyword_t), pointer :: kw
 
-        kw=>insert_keyword(self%active, path)
+        kw=>insert_keyword(this%active, path)
         
         if (associated(kw)) then
                 kw%typ=KW_STR
@@ -1057,8 +1057,8 @@ contains
         end if
     end subroutine
 
-    subroutine addkw_strvec(self, path, val)
-        type(getkw_t), target :: self
+    subroutine addkw_strvec(this, path, val)
+        type(getkw_t), target :: this
         character(*), intent(in) :: path
         character(LINELEN), dimension(:), intent(in) :: val
         
@@ -1066,7 +1066,7 @@ contains
         
         type(keyword_t), pointer :: kw
 
-        kw=>insert_keyword(self%active, path)
+        kw=>insert_keyword(this%active, path)
         
         if (associated(kw)) then
                 kw%typ=KW_STR
@@ -1121,13 +1121,13 @@ contains
         end if
     end function
 
-    subroutine add_section(self, path)
-        type(getkw_t) :: self
+    subroutine add_section(this, path)
+        type(getkw_t) :: this
         character(*), intent(in) :: path
 
         type(section_t), pointer :: new
 
-        new=>insert_section(self%active, path)
+        new=>insert_section(this%active, path)
         if (.not.associated(new)) then
             call addkw_err(path)
         end if
@@ -1144,8 +1144,8 @@ contains
         end if
     end subroutine
 
-    subroutine setkw_ival(self, path, val)
-        type(getkw_t), target :: self
+    subroutine setkw_ival(this, path, val)
+        type(getkw_t), target :: this
         character(*), intent(in) :: path
         integer(SP), intent(in) :: val
         
@@ -1153,9 +1153,9 @@ contains
         
         type(keyword_t), pointer :: ptr
         nullify(ptr)
-        call globals(self)
+        call globals(this)
 
-        ok=findkw(self%active, path, ptr)
+        ok=findkw(this%active, path, ptr)
         if (ok) then
             if (ptr%typ	 /= KW_INT) then
                 call getkw_typerr(ptr)
@@ -1168,8 +1168,8 @@ contains
         end if
     end subroutine
 
-    subroutine setkw_ivec(self, path, val)
-        type(getkw_t), target :: self
+    subroutine setkw_ivec(this, path, val)
+        type(getkw_t), target :: this
         character(*), intent(in) :: path
         integer(SP), dimension(:) :: val
         
@@ -1177,9 +1177,9 @@ contains
         
         type(keyword_t), pointer :: ptr
         nullify(ptr)
-        call globals(self)
+        call globals(this)
 
-        ok=findkw(self%active, path, ptr)
+        ok=findkw(this%active, path, ptr)
         if (ok) then
             if (ptr%typ	 /= KW_IVEC) then
                 call getkw_typerr(ptr)
@@ -1196,8 +1196,8 @@ contains
         end if
     end subroutine
 
-    subroutine setkw_dvec(self, path, val)
-        type(getkw_t), target :: self
+    subroutine setkw_dvec(this, path, val)
+        type(getkw_t), target :: this
         character(*), intent(in) :: path
         real(DP), dimension(:) :: val
         
@@ -1205,9 +1205,9 @@ contains
         
         type(keyword_t), pointer :: ptr
         nullify(ptr)
-        call globals(self)
+        call globals(this)
 
-        ok=findkw(self%active, path, ptr)
+        ok=findkw(this%active, path, ptr)
         if (ok) then
             if (ptr%typ	 /= KW_DVEC) then
                 call getkw_typerr(ptr)
@@ -1224,8 +1224,8 @@ contains
         end if
     end subroutine
 
-    subroutine setkw_dval(self, path, val)
-        type(getkw_t), target :: self
+    subroutine setkw_dval(this, path, val)
+        type(getkw_t), target :: this
         character(*), intent(in) :: path
         real(DP), intent(in) :: val
         
@@ -1233,9 +1233,9 @@ contains
         
         type(keyword_t), pointer :: ptr
         nullify(ptr)
-        call globals(self)
+        call globals(this)
 
-        ok=findkw(self%active, path, ptr)
+        ok=findkw(this%active, path, ptr)
         if (ok) then
             if (ptr%typ	 /= KW_DBL) then
                 call getkw_typerr(ptr)
@@ -1248,8 +1248,8 @@ contains
         end if
     end subroutine
 
-    subroutine setkw_lvec(self, path, val)
-        type(getkw_t), target :: self
+    subroutine setkw_lvec(this, path, val)
+        type(getkw_t), target :: this
         character(*), intent(in) :: path
         logical, dimension(:), pointer :: val
         
@@ -1257,9 +1257,9 @@ contains
         
         type(keyword_t), pointer :: ptr
         nullify(ptr)
-        call globals(self)
+        call globals(this)
 
-        ok=findkw(self%active, path, ptr)
+        ok=findkw(this%active, path, ptr)
         if (ok) then
             if (ptr%typ	 /= KW_LVEC) then
                 call getkw_typerr(ptr)
@@ -1276,8 +1276,8 @@ contains
         end if
     end subroutine
 
-    subroutine setkw_lval(self, path, val)
-        type(getkw_t), target :: self
+    subroutine setkw_lval(this, path, val)
+        type(getkw_t), target :: this
         character(*), intent(in) :: path
         logical, intent(in) :: val
         
@@ -1285,9 +1285,9 @@ contains
         
         type(keyword_t), pointer :: ptr
         nullify(ptr)
-        call globals(self)
+        call globals(this)
 
-        ok=findkw(self%active, path, ptr)
+        ok=findkw(this%active, path, ptr)
         if (ok) then
             if (ptr%typ	 /= KW_BOOL) then
                 call getkw_typerr(ptr)
@@ -1300,8 +1300,8 @@ contains
         end if
     end subroutine
 
-    subroutine setkw_str(self, path, val)
-        type(getkw_t), target :: self
+    subroutine setkw_str(this, path, val)
+        type(getkw_t), target :: this
         character(*), intent(in) :: path
         character(*), dimension(:), pointer :: val
         
@@ -1309,9 +1309,9 @@ contains
         
         type(keyword_t), pointer :: ptr
         nullify(ptr)
-        call globals(self)
+        call globals(this)
 
-        ok=findkw(self%active, path, ptr)
+        ok=findkw(this%active, path, ptr)
         if (ok) then
             if (ptr%typ	 /= KW_LVEC) then
                 call getkw_typerr(ptr)
@@ -1330,17 +1330,17 @@ contains
 
 !:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
-    subroutine save_keys(self, lun)
-        type(getkw_t) :: self
+    subroutine save_keys(this, lun)
+        type(getkw_t) :: this
         integer(SP), intent(in) :: lun
 
         type(section_t), pointer :: foo	
 
-        call globals(self)
+        call globals(this)
 
         ! for all sections: print section
         ! for all keys in section: print key
-        call write_section(self%active, lun)
+        call write_section(this%active, lun)
     end subroutine
 
     subroutine write_key(kw, lun) 
@@ -1472,15 +1472,15 @@ contains
         end if
     end function
 
-    subroutine getsect(self, path, ptr)
-        type(getkw_t) :: self
+    subroutine getsect(this, path, ptr)
+        type(getkw_t) :: this
         character(*), intent(in) :: path
         type(section_t), pointer :: ptr
 
         logical :: ok
 
-        call globals(self)
-        ok=find_sect(self%active, path, ptr)
+        call globals(this)
+        ok=find_sect(this%active, path, ptr)
         if (.not.ok) then
             nullify(ptr)
         end if
@@ -1761,26 +1761,26 @@ contains
         end select
     end subroutine
 
-    subroutine push_section(self, sect)
-        type(getkw_t), target :: self
+    subroutine push_section(this, sect)
+        type(getkw_t), target :: this
         character(*) :: sect
 
         type(section_t), pointer :: ptr
         logical :: ok
 
-        if (self%stidx < MAX_STACK) then
-            self%stidx=self%stidx+1
-            self%stack(self%stidx)%sect=>self%active
+        if (this%stidx < MAX_STACK) then
+            this%stidx=this%stidx+1
+            this%stack(this%stidx)%sect=>this%active
             if (sect == '.') then
-                self%active=>self%stack(1)%sect
+                this%active=>this%stack(1)%sect
                 return
             end if
-            ok=find_sect(self%active, sect, ptr)
+            ok=find_sect(this%active, sect, ptr)
             if ( .not.ok ) then
                 call msg_error('Invalid section: ' // sect)
                 stop
             end if
-            self%active=>ptr
+            this%active=>ptr
         else if (strict) then 
             call msg_error('push_section: stack overflow!')
             stop
@@ -1790,13 +1790,13 @@ contains
             
     end subroutine 
 
-    subroutine pop_section(self)
-        type(getkw_t), target :: self
+    subroutine pop_section(this)
+        type(getkw_t), target :: this
         integer(4) :: error
 
-        if (self%stidx > 0) then
-            self%active=>self%stack(self%stidx)%sect
-            self%stidx=self%stidx-1
+        if (this%stidx > 0) then
+            this%active=>this%stack(this%stidx)%sect
+            this%stidx=this%stidx-1
         else if (strict) then
             call msg_error('pop_section: stack underflow!')
             stop
@@ -1805,10 +1805,10 @@ contains
         end if
     end subroutine 
 
-    subroutine reset_active_section(self)
-        type(getkw_t), target :: self
+    subroutine reset_active_section(this)
+        type(getkw_t), target :: this
         
-        self%active=>self%main
+        this%active=>this%main
     end subroutine 
 
     subroutine validate(error, str)
@@ -1827,14 +1827,14 @@ contains
         end if
     end subroutine 
 
-    function keyword_is_set(self, key) result(ok)
-        type(getkw_t) :: self
+    function keyword_is_set(this, key) result(ok)
+        type(getkw_t) :: this
         character(*), intent(in) :: key
         logical :: ok
 
         type(keyword_t), pointer :: ptr
 
-        ok=findkw(self%active, key, ptr)
+        ok=findkw(this%active, key, ptr)
         if (.not.ok) then
             call msg_warn('getkw: no such key: ' // trim(key))
         else
@@ -1842,14 +1842,14 @@ contains
         end if
     end function 
 
-    function section_is_set(self, key) result(ok)
-        type(getkw_t) :: self
+    function section_is_set(this, key) result(ok)
+        type(getkw_t) :: this
         character(*), intent(in) :: key
         logical :: ok
 
         type(section_t), pointer :: ptr
 
-        ok=find_sect(self%active, key, ptr)
+        ok=find_sect(this%active, key, ptr)
         if (.not.ok) then
             call msg_warn('no such section: ' // trim(key))
         else
@@ -1857,14 +1857,14 @@ contains
         end if
     end function 
 
-    function has_keyword(self, key) result(ok)
-        type(getkw_t) :: self
+    function has_keyword(this, key) result(ok)
+        type(getkw_t) :: this
         character(*), intent(in) :: key
         logical :: ok
 
         type(keyword_t), pointer :: ptr
 
-        ok=findkw(self%active, key, ptr)
+        ok=findkw(this%active, key, ptr)
     end function 
 
     function next_keyword(key) result( new)

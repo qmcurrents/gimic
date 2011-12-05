@@ -18,31 +18,31 @@ module dfdb_class
     real(DP), dimension(:,:), allocatable, target, save :: xvec
 
 contains
-    subroutine init_dfdb(self, mol)
-        type(dfdb_t) :: self
+    subroutine init_dfdb(this, mol)
+        type(dfdb_t) :: this
         type(molecule_t), target :: mol
 
-        nullify(self%db)
+        nullify(this%db)
 
-        if (associated(self%db)) then
+        if (associated(this%db)) then
             call msg_warn('init_dfdb(): already allocated!')
         else
-            allocate(self%db(get_ncgto(mol),3))
+            allocate(this%db(get_ncgto(mol),3))
         end if
-        self%mol=>mol
+        this%mol=>mol
     end subroutine
 
-    subroutine del_dfdb(self)
-        type(dfdb_t) :: self
-        if (associated(self%db)) then
-            deallocate(self%db)
+    subroutine del_dfdb(this)
+        type(dfdb_t) :: this
+        if (associated(this%db)) then
+            deallocate(this%db)
         else
             call msg_warn('del_dfdb(): not allocated!')
         end if
     end subroutine
     
-    subroutine dfdb(self, r, bfvec, dbop, dbv)
-        type(dfdb_t) :: self
+    subroutine dfdb(this, r, bfvec, dbop, dbv)
+        type(dfdb_t) :: this
         real(DP), dimension(:), intent(in) :: r
         real(DP), dimension(:), intent(in) :: bfvec
         real(DP), dimension(:,:), intent(in) :: dbop
@@ -52,19 +52,19 @@ contains
         type(basis_t), pointer :: basis
         integer(I4) :: i, j, k, natoms, ncgto
 
-        natoms=get_natoms(self%mol)
+        natoms=get_natoms(this%mol)
         
         j=1
         do k=1,natoms
-            call get_atom(self%mol, k, atom)
+            call get_atom(this%mol, k, atom)
             call get_basis(atom, basis)
             ncgto=get_ncgto(basis)
             do i=1,ncgto
-                self%db(j,:)=dbop(:,k)*bfvec(j)
+                this%db(j,:)=dbop(:,k)*bfvec(j)
                 j=j+1
             end do
         end do
-        dbv=>self%db
+        dbv=>this%db
     end subroutine 
 
 end module

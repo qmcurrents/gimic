@@ -28,41 +28,41 @@ module bfeval_class
         
 contains
 
-    subroutine init_bfeval(self, mol)
-        type(bfeval_t) :: self
+    subroutine init_bfeval(this, mol)
+        type(bfeval_t) :: this
         type(molecule_t), target :: mol
         
-        allocate(self%bf(get_ncgto(mol)))
-        if (spherical) allocate(self%sbf(get_nccgto(mol)))
-        self%mol=>mol
+        allocate(this%bf(get_ncgto(mol)))
+        if (spherical) allocate(this%sbf(get_nccgto(mol)))
+        this%mol=>mol
     end subroutine
 
-    subroutine del_bfeval(self)
-        type(bfeval_t) :: self
+    subroutine del_bfeval(this)
+        type(bfeval_t) :: this
 
-        deallocate(self%bf)
-        if (spherical) deallocate(self%sbf)
-        nullify(self%sbf)
-        nullify(self%mol)
+        deallocate(this%bf)
+        if (spherical) deallocate(this%sbf)
+        nullify(this%sbf)
+        nullify(this%mol)
     end subroutine
     
-    subroutine bfeval(self, r, ans)
-        type(bfeval_t) :: self
+    subroutine bfeval(this, r, ans)
+        type(bfeval_t) :: this
         real(DP), dimension(3), intent(in) :: r
         real(DP), dimension(:), pointer :: ans
 
         integer(I4), dimension(99) :: posvec
         integer(I4) :: idx1, idx2
         
-        natoms=get_natoms(self%mol)
+        natoms=get_natoms(this%mol)
         
         idx=1
         idx2=0
         posvec=0
-        self%bf=0.d0
-        if (spherical) self%sbf=0.d0
+        this%bf=0.d0
+        if (spherical) this%sbf=0.d0
         do i=1,natoms
-            call get_atom(self%mol,i,atom)
+            call get_atom(this%mol,i,atom)
             call get_coord(atom, coord)
             call get_basis(atom, basis)
             rr=r-coord
@@ -71,33 +71,33 @@ contains
                 j=posvec(k)
                 call get_contraction(atom, j, ctr)
                 idx=idx2+get_ctridx(basis, j)
-                call cgto(rr, ctr, self%bf(idx:))
+                call cgto(rr, ctr, this%bf(idx:))
             end do
             idx2=idx2+get_ncgto(basis)
         end do
         if (spherical) then
-            call cao2sao(self%mol%c2s, self%bf, self%sbf)
-            ans=>self%sbf
+            call cao2sao(this%mol%c2s, this%bf, this%sbf)
+            ans=>this%sbf
         else
-            ans=>self%bf
+            ans=>this%bf
         end if
     end subroutine 
 
-    subroutine bfeval_ns(self, r, ans)
-        type(bfeval_t) :: self
+    subroutine bfeval_ns(this, r, ans)
+        type(bfeval_t) :: this
         real(DP), dimension(3), intent(in) :: r
         real(DP), dimension(:), pointer :: ans
 
         integer(I4), dimension(99) :: posvec
         integer(I4) :: idx1, idx2
 
-        natoms=get_natoms(self%mol)
+        natoms=get_natoms(this%mol)
         
         idx=1
         idx2=0
-        self%bf=0.d0
+        this%bf=0.d0
         do i=1,natoms
-            call get_atom(self%mol,i,atom)
+            call get_atom(this%mol,i,atom)
             call get_coord(atom, coord)
             call get_basis(atom, basis)
             rr=r-coord
@@ -106,18 +106,18 @@ contains
             do j=1,nctr 
                 call get_contraction(atom, j, ctr)
                 idx=idx2+get_ctridx(basis, j)
-                call cgto(rr, ctr, self%bf(idx:))
+                call cgto(rr, ctr, this%bf(idx:))
                 write(89,*) j, idx
-                write(89,*) self%bf(idx:idx+ctr%nccomp-1)
+                write(89,*) this%bf(idx:idx+ctr%nccomp-1)
                 write(89,*)
             end do
             idx2=idx2+get_ncgto(basis)
         end do
         if (spherical) then
-            call cao2sao(self%mol%c2s, self%bf, self%sbf)
-            ans=>self%sbf
+            call cao2sao(this%mol%c2s, this%bf, this%sbf)
+            ans=>this%sbf
         else
-            ans=>self%bf
+            ans=>this%bf
         end if
     end subroutine 
 

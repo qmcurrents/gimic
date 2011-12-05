@@ -22,38 +22,38 @@ module d2fdrdb_class
     
 contains
 
-    subroutine init_d2fdrdb(self, mol)
-        type(d2fdrdb_t) :: self
+    subroutine init_d2fdrdb(this, mol)
+        type(d2fdrdb_t) :: this
         type(molecule_t), target :: mol
 
-        nullify(self%d2)
+        nullify(this%d2)
 
-        if (associated(self%d2)) then
-            call msg_warn('init_selfdrdb(): already allocated!')
+        if (associated(this%d2)) then
+            call msg_warn('init_thisdrdb(): already allocated!')
         else
-            allocate(self%d2(get_ncgto(mol),9))
+            allocate(this%d2(get_ncgto(mol),9))
         end if
-        self%mol=>mol
+        this%mol=>mol
     end subroutine
 
-    subroutine del_d2fdrdb(self)
-        type(d2fdrdb_t) :: self
+    subroutine del_d2fdrdb(this)
+        type(d2fdrdb_t) :: this
 
-        if (associated(self%d2)) then
-            deallocate(self%d2)
-            nullify(self%d2)
-            nullify(self%mol)
+        if (associated(this%d2)) then
+            deallocate(this%d2)
+            nullify(this%d2)
+            nullify(this%mol)
         else
-            call msg_warn('del_selfdrdb(): not allocated!')
+            call msg_warn('del_thisdrdb(): not allocated!')
         end if
     end subroutine
 
-    subroutine d2fdrdb(self, r,  bfvec, drvec, dbop, selfv)
-        type(d2fdrdb_t) :: self
+    subroutine d2fdrdb(this, r,  bfvec, drvec, dbop, thisv)
+        type(d2fdrdb_t) :: this
         real(DP), dimension(:), intent(in) :: r
         real(DP), dimension(:,:), intent(in) :: drvec, dbop
         real(DP), dimension(:), intent(in) :: bfvec
-        real(DP), dimension(:,:), pointer :: selfv
+        real(DP), dimension(:,:), pointer :: thisv
     
         type(atom_t), dimension(:), pointer :: atoms
         integer(I4) :: i, j, k, natoms, nctr, ncomp, idx
@@ -65,12 +65,12 @@ contains
         integer(I4), dimension(99) :: posvec
         integer(I4) :: l, idx1
         
-        natoms=get_natoms(self%mol)
+        natoms=get_natoms(this%mol)
         
         idx=1
-        self%d2=0.d0
+        this%d2=0.d0
         do i=1,natoms
-            call get_atom(self%mol,i,atom)
+            call get_atom(this%mol,i,atom)
             dbov=dbop(:,i)
             call get_coord(atom, coord)
             ror1=coord(1)
@@ -84,27 +84,27 @@ contains
                 do k=1,ncomp
 
                     ! dBx
-                    self%d2(idx,1)=drvec(idx,1)*dbov(1)                  ! dx
-                    self%d2(idx,2)=drvec(idx,2)*dbov(1)+ror3*bfvec(idx)  ! dy
-                    self%d2(idx,3)=drvec(idx,3)*dbov(1)-ror2*bfvec(idx)  ! dz
+                    this%d2(idx,1)=drvec(idx,1)*dbov(1)                  ! dx
+                    this%d2(idx,2)=drvec(idx,2)*dbov(1)+ror3*bfvec(idx)  ! dy
+                    this%d2(idx,3)=drvec(idx,3)*dbov(1)-ror2*bfvec(idx)  ! dz
 
                     ! dBy
-                    self%d2(idx,4)=drvec(idx,1)*dbov(2)-ror3*bfvec(idx)
-                    self%d2(idx,5)=drvec(idx,2)*dbov(2)
-                    self%d2(idx,6)=drvec(idx,3)*dbov(2)+ror1*bfvec(idx)
+                    this%d2(idx,4)=drvec(idx,1)*dbov(2)-ror3*bfvec(idx)
+                    this%d2(idx,5)=drvec(idx,2)*dbov(2)
+                    this%d2(idx,6)=drvec(idx,3)*dbov(2)+ror1*bfvec(idx)
 
                     ! dBz
-                    self%d2(idx,7)=drvec(idx,1)*dbov(3)+ror2*bfvec(idx)
-                    self%d2(idx,8)=drvec(idx,2)*dbov(3)-ror1*bfvec(idx)
-                    self%d2(idx,9)=drvec(idx,3)*dbov(3)
+                    this%d2(idx,7)=drvec(idx,1)*dbov(3)+ror2*bfvec(idx)
+                    this%d2(idx,8)=drvec(idx,2)*dbov(3)-ror1*bfvec(idx)
+                    this%d2(idx,9)=drvec(idx,3)*dbov(3)
                     idx=idx+1
                 end do
             end do
         end do
-        selfv=>self%d2
+        thisv=>this%d2
     end subroutine 
 
-    subroutine print_selfvec(foo)
+    subroutine print_thisvec(foo)
         real(DP), dimension(:,:), intent(in) :: foo
 
         integer(I4) :: i

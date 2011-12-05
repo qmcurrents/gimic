@@ -29,8 +29,8 @@ module edens_class
 
 contains
     ! set up memory (once) for the different components
-    subroutine init_edens(self, mol, dens, grid, densfile)
-        type(edens_t) :: self
+    subroutine init_edens(this, mol, dens, grid, densfile)
+        type(edens_t) :: this
         type(molecule_t) :: mol
         type(dens_t), target :: dens
         type(grid_t), target :: grid
@@ -40,39 +40,39 @@ contains
         integer(I4) :: p1, p2
 
         call get_grid_size(grid, p1, p2)
-        call get_dens(dens, self%aodens)
+        call get_dens(dens, this%aodens)
         n=get_ncgto(mol)
-        allocate(self%tmp(n))
-        allocate(self%buf(p1,p2))
-        call init_bfeval(self%bf, mol)
-        self%grid=>grid
+        allocate(this%tmp(n))
+        allocate(this%buf(p1,p2))
+        call init_bfeval(this%bf, mol)
+        this%grid=>grid
 
         if (master_p) then
             open(EDFD, file=trim(densfile), access='direct', recl=p1*p2*DP)
         end if
     end subroutine
 
-    subroutine del_edens(self)
-        type(edens_t) :: self
+    subroutine del_edens(this)
+        type(edens_t) :: this
 
-        if (associated(self%tmp)) deallocate(self%tmp)
-        if (associated(self%buf)) deallocate(self%buf)
-        call del_bfeval(self%bf)
-        nullify(self%aodens,self%grid)
+        if (associated(this%tmp)) deallocate(this%tmp)
+        if (associated(this%buf)) deallocate(this%buf)
+        call del_bfeval(this%bf)
+        nullify(this%aodens,this%grid)
         if (master_p) then
             close(EDFD)
         end if
     end subroutine
 
-    subroutine set_edens(self, k)
-        type(edens_t), intent(in) :: self
+    subroutine set_edens(this, k)
+        type(edens_t), intent(in) :: this
         integer(I4), intent(in) :: k
 
-        write(EDFD, rec=k) self%buf
+        write(EDFD, rec=k) this%buf
     end subroutine
 
-    subroutine edens_plot(self, pltfile)
-        type(edens_t), intent(inout) :: self
+    subroutine edens_plot(this, pltfile)
+        type(edens_t), intent(inout) :: this
         character(*), intent(in) :: pltfile
         
         integer(I4) :: i,j,p1,p2,p3
@@ -80,15 +80,15 @@ contains
         real(DP), dimension(3) :: rr
         real(DP), dimension(:,:), pointer :: buf
 
-        call get_grid_size(self%grid, p1, p2,p3)
-        buf=>self%buf
+        call get_grid_size(this%grid, p1, p2,p3)
+        buf=>this%buf
 
         amax=D0
-        read(EDFD, rec=1) self%buf
+        read(EDFD, rec=1) this%buf
         open(EDPFD, file=trim(pltfile))
         do j=1,p2
             do i=1,p1
-                rr=gridpoint(self%grid, i, j, 1)
+                rr=gridpoint(this%grid, i, j, 1)
                 write(EDPFD, '(4f19.8)') rr, buf(i,j)
                 if (abs(buf(i,j)) > amax) amax=abs(buf(i,j))
             end do
@@ -99,8 +99,8 @@ contains
         call msg_info(str_g)
     end subroutine
 
-    subroutine edens_direct(self, k)
-        type(edens_t) :: self
+    subroutine edens_direct(this, k)
+        type(edens_t) :: this
         integer(I4), intent(in) :: k
 
         integer(I4) :: i, j, p1, p2
@@ -109,24 +109,24 @@ contains
         real(DP), dimension(:,:), pointer :: buf
         real(DP), dimension(:), pointer :: bfvec
 
-        call get_grid_size(self%grid, p1, p2)
+        call get_grid_size(this%grid, p1, p2)
         call schedule(p2, lo, hi)
 
-        buf=>self%buf
+        buf=>this%buf
 
         do j=lo,hi
             do i=1,p1
-                rr=gridpoint(self%grid, i, j, k)
-                call bfeval(self%bf,rr, bfvec)
-                self%tmp=matmul(self%aodens, bfvec)
-                self%buf(i,j)=dot_product(self%tmp, bfvec)
+                rr=gridpoint(this%grid, i, j, k)
+                call bfeval(this%bf,rr, bfvec)
+                this%tmp=matmul(this%aodens, bfvec)
+                this%buf(i,j)=dot_product(this%tmp, bfvec)
             end do
         end do
-        call gather_data(self%buf, self%buf(:,lo:hi))
+        call gather_data(this%buf, this%buf(:,lo:hi))
     end subroutine
 
-    subroutine edens(self)
-        type(edens_t) :: self
+    subroutine edens(this)
+        type(edens_t) :: this
 
         integer(I4) :: i, j, k, p1, p2, p3
         integer(I4) :: lo, hi
@@ -134,27 +134,27 @@ contains
         real(DP), dimension(:,:), pointer :: buf
         real(DP), dimension(:), pointer :: bfvec
 
-        call get_grid_size(self%grid, p1, p2, p3)
+        call get_grid_size(this%grid, p1, p2, p3)
         call schedule(p2, lo, hi)
 
-        buf=>self%buf
+        buf=>this%buf
     
         do k=1,p3
             do j=lo, hi
                 do i=1,p1
-                    rr=gridpoint(self%grid, i, j, k)
-                    call bfeval(self%bf,rr, bfvec)
-                    self%tmp=matmul(self%aodens, bfvec)
-                    self%buf(i,j)=dot_product(self%tmp, bfvec)
+                    rr=gridpoint(this%grid, i, j, k)
+                    call bfeval(this%bf,rr, bfvec)
+                    this%tmp=matmul(this%aodens, bfvec)
+                    this%buf(i,j)=dot_product(this%tmp, bfvec)
                 end do
             end do
-            call gather_data(self%buf, self%buf(:,lo:hi))
-            if (master_p) write(EDFD, rec=k) self%buf
+            call gather_data(this%buf, this%buf(:,lo:hi))
+            if (master_p) write(EDFD, rec=k) this%buf
         end do
     end subroutine
 
-    subroutine edens_gopenmol(self, pltfile)
-        type(edens_t) :: self
+    subroutine edens_gopenmol(this, pltfile)
+        type(edens_t) :: this
         character(*), intent(in) :: pltfile
 
         integer(I4) :: surface, rank, p1, p2, p3
@@ -163,16 +163,16 @@ contains
         real(DP), dimension(:,:), pointer :: buf
         character(BUFLEN) :: gopen_file
 
-        buf=>self%buf
+        buf=>this%buf
         if (trim(pltfile) == '') return
         open(GOPFD,file=trim(pltfile),access='direct',recl=I4)
 
         surface=200
         rank=3
 
-        call get_grid_size(self%grid, p1, p2, p3)
-        qmin=real(gridpoint(self%grid,1,1,1)*AU2A)
-        qmax=real(gridpoint(self%grid,p1,p2,p3)*AU2A)
+        call get_grid_size(this%grid, p1, p2, p3)
+        qmin=real(gridpoint(this%grid,1,1,1)*AU2A)
+        qmax=real(gridpoint(this%grid,p1,p2,p3)*AU2A)
 
         write(GOPFD,rec=1) rank
         write(GOPFD,rec=2) surface
@@ -200,8 +200,8 @@ contains
         close(GOPFD)
     end subroutine
 
-    subroutine edens_cube(self, pltfile)
-        type(edens_t) :: self
+    subroutine edens_cube(this, pltfile)
+        type(edens_t) :: this
         character(*), intent(in) :: pltfile
 
         integer(I4) :: p1, p2, p3
@@ -211,14 +211,14 @@ contains
 
         if (trim(pltfile) == '') return
 
-        call get_grid_size(self%grid, p1, p2, p3)
+        call get_grid_size(this%grid, p1, p2, p3)
         if (p3 < 2) return
 
         allocate(buf(p1,p2,p3))
         do k=1,p3
             read(EDFD, rec=k) buf(:,:,k)
         end do
-        call write_cubeplot(pltfile, self%grid, buf)
+        call write_cubeplot(pltfile, this%grid, buf)
         deallocate(buf)
 
     end subroutine

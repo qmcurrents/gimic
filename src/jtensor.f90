@@ -45,8 +45,8 @@ module jtensor_class
 
 contains
     ! set up memory (once) for the different components
-    subroutine init_jtensor(self, mol, xdens)
-        type(jtensor_t) :: self
+    subroutine init_jtensor(this, mol, xdens)
+        type(jtensor_t) :: this
         type(molecule_t), target :: mol
         type(dens_t), target :: xdens
         integer(I4) ::  ncgto
@@ -54,63 +54,63 @@ contains
         ncgto=get_ncgto(mol)
         
 !        call init_dens(ddens)
-        self%mol=>mol
-        self%xdens=>xdens
-        call init_bfeval(self%bfv, self%mol)
-        call init_dbop(self%dop, self%mol)
-        call init_dfdb(self%dbt, self%mol)
-        call init_dfdr(self%dfr, self%mol)
-        call init_d2fdrdb(self%d2f, self%mol)
+        this%mol=>mol
+        this%xdens=>xdens
+        call init_bfeval(this%bfv, this%mol)
+        call init_dbop(this%dop, this%mol)
+        call init_dfdb(this%dbt, this%mol)
+        call init_dfdr(this%dfr, this%mol)
+        call init_d2fdrdb(this%d2f, this%mol)
 
         ! intermediates
-        allocate(self%denbf(ncgto))
-        allocate(self%dendb(ncgto))
-        allocate(self%pdbf(ncgto))
+        allocate(this%denbf(ncgto))
+        allocate(this%dendb(ncgto))
+        allocate(this%pdbf(ncgto))
     end subroutine
 
-    subroutine del_jtensor(self)
-        type(jtensor_t) :: self
+    subroutine del_jtensor(this)
+        type(jtensor_t) :: this
 
-        call del_dbop(self%dop)
-        call del_dfdb(self%dbt)
-        call del_bfeval(self%bfv)
-        call del_dfdr(self%dfr)
-        call del_d2fdrdb(self%d2f)
-        deallocate(self%denbf)
-        deallocate(self%pdbf)
-        deallocate(self%dendb)
+        call del_dbop(this%dop)
+        call del_dfdb(this%dbt)
+        call del_bfeval(this%bfv)
+        call del_dfdr(this%dfr)
+        call del_d2fdrdb(this%d2f)
+        deallocate(this%denbf)
+        deallocate(this%pdbf)
+        deallocate(this%dendb)
     end subroutine
 
 
-    subroutine qtensor(self, r)
-        type(jtensor_t) :: self
+    subroutine qtensor(this, r)
+        type(jtensor_t) :: this
         real(DP), dimension(3), intent(in) :: r
 
         type(tensor_t) :: jt1, jt2
 
         if (uhf_p) then
-            call jtensor(self, r, jt1, spin_a)
-            call jtensor(self, r, jt2, spin_b)
+            call jtensor(this, r, jt1, spin_a)
+            call jtensor(this, r, jt2, spin_b)
             write(81, *) jt1%t
             write(82, *) jt2%t
             write(83, *) jt1%t+jt2%t
             write(84, *) jt1%t-jt2%t
         else
-            call jtensor(self, r, jt1, spin_a)
+            call jtensor(this, r, jt1, spin_a)
             write(85, *) jt1%t
         end if 
     end subroutine
 
-    subroutine qtensor2(self, r)
-        type(jtensor_t) :: self
+    subroutine qtensor2(this, r)
+        type(jtensor_t) :: this
         real(DP), dimension(3), intent(in) :: r
 
         type(tensor_t) :: pjt1, pjt2
         type(tensor_t) :: djt1, djt2
 
         if (uhf_p) then
-            call jtensor2(self, r, pjt1, djt1, spin_a)
-            call jtensor2(self, r, pjt2, djt2, spin_b)
+            call jtensor2(this, r, pjt1, djt1, spin_a)
+            call jtensor2(this, r, pjt2, djt2, spin_b)
             write(90, *) pjt1%t
             write(91, *) pjt2%t
             write(92, *) djt1%t
@@ -120,14 +120,14 @@ contains
             write(96, *) pjt1%t-djt1%t
             write(97, *) pjt2%t-djt2%t
         else
-            call jtensor2(self, r, pjt1, djt1, spin_a)
+            call jtensor2(this, r, pjt1, djt1, spin_a)
             write(98, *) pjt1%t
             write(99, *) djt1%t
         end if 
     end subroutine
 
-    subroutine ctensor(self, r, j, op)
-        type(jtensor_t) :: self
+    subroutine ctensor(this, r, j, op)
+        type(jtensor_t) :: this
         real(DP), dimension(3), intent(in) :: r
         type(tensor_t), intent(inout) :: j
         character(*) :: op
@@ -136,10 +136,10 @@ contains
 
         select case (op)
             case ('alpha')
-                call jtensor(self, r, j, spin_a)
+                call jtensor(this, r, j, spin_a)
             case ('beta')
                 if (uhf_p) then
-                    call jtensor(self, r, j, spin_b)
+                    call jtensor(this, r, j, spin_b)
                 else
                     call msg_error('ctensor(): &
                     &beta current requested, but not open-shell system!')
@@ -147,11 +147,11 @@ contains
                 end if
             case ('total')
                 if (uhf_p) then
-                    call jtensor(self, r, jt1, spin_a)
-                    call jtensor(self, r, jt2, spin_b)
+                    call jtensor(this, r, jt1, spin_a)
+                    call jtensor(this, r, jt2, spin_b)
                     j%t=jt1%t+jt2%t
                 else
-                    call jtensor(self, r, j, spin_a)
+                    call jtensor(this, r, j, spin_a)
                 end if
             case ('spindens')
                 if (.not.uhf_p) then
@@ -159,14 +159,14 @@ contains
                     &spindens requested, but not open-shell system!')
                     stop
                 end if
-                call jtensor(self, r, jt1, spin_a)
-                call jtensor(self, r, jt2, spin_b)
+                call jtensor(this, r, jt1, spin_a)
+                call jtensor(this, r, jt2, spin_b)
                 j%t=jt1%t-jt2%t
         end select
     end subroutine
 
-    subroutine ctensor2(self, r, pj, dj, op)
-        type(jtensor_t) :: self
+    subroutine ctensor2(this, r, pj, dj, op)
+        type(jtensor_t) :: this
         real(DP), dimension(3), intent(in) :: r
         type(tensor_t), intent(inout) :: pj, dj
         character(*) :: op
@@ -175,10 +175,10 @@ contains
 
         select case (op)
             case ('alpha')
-                call jtensor2(self, r, pj, dj, spin_a)
+                call jtensor2(this, r, pj, dj, spin_a)
             case ('beta')
                 if (uhf_p) then
-                    call jtensor2(self, r, pj, dj, spin_b)
+                    call jtensor2(this, r, pj, dj, spin_b)
                 else
                     call msg_error('ctensor(): &
                     &beta current requested, but not open-shell system!')
@@ -186,12 +186,12 @@ contains
                 end if
             case ('total')
                 if (uhf_p) then
-                    call jtensor2(self, r, pj1, dj1, spin_a)
-                    call jtensor2(self, r, pj2, dj2, spin_b)
+                    call jtensor2(this, r, pj1, dj1, spin_a)
+                    call jtensor2(this, r, pj2, dj2, spin_b)
                     pj%t=pj1%t+pj2%t
                     dj%t=dj1%t+dj2%t
                 else
-                    call jtensor2(self, r, pj, dj, spin_a)
+                    call jtensor2(this, r, pj, dj, spin_a)
                 end if
             case ('spindens')
                 if (.not.uhf_p) then
@@ -199,15 +199,15 @@ contains
                     &spindens requested, but not open-shell system!')
                     stop
                 end if
-                call jtensor2(self, r, pj1, dj1, spin_a)
-                call jtensor2(self, r, pj2, dj2, spin_b)
+                call jtensor2(this, r, pj1, dj1, spin_a)
+                call jtensor2(this, r, pj2, dj2, spin_b)
                 pj%t=pj1%t-dj1%t
                 dj%t=pj2%t-dj2%t
         end select
     end subroutine
 
-    subroutine jtensor(self, r, j, spin)
-        type(jtensor_t) :: self
+    subroutine jtensor(this, r, j, spin)
+        type(jtensor_t) :: this
         real(DP), dimension(:), intent(in) :: r
         type(tensor_t), intent(inout) :: j
         integer(I4) :: spin
@@ -217,15 +217,15 @@ contains
 
         rho=DP50*r ! needed for diamag. contr.
 
-        call bfeval(self%bfv, r, bfvec)
-        call mkdbop(self%dop, r, dbop)
-        call dfdr(self%dfr, r, drvec)
+        call bfeval(this%bfv, r, bfvec)
+        call mkdbop(this%dop, r, dbop)
+        call dfdr(this%dfr, r, drvec)
         if (giao_p) then
-            call dfdb(self%dbt, r, bfvec, dbop, dbvec)
-            call d2fdrdb(self%d2f, r, bfvec, drvec, dbop, d2fvec)
+            call dfdb(this%dbt, r, bfvec, dbop, dbvec)
+            call d2fdrdb(this%d2f, r, bfvec, drvec, dbop, d2fvec)
         end if
 
-        call contract(self, j%t, spin)
+        call contract(this, j%t, spin)
 
 !        write(75,*) jt1(:,:,1)
 !        write(76,*) jt1(:,:,2)
@@ -241,8 +241,8 @@ contains
         
     end subroutine
 
-    subroutine jtensor2(self, r, pj, dj, spin)
-        type(jtensor_t) :: self
+    subroutine jtensor2(this, r, pj, dj, spin)
+        type(jtensor_t) :: this
         real(DP), dimension(3), intent(in) :: r
         type(tensor_t), intent(inout) :: pj, dj
         integer(I4) :: spin
@@ -253,15 +253,15 @@ contains
 
         rho=DP50*r ! needed for diamag. contr.
 
-        call bfeval(self%bfv, r, bfvec)
-        call dfdr(self%dfr, r, drvec)
-        call mkdbop(self%dop, r, dbop)
+        call bfeval(this%bfv, r, bfvec)
+        call dfdr(this%dfr, r, drvec)
+        call mkdbop(this%dop, r, dbop)
         if (giao_p) then
-            call dfdb(self%dbt, r, bfvec, dbop, dbvec)
-            call d2fdrdb(self%d2f, r, bfvec, drvec, dbop, d2fvec)
+            call dfdb(this%dbt, r, bfvec, dbop, dbvec)
+            call d2fdrdb(this%d2f, r, bfvec, drvec, dbop, d2fvec)
         end if
 
-        call contract2(self, pj%t, dj%t, spin)
+        call contract2(this, pj%t, dj%t, spin)
 
     end subroutine
 
@@ -273,8 +273,8 @@ contains
         jv=matmul(pj+dj, bb)
     end subroutine
 
-    subroutine contract2(self, ctp, ctd, spin)
-        type(jtensor_t) :: self
+    subroutine contract2(this, ctp, ctd, spin)
+        type(jtensor_t) :: this
         real(DP), dimension(3,3), intent(out) :: ctp, ctd
         integer(I4), intent(in) :: spin
 
@@ -284,21 +284,21 @@ contains
         real(DP), dimension(3) :: dpd  ! diamagnetic probability density
         real(DP) :: diapam
 
-        call get_dens(self%xdens, aodens, spin)  
-        self%denbf=matmul(bfvec, aodens)
+        call get_dens(this%xdens, aodens, spin)  
+        this%denbf=matmul(bfvec, aodens)
 
         k=1
-        diapam=dot_product(self%denbf, bfvec)
+        diapam=dot_product(this%denbf, bfvec)
         do i=1,3! dB <x,y,z>
             ! get perturbed densities: x,y,z
-            call get_pdens(self%xdens, i, pdens,spin) 
-            self%pdbf=matmul(bfvec, pdens)
-            self%dendb=matmul(dbvec(:,i), aodens)
+            call get_pdens(this%xdens, i, pdens,spin) 
+            this%pdbf=matmul(bfvec, pdens)
+            this%dendb=matmul(dbvec(:,i), aodens)
             dpd(i)=diapam*rho(i) ! diamag. contr. to J
             do j=1,3 !dm <x,y,z>
-                prsp1=-dot_product(self%dendb, drvec(:,j))    ! (-i)**2=-1 
-                prsp2=dot_product(self%denbf, d2fvec(:,k))
-                ppd=dot_product(self%pdbf, drvec(:,j))
+                prsp1=-dot_product(this%dendb, drvec(:,j))    ! (-i)**2=-1 
+                prsp2=dot_product(this%denbf, d2fvec(:,k))
+                ppd=dot_product(this%pdbf, drvec(:,j))
                 ctp(j,i)=ZETA*ppd
                 if (giao_p) ctp(j,i)=ctp(j,i)+ZETA*(prsp1+prsp2)
                 k=k+1
@@ -321,8 +321,8 @@ contains
 !
 ! Contract all contributions to J. This is where all the actual work is done.
 !
-    subroutine contract(self, ct, spin)
-        type(jtensor_t) :: self
+    subroutine contract(this, ct, spin)
+        type(jtensor_t) :: this
         real(DP), dimension(3,3), intent(out) :: ct
         integer(I4), intent(in) :: spin
 
@@ -332,22 +332,22 @@ contains
         real(DP), dimension(3) :: dpd  ! diamagnetic probability density
         real(DP) :: diapam
 
-        call get_dens(self%xdens, aodens, spin)  
+        call get_dens(this%xdens, aodens, spin)  
         
-        self%denbf=matmul(bfvec, aodens)
+        this%denbf=matmul(bfvec, aodens)
 
         k=1
-        diapam=dot_product(self%denbf, bfvec)
+        diapam=dot_product(this%denbf, bfvec)
         do b=1,3! dB <x,y,z>
             ! get perturbed densities: x,y,z
-            call get_pdens(self%xdens, b, pdens, spin) 
-            self%pdbf=matmul(bfvec, pdens)
-            self%dendb=matmul(dbvec(:,b), aodens)
+            call get_pdens(this%xdens, b, pdens, spin) 
+            this%pdbf=matmul(bfvec, pdens)
+            this%dendb=matmul(dbvec(:,b), aodens)
             dpd(b)=diapam*rho(b) ! diamag. contr. to J
             do m=1,3 !dm <x,y,z>
-                prsp1=-dot_product(self%dendb, drvec(:,m))    ! (-i)**2=-1 
-                prsp2=dot_product(self%denbf, d2fvec(:,k))
-                ppd=dot_product(self%pdbf, drvec(:,m))
+                prsp1=-dot_product(this%dendb, drvec(:,m))    ! (-i)**2=-1 
+                prsp2=dot_product(this%denbf, d2fvec(:,k))
+                ppd=dot_product(this%pdbf, drvec(:,m))
                 ct(m,b)=ZETA*ppd
                 if (giao_p) ct(m,b)=ct(m,b)+ZETA*(prsp1+prsp2)
 !                print *, m,b
@@ -380,8 +380,8 @@ contains
 
     end subroutine
 
-    subroutine eta(self, grid, fac)
-        type(jtensor_t) :: self
+    subroutine eta(this, grid, fac)
+        type(jtensor_t) :: this
         type(grid_t) :: grid
         real(DP), intent(in), optional :: fac
 
@@ -399,7 +399,7 @@ contains
         call etime(times, tim1)
         tim1=times(1)
         do i=1,100
-            call jtensor(self, (/i*SC, i*SC, i*SC/), foo, spin_a)
+            call jtensor(this, (/i*SC, i*SC, i*SC/), foo, spin_a)
             foobar=matmul(bar,foo%t)
         end do
         call etime(times, tim2)
@@ -433,8 +433,8 @@ contains
 !        jj=q
 !    end function
     
-    subroutine jdebug(self)
-        type(jtensor_t) :: self
+    subroutine jdebug(this)
+        type(jtensor_t) :: this
 
         integer(I4) :: i, b
         integer(I4), save :: notify=1
@@ -442,11 +442,11 @@ contains
 
         call getkw(input, 'grid.origin', r)
 
-        call bfeval(self%bfv, r, bfvec)
-        call dfdr(self%dfr, r, drvec)
-        call mkdbop(self%dop, r, dbop)
-        call dfdb(self%dbt, r, bfvec, dbop, dbvec)
-        call d2fdrdb(self%d2f, r, bfvec, drvec, dbop, d2fvec)
+        call bfeval(this%bfv, r, bfvec)
+        call dfdr(this%dfr, r, drvec)
+        call mkdbop(this%dop, r, dbop)
+        call dfdb(this%dbt, r, bfvec, dbop, dbvec)
+        call d2fdrdb(this%d2f, r, bfvec, drvec, dbop, d2fvec)
         
         print *, 'bfvec'
         print *, repeat('-', 70)

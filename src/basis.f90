@@ -25,8 +25,8 @@ module basis_class
 
     private
 contains
-    subroutine init_basis(self, molfil, screening_thrs)
-        type(molecule_t) :: self
+    subroutine init_basis(this, molfil, screening_thrs)
+        type(molecule_t) :: this
         character(*) :: molfil
         real(DP), optional :: screening_thrs
 
@@ -35,14 +35,14 @@ contains
         type(atom_t), dimension(:), pointer :: atoms
         real(DP) :: screening = SCREEN_THRS
 
-        call read_intgrl(molfil,self%atoms, natoms)
+        call read_intgrl(molfil,this%atoms, natoms)
         call setup_gtos()
-        self%natoms=natoms
-        call calc_basdim(self)
+        this%natoms=natoms
+        call calc_basdim(this)
         
         call msg_out('Normalizing basis')
         call msg_out(repeat('=', 45))
-        atoms=>self%atoms
+        atoms=>this%atoms
         do i=1,natoms
             call nl
             write(str_g, '(a,i4,a4)') 'Normalizing basis for atom: ', &
@@ -55,9 +55,9 @@ contains
         do i=1,natoms
             call print_atom_data(atoms(i),i)
         end do
-        write(str_g, 77) '  Total number of primitive  GTO''s ', self%ngto
+        write(str_g, 77) '  Total number of primitive  GTO''s ', this%ngto
         call msg_out(str_g)
-        write(str_g, 77) '  Total number of contracted GTO''s ', self%ncgto
+        write(str_g, 77) '  Total number of contracted GTO''s ', this%ncgto
         call msg_out(str_g)
         call nl
 
@@ -211,19 +211,19 @@ contains
 ! set the global variables ngto and ncgto so that we know
 ! how to dimension the basis function value vectors later. 
 !
-    subroutine calc_basdim(self)
-        type(molecule_t), intent(inout) :: self
+    subroutine calc_basdim(this)
+        type(molecule_t), intent(inout) :: this
 
         integer(I4) :: k, l, n
         type(basis_t), pointer :: basis
         type(contraction_t), pointer :: ctr
 
-        self%ngto=0
-        self%ncgto=0
-        self%nccgto=0
+        this%ngto=0
+        this%ncgto=0
+        this%nccgto=0
 
-        do n=1,self%natoms
-            basis=>self%atoms(n)%basis
+        do n=1,this%natoms
+            basis=>this%atoms(n)%basis
 
             basis%ngto=0
             basis%ncgto=0
@@ -233,9 +233,9 @@ contains
                 basis%ngto=basis%ngto+ctr%npf*ctr%ncomp
                 basis%ncgto=basis%ncgto+ctr%ncomp
 
-                self%ngto=self%ngto+ctr%npf*ctr%ncomp
-                self%ncgto=self%ncgto+ctr%ncomp
-                self%nccgto=self%nccgto+ctr%nccomp
+                this%ngto=this%ngto+ctr%npf*ctr%ncomp
+                this%ncgto=this%ncgto+ctr%ncomp
+                this%nccgto=this%nccgto+ctr%nccomp
             end do
             basis%pos=1
             do k=2,basis%nctr
@@ -330,19 +330,19 @@ contains
 !
 ! basis and atom list destructor 
 ! 
-    subroutine del_basis(self)
-        type(molecule_t), intent(inout) :: self
+    subroutine del_basis(this)
+        type(molecule_t), intent(inout) :: this
 
         integer(I4) :: i
         type(atom_t), pointer :: atm
 
-        do i=1,self%natoms
-            atm=>self%atoms(i)
+        do i=1,this%natoms
+            atm=>this%atoms(i)
             call del_ctr(atm%basis)
             deallocate(atm%basis)
         end do
-        deallocate(self%atoms)
-        nullify(self%atoms)
+        deallocate(this%atoms)
+        nullify(this%atoms)
         call msg_info('Deallocated basis set and atom data')
         call nl
     end subroutine 
