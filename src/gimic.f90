@@ -396,7 +396,7 @@ contains
 call nl
 call msg_out('****************************************************************')
 call msg_out('***                                                          ***')
-call msg_out('***           GIMIC '// GIMIC_VERSION // &
+call msg_out('***           GIMIC '// PROJECT_VERSION // &
                                       '                                    ***')
 call msg_out('***              Written by Jonas Juselius                   ***')
 call msg_out('***                                                          ***')
