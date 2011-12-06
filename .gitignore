@@ -13,3 +13,4 @@ lib/*
 share/*
 cdash/*
 tools/*
+cmake/bump-version
