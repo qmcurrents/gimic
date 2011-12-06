@@ -5,6 +5,7 @@
 
 module integral_class
     use globals_m
+    use settings_m
     use grid_class
     use jfield_class
     use jtensor_class

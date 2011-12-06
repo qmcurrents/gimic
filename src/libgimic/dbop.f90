@@ -1,6 +1,7 @@
 
 module dbop_class
     use globals_m
+    use settings_m
     use basis_class
     use teletype_m
     implicit none

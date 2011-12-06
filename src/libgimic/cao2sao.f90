@@ -10,6 +10,7 @@
 
 module cao2sao_class
     use globals_m
+    use settings_m
     use gtodefs_m
     use factorial_m
     use basis_class

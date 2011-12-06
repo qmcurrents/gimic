@@ -4,6 +4,7 @@
 
 module bfeval_class
     use globals_m
+    use settings_m
     use basis_class
     use gtodefs_m
     use caos_m

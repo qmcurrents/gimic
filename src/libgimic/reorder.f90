@@ -1,5 +1,6 @@
 module reorder_class
     use globals_m
+    use settings_m
     use basis_class
     implicit none
 

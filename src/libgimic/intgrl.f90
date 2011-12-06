@@ -6,6 +6,7 @@
 
 module intgrl_m
     use globals_m
+    use settings_m
     use teletype_m
     implicit none
     

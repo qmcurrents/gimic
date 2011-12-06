@@ -6,6 +6,7 @@
 
 module divj_field_class
     use globals_m
+    use settings_m
     use grid_class
     use divj_m
     use jtensor_class

@@ -9,6 +9,7 @@
 
 module basis_class
     use globals_m
+    use settings_m
     use intgrl_m
     use gtodefs_m
     implicit none 

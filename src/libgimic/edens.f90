@@ -5,6 +5,7 @@
 
 module edens_class
     use globals_m
+    use settings_m
     use basis_class
     use bfeval_class
     use dens_class

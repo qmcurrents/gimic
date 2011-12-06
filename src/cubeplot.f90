@@ -3,6 +3,7 @@
 !
 module cubeplot_m
     use globals_m
+    use settings_m
     use grid_class
     implicit none
 

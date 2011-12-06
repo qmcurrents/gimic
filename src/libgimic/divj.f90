@@ -6,6 +6,7 @@
 
 module divj_m
     use globals_m
+    use settings_m
     use jtensor_class
     use teletype_m
     implicit none

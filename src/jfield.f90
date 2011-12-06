@@ -8,6 +8,7 @@
 
 module jfield_class
     use globals_m
+    use settings_m
     use jtensor_class
     use grid_class
     use basis_class

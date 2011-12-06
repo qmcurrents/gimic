@@ -4,6 +4,7 @@
 
 module caos_m
     use globals_m
+    use settings_m
     use gtodefs_m
     use basis_class
     use cao2sao_class

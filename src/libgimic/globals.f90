@@ -68,6 +68,7 @@ module globals_m
     character(*), parameter :: DEFAULT_MOFILE='mos'
 
     integer(4), dimension(100), private, save :: afd=0
+    logical :: bert_is_evil = .false.
 
     character, dimension(0:7), parameter :: shell_names = &
         & (/'s','p','d','f','g','h','i','j'/)

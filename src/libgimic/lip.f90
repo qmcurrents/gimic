@@ -1,6 +1,7 @@
 
 module lip_m
     use globals_m
+    use settings_m
     implicit none
     public lipn, lip3n, vector_t, lip3n_t
 

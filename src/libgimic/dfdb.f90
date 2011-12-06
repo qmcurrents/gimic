@@ -1,6 +1,7 @@
 
 module dfdb_class
     use globals_m
+    use settings_m
     use basis_class
     use dbop_class
     use bfeval_class

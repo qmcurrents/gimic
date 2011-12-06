@@ -1,6 +1,7 @@
 
 module dfdr_class
     use globals_m
+    use settings_m
     use basis_class
     use caos_m
     use gtodefs_m

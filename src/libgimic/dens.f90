@@ -1,6 +1,7 @@
 
 module dens_class
     use globals_m
+    use settings_m
     use basis_class
     use reorder_class
     implicit none

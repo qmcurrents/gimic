@@ -5,6 +5,7 @@
 
 module gtodefs_m
     use globals_m
+    use settings_m
     implicit none
 
     type gto_jar

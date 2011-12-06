@@ -6,6 +6,7 @@
 
 program gimic
     use globals_m  
+    use settings_m
     use teletype_m
     use basis_class
     use timer_m
@@ -112,6 +113,7 @@ contains
 
     subroutine cdens
         use globals_m
+    use settings_m
         use basis_class
         use cao2sao_class
         use dens_class

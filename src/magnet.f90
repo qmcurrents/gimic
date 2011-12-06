@@ -1,6 +1,7 @@
 module magnet_m
     use kinds_m
     use globals_m
+    use settings_m
     use grid_class
     implicit none
     
