@@ -25,7 +25,7 @@ program gimic
 
     call program_header
     call initialize()
-    call cdens()
+    call dispatcher()
     call finalize()
 
     call stockas_klocka()
@@ -65,12 +65,12 @@ contains
 
         settings%use_spherical=.false.
         settings%screen_thrs = SCREEN_THRS
-        call getkw(input, 'Advanced.use_spherical', settings%use_spherical)
+        call getkw(input, 'Advanced.spherical', settings%use_spherical)
         call getkw(input, 'Advanced.GIAO', settings%use_giao)
         call getkw(input, 'Advanced.diamag', settings%use_diamag)
         call getkw(input, 'Advanced.paramag',settings%use_paramag)
-        call getkw(input, 'Advanced.screen', settings%use_screening)
-        call getkw(input, 'Advanced.screen_thrs', settings%screen_thrs)
+        call getkw(input, 'Advanced.screening', settings%use_screening)
+        call getkw(input, 'Advanced.screening_thrs', settings%screen_thrs)
         call getkw(input, 'Advanced.lip_order', settings%lip_order)
 
         ierr=hostnm(sys)
@@ -88,12 +88,6 @@ contains
         call msg_out(' TITLE: '// trim(settings%title))
         call nl
         
-        if (settings%use_screening) then
-            call new_basis(mol, settings%basis, settings%screen_thrs)
-        else
-            call new_basis(mol, settings%basis, -1.d0)
-        end if
-
         if (.not.settings%use_giao) then
             call msg_info('GIAOs not used!')
             call nl
@@ -122,11 +116,11 @@ contains
         call del_getkw(input)
     end subroutine
 
-    subroutine cdens
+    subroutine dispatcher
         use globals_m
-    use settings_m
-        use basis_class
+        use settings_m
         use cao2sao_class
+        use basis_class
         use dens_class
         use jtensor_class
         use jfield_class
@@ -146,26 +140,24 @@ contains
         type(integral_t) :: it
         type(cao2sao_t) :: c2s
 
-        integer(I4) :: i,j, ncalc
-        integer(I4), dimension(4) :: calc
-        logical :: divj_p, int_p, cdens_p, edens_p
-        logical :: xdens_p, modens_p, imod_p
-        character(LINELEN), dimension(:), pointer :: cstr
+        integer(I4) :: i,j
 
         character(80) :: fname, mofile
         integer, dimension(2) :: morange
         real(DP), dimension(3) :: magnet
 
-
-        divj_p=.false.; int_p=.false.
-        cdens_p=.false.; edens_p=.false.
-        xdens_p=.false.; modens_p=.false.; imod_p=.false.
-
+        if (settings%use_screening) then
+            call new_basis(mol, settings%basis, settings%screen_thrs)
+        else
+            call new_basis(mol, settings%basis, -1.d0)
+        end if
 
         if (settings%use_spherical) then
             call new_c2sop(c2s,mol)
             call set_c2sop(mol, c2s)
         end if
+
+        call setup_grid(grid)
 
         if (settings%is_uhf) then
             call msg_info('Open-shell calculation')
@@ -174,117 +166,92 @@ contains
         end if
         call nl
 
-        
-        ! figure out work order
-        nullify(cstr)
-        ncalc=size(cstr)
-        do i=1,ncalc
-            if (cstr(i)(1:5) == 'cdens') then 
-                calc(i)=CDENS_TAG
-                cdens_p=.true.
-                xdens_p=.true.
-            else if (cstr(i)(1:8) == 'integral') then 
-                calc(i)=INTGRL_TAG
-                int_p=.true.
-                xdens_p=.true.
-            else if (cstr(i)(1:4) == 'divj') then 
-                calc(i)=DIVJ_TAG
-                divj_p=.true.
-                xdens_p=.true.
-            else if (cstr(i)(1:5) == 'edens') then 
-                calc(i)=EDENS_TAG
-                edens_p=.true.
-                modens_p=.true.
-            end if
-        end do
-
-        if (xdens_p) then
-            call new_dens(xdens, mol)
-            call read_dens(xdens, fname)
-        end if
-        if (modens_p) then
-            call new_dens(modens, mol, modens_p)
-            call read_modens(modens, fname, mofile, morange)
-        end if
-
-
-        call new_jtensor(jt,mol,xdens)
-
         if (settings%dryrun) then
             call msg_note('Dry run, not calculating...')
             call nl
         end if
+        
+        if (settings%calc(1:5) == 'cdens') then 
+            call run_cdens()
+        else if (settings%calc(1:8) == 'integral') then 
+            call run_integral()
+        else if (settings%calc(1:4) == 'divj') then 
+            call run_divj()
+        else if (settings%calc(1:5) == 'edens') then 
+            call run_edens()
+        else
+            call msg_error('gimic(): Unknown operation!')
+        end if
+    end do
 
-        call setup_grid(grid)
+    if (settings%use_spherical) then
+        call del_c2sop(c2s)
+    end if
+    call del_grid(grid)
+    end subroutine
 
-        do i=1,ncalc
-            select case(calc(i))
-            case(CDENS_TAG)
-                call msg_out('Calculating current density')
-                call msg_out('*****************************************')
-                call get_magnet(grid, magnet)
-                call new_jfield(jf, jt, grid, magnet)
-                if (settings%dryrun) cycle
-                call jfield(jf)
-                    ! Contract the tensors with B
-                if (mpi_rank == 0) then
-                    call jvectors(jf)
-                    call jvector_plot(jf)
-                end if
-            case(INTGRL_TAG)
-                call msg_out('Integrating current density')
-                call msg_out('*****************************************')
-                call new_integral(it, jt, jf, grid)
-                if (settings%dryrun) cycle
-                call int_s_direct(it)
-                call nl
-                call msg_note('Integrating |J|')
-                call int_mod_direct(it)
-                call msg_note('Integrating current tensor')
-                call int_t_direct(it)  ! tensor integral
-!                    call write_integral(it)
-            case(DIVJ_TAG)
-                call msg_out('Calculating divergence')
-                call msg_out('*****************************************')
-                call new_divj_field(dj, grid, magnet)
-                if (settings%dryrun) cycle
-                call divj_field(dj)
-                if (mpi_rank == 0) then 
-                    call divj_plot(dj, 'divj')
-                end if
-            case(EDENS_TAG)
-                call msg_out('Calculating charge density')
-                call msg_out('*****************************************')
-                call new_edens_field(ed, mol, modens, grid, fname)
-                if (settings%dryrun) cycle
-                call edens_field(ed)
-                if (mpi_rank == 0) then 
-                    call edens_plot(ed, "edens")
-                end if
-            case default
-                call msg_error('gimic(): Unknown operation!')
-            end select
-        end do
-
-        call del_grid(grid)
-        if (int_p) then
-            call del_integral(it)
+    subroutine run_cdens
+        call msg_out('Calculating current density')
+        call msg_out('*****************************************')
+        call new_dens(xdens, mol)
+        call new_jtensor(jt,mol,xdens)
+        call read_dens(xdens, fname)
+        call get_magnet(grid, magnet)
+        call new_jfield(jf, jt, grid, magnet)
+        if (settings%dryrun) cycle
+        call jfield(jf)
+        ! Contract the tensors with B
+        if (mpi_rank == 0) then
+            call jvectors(jf)
+            call jvector_plot(jf)
         end if
-        if (divj_p) then
-            call del_divj_field(dj)
-        end if
-        if (cdens_p) then
-            call del_jfield(jf)
-        end if
-        if (edens_p) then
-            call del_edens_field(ed)
-        end if
-        if (xdens_p) call del_dens(xdens)
-        if (modens_p) call del_dens(modens)
-        if (settings%use_spherical) call del_c2sop(c2s)
+        call del_jfield(jf)
+        call del_dens(xdens)
         call del_jtensor(jt)
     end subroutine
 
+    subroutine run_integral
+        call msg_out('Integrating current density')
+        call msg_out('*****************************************')
+        call new_integral(it, jt, jf, grid)
+        if (settings%dryrun) cycle
+        call int_s_direct(it)
+        call nl
+        call msg_note('Integrating |J|')
+        call int_mod_direct(it)
+        call msg_note('Integrating current tensor')
+        call int_t_direct(it)  ! tensor integral
+        !                    call write_integral(it)
+        call del_integral(it)
+    end subroutine
+
+    subroutine run_divj
+        call msg_out('Calculating divergence')
+        call msg_out('*****************************************')
+        call new_divj_field(dj, grid, magnet)
+        if (settings%dryrun) cycle
+        call divj_field(dj)
+        if (mpi_rank == 0) then 
+            call divj_plot(dj, 'divj')
+        end if
+        call del_divj_field(dj)
+    end subroutine
+    
+    subroutine run_edens
+        call msg_out('Calculating charge density')
+        call msg_out('*****************************************')
+        call new_dens(modens, mol, modens_p)
+        call read_modens(modens, fname, mofile, morange)
+        call new_edens_field(ed, mol, modens, grid, fname)
+        if (settings%dryrun) cycle
+        call edens_field(ed)
+        if (mpi_rank == 0) then 
+            call edens_plot(ed, "edens")
+        end if
+        call del_edens_field(ed)
+        call del_dens(modens)
+    end subroutine
+    
     subroutine setup_grid(grid)
         use grid_class
         type(grid_t) :: grid

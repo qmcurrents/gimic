@@ -52,7 +52,7 @@ def main():
     top.add_kw('basis', 'STR', ('mol',))
     top.add_kw('density', 'STR', ('',))
     top.add_kw('mofile', 'STR', ('',))
-    top.add_kw('mo_range', 'INT_ARRAY', (0, 0))
+    top.add_kw('mos', 'INT_ARRAY', (0, 0))
     top.add_kw('xdens', 'STR', ('XDENS',))
     top.add_kw('magnet_axis', 'STR', ('',))
     top.add_kw('magnet', 'DBL_ARRAY', (0.0, 0.0, 0.0))
@@ -61,7 +61,7 @@ def main():
 
     adv=getkw.Section('Advanced')
     adv.add_kw('screening', 'BOOL', (False,))
-    adv.add_kw('screen_thrs', 'DBL', (1.0e-8,))
+    adv.add_kw('screening_thrs', 'DBL', (1.0e-8,))
     adv.add_kw('spherical', 'BOOL', (True,))
     adv.add_kw('GIAO', 'BOOL', (True,))
     adv.add_kw('diamag', 'BOOL', (True,))

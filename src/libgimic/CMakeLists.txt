@@ -19,7 +19,6 @@ add_library(gimic STATIC
     jtensor.f90
     kinds.f90
     lip.f90
-    magnet.f90
     reorder.f90
     settings.f90
     teletype.f90

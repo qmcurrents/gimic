@@ -61,7 +61,7 @@ contains
         this%basv=0.0
         this%l=0.0
         this%ortho=0.d0
-        call getkw(input, 'grid', this%mode)
+        call getkw(input, 'Grid', this%mode)
 
         ! first figure out where and how to place the grid
         select case (trim(this%mode))
@@ -83,13 +83,13 @@ contains
         call ortho_coordsys(this)
         
         ! rotate basis vectors if needed
-        if (keyword_is_set(input, 'grid.rotation')) then
-            call getkw(input, 'grid.rotation', angle)
+        if (keyword_is_set(input, 'Grid.rotation')) then
+            call getkw(input, 'Grid.rotation', angle)
             call rotate(this, angle)
         end if
 
         ! calculate distibution of grid points
-        call getkw(input, 'grid.type', this%gtype)
+        call getkw(input, 'Grid.type', this%gtype)
         i=len(trim(this%gtype))
         select case (this%gtype(1:i))
             case ('even')
@@ -120,15 +120,15 @@ contains
         integer(I4) :: i
         real(DP), dimension(3) :: normv
 
-        call getkw(input, 'grid.origin', this%origin)
-        call getkw(input, 'grid.ivec', this%basv(:,1))
-        call getkw(input, 'grid.jvec', this%basv(:,2))
-        call getkw(input, 'grid.lengths', this%l)
+        call getkw(input, 'Grid.origin', this%origin)
+        call getkw(input, 'Grid.ivec', this%basv(:,1))
+        call getkw(input, 'Grid.jvec', this%basv(:,2))
+        call getkw(input, 'Grid.lengths', this%l)
 
-        if (keyword_is_set(input, 'grid.spacing')) then
-            call getkw(input, 'grid.spacing', this%step)
+        if (keyword_is_set(input, 'Grid.spacing')) then
+            call getkw(input, 'Grid.spacing', this%step)
         else
-            call getkw(input, 'grid.grid_points', this%npts)
+            call getkw(input, 'Grid.grid_points', this%npts)
             this%step=this%l/(this%npts-1)
         end if
 
@@ -148,45 +148,45 @@ contains
         real(DP), dimension(2) :: hgt, wdt
         real(DP) :: l3
 
-        if (keyword_is_set(input, 'grid.bond')) then
-            call getkw(input, 'grid.bond', atoms(1:2))
+        if (keyword_is_set(input, 'Grid.bond')) then
+            call getkw(input, 'Grid.bond', atoms(1:2))
             call get_atom(mol, atoms(1), atom)
             call get_coord(atom, this%basv(:,1))
             call get_atom(mol, atoms(2), atom)
             call get_coord(atom, this%basv(:,2))
         else
-            call getkw(input, 'grid.coord1', this%basv(:,1))
-            call getkw(input, 'grid.coord2', this%basv(:,2))
+            call getkw(input, 'Grid.coord1', this%basv(:,1))
+            call getkw(input, 'Grid.coord2', this%basv(:,2))
         end if
 
-        if (keyword_is_set(input,'grid.fixpoint')) then
-            call getkw(input, 'grid.fixpoint', atoms(3))
+        if (keyword_is_set(input,'Grid.fixpoint')) then
+            call getkw(input, 'Grid.fixpoint', atoms(3))
             call get_atom(mol, atoms(3), atom)
             call get_coord(atom, this%origin)
         else
-            call getkw(input, 'grid.fixcoord', this%origin)
+            call getkw(input, 'Grid.fixcoord', this%origin)
         end if
 
         !defaults, etc.
         l3=-1.d0
         wdt=-1.d0
         hgt=-1.d0
-        call getkw(input, 'grid.distance', l3)
-        if (keyword_is_set(input, 'grid.height')) then
-            call getkw(input, 'grid.height', hgt)
-            call getkw(input, 'grid.width', wdt)
+        call getkw(input, 'Grid.distance', l3)
+        if (keyword_is_set(input, 'Grid.height')) then
+            call getkw(input, 'Grid.height', hgt)
+            call getkw(input, 'Grid.width', wdt)
             hgt(1)=-hgt(1)
             wdt(1)=-wdt(1)
         else
-            call getkw(input, 'grid.in', wdt(1))
-            call getkw(input, 'grid.out', wdt(2))
-            call getkw(input, 'grid.up', hgt(1))
-            call getkw(input, 'grid.down', hgt(2))
+            call getkw(input, 'Grid.in', wdt(1))
+            call getkw(input, 'Grid.out', wdt(2))
+            call getkw(input, 'Grid.up', hgt(1))
+            call getkw(input, 'Grid.down', hgt(2))
         end if
         this%l=(/sum(hgt), sum(wdt), 0.d0/)
 
         if ( l3 < 0.d0 ) then
-            call msg_warn('grid.distance < 0!')
+            call msg_warn('Grid.distance < 0!')
         end if
         if ( sum(wdt) < 0.d0 ) then
             call msg_critical('Grid width < 0!')
@@ -260,12 +260,12 @@ contains
         flag=.false.
 
         call msg_info('Integration grid selected.')
-        call getkw(input, 'grid.gauss_order', this%gauss_order)
+        call getkw(input, 'Grid.gauss_order', this%gauss_order)
         order = this%gauss_order
-        if (keyword_is_set(input,'grid.grid_points')) then
-            call getkw(input, 'grid.grid_points', this%npts)
+        if (keyword_is_set(input,'Grid.grid_points')) then
+            call getkw(input, 'Grid.grid_points', this%npts)
         else
-            call getkw(input, 'grid.spacing', spc)
+            call getkw(input, 'Grid.spacing', spc)
             do i=1,3
                 if (abs(spc(i)) < 1.d-10 .or.spc(i) < 0.d0) then
                     this%npts(i)=0
@@ -498,8 +498,8 @@ contains
             call exit(1)
         end if
 
-        if (keyword_is_set(input,'grid.file')) then
-            call getkw(input, 'grid.file', str_g)
+        if (keyword_is_set(input,'Grid.file')) then
+            call getkw(input, 'Grid.file', str_g)
             open(GRIDFD, file=trim(str_g))
         else
             open(GRIDFD, file='GRIDDATA')
@@ -542,7 +542,7 @@ contains
         natoms=get_natoms(mol)
         
         call get_grid_size(this,p1,p2,p3)
-        call getkw(input, 'show_up_axis', show_axis)
+        call getkw(input, 'show_axis', show_axis)
         i=0
         if (show_axis) i=1
 
@@ -851,19 +851,19 @@ contains
         l3=-1.d0
         lh=-1.d0
         ht=-1.d0
-        call getkw(input, 'grid.distance', l3)
-        call getkw(input, 'grid.width', lh)
-        call getkw(input, 'grid.height', ht)
+        call getkw(input, 'Grid.distance', l3)
+        call getkw(input, 'Grid.width', lh)
+        call getkw(input, 'Grid.height', ht)
         if ( l3 < 0.d0 ) then
-            call msg_critical('grid.distace < 0!')
+            call msg_critical('Grid.distace < 0!')
             stop 
         end if
         if ( sum(lh) < 0.d0 ) then
-            call msg_critical('grid.width < 0!')
+            call msg_critical('Grid.width < 0!')
             stop 
         end if
         if ( sum(ht) < 0.d0 ) then
-            call msg_critical('grid.height < 0!')
+            call msg_critical('Grid.height < 0!')
             stop 
         end if
 
@@ -935,11 +935,11 @@ contains
 
         l3=-1.d0
         r=-1.d0
-        call getkw(input, 'grid.l3', l3)
-        call getkw(input, 'grid.radius', this%radius)
+        call getkw(input, 'Grid.l3', l3)
+        call getkw(input, 'Grid.radius', this%radius)
         r = this%radius
-        if ( l3 < 0.d0 ) stop 'grid.l3 < 0!'
-        if ( r < 0.d0 ) stop 'grid.radius < 0!'
+        if ( l3 < 0.d0 ) stop 'Grid.l3 < 0!'
+        if ( r < 0.d0 ) stop 'Grid.radius < 0!'
 
         v1=norm(this%basv(:,2)-this%basv(:,1))
         v2(1)=-v1(2)-v1(3)
