@@ -136,7 +136,7 @@ contains
         use edens_field_class
 
         type(jfield_t) :: jf
-        type(grid_t) :: cgrid, igrid, dgrid, egrid
+        type(grid_t) :: grid
         type(jtensor_t) :: jt
         type(dens_t) :: xdens, modens
         type(divj_field_t) :: dj
@@ -220,16 +220,17 @@ contains
             call nl
         end if
 
+        call setup_grid(calc(i), grid)
+
         do i=1,ncalc
             select case(calc(i))
             case(CDENS_TAG)
                 call msg_out('Calculating current density')
                 call msg_out('*****************************************')
-                call setup_grid(calc(i), cgrid)
                 call push_section(input, 'cdens')
-                call get_magnet(cgrid, magnet)
+                call get_magnet(grid, magnet)
                 call pop_section(input)
-                call new_jfield(jf, jt, cgrid, magnet)
+                call new_jfield(jf, jt, grid, magnet)
                 if (dryrun_p) cycle
                 call jfield(jf)
                     ! Contract the tensors with B
@@ -240,8 +241,7 @@ contains
             case(INTGRL_TAG)
                 call msg_out('Integrating current density')
                 call msg_out('*****************************************')
-                call setup_grid(calc(i), igrid)
-                call new_integral(it, jt, jf, igrid)
+                call new_integral(it, jt, jf, grid)
                 if (dryrun_p) cycle
                 call int_s_direct(it)
                 call nl
@@ -259,8 +259,7 @@ contains
             case(DIVJ_TAG)
                 call msg_out('Calculating divergence')
                 call msg_out('*****************************************')
-                call setup_grid(calc(i), dgrid)
-                call new_divj_field(dj, dgrid, magnet)
+                call new_divj_field(dj, grid, magnet)
                 if (dryrun_p) cycle
                 call divj_field(dj)
                 if (master_p) then 
@@ -269,9 +268,8 @@ contains
             case(EDENS_TAG)
                 call msg_out('Calculating charge density')
                 call msg_out('*****************************************')
-                call setup_grid(calc(i), egrid)
                 call getkw(input, 'edens.density', fname)
-                call new_edens_field(ed, mol, modens, egrid, fname)
+                call new_edens_field(ed, mol, modens, grid, fname)
                 if (dryrun_p) cycle
                 call edens_field(ed)
                 if (master_p) then 
@@ -282,21 +280,18 @@ contains
             end select
         end do
 
+        call del_grid(grid)
         if (int_p) then
             call del_integral(it)
-            call del_grid(igrid)
         end if
         if (divj_p) then
             call del_divj_field(dj)
-            call del_grid(dgrid)
         end if
         if (cdens_p) then
             call del_jfield(jf)
-            call del_grid(cgrid)
         end if
         if (edens_p) then
             call del_edens_field(ed)
-            call del_grid(egrid)
         end if
         if (xdens_p) call del_dens(xdens)
         if (modens_p) call del_dens(modens)
@@ -308,72 +303,17 @@ contains
         use grid_class
         integer(I4) :: calc
         type(grid_t) :: grid
-        logical :: p, divj_p, int_p, cdens_p, edens_p
+        logical :: p 
         integer(I4) :: i
         real(DP), dimension(3) :: center
         
-        p=.false.; divj_p=.false.; int_p=.false.
-        cdens_p=.false.; edens_p=.false.
+        p=.false. 
 
-!        call plot_grid_xyz(grid, 'koord.xyz', mol)
-        select case(calc)
-            case(CDENS_TAG)
-                call push_section(input, 'cdens')
-                call new_grid(grid, mol)
-                call grid_center(grid,center)
-                call pop_section(input)
-                if (master_p) then
-                    call plot_grid_xyz(grid, 'grid.xyz',  mol)
-                end if
-            case(DIVJ_TAG)
-                if (.not.section_is_set(input, 'divj')) then
-                    call msg_error('Divergence calculation requested, '//& 
-                    & 'but ''divj'' is undefined in input!')
-                else
-                    p=section_is_set(input, 'divj.grid')
-                    if (p) then
-                        call push_section(input, 'divj')
-                        call new_grid(grid, mol)
-                        call grid_center(grid,center)
-                        call pop_section(input)
-                    else
-                        call msg_critical('No grid definition for section divj')
-                    end if
-                    if (master_p) then
-                        call plot_grid_xyz(grid, 'divj.xyz', mol)
-                    end if
-                end if
-            case(INTGRL_TAG)
-                p=keyword_is_set(input, 'integral.grid')
-                if (p) then
-                    call push_section(input, 'integral')
-                    call new_grid(grid, mol)
-                    call grid_center(grid,center)
-                    call pop_section(input)
-                else
-                    call msg_critical('No grid definition for section integral')
-                end if
-                if (master_p) then
-                    call plot_grid_xyz(grid, 'integral.xyz', mol)
-                end if
-            case(EDENS_TAG)
-                i=0
-                p=keyword_is_set(input, 'edens.grid')
-                if (p) then
-                    call push_section(input, 'edens')
-                    call new_grid(grid, mol)
-                    call grid_center(grid,center)
-                    call pop_section(input)
-                else
-                    call msg_critical('No grid definition for section edens')
-                end if
-                if (master_p) then
-                    call plot_grid_xyz(grid, 'edens.xyz', mol)
-                end if
-            case(0)
-                continue
-        end select
-        
+        call new_grid(grid, mol)
+        call grid_center(grid, center)
+        if (master_p) then
+            call plot_grid_xyz(grid, 'grid.xyz',  mol)
+        end if
     end subroutine
 
 
