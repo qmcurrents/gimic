@@ -20,8 +20,8 @@ contains
         ortho=.false.
         dir=1.d0
         mag=0.d0
-        if (keyword_is_set(input, 'magnet_axis')) then
-            call getkw(input, 'magnet_axis', axis)
+        axis = calc_conf%magnet_axis
+        if (trim(axis) /= '') then
             if (axis(1:1) == '-') then 
                 dir=-1.d0
                 axis(1:1)=axis(2:2)
@@ -41,7 +41,7 @@ contains
                     mag=(/D0, D1, D0/)*dir
                 case('z')
                     mag=(/D0, D0, D1/)*dir
-                case('T')
+                case('X')
                     ortho=.true.
                     call get_ortho(g,mag)
                     mag=mag*dir
@@ -49,8 +49,8 @@ contains
                     call msg_error('Invalid axis specifier: ' // axis)
                     stop
             end select
-        else if (keyword_is_set(input, 'magnet')) then
-            call getkw(input, 'magnet', mag)
+        else 
+            mag = calc_conf%magnet
         end if
 
         if (vcmp(mag, NILL_VECTOR)) then

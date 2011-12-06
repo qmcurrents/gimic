@@ -25,8 +25,6 @@ def main():
             help='title of job')
     cmdln.add_option('-d','--debug', action='store', dest='debug',
             help='debug level')
-    cmdln.add_option('-M','--mpi', action='store_true', dest='mpirun',
-            default=False, help='parallel run')
     cmdln.add_option('-o','--output', action='store', dest='outfile',
             help='base name for output file(s)')
     cmdln.add_option('-D','--debug-file', action='store', dest='debugf',
@@ -50,26 +48,31 @@ def main():
         cmdln.error('incorrect number of files')
         sys.exit(0)
     
-    top=getkw.Section('top', callback=check_calc)
+    top=getkw.Section('top')
     top.set_status(True)
     top.add_kw('title', 'STR', ('',))
     top.add_kw('debug_file', 'STR', ('DEBUG.out',))
     top.add_kw('debug', 'INT', (0,))
-    top.add_kw('basis', 'STR', ('mol',))
-    top.add_kw('density', 'STR', 1)
-    top.add_kw('mpirun', 'BOOL', (False,))
-    top.add_kw('screening', 'BOOL', (False,))
-    top.add_kw('screen_thrs', 'DBL', (1.0e-8,))
-    top.add_kw('use_spherical', 'BOOL', (True,))
     top.add_kw('dryrun', 'BOOL', (False,))
-    top.add_kw('openshell', 'BOOL', (False,))
-    top.add_kw('GIAO', 'BOOL', (True,))
-    top.add_kw('diamag', 'BOOL', (True,))
-    top.add_kw('paramag', 'BOOL', (True,))
+    top.add_kw("show_axis", 'BOOL', (True,))
     top.add_kw('calc', 'STR', None)
-    top.add_kw("show_up_axis", 'BOOL', (False,))
+    top.add_kw('basis', 'STR', ('mol',))
+    top.add_kw('density', 'STR', ('DENS',))
+    top.add_kw('xdens', 'STR', ('XDENS',))
+    top.add_kw('magnet_axis', 'STR', ('',))
+    top.add_kw('magnet', 'DBL_ARRAY', (0.0, 0.0, 0.0))
+    top.add_kw('openshell', 'BOOL', (False,))
+    top.add_kw('scale_vectors', 'DBL', (1.0,))
 
-    grid=getkw.Section('grid', callback=check_grid)
+    adv=getkw.Section('Advanced')
+    adv.add_kw('screening', 'BOOL', (False,))
+    adv.add_kw('screen_thrs', 'DBL', (1.0e-8,))
+    adv.add_kw('use_spherical', 'BOOL', (True,))
+    adv.add_kw('GIAO', 'BOOL', (True,))
+    adv.add_kw('diamag', 'BOOL', (True,))
+    adv.add_kw('paramag', 'BOOL', (True,))
+
+    grid=getkw.Section('Grid', callback=check_grid)
     grid.set_arg('STR', ('std',))
     grid.add_kw("type", 'STR', ('even',))
     grid.add_kw("file", 'STR', 1)
@@ -97,33 +100,17 @@ def main():
     grid.add_kw("grid_points", 'INT_ARRAY', 3)
     grid.add_kw("gauss_order", 'INT', 1)
 
-    cdens=getkw.Section('cdens', req=True, callback=check_cdens)
-    cdens.add_kw('magnet_axis', 'STR', ('T',))
-    cdens.add_kw('magnet', 'DBL_ARRAY', (0.0, 0.0, 0.0))
-    cdens.add_kw('scale_vectors', 'DBL', (1.0,))
-
-    integral=getkw.Section('integral')
+    integral=getkw.Section('Integral')
     integral.add_kw('lip_order', 'INT', (10,))
     integral.add_kw('spin', 'STR', ('total',))
-    integral.add_kw('interpolate', 'BOOL', (False,))
+    #integral.add_kw('interpolate', 'BOOL', (False,))
     integral.add_kw('tensor', 'BOOL', (False,))
     integral.add_kw('modulus', 'BOOL', (False,))
     integral.add_kw('radius', 'DBL', 1)
-    integral.add_kw('magnet_axis', 'STR', ('T',))
-    integral.add_kw('magnet', 'DBL_ARRAY', (0.0, 0.0, 0.0))
 
-    divj=getkw.Section('divj')
-    divj.add_kw('magnet_axis', 'STR', ('T',))
-    divj.add_kw('magnet', 'DBL_ARRAY', (0.0, 0.0, 0.0))
-
-    edens=getkw.Section('edens', req=False)
-    edens.add_kw('density', 'STR', ('EDENS',))
-
-    top.add_sect(cdens)
+    top.add_sect(adv)
     top.add_sect(grid)
     top.add_sect(integral)
-    top.add_sect(divj)
-    top.add_sect(edens)
     
     if inpfil is not None:
         input=getkw.GetkwParser(top)
@@ -136,8 +123,6 @@ def main():
         inkw.setkw('title', opts.title)
     if opts.debug:
         inkw.setkw('debug', opts.debug)
-    if opts.mpirun:
-        inkw.setkw('mpirun', opts.mpirun)
     if opts.dryrun:
         inkw.setkw('dryrun', opts.dryrun)
     if opts.outfile:

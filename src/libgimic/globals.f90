@@ -67,11 +67,14 @@ module globals_m
     character(*), parameter :: DEFAULT_DENSFILE='XDENS'
     character(*), parameter :: DEFAULT_MOFILE='mos'
 
-    integer(4), dimension(100), private, save :: afd=0
-    logical :: bert_is_evil = .false.
-
     character, dimension(0:7), parameter :: shell_names = &
         & (/'s','p','d','f','g','h','i','j'/)
+
+    integer(4), dimension(100), private, save :: afd=0
+    logical :: is_turbomole = .false.
+    logical :: bert_is_evil = .false.
+    integer :: mpi_world_size = 1
+    integer :: mpi_rank = -1
 
     type cao2sao_t
         real(DP), dimension(:,:), pointer :: po

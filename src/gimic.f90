@@ -41,16 +41,29 @@ contains
     subroutine initialize()
         integer(I4) :: i, hostnm, rank, ierr
         integer(I4) :: chdir, system
-        character(BUFLEN) :: title, fdate, sys, molfil, denfil
+        character(BUFLEN) :: title, fdate, sys
         real(DP), dimension(3) :: center, magnet
 
         logical :: screen
-        real(DP) :: screening_thrs = SCREEN_THRS
 
-        use_spherical=.false.
-        call getkw(input, 'use_spherical', spherical)
-        call getkw(input, 'basis', molfil)
-        call getkw(input, 'density', denfil)
+        call getkw(input, 'debug', debug_level)
+        call set_debug_level(debug_level)
+
+        call getkw(input, 'basis', main%basis)
+        call getkw(input, 'xdens', main%xdens)
+        call getkw(input, 'density', main%density)
+        call getkw(input, 'magnet_axis', main%magnet_axis)
+        call getkw(input, 'magnet', main%magnet)
+        call getkw(input, 'openshell', main%is_uhf)
+
+        main%use_spherical=.false.
+        main%screen_thrs = SCREEN_THRS
+        call getkw(input, 'Advanced.use_spherical', main%use_spherical)
+        call getkw(input, 'Advanced.GIAO', main%use_giao)
+        call getkw(input, 'Advanced.diamag', main%use_diamag)
+        call getkw(input, 'Advanced.paramag', main%use_paramag)
+        call getkw(input, 'Advanced.screen', main%use_screening)
+        call getkw(input, 'Advanced.screen_thrs', main%screen_thrs)
 
         ierr=hostnm(sys)
         if (mpi_rank == 0) then
@@ -62,41 +75,32 @@ contains
             call msg_debug(str_g,2)
         end if
 
-        call getkw(input, 'debug', debug_level)
-        call set_debug_level(debug_level)
-
         call msg_out(fdate())
         
-        call getkw(input, 'title', title)
-        call msg_out(' TITLE: '// trim(title))
+        call getkw(input, 'title', main%title)
+        call msg_out(' TITLE: '// trim(main%title))
         call nl
         
-        call getkw(input, 'screen', screen)
-        if (screen) then
-            call getkw(input, 'screen_thrs', screening_thrs)
+        if (main%use_screening) then
+            call new_basis(mol, main%basis, main%screen_thrs)
         else
-            screening_thrs = -1.0 ! disable screening
+            call new_basis(mol, main%basis, -1.0)
         end if
-        call new_basis(mol, molfil, screening_thrs)
 
-        call getkw(input, 'GIAO', use_giao)
-        call getkw(input, 'diamag', use_diamag)
-        call getkw(input, 'paramag', use_paramag)
-        
-        if (.not.use_giao) then
+        if (.not.main%use_giao) then
             call msg_info('GIAOs not used!')
             call nl
         end if
 
-        if (.not.use_diamag) then
+        if (.not.main%use_diamag) then
             call msg_info( 'Diamagnetic contributions not calculated!')
             call nl
         end if
-        if (.not.use_paramag) then
+        if (.not.main%use_paramag) then
             call msg_info( 'Paramagnetic contributions not calculated!')
             call nl
         end if
-        if ((.not.use_diamag).and.(.not.use_paramag)) then
+        if ((.not.main%use_diamag).and.(.not.main%use_paramag)) then
             call msg_out( '    ...this does not make sense...')
             call nl
             call msg_critical( '    PLEASE SEEK PROFESSIONAL HELP, ASAP!  ')
@@ -152,12 +156,11 @@ contains
 
         call getkw(input,'dryrun', dryrun_p)
 
-        if (use_spherical) then
+        if (main%use_spherical) then
             call new_c2sop(c2s,mol)
             call set_c2sop(mol, c2s)
         end if
 
-        call getkw(input, 'openshell', is_uhf)
         if (is_uhf) then
             call msg_info('Open-shell calculation')
         else
@@ -211,16 +214,14 @@ contains
             call nl
         end if
 
-        call setup_grid(calc(i), grid)
+        call setup_grid(grid)
 
         do i=1,ncalc
             select case(calc(i))
             case(CDENS_TAG)
                 call msg_out('Calculating current density')
                 call msg_out('*****************************************')
-                call push_section(input, 'cdens')
                 call get_magnet(grid, magnet)
-                call pop_section(input)
                 call new_jfield(jf, jt, grid, magnet)
                 if (dryrun_p) cycle
                 call jfield(jf)
@@ -286,13 +287,12 @@ contains
         end if
         if (xdens_p) call del_dens(xdens)
         if (modens_p) call del_dens(modens)
-        if (use_spherical) call del_c2sop(c2s)
+        if (main%use_spherical) call del_c2sop(c2s)
         call del_jtensor(jt)
     end subroutine
 
-    subroutine setup_grid(calc, grid)
+    subroutine setup_grid(grid)
         use grid_class
-        integer(I4) :: calc
         type(grid_t) :: grid
         logical :: p 
         integer(I4) :: i

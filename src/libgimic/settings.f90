@@ -7,17 +7,31 @@ module settings_m
     
     integer(I4) :: debug_level=0
 
-    logical :: is_turbomole=.false.
-    logical :: is_mpirun=.false.
-    logical :: is_uhf=.false.
+    type main_settings_t
+        character(256) :: title
+        character(128) :: debug_file
+        logical :: dryrun
+        logical :: show_axis
+        character(16) :: calc
+        character(128) :: basis
+        character(128) :: density
+        real, dimension(3) :: magnet
+        character(2) :: magnet_axis
+        logical :: is_uhf=.false.
+        logical :: is_mpirun=.false.
+        logical :: use_spherical=.false.
+        logical :: use_giao=.true.
+        logical :: use_diamag=.true.
+        logical :: use_paramag=.true.
+        real :: screen_thrs
+        logical :: use_screening
+    end type
 
-    logical :: use_spherical=.false.
-    logical :: use_giao=.true.
-    logical :: use_diamag=.true.
-    logical :: use_paramag=.true.
-
-    integer :: mpi_world_size = 1
-    integer :: mpi_rank = -1
+    type integral_settings_t
+    end type
+    
+    type(main_settings_t), save :: main
+    type(integral_settings_t), save :: integral_conf
 end module
 
 ! vim:et:sw=4:ts=4

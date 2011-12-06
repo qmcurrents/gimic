@@ -131,7 +131,7 @@ contains
                 ! i => l-quantum number +1
                 ctr%l=i-1 ! save l-qnum 
                 ! store number of components 
-                if (use_spherical) then
+                if (main%use_spherical) then
                     ctr%ncomp=2*ctr%l+1
                 else
                     ctr%ncomp=(ctr%l+1)*(ctr%l+2)/2

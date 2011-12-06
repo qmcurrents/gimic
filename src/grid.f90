@@ -39,16 +39,20 @@ module grid_class
 
     private
     real(DP), parameter :: DPTOL=1.d-10
+    type(getkw_t), pointer :: input
 contains
 
-    subroutine new_grid(this, mol)
+    subroutine new_grid(this, inp, mol)
         type(grid_t) :: this
+        type(getkw_t), target :: inp
         type(molecule_t) :: mol
 
         real(DP) :: ll 
         real(DP), dimension(3) :: angle
         integer(I4), dimension(3) :: ngp
         integer(I4) :: i, j
+
+        input=>inp
         
         this%step=1.d0
         this%gtype='even'
