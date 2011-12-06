@@ -44,7 +44,7 @@ contains
 
         call get_grid_size(grid, p1, p2)
         djrl=p1*p2*DP
-        if (master_p) then
+        if (mpi_rank == 0) then
             open(DIVJFD, file='DIVJ', access='direct', recl=djrl)
         end if
 
@@ -56,7 +56,7 @@ contains
         type(divj_field_t), intent(inout) :: this
 
         deallocate(this%buf)
-        if (master_p) then
+        if (mpi_rank == 0) then
             close(DIVJFD)
         end if
     end subroutine
@@ -107,7 +107,7 @@ contains
         real(DP) :: div, amax
         real(DP), dimension(3) :: rr 
         
-        if (mpirun_p) then
+        if (is_mpirun) then
             call msg_error('divj_direct_plt(): does not work in parallel')
             stop
         end if
@@ -181,7 +181,7 @@ contains
                 end do
             end do
             call gather_data(buf,buf(:,lo:hi))
-            if (master_p) write(DIVJFD, rec=k) this%buf
+            if (mpi_rank == 0) write(DIVJFD, rec=k) this%buf
         end do
     end subroutine
 

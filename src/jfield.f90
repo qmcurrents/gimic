@@ -48,7 +48,7 @@ contains
         this%jt=>jt
         this%grid=>g
 
-        if (master_p) then
+        if (mpi_rank == 0) then
             call setup_files(this)
         end if
 
@@ -123,7 +123,7 @@ contains
             deallocate(this%vsd)
         end if
         
-        if (master_p) then
+        if (mpi_rank == 0) then
             close(JTFD)
             close(JVECFD)
             if (uhf_p) then
@@ -375,7 +375,7 @@ contains
         character(132) :: fname
 
         fd=0
-        if (.not.master_p) return
+        if (mpi_rank > 0) return
         if (trim(basename) == '') return
 
         call getfd(fd)
@@ -482,7 +482,7 @@ contains
                 call gather_data(this%jjb,this%jjb(:,lo:hi))
                 call gather_data(this%jsd,this%jsd(:,lo:hi))
             end if
-            if (master_p) call jtens_io(this, k, 'w')
+            if (mpi_rank == 0) call jtens_io(this, k, 'w')
             this%zpos_j=k
         end do
     end subroutine 
@@ -640,7 +640,7 @@ contains
 
         fd=0
         fname=kname
-        if (.not.master_p) return
+        if (mpi_rank > 0) return
         if (trim(fname) == '') return
 
         call getfd(fd)

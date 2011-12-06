@@ -5,14 +5,11 @@ module parallel_m
     implicit none
 #ifdef HAVE_MPI
     include 'mpif.h'
-    integer(I4), parameter :: mpi_compiled=1
     integer(I4), parameter :: GATHER_DATA_TAG=1
     integer(I4), parameter :: DATA_SIZE_TAG=2
-#else
-    integer(I4), parameter :: mpi_compiled=0
 #endif
 
-    public start_mpi, stop_mpi, get_mpi_rank, rankname, schedule
+    public init_mpi, stop_mpi, get_mpi_rank, rankname, schedule
     public gather_data, collect_sum
     private
 
@@ -27,33 +24,34 @@ module parallel_m
     integer(I4) :: rank
     character(80) :: sys
 contains
-    function start_mpi() result(mpirank)
+    function init_mpi(is_mpirun) result(mpirank)
+        logical, intent(out) :: is_mpirun
         integer(I4) :: mpirank
         integer(I4) :: hostnm
-        
-        if (mpi_compiled == 0) then
-            rank=-1
-            mpirank=-1
-            return
-        end if
+
+        mpi_world_size = 1
 #ifdef HAVE_MPI
         ierr=hostnm(sys)
         call msg_note('Initializing MPI on ' // trim(sys))
         call nl
         call mpi_init(ierr)
         call mpi_comm_rank(MPI_COMM_WORLD, rank, ierr)
-        if (rank == 0) then
-            master_p=.true.
-        end if
+        call mpi_comm_size(MPI_COMM_WORLD, mpi_world_size, ierr)
         mpirank=rank
+#else
+        rank = 0
+        mpirank = 0
 #endif
+        if (mpi_world_size == 1) then
+            is_mpirun = .false.
+        else
+            is_mpirun = .true.
+        end if
     end function
         
     subroutine stop_mpi()
 #ifdef HAVE_MPI
-        if ( mpirun_p ) then
-            call mpi_finalize(ierr)
-        end if
+        call mpi_finalize(ierr)
 #endif
     end subroutine
 
@@ -79,7 +77,7 @@ contains
 
         integer(I4) :: sz, num, reminder, i
 
-        if (.not.mpirun_p) then
+        if (mpi_world_size == 1) then
             lo=1
             hi=npts
             return
@@ -105,7 +103,7 @@ contains
         integer(I4) :: lo, hi 
         npts=size(source)
 
-        if (.not.mpirun_p) then
+        if (mpi_world_size == 1) then
             dest=source
             return
         end if
@@ -139,7 +137,7 @@ contains
         integer(I4) :: nproc, client, ni, nj
         integer(I4) :: lo, hi,i 
 
-        if (.not.mpirun_p) then
+        if (mpi_world_size == 1) then
             dest=source
             return
         end if
@@ -186,13 +184,13 @@ contains
         integer(I4) :: lo, hi,i 
         real(8), dimension(:), allocatable :: tmp
 
-        if (.not.mpirun_p) then
+        if (mpi_world_size == 1) then
             call copy_tensor(source,dest)
             return
         end if
 #ifdef HAVE_MPI
 
-        if (master_p) call msg_warn('gather_1d_tensor(): not tested, pls vrfy')
+        if (mpi_rank == 0) call msg_warn('gather_1d_tensor(): not tested, pls vrfy')
 
         ni=size(source)
 
@@ -230,7 +228,7 @@ contains
         integer(I4) :: lo, hi,i 
         real(8), dimension(:), allocatable :: tmp
 
-        if (.not.mpirun_p) then
+        if (mpi_world_size == 1) then
             call copy_tensor(source,dest)
             return
         end if
@@ -314,7 +312,7 @@ contains
         real(DP), intent(in) :: source
         real(DP), intent(out) :: dest
 
-        if (.not.mpirun_p) then
+        if (mpi_world_size == 1) then
             dest=source
             return
         end if

@@ -3,6 +3,7 @@
 !
 module globals_m
     use kinds_m
+    use settings_m
     use teletype_m
     use getkw_class
     implicit none 
@@ -37,8 +38,6 @@ module globals_m
 
     integer(I4), parameter :: SPIN_A=1, SPIN_B=2
 
-    integer(I4) :: debug_level=0
-
     real(DP), parameter :: PII=3.141592653589793D0
     !real(DP), parameter :: PI=atan(1.d0)*4.d0
     real(DP), parameter :: PII_FAC=6.349363593424098D-002 ! (0.5/PI)**0.75
@@ -68,17 +67,6 @@ module globals_m
     character(*), parameter :: DEFAULT_DENSFILE='XDENS'
     character(*), parameter :: DEFAULT_MOFILE='mos'
 
-    logical :: turbomole_p=.false.
-    logical :: spherical=.false.
-    logical :: bert_is_evil=.false.
-    logical :: mpirun_p=.false.
-    logical :: master_p=.false.
-    logical :: uhf_p=.false.
-    logical :: giao_p=.true.
-    logical :: diamag_p=.true.
-    logical :: paramag_p=.true.
-
-    type(getkw_t), save :: input
     integer(4), dimension(100), private, save :: afd=0
 
     character, dimension(0:7), parameter :: shell_names = &

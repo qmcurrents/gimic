@@ -484,7 +484,7 @@ contains
         this%step=0.d0
         this%gtype='file'
 
-        if (mpirun_p) then
+        if (is_mpirun) then
             call msg_error('grid type ''file'' does not work with the &
             &parallel version (yet)!')
             call exit(1)

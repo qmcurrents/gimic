@@ -42,7 +42,7 @@ contains
         allocate(this%buf(p1,p2))
         this%grid=>grid
 
-        if (master_p) then
+        if (mpi_rank == 0) then
             open(EDFD, file=trim(densfile), access='direct', recl=p1*p2*DP)
         end if
     end subroutine
@@ -53,7 +53,7 @@ contains
         if (associated(this%buf)) deallocate(this%buf)
         call del_edens(this%edens)
         nullify(this%grid)
-        if (master_p) then
+        if (mpi_rank == 0) then
             close(EDFD)
         end if
     end subroutine
@@ -143,7 +143,7 @@ contains
                 end do
             end do
             call gather_data(this%buf, this%buf(:,lo:hi))
-            if (master_p) write(EDFD, rec=k) this%buf
+            if (mpi_rank == 0) write(EDFD, rec=k) this%buf
         end do
     end subroutine
 

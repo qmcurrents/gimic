@@ -1,4 +1,4 @@
-!! @brief  
+!
 ! GIMIC - a pretty advanced 'Hello World!' program.
 !
 
@@ -15,23 +15,21 @@ program gimic
 
     character(BUFLEN) :: buf
     type(molecule_t) :: mol
+    type(getkw_t) :: input
     
+    call new_getkw(input)
     call set_debug_level(3)
 
-    call new_getkw(input)
+    mpi_rank = init_mpi(is_mpirun)
 
-    call getenv('MPIRUN', buf)
-    if ( trim(buf) == '1' ) mpirun_p=.true.
-    call getkw(input,'mpirun', mpirun_p)
-    if (.not.mpirun_p) call program_header
-
+    call program_header
     call initialize()
     call cdens()
     call finalize()
 
     call stockas_klocka()
     call msg_out('Hello World! (tm)')
-!    call program_footer()
+    call program_footer()
     
     if (bert_is_evil) then
         call msg_error('Bert is evil, and your results are wicked.')
@@ -43,7 +41,6 @@ contains
         integer(I4) :: i, hostnm, rank, ierr
         integer(I4) :: chdir, system
         character(BUFLEN) :: title, fdate, sys, molfil, denfil
-        character(4) :: rankdir
         real(DP), dimension(3) :: center, magnet
 
         logical :: screen
@@ -54,16 +51,8 @@ contains
         call getkw(input, 'basis', molfil)
         call getkw(input, 'density', denfil)
 
-        if (mpirun_p) then
-            rank=start_mpi()
-            call rankname(rankdir)
-        else
-            master_p=.true.
-            rank=0
-        end if
-
         ierr=hostnm(sys)
-        if (master_p) then
+        if (mpi_rank == 0) then
             write(str_g, '(a,i3,a,a)') 'MPI master', rank,' on ', trim(sys)
             call msg_debug(str_g,2)
         else
@@ -234,7 +223,7 @@ contains
                 if (dryrun_p) cycle
                 call jfield(jf)
                     ! Contract the tensors with B
-                if (master_p) then
+                if (mpi_rank == 0) then
                     call jvectors(jf)
                     call jvector_plot(jf)
                 end if
@@ -262,7 +251,7 @@ contains
                 call new_divj_field(dj, grid, magnet)
                 if (dryrun_p) cycle
                 call divj_field(dj)
-                if (master_p) then 
+                if (mpi_rank == 0) then 
                     call divj_plot(dj, 'divj')
                 end if
             case(EDENS_TAG)
@@ -272,7 +261,7 @@ contains
                 call new_edens_field(ed, mol, modens, grid, fname)
                 if (dryrun_p) cycle
                 call edens_field(ed)
-                if (master_p) then 
+                if (mpi_rank == 0) then 
                     call edens_plot(ed, "edens")
                 end if
             case default
@@ -311,7 +300,7 @@ contains
 
         call new_grid(grid, mol)
         call grid_center(grid, center)
-        if (master_p) then
+        if (mpi_rank == 0) then
             call plot_grid_xyz(grid, 'grid.xyz',  mol)
         end if
     end subroutine
@@ -391,7 +380,7 @@ call nl
                 call getarg(1, inpfile)
                 if (inpfile(1:1) == '-') then
                     if (trim(inpfile) /= '--mpi') call usage
-                    mpirun_p=.true.
+                    is_mpirun=.true.
                 else
                     call usage
                 end if
@@ -399,13 +388,13 @@ call nl
             case (2) 
                 call getarg(1, inpfile)
                 if (trim(inpfile) /= '--mpi') call usage
-                mpirun_p=.true.
+                is_mpirun=.true.
                 call getarg(2,inpfile)
             case default 
                 call usage
         end select
         call getenv('MPIRUN', mpienv)
-        if ( trim(mpienv) == '1' ) mpirun_p=.true.
+        if ( trim(mpienv) == '1' ) is_mpirun=.true.
     end subroutine
 
     subroutine usage()
