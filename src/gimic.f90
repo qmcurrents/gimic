@@ -21,7 +21,7 @@ program gimic
     call new_getkw(input)
     call set_debug_level(3)
 
-    mpi_rank = init_mpi(is_mpirun)
+    mpi_rank = init_mpi(settings%is_mpirun)
 
     call program_header
     call initialize()
@@ -49,21 +49,29 @@ contains
         call getkw(input, 'debug', debug_level)
         call set_debug_level(debug_level)
 
-        call getkw(input, 'basis', main%basis)
-        call getkw(input, 'xdens', main%xdens)
-        call getkw(input, 'density', main%density)
-        call getkw(input, 'magnet_axis', main%magnet_axis)
-        call getkw(input, 'magnet', main%magnet)
-        call getkw(input, 'openshell', main%is_uhf)
+        call getkw(input, 'title', settings%title)
+        call getkw(input, 'basis', settings%basis)
+        call getkw(input, 'xdens', settings%xdens)
+        call getkw(input, 'density', settings%density)
+        call getkw(input, 'magnet_axis', settings%magnet_axis)
+        call getkw(input, 'magnet', settings%magnet)
+        call getkw(input, 'openshell', settings%is_uhf)
+        call getkw(input, 'dryrun', settings%dryrun)
+        call getkw(input, 'calc', settings%calc)
+        call getkw(input, 'xdens', settings%xdens)
+        call getkw(input, 'density', settings%density)
+        call getkw(input, 'mofile', settings%mofile)
+        call getkw(input, 'mos', settings%morange)
 
-        main%use_spherical=.false.
-        main%screen_thrs = SCREEN_THRS
-        call getkw(input, 'Advanced.use_spherical', main%use_spherical)
-        call getkw(input, 'Advanced.GIAO', main%use_giao)
-        call getkw(input, 'Advanced.diamag', main%use_diamag)
-        call getkw(input, 'Advanced.paramag', main%use_paramag)
-        call getkw(input, 'Advanced.screen', main%use_screening)
-        call getkw(input, 'Advanced.screen_thrs', main%screen_thrs)
+        settings%use_spherical=.false.
+        settings%screen_thrs = SCREEN_THRS
+        call getkw(input, 'Advanced.use_spherical', settings%use_spherical)
+        call getkw(input, 'Advanced.GIAO', settings%use_giao)
+        call getkw(input, 'Advanced.diamag', settings%use_diamag)
+        call getkw(input, 'Advanced.paramag',settings%use_paramag)
+        call getkw(input, 'Advanced.screen', settings%use_screening)
+        call getkw(input, 'Advanced.screen_thrs', settings%screen_thrs)
+        call getkw(input, 'Advanced.lip_order', settings%lip_order)
 
         ierr=hostnm(sys)
         if (mpi_rank == 0) then
@@ -77,30 +85,29 @@ contains
 
         call msg_out(fdate())
         
-        call getkw(input, 'title', main%title)
-        call msg_out(' TITLE: '// trim(main%title))
+        call msg_out(' TITLE: '// trim(settings%title))
         call nl
         
-        if (main%use_screening) then
-            call new_basis(mol, main%basis, main%screen_thrs)
+        if (settings%use_screening) then
+            call new_basis(mol, settings%basis, settings%screen_thrs)
         else
-            call new_basis(mol, main%basis, -1.0)
+            call new_basis(mol, settings%basis, -1.d0)
         end if
 
-        if (.not.main%use_giao) then
+        if (.not.settings%use_giao) then
             call msg_info('GIAOs not used!')
             call nl
         end if
 
-        if (.not.main%use_diamag) then
+        if (.not.settings%use_diamag) then
             call msg_info( 'Diamagnetic contributions not calculated!')
             call nl
         end if
-        if (.not.main%use_paramag) then
+        if (.not.settings%use_paramag) then
             call msg_info( 'Paramagnetic contributions not calculated!')
             call nl
         end if
-        if ((.not.main%use_diamag).and.(.not.main%use_paramag)) then
+        if ((.not.settings%use_diamag).and.(.not.settings%use_paramag)) then
             call msg_out( '    ...this does not make sense...')
             call nl
             call msg_critical( '    PLEASE SEEK PROFESSIONAL HELP, ASAP!  ')
@@ -142,7 +149,7 @@ contains
         integer(I4) :: i,j, ncalc
         integer(I4), dimension(4) :: calc
         logical :: divj_p, int_p, cdens_p, edens_p
-        logical :: xdens_p, modens_p, dryrun_p, imod_p
+        logical :: xdens_p, modens_p, imod_p
         character(LINELEN), dimension(:), pointer :: cstr
 
         character(80) :: fname, mofile
@@ -151,17 +158,16 @@ contains
 
 
         divj_p=.false.; int_p=.false.
-        cdens_p=.false.; edens_p=.false.; dryrun_p=.false.
+        cdens_p=.false.; edens_p=.false.
         xdens_p=.false.; modens_p=.false.; imod_p=.false.
 
-        call getkw(input,'dryrun', dryrun_p)
 
-        if (main%use_spherical) then
+        if (settings%use_spherical) then
             call new_c2sop(c2s,mol)
             call set_c2sop(mol, c2s)
         end if
 
-        if (is_uhf) then
+        if (settings%is_uhf) then
             call msg_info('Open-shell calculation')
         else
             call msg_info('Closed-shell calculation')
@@ -171,7 +177,6 @@ contains
         
         ! figure out work order
         nullify(cstr)
-        call getkw(input, 'calc', cstr)
         ncalc=size(cstr)
         do i=1,ncalc
             if (cstr(i)(1:5) == 'cdens') then 
@@ -194,14 +199,10 @@ contains
         end do
 
         if (xdens_p) then
-            call getkw(input, 'density', fname)
             call new_dens(xdens, mol)
             call read_dens(xdens, fname)
         end if
         if (modens_p) then
-            call getkw(input, 'density', fname)
-            call getkw(input, 'edens.mofile', mofile)
-            call getkw(input, 'edens.mos', morange)
             call new_dens(modens, mol, modens_p)
             call read_modens(modens, fname, mofile, morange)
         end if
@@ -209,7 +210,7 @@ contains
 
         call new_jtensor(jt,mol,xdens)
 
-        if (dryrun_p) then
+        if (settings%dryrun) then
             call msg_note('Dry run, not calculating...')
             call nl
         end if
@@ -223,7 +224,7 @@ contains
                 call msg_out('*****************************************')
                 call get_magnet(grid, magnet)
                 call new_jfield(jf, jt, grid, magnet)
-                if (dryrun_p) cycle
+                if (settings%dryrun) cycle
                 call jfield(jf)
                     ! Contract the tensors with B
                 if (mpi_rank == 0) then
@@ -234,25 +235,19 @@ contains
                 call msg_out('Integrating current density')
                 call msg_out('*****************************************')
                 call new_integral(it, jt, jf, grid)
-                if (dryrun_p) cycle
+                if (settings%dryrun) cycle
                 call int_s_direct(it)
                 call nl
-                call getkw(input, 'integral.modulus', imod_p)
-                if (imod_p) then
-                    call msg_note('Integrating |J|')
-                    call int_mod_direct(it)
-                end if
-                call getkw(input, 'integral.tensor', imod_p)
-                if (imod_p) then
-                    call msg_note('Integrating current tensor')
-                    call int_t_direct(it)  ! tensor integral
-                end if
+                call msg_note('Integrating |J|')
+                call int_mod_direct(it)
+                call msg_note('Integrating current tensor')
+                call int_t_direct(it)  ! tensor integral
 !                    call write_integral(it)
             case(DIVJ_TAG)
                 call msg_out('Calculating divergence')
                 call msg_out('*****************************************')
                 call new_divj_field(dj, grid, magnet)
-                if (dryrun_p) cycle
+                if (settings%dryrun) cycle
                 call divj_field(dj)
                 if (mpi_rank == 0) then 
                     call divj_plot(dj, 'divj')
@@ -260,9 +255,8 @@ contains
             case(EDENS_TAG)
                 call msg_out('Calculating charge density')
                 call msg_out('*****************************************')
-                call getkw(input, 'edens.density', fname)
                 call new_edens_field(ed, mol, modens, grid, fname)
-                if (dryrun_p) cycle
+                if (settings%dryrun) cycle
                 call edens_field(ed)
                 if (mpi_rank == 0) then 
                     call edens_plot(ed, "edens")
@@ -287,7 +281,7 @@ contains
         end if
         if (xdens_p) call del_dens(xdens)
         if (modens_p) call del_dens(modens)
-        if (main%use_spherical) call del_c2sop(c2s)
+        if (settings%use_spherical) call del_c2sop(c2s)
         call del_jtensor(jt)
     end subroutine
 
@@ -300,7 +294,7 @@ contains
         
         p=.false. 
 
-        call new_grid(grid, mol)
+        call new_grid(grid, input, mol)
         call grid_center(grid, center)
         if (mpi_rank == 0) then
             call plot_grid_xyz(grid, 'grid.xyz',  mol)
@@ -358,112 +352,6 @@ call nl
         call nl
     end subroutine
 
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!
-! Deprecated routines
-!
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-    ! this routine is deprecated. everything is handled by getkw now
-    subroutine cmdline(inpfile)
-        character(*), intent(out) :: inpfile
-
-        integer(I4) :: iargc, fgetc 
-        character(BUFLEN) :: fdate
-        integer(I4) :: argc
-        character(BUFLEN) :: mpienv
-
-    ! figure out command line...
-        argc=iargc()
-        select case(argc)
-            case(0) ! open default file
-                inpfile=DEFAULT_INPUT
-            case(1)
-                call getarg(1, inpfile)
-                if (inpfile(1:1) == '-') then
-                    if (trim(inpfile) /= '--mpi') call usage
-                    is_mpirun=.true.
-                else
-                    call usage
-                end if
-                inpfile=DEFAULT_INPUT
-            case (2) 
-                call getarg(1, inpfile)
-                if (trim(inpfile) /= '--mpi') call usage
-                is_mpirun=.true.
-                call getarg(2,inpfile)
-            case default 
-                call usage
-        end select
-        call getenv('MPIRUN', mpienv)
-        if ( trim(mpienv) == '1' ) is_mpirun=.true.
-    end subroutine
-
-    subroutine usage()
-        call msg_out('usage: gimic [--mpi] [file]')
-        call exit(1)
-    end subroutine
-
-!
-! read in the input file into a buffer which can be broadcast 
-!
-
-    subroutine read_inpbuf(inpfile, inpbuf)
-        character(*), intent(in) :: inpfile
-        character, dimension(:), pointer :: inpbuf
-
-        integer(I4) :: i, n, err
-        integer(I4) :: fgetc 
-
-        write(str_g, 100) "Reading input from '", trim(inpfile),"'"
-        call msg_info(str_g)
-        open(99, file=trim(inpfile), status='old', action='read', iostat=err)
-
-        if (err /= 0 ) then
-            write(str_g, 100) "read_inpbuf(): open failed for '",&
-                trim(inpfile),"'"
-            call msg_error(str_g)
-            stop
-        end if
-
-        n=getfsize(inpfile)
-        allocate(inpbuf(n))
-        do i=1,n
-            err=fgetc(99, inpbuf(i))
-        end do
-        close(99)
-100 format(a,a,a)
-    end subroutine
-
-!
-! read in the MOL file into a buffer which can be broadcast 
-!
-    subroutine read_molbuf(molbuf)
-        character(MAX_LINE_LEN), dimension(:), pointer :: molbuf
-        integer(I4) :: i, n, ios
-        character(BUFLEN) :: basfile
-        call getkw(input, 'basis', basfile)
-        call msg_note('Basis sets read from file: ' // trim(basfile))
-        call nl
-
-        open(BASFD, file=basfile, status='old', action='read', &
-             form='formatted', iostat=ios)
-
-        if (ios /= 0 ) then
-            call msg_error('read_intgrl(): open failed.')
-            stop
-        end if
-
-        n=getnlines(BASFD)
-        allocate(molbuf(n))
-        do i=1,n
-            read(BASFD, '(200a)') molbuf(i) ! MAX_LINE_LEN
-        end do
-        close(BASFD)
-
-    end subroutine
-
 end program 
-
 
 ! vim:et:sw=4:ts=4

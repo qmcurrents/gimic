@@ -23,6 +23,8 @@ module grid_class
         type(gdata_t), dimension(3) :: gdata
         character(BUFLEN) :: mode, gtype
         real(DP), dimension(:,:), pointer :: xdata
+        integer(I4) :: gauss_order
+        real(DP) :: radius
     end type grid_t
 
     public grid_t
@@ -258,7 +260,8 @@ contains
         flag=.false.
 
         call msg_info('Integration grid selected.')
-        call getkw(input, 'grid.gauss_order', order)
+        call getkw(input, 'grid.gauss_order', this%gauss_order)
+        order = this%gauss_order
         if (keyword_is_set(input,'grid.grid_points')) then
             call getkw(input, 'grid.grid_points', this%npts)
         else
@@ -489,7 +492,7 @@ contains
         this%step=0.d0
         this%gtype='file'
 
-        if (is_mpirun) then
+        if (settings%is_mpirun) then
             call msg_error('grid type ''file'' does not work with the &
             &parallel version (yet)!')
             call exit(1)
@@ -933,7 +936,8 @@ contains
         l3=-1.d0
         r=-1.d0
         call getkw(input, 'grid.l3', l3)
-        call getkw(input, 'grid.radius', r)
+        call getkw(input, 'grid.radius', this%radius)
+        r = this%radius
         if ( l3 < 0.d0 ) stop 'grid.l3 < 0!'
         if ( r < 0.d0 ) stop 'grid.radius < 0!'
 

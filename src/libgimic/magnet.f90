@@ -20,7 +20,7 @@ contains
         ortho=.false.
         dir=1.d0
         mag=0.d0
-        axis = calc_conf%magnet_axis
+        axis = settings%magnet_axis
         if (trim(axis) /= '') then
             if (axis(1:1) == '-') then 
                 dir=-1.d0
@@ -50,7 +50,7 @@ contains
                     stop
             end select
         else 
-            mag = calc_conf%magnet
+            mag = settings%magnet
         end if
 
         if (vcmp(mag, NILL_VECTOR)) then
@@ -95,9 +95,7 @@ contains
         real(DP), dimension(3) :: magnet,v
         real(DP) :: x
 
-        call push_section(input, '.')
         call get_magnet(g, magnet) 
-        call pop_section(input)
         call get_basvec(g, 3, v)
 
         stop 'is_diamagnetic(): not implemented yet'

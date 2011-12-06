@@ -37,7 +37,7 @@ contains
             end if
         end if
 
-        if (is_uhf) then
+        if (settings%is_uhf) then
             this%spin=2
         else
             this%spin=1
@@ -45,10 +45,10 @@ contains
 
         if (this%pdens_p) then
             allocate(this%da(ncgto,ncgto,0:3))
-            if (is_uhf) allocate(this%db(ncgto,ncgto,0:3))
+            if (settings%is_uhf) allocate(this%db(ncgto,ncgto,0:3))
         else
             allocate(this%da(ncgto,ncgto,0:0))
-            if (is_uhf) allocate(this%db(ncgto,ncgto,0:0))
+            if (settings%is_uhf) allocate(this%db(ncgto,ncgto,0:0))
         end if
 
     end subroutine
@@ -65,7 +65,7 @@ contains
             call msg_error('read_dens(): dens not allocated!')
             call exit(1)
         end if
-        if ( is_uhf.and..not.associated(this%db) ) then
+        if ( settings%is_uhf.and..not.associated(this%db) ) then
             call msg_error('read_dens(): beta dens not allocated!')
             call exit(1)
         end if
@@ -91,7 +91,7 @@ contains
 
         deallocate(kusse)
 
-        if (is_uhf) then
+        if (settings%is_uhf) then
             call  msg_info('scaling perturbed densities by 0.d5')
             this%da(:,:,1:3)= this%da(:,:,1:3)/2.d0
             this%db(:,:,1:3)= this%db(:,:,1:3)/2.d0
@@ -135,7 +135,7 @@ contains
             call msg_warn('del_dens(): not allocated!')
         end if
         
-        if (is_uhf.and.associated(this%db)) then
+        if (settings%is_uhf.and.associated(this%db)) then
             deallocate(this%db)
         end if
         
@@ -230,7 +230,7 @@ contains
         dens=>this%da
         if (present(spin)) then
             if (spin == spin_b) then
-                if (.not.is_uhf) then
+                if (.not.settings%is_uhf) then
                     call msg_error('gimic: moco(): &
                     &invalid spin for closed shell')
                     stop

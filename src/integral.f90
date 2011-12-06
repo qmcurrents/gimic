@@ -38,8 +38,6 @@ contains
         type(jfield_t),  target :: jf
         type(grid_t), target :: grid
         
-        call getkw(input, 'integral.spin', spin)
-        
         this%jf=>jf
         this%jt=>jt
         this%grid=>grid
@@ -115,7 +113,7 @@ contains
         type(vector_t) :: jvec
         type(tensor_t) :: jt
 
-        if (is_uhf) then
+        if (settings%is_uhf) then
             select case(spin)
                 case('total')
                     call msg_note("Integrating total density")
@@ -132,15 +130,13 @@ contains
         end if
         
         call get_grid_size(this%grid, p1, p2, p3)
-        call push_section(input, 'integral')
         call get_magnet(this%grid, bb)
-        call pop_section(input)
         !call jfield_eta(this%jf)
 
         normal=get_grid_normal(this%grid)
 
         bound=1.d+10
-        call getkw(input, 'integral.grid.radius', bound)
+        bound=this%grid%radius
         if (bound < 1.d+10) then
             write(str_g, *) 'Integration bound set to radius ', bound
             call msg_out(str_g)
@@ -227,7 +223,7 @@ contains
         type(vector_t) :: jvec
         type(tensor_t) :: jt
 
-        if (is_uhf) then
+        if (settings%is_uhf) then
             select case(spin)
                 case('total')
                     call msg_note("Integrating total density")
@@ -244,14 +240,11 @@ contains
         end if
 
         call get_grid_size(this%grid, p1, p2, p3)
-        call push_section(input, 'integral')
         call get_magnet(this%grid, bb)
-        call pop_section(input)
 
         normal=get_grid_normal(this%grid)
 
-        bound=1.d+10
-        call getkw(input, 'integral.grid.radius', bound)
+        bound=this%grid%radius
         if (bound < 1.d+10) then
             write(str_g, *) 'Integration bound set to radius ', bound
             call msg_out(str_g)
@@ -513,7 +506,7 @@ contains
         normal=get_grid_normal(grid)
 
         bound=1.d+10
-        call getkw(input, 'integral.grid.radius', bound)
+        bound=grid%radius
         if (bound < 1.d+10) then
             write(str_g, *) 'Integration bound set to radius ', bound
             call msg_out(str_g)
@@ -596,7 +589,7 @@ contains
         normal=get_grid_normal(grid)
 
         bound=1.d+10
-        call getkw(input, 'integral.grid.radius', bound)
+        bound=grid%radius
         if (bound < 1.d+10) then
             write(str_g, *) 'Integration bound set to radius ', bound
             call msg_out(str_g)
@@ -673,11 +666,9 @@ contains
 
         type(grid_t) :: lgrid
         
-
-        !call getkw(input, 'integral.grid_points', g%npts)
-        call getkw(input, 'integral.gauss_points', ngp)
-        call getkw(input, 'integral.lip_order', nlip)
-        call msg_info('lip_order kwyword ignored so far... using 3.')
+        ngp = g%gauss_order
+        nlip = settings%lip_order
+        call msg_info('lip_order keyword ignored so far... using 3.')
 
         call copy_grid(g,lgrid)
         do i=1,3

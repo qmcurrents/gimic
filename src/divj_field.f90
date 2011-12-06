@@ -108,7 +108,7 @@ contains
         real(DP) :: div, amax
         real(DP), dimension(3) :: rr 
         
-        if (is_mpirun) then
+        if (settings%is_mpirun) then
             call msg_error('divj_direct_plt(): does not work in parallel')
             stop
         end if
