@@ -37,7 +37,7 @@ args = parser.parse_args()
 def gen_test_inp(calc, fname):
     f=open(fname, 'w')
     for i in open('gimic.inp', 'r'):
-        i = i.replace('calc=[]', 'calc=[{0}]'.format(calc))
+        i = i.replace('calc=cdens', 'calc={0}'.format(calc))
         f.write(i)
     f.close()
 

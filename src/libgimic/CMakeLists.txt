@@ -20,6 +20,7 @@ add_library(gimic STATIC
     kinds.f90
     lip.f90
     reorder.f90
+    settings.f90
     teletype.f90
     tensor.f90
     timer.f90
