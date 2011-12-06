@@ -12,11 +12,25 @@ program gimic
     use timer_m
     use magnet_m
     use parallel_m
+    use cao2sao_class
+    use grid_class
+    use basis_class
+    use dens_class
+    use jtensor_class
+    use jfield_class
+    use caos_m
+    use gaussint_m
     implicit none 
 
-    character(BUFLEN) :: buf
     type(molecule_t) :: mol
     type(getkw_t) :: input
+    type(grid_t) :: grid
+    type(jfield_t) :: jf
+    type(jtensor_t) :: jt
+    type(dens_t) :: xdens
+    real(DP), dimension(3) :: magnet
+
+    character(BUFLEN) :: buf
     
     call new_getkw(input)
     call set_debug_level(3)
@@ -25,7 +39,7 @@ program gimic
 
     call program_header
     call initialize()
-    call dispatcher()
+    call driver()
     call finalize()
 
     call stockas_klocka()
@@ -42,7 +56,7 @@ contains
         integer(I4) :: i, hostnm, rank, ierr
         integer(I4) :: chdir, system
         character(BUFLEN) :: title, fdate, sys
-        real(DP), dimension(3) :: center, magnet
+        real(DP), dimension(3) :: magnet
 
         logical :: screen
 
@@ -73,6 +87,7 @@ contains
         call getkw(input, 'Advanced.screening_thrs', settings%screen_thrs)
         call getkw(input, 'Advanced.lip_order', settings%lip_order)
 
+        print *, settings
         ierr=hostnm(sys)
         if (mpi_rank == 0) then
             write(str_g, '(a,i3,a,a)') 'MPI master', rank,' on ', trim(sys)
@@ -116,35 +131,8 @@ contains
         call del_getkw(input)
     end subroutine
 
-    subroutine dispatcher
-        use globals_m
-        use settings_m
-        use cao2sao_class
-        use basis_class
-        use dens_class
-        use jtensor_class
-        use jfield_class
-        use caos_m
-        use grid_class
-        use gaussint_m
-        use integral_class
-        use divj_field_class
-        use edens_field_class
-
-        type(jfield_t) :: jf
-        type(grid_t) :: grid
-        type(jtensor_t) :: jt
-        type(dens_t) :: xdens, modens
-        type(divj_field_t) :: dj
-        type(edens_field_t) :: ed
-        type(integral_t) :: it
+    subroutine driver
         type(cao2sao_t) :: c2s
-
-        integer(I4) :: i,j
-
-        character(80) :: fname, mofile
-        integer, dimension(2) :: morange
-        real(DP), dimension(3) :: magnet
 
         if (settings%use_screening) then
             call new_basis(mol, settings%basis, settings%screen_thrs)
@@ -157,7 +145,16 @@ contains
             call set_c2sop(mol, c2s)
         end if
 
-        call setup_grid(grid)
+        call new_dens(xdens, mol)
+        call new_jtensor(jt,mol,xdens)
+        call read_dens(xdens, settings%xdens)
+
+        call new_grid(grid, input, mol)
+        if (mpi_rank == 0) then
+            call plot_grid_xyz(grid, 'grid.xyz',  mol)
+        end if
+
+        call get_magnet(grid, magnet)
 
         if (settings%is_uhf) then
             call msg_info('Open-shell calculation')
@@ -170,7 +167,7 @@ contains
             call msg_note('Dry run, not calculating...')
             call nl
         end if
-        
+
         if (settings%calc(1:5) == 'cdens') then 
             call run_cdens()
         else if (settings%calc(1:8) == 'integral') then 
@@ -182,54 +179,62 @@ contains
         else
             call msg_error('gimic(): Unknown operation!')
         end if
-    end do
 
-    if (settings%use_spherical) then
-        call del_c2sop(c2s)
-    end if
-    call del_grid(grid)
+        if (settings%use_spherical) then
+            call del_c2sop(c2s)
+        end if
+        call del_jfield(jf)
+        call del_dens(xdens)
+        call del_jtensor(jt)
+        call del_grid(grid)
     end subroutine
 
     subroutine run_cdens
+        type(jfield_t) :: jf
+        type(jtensor_t) :: jt
+        type(dens_t) :: xdens
         call msg_out('Calculating current density')
         call msg_out('*****************************************')
-        call new_dens(xdens, mol)
-        call new_jtensor(jt,mol,xdens)
-        call read_dens(xdens, fname)
-        call get_magnet(grid, magnet)
         call new_jfield(jf, jt, grid, magnet)
-        if (settings%dryrun) cycle
+        if (settings%dryrun) return
         call jfield(jf)
         ! Contract the tensors with B
         if (mpi_rank == 0) then
             call jvectors(jf)
             call jvector_plot(jf)
         end if
-        call del_jfield(jf)
-        call del_dens(xdens)
-        call del_jtensor(jt)
     end subroutine
 
     subroutine run_integral
+        use integral_class
+        type(jfield_t) :: jf
+        type(jtensor_t) :: jt
+        type(integral_t) :: it
         call msg_out('Integrating current density')
         call msg_out('*****************************************')
         call new_integral(it, jt, jf, grid)
-        if (settings%dryrun) cycle
+        
+        if (settings%dryrun) return
+
         call int_s_direct(it)
         call nl
+        
         call msg_note('Integrating |J|')
         call int_mod_direct(it)
+        
         call msg_note('Integrating current tensor')
         call int_t_direct(it)  ! tensor integral
-        !                    call write_integral(it)
+!        call write_integral(it)
         call del_integral(it)
     end subroutine
 
     subroutine run_divj
+        use divj_field_class
+        type(divj_field_t) :: dj
         call msg_out('Calculating divergence')
         call msg_out('*****************************************')
         call new_divj_field(dj, grid, magnet)
-        if (settings%dryrun) cycle
+        if (settings%dryrun) return
         call divj_field(dj)
         if (mpi_rank == 0) then 
             call divj_plot(dj, 'divj')
@@ -238,12 +243,16 @@ contains
     end subroutine
     
     subroutine run_edens
+        use edens_field_class
+        type(edens_field_t) :: ed
+        type(dens_t) :: modens
         call msg_out('Calculating charge density')
         call msg_out('*****************************************')
-        call new_dens(modens, mol, modens_p)
-        call read_modens(modens, fname, mofile, morange)
-        call new_edens_field(ed, mol, modens, grid, fname)
-        if (settings%dryrun) cycle
+        call new_dens(modens, mol, .true.)
+        call read_modens(modens, settings%density, settings%mofile, &
+            settings%morange)
+        call new_edens_field(ed, mol, modens, grid, 'edens.bin')
+        if (settings%dryrun) return
         call edens_field(ed)
         if (mpi_rank == 0) then 
             call edens_plot(ed, "edens")
@@ -252,23 +261,6 @@ contains
         call del_dens(modens)
     end subroutine
     
-    subroutine setup_grid(grid)
-        use grid_class
-        type(grid_t) :: grid
-        logical :: p 
-        integer(I4) :: i
-        real(DP), dimension(3) :: center
-        
-        p=.false. 
-
-        call new_grid(grid, input, mol)
-        call grid_center(grid, center)
-        if (mpi_rank == 0) then
-            call plot_grid_xyz(grid, 'grid.xyz',  mol)
-        end if
-    end subroutine
-
-
     subroutine program_header
         integer(I4) :: i,j,sz
         integer(I4), dimension(3) :: iti

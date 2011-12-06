@@ -38,7 +38,7 @@ contains
         integer(I4) :: n
         integer(I4) :: p1, p2
 
-        call new_edens(this%edens, mol, dens, densfile)
+        call new_edens(this%edens, mol, dens)
         call get_grid_size(grid, p1, p2)
         allocate(this%buf(p1,p2))
         this%grid=>grid

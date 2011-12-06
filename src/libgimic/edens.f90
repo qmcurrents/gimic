@@ -25,11 +25,10 @@ module edens_class
 
 contains
     ! set up memory (once) for the different components
-    subroutine new_edens(this, mol, dens, densfile)
+    subroutine new_edens(this, mol, dens)
         type(edens_t) :: this
         type(molecule_t) :: mol
         type(dens_t), target :: dens
-        character(*), intent(in) :: densfile
 
         integer(I4) :: n
 
