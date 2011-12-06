@@ -33,7 +33,7 @@ contains
         type(molecule_t), target :: mol
         
         allocate(this%bf(get_ncgto(mol)))
-        if (spherical) allocate(this%sbf(get_nccgto(mol)))
+        if (use_spherical) allocate(this%sbf(get_nccgto(mol)))
         this%mol=>mol
     end subroutine
 
@@ -41,7 +41,7 @@ contains
         type(bfeval_t) :: this
 
         deallocate(this%bf)
-        if (spherical) deallocate(this%sbf)
+        if (use_spherical) deallocate(this%sbf)
         nullify(this%sbf)
         nullify(this%mol)
     end subroutine
@@ -60,7 +60,7 @@ contains
         idx2=0
         posvec=0
         this%bf=0.d0
-        if (spherical) this%sbf=0.d0
+        if (use_spherical) this%sbf=0.d0
         do i=1,natoms
             call get_atom(this%mol,i,atom)
             call get_coord(atom, coord)
@@ -75,7 +75,7 @@ contains
             end do
             idx2=idx2+get_ncgto(basis)
         end do
-        if (spherical) then
+        if (use_spherical) then
             call cao2sao(this%mol%c2s, this%bf, this%sbf)
             ans=>this%sbf
         else
@@ -113,7 +113,7 @@ contains
             end do
             idx2=idx2+get_ncgto(basis)
         end do
-        if (spherical) then
+        if (use_spherical) then
             call cao2sao(this%mol%c2s, this%bf, this%sbf)
             ans=>this%sbf
         else

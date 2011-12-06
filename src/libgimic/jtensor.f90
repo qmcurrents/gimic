@@ -88,7 +88,7 @@ contains
 
         type(tensor_t) :: jt1, jt2
 
-        if (uhf_p) then
+        if (is_uhf) then
             call jtensor(this, r, jt1, spin_a)
             call jtensor(this, r, jt2, spin_b)
             write(81, *) jt1%t
@@ -108,7 +108,7 @@ contains
         type(tensor_t) :: pjt1, pjt2
         type(tensor_t) :: djt1, djt2
 
-        if (uhf_p) then
+        if (is_uhf) then
             call jtensor2(this, r, pjt1, djt1, spin_a)
             call jtensor2(this, r, pjt2, djt2, spin_b)
             write(90, *) pjt1%t
@@ -138,7 +138,7 @@ contains
             case ('alpha')
                 call jtensor(this, r, j, spin_a)
             case ('beta')
-                if (uhf_p) then
+                if (is_uhf) then
                     call jtensor(this, r, j, spin_b)
                 else
                     call msg_error('ctensor(): &
@@ -146,7 +146,7 @@ contains
                     stop
                 end if
             case ('total')
-                if (uhf_p) then
+                if (is_uhf) then
                     call jtensor(this, r, jt1, spin_a)
                     call jtensor(this, r, jt2, spin_b)
                     j%t=jt1%t+jt2%t
@@ -154,7 +154,7 @@ contains
                     call jtensor(this, r, j, spin_a)
                 end if
             case ('spindens')
-                if (.not.uhf_p) then
+                if (.not.is_uhf) then
                     call msg_error('ctensor(): &
                     &spindens requested, but not open-shell system!')
                     stop
@@ -177,7 +177,7 @@ contains
             case ('alpha')
                 call jtensor2(this, r, pj, dj, spin_a)
             case ('beta')
-                if (uhf_p) then
+                if (is_uhf) then
                     call jtensor2(this, r, pj, dj, spin_b)
                 else
                     call msg_error('ctensor(): &
@@ -185,7 +185,7 @@ contains
                     stop
                 end if
             case ('total')
-                if (uhf_p) then
+                if (is_uhf) then
                     call jtensor2(this, r, pj1, dj1, spin_a)
                     call jtensor2(this, r, pj2, dj2, spin_b)
                     pj%t=pj1%t+pj2%t
@@ -194,7 +194,7 @@ contains
                     call jtensor2(this, r, pj, dj, spin_a)
                 end if
             case ('spindens')
-                if (.not.uhf_p) then
+                if (.not.is_uhf) then
                     call msg_error('ctensor(): &
                     &spindens requested, but not open-shell system!')
                     stop
@@ -220,7 +220,7 @@ contains
         call bfeval(this%bfv, r, bfvec)
         call mkdbop(this%dop, r, dbop)
         call dfdr(this%dfr, r, drvec)
-        if (giao_p) then
+        if (use_giao) then
             call dfdb(this%dbt, r, bfvec, dbop, dbvec)
             call d2fdrdb(this%d2f, r, bfvec, drvec, dbop, d2fvec)
         end if
@@ -256,7 +256,7 @@ contains
         call bfeval(this%bfv, r, bfvec)
         call dfdr(this%dfr, r, drvec)
         call mkdbop(this%dop, r, dbop)
-        if (giao_p) then
+        if (use_giao) then
             call dfdb(this%dbt, r, bfvec, dbop, dbvec)
             call d2fdrdb(this%d2f, r, bfvec, drvec, dbop, d2fvec)
         end if
@@ -300,7 +300,7 @@ contains
                 prsp2=dot_product(this%denbf, d2fvec(:,k))
                 ppd=dot_product(this%pdbf, drvec(:,j))
                 ctp(j,i)=ZETA*ppd
-                if (giao_p) ctp(j,i)=ctp(j,i)+ZETA*(prsp1+prsp2)
+                if (use_giao) ctp(j,i)=ctp(j,i)+ZETA*(prsp1+prsp2)
                 k=k+1
             end do
         end do
@@ -349,7 +349,7 @@ contains
                 prsp2=dot_product(this%denbf, d2fvec(:,k))
                 ppd=dot_product(this%pdbf, drvec(:,m))
                 ct(m,b)=ZETA*ppd
-                if (giao_p) ct(m,b)=ct(m,b)+ZETA*(prsp1+prsp2)
+                if (use_giao) ct(m,b)=ct(m,b)+ZETA*(prsp1+prsp2)
 !                print *, m,b
 !                print *, ppd, prsp1, prsp2
                 k=k+1
@@ -361,12 +361,12 @@ contains
 ! contributes to the diagonal.
 
         ! annihilate paramagnetic contribution
-        if (.not.paramag_p)	then
+        if (.not.use_paramag)	then
             ct=D0
             bert_is_evil=.true.
         end if
         ! annihilate diamagnetic  contribution
-        if (.not.diamag_p) then
+        if (.not.use_diamag) then
             dpd=D0    
             bert_is_evil=.true.
         end if

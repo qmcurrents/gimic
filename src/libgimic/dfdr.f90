@@ -31,7 +31,7 @@ contains
         type(molecule_t), target :: mol
 
         allocate(this%dr(get_nccgto(mol),3))
-        if (spherical) allocate(this%sdr(get_ncgto(mol),3))
+        if (use_spherical) allocate(this%sdr(get_ncgto(mol),3))
         this%mol=>mol
 !        call dfdr(this, (/0.d0, 0.d0, 0.d0/), this%dr)
     end subroutine
@@ -40,7 +40,7 @@ contains
         type(dfdr_t) :: this
 
         deallocate(this%dr)
-        if (spherical) deallocate(this%sdr)
+        if (use_spherical) deallocate(this%sdr)
     end subroutine
 
     subroutine dfdr(this, r, drv)
@@ -71,7 +71,7 @@ contains
             end do
             idx2=idx2+get_ncgto(basis)
         end do
-        if (spherical) then
+        if (use_spherical) then
             do axis=1,3
                 call cao2sao(this%mol%c2s, this%dr(:, axis), this%sdr(:,axis))
             end do

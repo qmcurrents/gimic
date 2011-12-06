@@ -114,7 +114,7 @@ contains
         type(vector_t) :: jvec
         type(tensor_t) :: jt
 
-        if (uhf_p) then
+        if (is_uhf) then
             select case(spin)
                 case('total')
                     call msg_note("Integrating total density")
@@ -226,7 +226,7 @@ contains
         type(vector_t) :: jvec
         type(tensor_t) :: jt
 
-        if (uhf_p) then
+        if (is_uhf) then
             select case(spin)
                 case('total')
                     call msg_note("Integrating total density")

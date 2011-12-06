@@ -46,8 +46,8 @@ contains
         logical :: screen
         real(DP) :: screening_thrs = SCREEN_THRS
 
-        spherical=.false.
-        call getkw(input, 'spherical', spherical)
+        use_spherical=.false.
+        call getkw(input, 'use_spherical', spherical)
         call getkw(input, 'basis', molfil)
         call getkw(input, 'density', denfil)
 
@@ -78,24 +78,24 @@ contains
         end if
         call new_basis(mol, molfil, screening_thrs)
 
-        call getkw(input, 'GIAO', giao_p)
-        call getkw(input, 'diamag', diamag_p)
-        call getkw(input, 'paramag', paramag_p)
+        call getkw(input, 'GIAO', use_giao)
+        call getkw(input, 'diamag', use_diamag)
+        call getkw(input, 'paramag', use_paramag)
         
-        if (.not.giao_p) then
+        if (.not.use_giao) then
             call msg_info('GIAOs not used!')
             call nl
         end if
 
-        if (.not.diamag_p) then
+        if (.not.use_diamag) then
             call msg_info( 'Diamagnetic contributions not calculated!')
             call nl
         end if
-        if (.not.paramag_p) then
+        if (.not.use_paramag) then
             call msg_info( 'Paramagnetic contributions not calculated!')
             call nl
         end if
-        if ((.not.diamag_p).and.(.not.paramag_p)) then
+        if ((.not.use_diamag).and.(.not.use_paramag)) then
             call msg_out( '    ...this does not make sense...')
             call nl
             call msg_critical( '    PLEASE SEEK PROFESSIONAL HELP, ASAP!  ')
@@ -150,13 +150,13 @@ contains
 
         call getkw(input,'dryrun', dryrun_p)
 
-        if (spherical) then
+        if (use_spherical) then
             call new_c2sop(c2s,mol)
             call set_c2sop(mol, c2s)
         end if
 
-        call getkw(input, 'openshell', uhf_p)
-        if (uhf_p) then
+        call getkw(input, 'openshell', is_uhf)
+        if (is_uhf) then
             call msg_info('Open-shell calculation')
         else
             call msg_info('Closed-shell calculation')
@@ -284,7 +284,7 @@ contains
         end if
         if (xdens_p) call del_dens(xdens)
         if (modens_p) call del_dens(modens)
-        if (spherical) call del_c2sop(c2s)
+        if (use_spherical) call del_c2sop(c2s)
         call del_jtensor(jt)
     end subroutine
 

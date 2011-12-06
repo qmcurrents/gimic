@@ -11,7 +11,7 @@ module settings_m
     logical :: is_mpirun=.false.
     logical :: is_uhf=.false.
 
-    logical :: use_spherical=.false.
+    logical :: use_use_spherical=.false.
     logical :: use_giao=.true.
     logical :: use_diamag=.true.
     logical :: use_paramag=.true.

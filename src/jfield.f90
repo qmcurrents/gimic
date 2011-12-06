@@ -55,7 +55,7 @@ contains
         call get_grid_size(g,i,j,k)
         allocate(this%jj(i,j))
         allocate(this%vv(i,j))
-        if (uhf_p) then
+        if (is_uhf) then
             allocate(this%jja(i,j))
             allocate(this%jjb(i,j))
             allocate(this%jsd(i,j))
@@ -89,7 +89,7 @@ contains
             access='direct', recl=jtrecl)
         open(JVECFD, file=trim(jvector_file) // '.bin', &
             access='direct', recl=jvrecl)
-        if (uhf_p) then
+        if (is_uhf) then
             open(JTFD+1, file=trim(jtensor_file) // '_A.bin', &
             access='direct', recl=jtrecl)
             open(JTFD+2, file=trim(jtensor_file) // '_B.bin', &
@@ -114,7 +114,7 @@ contains
         deallocate(this%vv)
         nullify(this%jj)
         nullify(this%vv)
-        if (uhf_p) then
+        if (is_uhf) then
             deallocate(this%jja)
             deallocate(this%jjb)
             deallocate(this%jsd)
@@ -126,7 +126,7 @@ contains
         if (mpi_rank == 0) then
             close(JTFD)
             close(JVECFD)
-            if (uhf_p) then
+            if (is_uhf) then
             close(JTFD+1)
             close(JTFD+2)
             close(JTFD+3)
@@ -154,7 +154,7 @@ contains
             do j=1,p2
                 do i=1,p1
                     this%vv(i,j)%v=matmul(this%jj(i,j)%t, this%b)
-                    if (uhf_p) then
+                    if (is_uhf) then
                         this%vva(i,j)%v=matmul(this%jja(i,j)%t, this%b)
                         this%vvb(i,j)%v=matmul(this%jjb(i,j)%t, this%b)
                         this%vsd(i,j)%v=matmul(this%jsd(i,j)%t, this%b)
@@ -182,14 +182,14 @@ contains
                 select case(op)
                 case('r')
                     read(JTFD, rec=k) this%jj(i,j)%t
-                    if (uhf_p) then
+                    if (is_uhf) then
                         read(JTFD+1, rec=k) this%jja(i,j)%t
                         read(JTFD+2, rec=k) this%jjb(i,j)%t
                         read(JTFD+3, rec=k) this%jsd(i,j)%t
                     end if
                 case('w')
                     write(JTFD, rec=k) this%jj(i,j)%t
-                    if (uhf_p) then
+                    if (is_uhf) then
                         write(JTFD+1, rec=k) this%jja(i,j)%t
                         write(JTFD+2, rec=k) this%jjb(i,j)%t
                         write(JTFD+3, rec=k) this%jsd(i,j)%t
@@ -250,14 +250,14 @@ contains
                 select case(op)
                 case('r')
                     read(JVECFD, rec=k) this%vv(i,j)%v
-                    if (uhf_p) then
+                    if (is_uhf) then
                         read(JVECFD+1, rec=k) this%vva(i,j)%v
                         read(JVECFD+2, rec=k) this%vvb(i,j)%v
                         read(JVECFD+3, rec=k) this%vsd(i,j)%v
                     end if
                 case('w')
                     write(JVECFD, rec=k) this%vv(i,j)%v
-                    if (uhf_p) then
+                    if (is_uhf) then
                         write(JVECFD+1, rec=k) this%vva(i,j)%v
                         write(JVECFD+2, rec=k) this%vvb(i,j)%v
                         write(JVECFD+3, rec=k) this%vsd(i,j)%v
@@ -281,7 +281,7 @@ contains
         p2=size(buf(1,:,1))
         p3=size(buf(1,1,:))
 
-        if (spin > 1 .and. .not.uhf_p) then
+        if (spin > 1 .and. .not.is_uhf) then
             call msg_error("read_jvecs(): requested spin component for  & 
             &closed-shell!")
             stop 1
@@ -411,7 +411,7 @@ contains
         type(vector_t), dimension(:,:), pointer :: jv
 
         spin=1
-        if (uhf_p) then
+        if (is_uhf) then
             spin=4
         end if
 
@@ -469,7 +469,7 @@ contains
                 do i=1,p1
                     rr=gridpoint(this%grid, i, j, k)
                     call ctensor(this%jt, rr, this%jj(i,j), 'total')
-                    if (uhf_p) then
+                    if (is_uhf) then
                         call ctensor(this%jt, rr, this%jja(i,j), 'alpha')
                         call ctensor(this%jt, rr, this%jjb(i,j), 'beta')
                         call ctensor(this%jt, rr, this%jsd(i,j), 'spindens')
@@ -477,7 +477,7 @@ contains
                 end do
             end do
             call gather_data(this%jj,this%jj(:,lo:hi))
-            if (uhf_p) then
+            if (is_uhf) then
                 call gather_data(this%jja,this%jja(:,lo:hi))
                 call gather_data(this%jjb,this%jjb(:,lo:hi))
                 call gather_data(this%jsd,this%jsd(:,lo:hi))
@@ -505,7 +505,7 @@ contains
             do i=1,p1
                 rr=gridpoint(this%grid, i, j, k)
                 call ctensor(this%jt, rr, this%jj(i,j), 'total')
-                if (uhf_p) then
+                if (is_uhf) then
                     call ctensor(this%jt, rr, this%jja(i,j), 'alpha')
                     call ctensor(this%jt, rr, this%jjb(i,j), 'beta')
                     call ctensor(this%jt, rr, this%jsd(i,j), 'spindens')
@@ -513,7 +513,7 @@ contains
             end do
         end do
         call gather_data(this%jj,this%jj(:,lo:hi))
-        if (uhf_p) then
+        if (is_uhf) then
             call gather_data(this%jja,this%jja(:,lo:hi))
             call gather_data(this%jjb,this%jjb(:,lo:hi))
             call gather_data(this%jsd,this%jsd(:,lo:hi))

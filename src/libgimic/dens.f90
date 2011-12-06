@@ -36,7 +36,7 @@ contains
             end if
         end if
 
-        if (uhf_p) then
+        if (is_uhf) then
             this%spin=2
         else
             this%spin=1
@@ -44,10 +44,10 @@ contains
 
         if (this%pdens_p) then
             allocate(this%da(ncgto,ncgto,0:3))
-            if (uhf_p) allocate(this%db(ncgto,ncgto,0:3))
+            if (is_uhf) allocate(this%db(ncgto,ncgto,0:3))
         else
             allocate(this%da(ncgto,ncgto,0:0))
-            if (uhf_p) allocate(this%db(ncgto,ncgto,0:0))
+            if (is_uhf) allocate(this%db(ncgto,ncgto,0:0))
         end if
 
     end subroutine
@@ -64,7 +64,7 @@ contains
             call msg_error('read_dens(): dens not allocated!')
             call exit(1)
         end if
-        if ( uhf_p.and..not.associated(this%db) ) then
+        if ( is_uhf.and..not.associated(this%db) ) then
             call msg_error('read_dens(): beta dens not allocated!')
             call exit(1)
         end if
@@ -90,13 +90,13 @@ contains
 
         deallocate(kusse)
 
-        if (uhf_p) then
+        if (is_uhf) then
             call  msg_info('scaling perturbed densities by 0.d5')
             this%da(:,:,1:3)= this%da(:,:,1:3)/2.d0
             this%db(:,:,1:3)= this%db(:,:,1:3)/2.d0
         end if
 
-        if (turbomole_p) then
+        if (is_turbomole) then
             call new_reorder(bofh, this%mol)
             call msg_info('Reordering densities [TURBOMOLE]')
             call turbo_reorder(bofh)
@@ -134,7 +134,7 @@ contains
             call msg_warn('del_dens(): not allocated!')
         end if
         
-        if (uhf_p.and.associated(this%db)) then
+        if (is_uhf.and.associated(this%db)) then
             deallocate(this%db)
         end if
         
@@ -229,7 +229,7 @@ contains
         dens=>this%da
         if (present(spin)) then
             if (spin == spin_b) then
-                if (.not.uhf_p) then
+                if (.not.is_uhf) then
                     call msg_error('gimic: moco(): &
                     &invalid spin for closed shell')
                     stop
@@ -277,7 +277,7 @@ contains
         real(DP), dimension(:,:), allocatable :: mos
         type(reorder_t) :: bofh
 
-        if (.not.turbomole_p) then
+        if (.not.is_turbomole) then
             call read_dens(this, dens_file)
             return
         end if

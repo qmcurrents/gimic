@@ -60,7 +60,7 @@ def main():
     top.add_kw('mpirun', 'BOOL', (False,))
     top.add_kw('screening', 'BOOL', (False,))
     top.add_kw('screen_thrs', 'DBL', (1.0e-8,))
-    top.add_kw('spherical', 'BOOL', (True,))
+    top.add_kw('use_spherical', 'BOOL', (True,))
     top.add_kw('dryrun', 'BOOL', (False,))
     top.add_kw('openshell', 'BOOL', (False,))
     top.add_kw('GIAO', 'BOOL', (True,))

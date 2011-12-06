@@ -1,6 +1,6 @@
 !
 ! Set up the projection operators for transforming from cartesian to 
-! spherical angular basis as described in "Molecular Electronic-Structure
+! use_spherical angular basis as described in "Molecular Electronic-Structure
 ! Theory" by Helgaker et al. [Section 9.1.2].
 !
 ! Well... This scheme does not work well with aces2, so the projection 
@@ -35,9 +35,9 @@ contains
     subroutine setup_c2soper()
         integer(I4) :: l, i,j
         
-        ! Ordering of spherical harmonics in aces2
+        ! Ordering of use_spherical harmonics in aces2
         ! (the ordering is... random!!?)
-        if (turbomole_p) then ! these are NOT right!!!
+        if (is_turbomole) then ! these are NOT right!!!
             sphmap(0,0)=1
             sphmap(1,-1:1)= (/2,3,1/)
             sphmap(2,-2:2)= (/2,5,1,3,4/)

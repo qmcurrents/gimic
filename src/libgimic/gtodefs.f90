@@ -140,7 +140,7 @@ contains
         GTO_DEFS(0)%nlm=>GTS
         GTO_DEFS(1)%nlm=>GTP
         
-        if (turbomole_p) then
+        if (is_turbomole) then
             GTO_DEFS(2)%nlm=>GTD_TM
             GTO_DEFS(3)%nlm=>GTF_TM
             GTO_DEFS(4)%nlm=>GTG_TM
