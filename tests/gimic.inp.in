@@ -1,22 +1,24 @@
 # NEW INPUT
 
+calc=cdens          # cdens, integral, edens, divj
 dryrun=off        # don't actually calculate (good for tuning grids, etc.)
 title=""
 basis="@CMAKE_CURRENT_SOURCE_DIR@/mol"
-density="@CMAKE_CURRENT_SOURCE_DIR@/XDENS"
-spherical=off     # don't touch, unless you REALLY know what you are doing
+xdens="@CMAKE_CURRENT_SOURCE_DIR@/xdens"
 debug=1           # debug print level
-diamag=on           # turn on/off diamagnetic contributions
-paramag=on          # turn on/off paramagnetic contributions
-GIAO=on             # turn on/off GIAOs. Don't change unless you know why.
 openshell=false 
-screening=on        # use screening to speed up 
-screen_thrs=1.d-8   # Screening threshold
-show_up_axis=true   # mark "up" axis in .xyz files
-calc=cdens          # cdens, integral, edens, divj
+show_axis=true   # mark "up" axis in .xyz files
+magnet_axis=-z #[-] i,j,k || x,y,z -> align magnet along axis
+#magnet=[0.0, -1.0, 0.0]   # magnet vector
+scale_vectors=1.0
+
+## For edens only currently
+#density="dens"
+#morange=[0, 0]
+#mofile="mos"
 
 # grid type can be: base/std, bond or file (see examples below)
-grid(base) {    
+Grid(base) {    
     type=even                   # even or gauss 
     origin=[-8.0, -8.0, -2.0]   # origin of grid
     ivec=[1.0, 0.0, 0.0]        # basis vector i
@@ -27,36 +29,21 @@ grid(base) {
     rotation=[0.0,0.0,0.0]      # Rotation of (i,j,k) -> (i',j',k') in degrees
 }
 
-cdens {           
-    magnet_axis=-z #[-] i,j,k || x,y,z -> align magnet along axis
-#   magnet=[0.0, -1.0, 0.0]   # magnet vector
-    scale_vectors=1.0
-}
-
-integral {
-    magnet_axis=T 
-    modulus=off                      # calculate the |J| integral
-    spin=total                       # total, alpha, beta
-# Advanced options, refer to the souece for details
-    tensor=off       # integrate the tensor components
-    interpolate=off  # do integration on even spaced grid by interpolation
+Advanced {
     lip_order=5      # order of Lagrange Interpolating Polynominals to use
-}
-
-divj {
-    magnet_axis=y 
-#   magnet=[0.0, -1.0, 0.0]   
-}
-
-edens {
-    density='EDENS'
+    spherical=off     # don't touch, unless you REALLY know what you are doing
+    diamag=on           # turn on/off diamagnetic contributions
+    paramag=on          # turn on/off paramagnetic contributions
+    GIAO=on             # turn on/off GIAOs. Don't change unless you know why.
+    screening=on        # use screening to speed up 
+    screen_thrs=1.d-8   # Screening threshold
 }
 
 ##############################
 ## Grid example collection
 ##############################
 
-# grid(bond) {                    # define grid orthogonal to a bond 
+# Grid(bond) {                    # define grid orthogonal to a bond 
 #     type=gauss                  # gauss distribution of grid points
 #     bond=[1,2]                  # atom indeces for bond
 #     fixpoint=5
@@ -71,7 +58,7 @@ edens {
 ##    radius=1.0                  # round grid: cut off at radius
 # }
 
-# grid(bond) {                    # define grid orthogonal to a bond 
+# Grid(bond) {                    # define grid orthogonal to a bond 
 #     type=gauss                  # gauss distribution of grid points
 #     coord1=[0.0, 0.0, 2.145166] # "atom" coordinates
 #     coord2=[0.0, 0.0, -2.145166] 
@@ -87,7 +74,7 @@ edens {
 # }
 
 ## Read in grid from external file. 
-# grid(file) {   
+# Grid(file) {   
 #     file=gridfile.grd
 # }
 

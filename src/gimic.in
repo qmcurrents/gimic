@@ -12,43 +12,36 @@ GIMIC_EXECUTABLE="@GIMIC_EXECUTABLE@"
 
 #from subprocess import Popen, PIPE
 import re
-import optparse
+from argparse import ArgumentParser
 import getkw
 
-version="@GIMIC_VERSION_MAJOR@.@GIMIC_VERSION_MINOR@.@GIMIC_VERSION_PATCH@"
+version="@PROJECT_VERSION@"
+
+parser = ArgumentParser(description="GIMIC {0}".format(version))
+
+parser.add_argument('infile', metavar="file", action='store', nargs='?',
+        default='gimic.inp', help='input file [default: gimic.inp]')
+parser.add_argument('-t', '--title', action='store', dest='title',
+        help='title of job')
+parser.add_argument('-d','--debug', action='store', type=int, dest='debug',
+        help='debug level')
+parser.add_argument('-o','--output', action='store', dest='outfile',
+        help='base name for output file(s)')
+parser.add_argument('-D','--debug-file', action='store', dest='debug_file',
+        help='debug file name')
+parser.add_argument('-v','--verbose', action='store_true', dest='verbose',
+       help='be verbose')
+parser.add_argument('-q','--quiet', action='store_false', dest='verbose',
+       help='be quiet')
+parser.add_argument('-y','--dryrun', action='store_true', dest='dryrun',
+       help='dryrun without actually calculating anything')
+parser.add_argument('-k','--keep', action='store_true', dest='keep',
+       help='keep temp input file')
+
+args=parser.parse_args()
 
 def main():
-    usage="%prog [options] [config]"
-    cmdln=optparse.OptionParser(usage=usage, 
-        version="%prog {0}".format(version))
-    cmdln.add_option('-t', action='store', dest='title',
-            help='title of job')
-    cmdln.add_option('-d','--debug', action='store', dest='debug',
-            help='debug level')
-    cmdln.add_option('-o','--output', action='store', dest='outfile',
-            help='base name for output file(s)')
-    cmdln.add_option('-D','--debug-file', action='store', dest='debugf',
-            help='debug file name')
-    cmdln.add_option('-v','--verbose', action='store_true', dest='verbose',
-           help='be verbose')
-    cmdln.add_option('-q','--quiet', action='store_false', dest='verbose',
-           help='be quiet')
-    cmdln.add_option('-y','--dryrun', action='store_true', dest='dryrun',
-           help='dryrun without actually calculating anything')
-    cmdln.add_option('-k','--keep', action='store_true', dest='keep',
-           help='keep temp input file')
-    (opts, args)=cmdln.parse_args()
-
-    inpfil=None
-    if (len(args) == 0):
-        inpfil="gimic.inp"
-    elif (len(args) == 1):
-        inpfil=args[0]
-    else:
-        cmdln.error('incorrect number of files')
-        sys.exit(0)
-    
-    top=getkw.Section('top')
+    top=getkw.Section('top', callback=check_top)
     top.set_status(True)
     top.add_kw('title', 'STR', ('',))
     top.add_kw('debug_file', 'STR', ('DEBUG.out',))
@@ -69,7 +62,7 @@ def main():
     adv=getkw.Section('Advanced')
     adv.add_kw('screening', 'BOOL', (False,))
     adv.add_kw('screen_thrs', 'DBL', (1.0e-8,))
-    adv.add_kw('use_spherical', 'BOOL', (True,))
+    adv.add_kw('spherical', 'BOOL', (True,))
     adv.add_kw('GIAO', 'BOOL', (True,))
     adv.add_kw('diamag', 'BOOL', (True,))
     adv.add_kw('paramag', 'BOOL', (True,))
@@ -106,23 +99,20 @@ def main():
     top.add_sect(adv)
     top.add_sect(grid)
     
-    if inpfil is not None:
-        input=getkw.GetkwParser(top)
-        inkw=input.parseFile(inpfil)
-        inkw.sanitize(top)
-    else:
-        inkw=top
+    input=getkw.GetkwParser(top)
+    inkw=input.parseFile(args.infile)
+    inkw.sanitize(top)
 
-    if opts.title:
-        inkw.setkw('title', opts.title)
-    if opts.debug:
-        inkw.setkw('debug', opts.debug)
-    if opts.dryrun:
-        inkw.setkw('dryrun', opts.dryrun)
-    if opts.outfile:
-        inkw.setkw('outfile', opts.outfile)
-    if opts.debugf:
-        inkw.setkw('debug_file', opts.debugf)
+    if args.title:
+        inkw.setkw('title', args.title)
+    if args.debug:
+        inkw.setkw('debug', args.debug)
+    if args.dryrun:
+        inkw.setkw('dryrun', args.dryrun)
+    if args.outfile:
+        inkw.setkw('outfile', args.outfile)
+    if args.debug_file:
+        inkw.setkw('debug_file', args.debugf)
 
     inkw.run_callbacks(top)
 
@@ -132,7 +122,7 @@ def main():
 
     fd.close()
     os.system(GIMIC_EXECUTABLE + ' < ' + infile)
-    if not opts.keep:
+    if not args.keep:
         os.unlink(infile)
 
 # sanity check
@@ -283,20 +273,14 @@ def check_grid(grid):
 #specified"
 #            sys.exit(1)
 
-def check_calc(top):
+def check_top(top):
     calc=top.getkw('calc')[0]	
     allow={'cdens':1, 'integral':1, 'divj':1, 'edens':1}
     if not allow.has_key(calc):
         print 'Error: unknown option calc = ', calc
         sys.exit(1)
-    if not top.is_set(calc):
-            print 'Error: calc = %s requested, but section %s not set!'\
-                    % (calc, calc)
-            sys.exit(1)
-
-def check_cdens(cdens):
-    omagn=cdens.getkw('magnet')[0]
-    pmagn=cdens.getkw('magnet_axis')[0]
+    omagn=top.getkw('magnet')[0]
+    pmagn=top.getkw('magnet_axis')[0]
     if omagn == 'True' and pmagn == 'True':
         print 'Error: Both magnet vector and axis set simultaneously!'
         sys.exit(1)
