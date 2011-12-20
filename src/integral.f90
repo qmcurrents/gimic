@@ -18,13 +18,14 @@ module integral_class
 
     type integral_t
         type(jtensor_t), pointer :: jt
-        type(jfield_t), pointer :: jf
+!        type(jfield_t), pointer :: jf
         type(grid_t), pointer :: grid
         real(DP), dimension(3,3) :: tint
     end type
 
     public new_integral, del_integral, integral_t
-    public integrate, int_t_direct, int_s_direct, int_t_2d, lipton
+!    public integrate, int_t_2d, lipton
+    public int_t_direct, int_s_direct
     public write_integral, int_mod_direct
     
     private 
@@ -32,13 +33,13 @@ module integral_class
     character(8) :: spin='total'
     integer(I4) :: nlip
 contains
-    subroutine new_integral(this, jt, jf, grid)
+    subroutine new_integral(this, jt, grid)
         type(integral_t) :: this
         type(jtensor_t), target :: jt
-        type(jfield_t),  target :: jf
+!        type(jfield_t),  target :: jf
         type(grid_t), target :: grid
         
-        this%jf=>jf
+!        this%jf=>jf
         this%jt=>jt
         this%grid=>grid
         this%tint=D0
@@ -47,23 +48,23 @@ contains
     subroutine del_integral(this)
         type(integral_t) :: this
 
-        nullify(this%jf)
-        nullify(this%jt)
-        nullify(this%grid)
+!        nullify(this%jf)
+!        nullify(this%jt)
+!        nullify(this%grid)
     end subroutine
 
-    subroutine integrate(jf, grid)
-        type(jfield_t), intent(inout) :: jf
-        type(grid_t), intent(in) :: grid
+!    subroutine integrate(jf, grid)
+!        type(jfield_t), intent(inout) :: jf
+!        type(grid_t), intent(in) :: grid
 
-        integer(I4) :: p1, p2, p3
-        call get_grid_size(grid, p1, p2, p3)
-        if (p3 == 1) then
-            call integrate_s(jf,grid)
-        else
-            call integrate_t(jf,grid)
-        end if
-    end subroutine
+!        integer(I4) :: p1, p2, p3
+!        call get_grid_size(grid, p1, p2, p3)
+!        if (p3 == 1) then
+!            call integrate_s(jf,grid)
+!        else
+!            call integrate_t(jf,grid)
+!        end if
+!    end subroutine
 
     subroutine int_t_direct(this)
         type(integral_t) :: this
@@ -414,318 +415,318 @@ contains
         end do
     end function
 
-    subroutine integrate_v(jf, grid)
-        type(jfield_t), intent(inout) :: jf
-        type(grid_t), intent(in) :: grid
+!    subroutine integrate_v(jf, grid)
+!        type(jfield_t), intent(inout) :: jf
+!        type(grid_t), intent(in) :: grid
 
-        integer(I4) :: i, j, k, p1, p2, p3
-        real(DP), dimension(3) :: rr
-        real(DP) :: w
-        real(DP), dimension(3) :: xsum, xsum2, xsum3
-        type(vector_t), dimension(:,:), pointer :: jvec
-        
-        call get_grid_size(grid, p1, p2, p3)
+!        integer(I4) :: i, j, k, p1, p2, p3
+!        real(DP), dimension(3) :: rr
+!        real(DP) :: w
+!        real(DP), dimension(3) :: xsum, xsum2, xsum3
+!        type(vector_t), dimension(:,:), pointer :: jvec
+!        
+!        call get_grid_size(grid, p1, p2, p3)
 
-        xsum3=0.d0
-        do k=1,p3
-            call get_jvectors(jf, k, jvec)
-            xsum2=0.d0
-            do j=1,p2
-                xsum=0.d0
-                do i=1,p1
-                    w=get_weight(grid, i, 1) 
-                    xsum=xsum+jvec(i,j)%v*w
-                end do
-                w=get_weight(grid,j,2)
-                xsum2=xsum2+xsum*w
-            end do
-            w=get_weight(grid,k,3)
-            xsum3=xsum3+xsum2*w
-        end do
+!        xsum3=0.d0
+!        do k=1,p3
+!            call get_jvectors(jf, k, jvec)
+!            xsum2=0.d0
+!            do j=1,p2
+!                xsum=0.d0
+!                do i=1,p1
+!                    w=get_weight(grid, i, 1) 
+!                    xsum=xsum+jvec(i,j)%v*w
+!                end do
+!                w=get_weight(grid,j,2)
+!                xsum2=xsum2+xsum*w
+!            end do
+!            w=get_weight(grid,k,3)
+!            xsum3=xsum3+xsum2*w
+!        end do
 
-        call nl
-        call msg_out(repeat('*', 60))
-        write(str_g, '(a,3f13.6)') '   Induced current (au)    :', xsum3
-        call msg_out(str_g)
-        call nl
-        write(str_g, '(a,3f13.6)') '   Induced current (nA/T)  :', &
-            (au2si(xsum3(i)), i=1,3)
-        call msg_out(str_g)
-        call nl
-        write(str_g, '(a,f13.6)') '        Conversion Factor   :', au2si(1.d0)
-        call msg_out(str_g)
-        call msg_out(repeat('*', 60))
-    end subroutine
+!        call nl
+!        call msg_out(repeat('*', 60))
+!        write(str_g, '(a,3f13.6)') '   Induced current (au)    :', xsum3
+!        call msg_out(str_g)
+!        call nl
+!        write(str_g, '(a,3f13.6)') '   Induced current (nA/T)  :', &
+!            (au2si(xsum3(i)), i=1,3)
+!        call msg_out(str_g)
+!        call nl
+!        write(str_g, '(a,f13.6)') '        Conversion Factor   :', au2si(1.d0)
+!        call msg_out(str_g)
+!        call msg_out(repeat('*', 60))
+!    end subroutine
 
-    subroutine integrate_t(jf, grid)
-        type(jfield_t), intent(inout) :: jf
-        type(grid_t), intent(in) :: grid
+!    subroutine integrate_t(jf, grid)
+!        type(jfield_t), intent(inout) :: jf
+!        type(grid_t), intent(in) :: grid
 
-        integer(I4) :: i, j, k, p1, p2, p3
-        real(DP), dimension(3) :: rr
-        real(DP) :: w
-        real(DP), dimension(3,3) :: xsum, xsum2, xsum3
-        type(tensor_t), dimension(:,:), pointer :: jt
-        
-        call get_grid_size(grid, p1, p2, p3)
+!        integer(I4) :: i, j, k, p1, p2, p3
+!        real(DP), dimension(3) :: rr
+!        real(DP) :: w
+!        real(DP), dimension(3,3) :: xsum, xsum2, xsum3
+!        type(tensor_t), dimension(:,:), pointer :: jt
+!        
+!        call get_grid_size(grid, p1, p2, p3)
 
-        xsum3=0.d0
-        do k=1,p3
-            call get_jtensors(jf,k,jt)
-            xsum2=0.d0
-            do j=1,p2
-                xsum=0.d0
-                do i=1,p1
-                    w=get_weight(grid, i, 1) 
-                    xsum=xsum+jt(i,j)%t*w
-                end do
-                w=get_weight(grid,j,2)
-                xsum2=xsum2+xsum*w
-            end do
-            w=get_weight(grid,k,3)
-            xsum3=xsum3+xsum2*w
-        end do
+!        xsum3=0.d0
+!        do k=1,p3
+!            call get_jtensors(jf,k,jt)
+!            xsum2=0.d0
+!            do j=1,p2
+!                xsum=0.d0
+!                do i=1,p1
+!                    w=get_weight(grid, i, 1) 
+!                    xsum=xsum+jt(i,j)%t*w
+!                end do
+!                w=get_weight(grid,j,2)
+!                xsum2=xsum2+xsum*w
+!            end do
+!            w=get_weight(grid,k,3)
+!            xsum3=xsum3+xsum2*w
+!        end do
 
 !        call print_t_int(xsum3)
-    end subroutine
+!    end subroutine
 
-    subroutine integrate_s(jf, grid)
-        type(jfield_t), intent(inout) :: jf
-        type(grid_t), intent(in) :: grid
+!    subroutine integrate_s(jf, grid)
+!        type(jfield_t), intent(inout) :: jf
+!        type(grid_t), intent(in) :: grid
 
-        integer(I4) :: i, j, k, p1, p2, p3
-        real(DP), dimension(3) :: normal, rr, center 
-        real(DP) :: psum, nsum, w, jp, r, bound
-        real(DP) :: psum2, nsum2
-        real(DP) :: psum3, nsum3
-        real(DP) :: xsum, xsum2, xsum3
-        type(vector_t), dimension(:,:), pointer :: jvec
-        
-        call get_grid_size(grid, p1, p2, p3)
+!        integer(I4) :: i, j, k, p1, p2, p3
+!        real(DP), dimension(3) :: normal, rr, center 
+!        real(DP) :: psum, nsum, w, jp, r, bound
+!        real(DP) :: psum2, nsum2
+!        real(DP) :: psum3, nsum3
+!        real(DP) :: xsum, xsum2, xsum3
+!        type(vector_t), dimension(:,:), pointer :: jvec
+!        
+!        call get_grid_size(grid, p1, p2, p3)
 
-        normal=get_grid_normal(grid)
+!        normal=get_grid_normal(grid)
 
-        bound=1.d+10
-        bound=grid%radius
-        if (bound < 1.d+10) then
-            write(str_g, *) 'Integration bound set to radius ', bound
-            call msg_out(str_g)
-        end if
-        call grid_center(grid,center)
+!        bound=1.d+10
+!        bound=grid%radius
+!        if (bound < 1.d+10) then
+!            write(str_g, *) 'Integration bound set to radius ', bound
+!            call msg_out(str_g)
+!        end if
+!        call grid_center(grid,center)
 
-        xsum3=0.d0
-        psum3=0.d0
-        nsum3=0.d0
-        do k=1,p3
-            call get_jvectors(jf, k, jvec)
-            xsum2=0.d0
-            psum2=0.d0
-            nsum2=0.d0
-            do j=1,p2
-                xsum=0.d0
-                psum=0.d0
-                nsum=0.d0
-                do i=1,p1
-                    rr=gridpoint(grid, i, j, k)
-                    r=sqrt(sum((rr-center)**2))
-                    if ( r > bound ) then
-                        w=0.d0
-                        jp=0.d0
-                    else
-                        w=get_weight(grid, i, 1) 
-                        jp=dot_product(normal,jvec(i,j)%v)
-                    end if
-                    xsum=xsum+jp*w
-                    if (jp > 0.d0) then
-                        psum=psum+jp*w
-                    else
-                        nsum=nsum+jp*w
-                    end if
-                end do
-                w=get_weight(grid,j,2)
-                xsum2=xsum2+xsum*w
-                psum2=psum2+psum*w
-                nsum2=nsum2+nsum*w
-            end do
-            w=get_weight(grid,k,3)
-            xsum3=xsum3+xsum2*w
-            psum3=psum3+psum2*w
-            nsum3=nsum3+nsum2*w
-        end do
+!        xsum3=0.d0
+!        psum3=0.d0
+!        nsum3=0.d0
+!        do k=1,p3
+!            call get_jvectors(jf, k, jvec)
+!            xsum2=0.d0
+!            psum2=0.d0
+!            nsum2=0.d0
+!            do j=1,p2
+!                xsum=0.d0
+!                psum=0.d0
+!                nsum=0.d0
+!                do i=1,p1
+!                    rr=gridpoint(grid, i, j, k)
+!                    r=sqrt(sum((rr-center)**2))
+!                    if ( r > bound ) then
+!                        w=0.d0
+!                        jp=0.d0
+!                    else
+!                        w=get_weight(grid, i, 1) 
+!                        jp=dot_product(normal,jvec(i,j)%v)
+!                    end if
+!                    xsum=xsum+jp*w
+!                    if (jp > 0.d0) then
+!                        psum=psum+jp*w
+!                    else
+!                        nsum=nsum+jp*w
+!                    end if
+!                end do
+!                w=get_weight(grid,j,2)
+!                xsum2=xsum2+xsum*w
+!                psum2=psum2+psum*w
+!                nsum2=nsum2+nsum*w
+!            end do
+!            w=get_weight(grid,k,3)
+!            xsum3=xsum3+xsum2*w
+!            psum3=psum3+psum2*w
+!            nsum3=nsum3+nsum2*w
+!        end do
 
-        call nl
-        call msg_out(repeat('*', 60))
-        write(str_g, '(a,f13.6)') '   Induced current (au)    :', xsum3
-        call msg_out(str_g)
-        write(str_g, '(a,f13.6,a,f11.6,a)') &
-            '      Positive contribution:', psum3, '  (',au2si(psum3),' )'
-        call msg_out(str_g)
-        write(str_g, '(a,f13.6,a,f11.6,a)') &
-            '      Negative contribution:', nsum3, '  (',au2si(nsum3),' )'
-        call msg_out(str_g)
-        call nl
-        write(str_g, '(a,f13.6)') '   Induced current (nA/T)  :', au2si(xsum3)
-        call msg_out(str_g)
-        write(str_g, '(a,f13.6)') '      (conversion factor)  :', au2si(1.d0)
-        call msg_out(str_g)
-        call msg_out(repeat('*', 60))
-    end subroutine
+!        call nl
+!        call msg_out(repeat('*', 60))
+!        write(str_g, '(a,f13.6)') '   Induced current (au)    :', xsum3
+!        call msg_out(str_g)
+!        write(str_g, '(a,f13.6,a,f11.6,a)') &
+!            '      Positive contribution:', psum3, '  (',au2si(psum3),' )'
+!        call msg_out(str_g)
+!        write(str_g, '(a,f13.6,a,f11.6,a)') &
+!            '      Negative contribution:', nsum3, '  (',au2si(nsum3),' )'
+!        call msg_out(str_g)
+!        call nl
+!        write(str_g, '(a,f13.6)') '   Induced current (nA/T)  :', au2si(xsum3)
+!        call msg_out(str_g)
+!        write(str_g, '(a,f13.6)') '      (conversion factor)  :', au2si(1.d0)
+!        call msg_out(str_g)
+!        call msg_out(repeat('*', 60))
+!    end subroutine
 
-    subroutine integrate_old(jf, grid)
-        type(jfield_t), intent(inout) :: jf
-        type(grid_t), intent(in) :: grid
+!    subroutine integrate_old(jf, grid)
+!        type(jfield_t), intent(inout) :: jf
+!        type(grid_t), intent(in) :: grid
 
-        integer(I4) :: i, j, k, p1, p2, p3
-        real(DP), dimension(3) :: normal, rr, center 
-        real(DP), dimension(:), allocatable :: tmp, ptmp, ntmp
-        real(DP) :: xsum, psum, nsum, w, jp, r, bound
-        type(vector_t), dimension(:,:), pointer :: jvec
-        
-        call get_grid_size(grid, p1, p2, p3)
-        allocate(tmp(p1))
-        allocate(ptmp(p1))
-        allocate(ntmp(p1))
+!        integer(I4) :: i, j, k, p1, p2, p3
+!        real(DP), dimension(3) :: normal, rr, center 
+!        real(DP), dimension(:), allocatable :: tmp, ptmp, ntmp
+!        real(DP) :: xsum, psum, nsum, w, jp, r, bound
+!        type(vector_t), dimension(:,:), pointer :: jvec
+!        
+!        call get_grid_size(grid, p1, p2, p3)
+!        allocate(tmp(p1))
+!        allocate(ptmp(p1))
+!        allocate(ntmp(p1))
 
-        normal=get_grid_normal(grid)
+!        normal=get_grid_normal(grid)
 
-        bound=1.d+10
-        bound=grid%radius
-        if (bound < 1.d+10) then
-            write(str_g, *) 'Integration bound set to radius ', bound
-            call msg_out(str_g)
-        end if
-        call grid_center(grid,center)
+!        bound=1.d+10
+!        bound=grid%radius
+!        if (bound < 1.d+10) then
+!            write(str_g, *) 'Integration bound set to radius ', bound
+!            call msg_out(str_g)
+!        end if
+!        call grid_center(grid,center)
 
-        call get_jvectors(jf, 1, jvec)
-        do j=1,p2
-            xsum=0.d0
-            psum=0.d0
-            nsum=0.d0
-            do i=1,p1
-                rr=gridpoint(grid, i, j, 1)
-                r=sqrt(sum((rr-center)**2))
-                if ( r > bound ) then
-                    w=0.d0
-                    jp=0.d0
-                else
-                    w=get_weight(grid, i, 1) 
-                    jp=dot_product(normal,jvec(i,j)%v)
-                end if
-                xsum=xsum+jp*w
-                if (jp > 0.d0) then
-                    psum=psum+jp*w
-                else
-                    nsum=nsum+jp*w
-                end if
-            end do
-            tmp(j)=xsum
-            ptmp(j)=psum
-            ntmp(j)=nsum
-        end do
-        
-        xsum=0.d0
-        psum=0.d0
-        nsum=0.d0
-        do j=1, p2
-            w=get_weight(grid,j,2)
-            xsum=xsum+tmp(j)*w
-            psum=psum+ptmp(j)*w
-            nsum=nsum+ntmp(j)*w
-        end do
+!        call get_jvectors(jf, 1, jvec)
+!        do j=1,p2
+!            xsum=0.d0
+!            psum=0.d0
+!            nsum=0.d0
+!            do i=1,p1
+!                rr=gridpoint(grid, i, j, 1)
+!                r=sqrt(sum((rr-center)**2))
+!                if ( r > bound ) then
+!                    w=0.d0
+!                    jp=0.d0
+!                else
+!                    w=get_weight(grid, i, 1) 
+!                    jp=dot_product(normal,jvec(i,j)%v)
+!                end if
+!                xsum=xsum+jp*w
+!                if (jp > 0.d0) then
+!                    psum=psum+jp*w
+!                else
+!                    nsum=nsum+jp*w
+!                end if
+!            end do
+!            tmp(j)=xsum
+!            ptmp(j)=psum
+!            ntmp(j)=nsum
+!        end do
+!        
+!        xsum=0.d0
+!        psum=0.d0
+!        nsum=0.d0
+!        do j=1, p2
+!            w=get_weight(grid,j,2)
+!            xsum=xsum+tmp(j)*w
+!            psum=psum+ptmp(j)*w
+!            nsum=nsum+ntmp(j)*w
+!        end do
 
-        deallocate(tmp, ptmp, ntmp)
-        call nl
-        call msg_out(repeat('*', 60))
-        write(str_g, '(a,f13.6)') '   Induced current (au)    :', xsum
-        call msg_out(str_g)
-        write(str_g, '(a,f13.6,a,f11.6,a)') &
-            '      Positive contribution:', psum, '  (',au2si(psum),' )'
-        call msg_out(str_g)
-        write(str_g, '(a,f13.6,a,f11.6,a)') &
-            '      Negative contribution:', nsum, '  (',au2si(nsum),' )'
-        call msg_out(str_g)
-        call nl
-        write(str_g, '(a,f13.6)') '   Induced current (nA/T)  :', au2si(xsum)
-        call msg_out(str_g)
-        write(str_g, '(a,f13.6)') '      (conversion factor)  :', au2si(1.d0)
-        call msg_out(str_g)
-        call msg_out(repeat('*', 60))
-    end subroutine
+!        deallocate(tmp, ptmp, ntmp)
+!        call nl
+!        call msg_out(repeat('*', 60))
+!        write(str_g, '(a,f13.6)') '   Induced current (au)    :', xsum
+!        call msg_out(str_g)
+!        write(str_g, '(a,f13.6,a,f11.6,a)') &
+!            '      Positive contribution:', psum, '  (',au2si(psum),' )'
+!        call msg_out(str_g)
+!        write(str_g, '(a,f13.6,a,f11.6,a)') &
+!            '      Negative contribution:', nsum, '  (',au2si(nsum),' )'
+!        call msg_out(str_g)
+!        call nl
+!        write(str_g, '(a,f13.6)') '   Induced current (nA/T)  :', au2si(xsum)
+!        call msg_out(str_g)
+!        write(str_g, '(a,f13.6)') '      (conversion factor)  :', au2si(1.d0)
+!        call msg_out(str_g)
+!        call msg_out(repeat('*', 60))
+!    end subroutine
 
-    subroutine lipton(jf, g)
-        type(jfield_t), intent(inout) :: jf
-        type(grid_t), intent(inout) :: g
+!    subroutine lipton(jf, g)
+!        type(jfield_t), intent(inout) :: jf
+!        type(grid_t), intent(inout) :: g
 
-        integer(I4) :: i, j, p1, p2
-        real(DP), dimension(3) :: normal, ljt
-        integer(I4), dimension(3) :: ngp
-        real(DP), dimension(:), allocatable :: tmp, gpts
-        real(DP) :: xsum, w, jp, x, q
-        type(vector_t), dimension(:,:), pointer :: jvec
-        type(vector_t), dimension(:), allocatable :: z
+!        integer(I4) :: i, j, p1, p2
+!        real(DP), dimension(3) :: normal, ljt
+!        integer(I4), dimension(3) :: ngp
+!        real(DP), dimension(:), allocatable :: tmp, gpts
+!        real(DP) :: xsum, w, jp, x, q
+!        type(vector_t), dimension(:,:), pointer :: jvec
+!        type(vector_t), dimension(:), allocatable :: z
 
-        type(grid_t) :: lgrid
-        
-        ngp = g%gauss_order
-        nlip = settings%lip_order
-        call msg_info('lip_order keyword ignored so far... using 3.')
+!        type(grid_t) :: lgrid
+!        
+!        ngp = g%gauss_order
+!        nlip = settings%lip_order
+!        call msg_info('lip_order keyword ignored so far... using 3.')
 
-        call copy_grid(g,lgrid)
-        do i=1,3
-            call setup_gauss_data(0.d0, lgrid%l(i), ngp(i), &
-                lgrid%gdata(i), 'gauss')
-        end do
+!        call copy_grid(g,lgrid)
+!        do i=1,3
+!            call setup_gauss_data(0.d0, lgrid%l(i), ngp(i), &
+!                lgrid%gdata(i), 'gauss')
+!        end do
 
-        call get_grid_size(g, p1, p2)
-        allocate(tmp(p2))
-        allocate(gpts(p1))
-        allocate(z(p1))
+!        call get_grid_size(g, p1, p2)
+!        allocate(tmp(p2))
+!        allocate(gpts(p1))
+!        allocate(z(p1))
 
-        normal=get_grid_normal(g)
-        call get_jvectors(jf, 1, jvec)
+!        normal=get_grid_normal(g)
+!        call get_jvectors(jf, 1, jvec)
 
         ! dirt.
-        gpts=g%gdata(1)%pts
+!        gpts=g%gdata(1)%pts
 
-        do j=1,p2
-            do i=1,p1
-                z(i)%v=jvec(i,j)%v !dirt. fix later.
-            end do
-            w=get_weight(lgrid, 1, 1)
-            jp=dot_product(normal, z(1)%v)
-            xsum=jp*w
-            w=get_weight(lgrid, p1, 1)
-            jp=dot_product(normal, z(p1)%v)
-            xsum=xsum+jp*w
-            do i=2,p1-1
-                x=lgrid%gdata(1)%pts(i) !dirt.
-                ljt=lip3n(x, gpts(i-1:i+1), z(i-1:i+1))
-                jp=dot_product(normal, ljt)
-                w=get_weight(lgrid, i, 1)
-                xsum=xsum+jp*w
-            end do
-            tmp(j)=xsum
-        end do
+!        do j=1,p2
+!            do i=1,p1
+!                z(i)%v=jvec(i,j)%v !dirt. fix later.
+!            end do
+!            w=get_weight(lgrid, 1, 1)
+!            jp=dot_product(normal, z(1)%v)
+!            xsum=jp*w
+!            w=get_weight(lgrid, p1, 1)
+!            jp=dot_product(normal, z(p1)%v)
+!            xsum=xsum+jp*w
+!            do i=2,p1-1
+!                x=lgrid%gdata(1)%pts(i) !dirt.
+!                ljt=lip3n(x, gpts(i-1:i+1), z(i-1:i+1))
+!                jp=dot_product(normal, ljt)
+!                w=get_weight(lgrid, i, 1)
+!                xsum=xsum+jp*w
+!            end do
+!            tmp(j)=xsum
+!        end do
         
         ! dirt.
-        gpts=g%gdata(2)%pts
+!        gpts=g%gdata(2)%pts
 
-        w=get_weight(lgrid, 1, 2)
-        xsum=w*tmp(1)
-        w=get_weight(lgrid, p2, 2)
-        xsum=xsum+w*tmp(p2)
-        do i=2, p2-1
-            x=lgrid%gdata(2)%pts(i) !dirt.
-            q=lipn(x, gpts(i-1:i+1), tmp(i-1:i+1))
-            w=get_weight(lgrid,i,2)
-            xsum=xsum+tmp(i)*w
-        end do
+!        w=get_weight(lgrid, 1, 2)
+!        xsum=w*tmp(1)
+!        w=get_weight(lgrid, p2, 2)
+!        xsum=xsum+w*tmp(p2)
+!        do i=2, p2-1
+!            x=lgrid%gdata(2)%pts(i) !dirt.
+!            q=lipn(x, gpts(i-1:i+1), tmp(i-1:i+1))
+!            w=get_weight(lgrid,i,2)
+!            xsum=xsum+tmp(i)*w
+!        end do
 
-        deallocate(tmp, gpts, z)
-        write(str_g, '(a,e19.12)') 'Integrated current (LIP):', xsum
-        call msg_out(str_g)
-        call del_grid(lgrid)
-    end subroutine
+!        deallocate(tmp, gpts, z)
+!        write(str_g, '(a,e19.12)') 'Integrated current (LIP):', xsum
+!        call msg_out(str_g)
+!        call del_grid(lgrid)
+!    end subroutine
 
     function au2si(au) result(si)
         real(DP), intent(in) :: au

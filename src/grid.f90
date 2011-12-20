@@ -167,6 +167,11 @@ contains
             call getkw(input, 'Grid.fixcoord', this%origin)
         end if
 
+        this%radius = 1.e10
+        if (keyword_is_set(input, 'Grid.radius')) then
+            call getkw(input, 'Grid.radius', this%radius)
+        endif
+
         !defaults, etc.
         l3=-1.d0
         wdt=-1.d0

@@ -87,7 +87,6 @@ contains
         call getkw(input, 'Advanced.screening_thrs', settings%screen_thrs)
         call getkw(input, 'Advanced.lip_order', settings%lip_order)
 
-        print *, settings
         ierr=hostnm(sys)
         if (mpi_rank == 0) then
             write(str_g, '(a,i3,a,a)') 'MPI master', rank,' on ', trim(sys)
@@ -146,7 +145,7 @@ contains
         end if
 
         call new_dens(xdens, mol)
-        call new_jtensor(jt,mol,xdens)
+        call new_jtensor(jt, mol, xdens)
         call read_dens(xdens, settings%xdens)
 
         call new_grid(grid, input, mol)
@@ -169,9 +168,9 @@ contains
         end if
 
         if (settings%calc(1:5) == 'cdens') then 
-            call run_cdens()
+            call run_cdens(jf, jt, xdens)
         else if (settings%calc(1:8) == 'integral') then 
-            call run_integral()
+            call run_integral(jf, jt)
         else if (settings%calc(1:4) == 'divj') then 
             call run_divj()
         else if (settings%calc(1:5) == 'edens') then 
@@ -183,13 +182,12 @@ contains
         if (settings%use_spherical) then
             call del_c2sop(c2s)
         end if
-        call del_jfield(jf)
         call del_dens(xdens)
         call del_jtensor(jt)
         call del_grid(grid)
     end subroutine
 
-    subroutine run_cdens
+    subroutine run_cdens(jf, jt, xdens)
         type(jfield_t) :: jf
         type(jtensor_t) :: jt
         type(dens_t) :: xdens
@@ -203,16 +201,18 @@ contains
             call jvectors(jf)
             call jvector_plot(jf)
         end if
+        call del_jfield(jf)
     end subroutine
 
-    subroutine run_integral
+    subroutine run_integral(jf, jt)
         use integral_class
         type(jfield_t) :: jf
         type(jtensor_t) :: jt
         type(integral_t) :: it
         call msg_out('Integrating current density')
         call msg_out('*****************************************')
-        call new_integral(it, jt, jf, grid)
+!        call new_integral(it, jt, jf, grid)
+        call new_integral(it, jt, grid)
         
         if (settings%dryrun) return
 
@@ -281,7 +281,7 @@ call nl
 call msg_out('****************************************************************')
 call msg_out('***                                                          ***')
 call msg_out('***           GIMIC '// PROJECT_VERSION // &
-                                      '                                    ***')
+                       ' (' // GIT_REVISION // ')                          ***')
 call msg_out('***              Written by Jonas Juselius                   ***')
 call msg_out('***                                                          ***')
 call msg_out('***  This software is copyright (c) 2003-2011 by             ***')
@@ -290,7 +290,7 @@ call msg_out('***                                                          ***')
 call msg_out('***  You are free to distribute this software under the      ***')
 call msg_out('***  terms of the GNU General Public License                 ***')
 call msg_out('***                                                          ***')
-call msg_out('***  A Pretty Advanced ''Hello World!'' Program              ***')
+call msg_out('***  A Pretty Advanced ''Hello World!'' Program                ***')
 call msg_out('****************************************************************')
 call nl
     end subroutine

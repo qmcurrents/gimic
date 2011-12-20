@@ -12,11 +12,12 @@ execute_process(COMMAND
     chmod 755 ${CMAKE_CURRENT_BINARY_DIR}/gimic OUTPUT_QUIET) 
 
 # Configure input
-if (NOT EXISTS ${CMAKE_CURRENT_BINARY_DIR}/gimic.inp) 
-    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/gimic.inp.in
-        ${CMAKE_CURRENT_BINARY_DIR}/gimic.inp @ONLY
-        )
-endif()
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/vectors.inp.in
+    ${CMAKE_CURRENT_BINARY_DIR}/vectors.inp @ONLY
+    )
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/bondint.inp.in
+    ${CMAKE_CURRENT_BINARY_DIR}/bondint.inp @ONLY
+    )
 
 # Configure script
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/test.py.in

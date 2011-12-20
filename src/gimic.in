@@ -91,7 +91,7 @@ def main():
     grid.add_kw("down", 'DBL', 1)
     grid.add_kw("in", 'DBL', 1)
     grid.add_kw("out", 'DBL', 1)
-    grid.add_kw("radius", 'DBL', (1.e10,))
+    grid.add_kw("radius", 'DBL', (-1.0,))
     grid.add_kw("gridplot", 'INT', 1)
     grid.add_kw("grid_points", 'INT_ARRAY', 3)
     grid.add_kw("gauss_order", 'INT', (7,))

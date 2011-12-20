@@ -34,13 +34,6 @@ parser.add_argument('name',
 
 args = parser.parse_args()
 
-def gen_test_inp(calc, fname):
-    f=open(fname, 'w')
-    for i in open('gimic.inp', 'r'):
-        i = i.replace('calc=cdens', 'calc={0}'.format(calc))
-        f.write(i)
-    f.close()
-
 def run_gimic(name):
     fout = open(name + '.out', 'w')
     ferr = open(name + '.err', 'w')
@@ -57,7 +50,6 @@ def run_gimic(name):
 def test_vectors():
     comment = re.compile(r'^[ ]*#.*$')
     empty = re.compile(r'^[ \t]*$')
-    gen_test_inp('cdens', 'vectors.inp')
     if not run_gimic('vectors'):
         return False
     ref = os.path.join(ref_dir, 'jvec.txt')
@@ -78,10 +70,9 @@ def test_vectors():
     return True
 
 def test_bond_integral():
-    gen_test_inp('integral', 'integral.inp')
-    if not run_gimic('integral'):
+    if not run_gimic('bondint'):
         return False
-    f = open('integral.out', 'r')
+    f = open('bondint.out', 'r')
     intgrl = -1.e10
     for line in f:
         if 'Induced current (nA/T)  :' in line:
