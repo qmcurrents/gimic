@@ -10,6 +10,7 @@ module jfield_class
     use globals_m
     use settings_m
     use jtensor_class
+    use dens_class
     use grid_class
     use basis_class
     use teletype_m
@@ -18,7 +19,7 @@ module jfield_class
     implicit none
 
     type jfield_t
-        type(jtensor_t), pointer :: jt
+        !type(jtensor_t), pointer :: jt
         real(DP), dimension(3) :: b
         type(tensor_t), dimension(:,:,:), pointer :: jj, jja, jjb, jsd
         type(vector_t), dimension(:,:,:), pointer :: vv, vva, vvb, vsd
@@ -33,16 +34,16 @@ module jfield_class
     integer(I4) :: spin
     character(BUFLEN) :: jmod_plt, jvec_plt
 contains
-    subroutine new_jfield(this, jt, g, magnet)
+    subroutine new_jfield(this, g, magnet)
         type(jfield_t) :: this
-        type(jtensor_t), target :: jt
+!        type(jtensor_t), target :: jt
         type(grid_t), target :: g
         real(DP), dimension(3), intent(in) :: magnet
 
         integer(I4) :: i, j, k
 
         this%b=magnet
-        this%jt=>jt
+!        this%jt=>jt
         this%grid=>g
 
         call get_grid_size(g,i,j,k)
@@ -76,28 +77,32 @@ contains
         end if
     end subroutine
 
-    subroutine jfield(this)
+    subroutine jfield(this, mol, xdens)
         type(jfield_t) :: this
+        type(molecule_t) :: mol
+        type(dens_t) :: xdens
 
         integer(I4) :: i, j, k, p1, p2, p3
         real(DP), dimension(3) :: rr
         character(10) :: op
         integer(I4) :: lo, hi, npts
+        type(jtensor_t) :: jt
 
-        call jfield_eta(this)
+        call jfield_eta(this, mol, xdens)
         call get_grid_size(this%grid, p1, p2, p3)
 
-!$OMP PARALLEL PRIVATE(i,j,k,rr) SHARED(p1,p2,p3,settings,this)
+!$OMP PARALLEL PRIVATE(i,j,k,rr,jt) SHARED(p1,p2,p3,settings,this,mol,xdens)
+        call new_jtensor(jt, mol, xdens)
         do k=1,p3
             !$OMP DO SCHEDULE(STATIC) 
             do j=1,p2
                 do i=1,p1
                     rr=gridpoint(this%grid, i, j, k)
-                    call ctensor(this%jt, rr, this%jj(i,j,k), 'total')
+                    call ctensor(jt, rr, this%jj(i,j,k), 'total')
                     if (settings%is_uhf) then
-                        call ctensor(this%jt, rr, this%jja(i,j,k), 'alpha')
-                        call ctensor(this%jt, rr, this%jjb(i,j,k), 'beta')
-                        call ctensor(this%jt, rr, this%jsd(i,j,k), 'spindens')
+                        call ctensor(jt, rr, this%jja(i,j,k), 'alpha')
+                        call ctensor(jt, rr, this%jjb(i,j,k), 'beta')
+                        call ctensor(jt, rr, this%jsd(i,j,k), 'spindens')
                     end if
                 end do
             end do
@@ -133,12 +138,15 @@ contains
 !$OMP END PARALLEL
     end subroutine
 
-    subroutine jfield_eta(this, fac)
+    subroutine jfield_eta(this, mol, xdens, fac)
         type(jfield_t) :: this
+        type(molecule_t) :: mol
+        type(dens_t) :: xdens
         real(DP), intent(in), optional :: fac
 
         integer(I4) :: i, j, p1, p2, p3
         type(tensor_t) :: foo
+        type(jtensor_t) :: jt
         real(DP) :: delta_t
         real(4) :: tim1, tim2
         real(4), dimension(2) :: times
@@ -148,10 +156,11 @@ contains
         
         call get_grid_size(this%grid, p1, p2, p3)
         
+        call new_jtensor(jt, mol, xdens)
         call etime(times, tim1)
         tim1=times(1)
         do i=1,100
-            call jtensor(this%jt, (/i*SC, i*SC, i*SC/), foo, spin_a)
+            call jtensor(jt, (/i*SC, i*SC, i*SC/), foo, spin_a)
             foobar=matmul(bar,foo%t)
         end do
         call etime(times, tim2)

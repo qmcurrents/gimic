@@ -168,7 +168,7 @@ contains
         end if
 
         if (settings%calc(1:5) == 'cdens') then 
-            call run_cdens(jf, jt, xdens)
+            call run_cdens(jf, xdens)
         else if (settings%calc(1:8) == 'integral') then 
             call run_integral(jf, jt)
         else if (settings%calc(1:4) == 'divj') then 
@@ -187,15 +187,14 @@ contains
         call del_grid(grid)
     end subroutine
 
-    subroutine run_cdens(jf, jt, xdens)
+    subroutine run_cdens(jf, xdens)
         type(jfield_t) :: jf
-        type(jtensor_t) :: jt
         type(dens_t) :: xdens
         call msg_out('Calculating current density')
         call msg_out('*****************************************')
-        call new_jfield(jf, jt, grid, magnet)
+        call new_jfield(jf, grid, magnet)
         if (settings%dryrun) return
-        call jfield(jf)
+        call jfield(jf, mol, xdens)
         ! Contract the tensors with B
         if (mpi_rank == 0) then
             call jvectors(jf)

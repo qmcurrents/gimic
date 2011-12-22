@@ -28,6 +28,10 @@ module jtensor_class
         type(dfdr_t) :: dfr
         type(bfeval_t) :: bfv
         real(DP), dimension(:), pointer :: pdbf, denbf, dendb
+        ! scratch mem
+        real(DP), dimension(:), pointer :: bfvec
+        real(DP), dimension(:,:), pointer :: dbvec, drvec, d2fvec, dbop
+        real(DP), dimension(:,:), pointer :: aodens, pdens
     end type
 
     public new_jtensor, del_jtensor, jtensor, jtensor2, jvector
@@ -36,12 +40,6 @@ module jtensor_class
     public jtensor_t, jdebug
     
     private
-    
-    real(DP), dimension(3) :: rho
-
-    real(DP), dimension(:), pointer :: bfvec
-    real(DP), dimension(:,:), pointer :: dbvec, drvec, d2fvec, dbop
-    real(DP), dimension(:,:), pointer :: aodens, pdens
     integer(I4), parameter :: NOTIFICATION=1000
 
 contains
@@ -215,15 +213,16 @@ contains
 
         integer(I4) :: i, b
         integer(I4), save :: notify=1
+        real(DP), dimension(3) :: rho
 
         rho=DP50*r ! needed for diamag. contr.
 
-        call bfeval(this%bfv, r, bfvec)
-        call mkdbop(this%dop, r, dbop)
-        call dfdr(this%dfr, r, drvec)
+        call bfeval(this%bfv, r, this%bfvec)
+        call mkdbop(this%dop, r, this%dbop)
+        call dfdr(this%dfr, r, this%drvec)
         if (settings%use_giao) then
-            call dfdb(this%dbt, r, bfvec, dbop, dbvec)
-            call d2fdrdb(this%d2f, r, bfvec, drvec, dbop, d2fvec)
+            call dfdb(this%dbt, r, this%bfvec, this%dbop, this%dbvec)
+            call d2fdrdb(this%d2f, r, this%bfvec, this%drvec, this%dbop, this%d2fvec)
         end if
 
         call contract(this, j%t, spin)
@@ -248,18 +247,19 @@ contains
         type(tensor_t), intent(inout) :: pj, dj
         integer(I4) :: spin
 
-        real(DP), dimension(:,:), pointer :: dbop
+!        real(DP), dimension(:,:), pointer :: dbop
         integer(I4) :: i, b
         integer(I4), save :: notify=1
+        real(DP), dimension(3) :: rho
 
         rho=DP50*r ! needed for diamag. contr.
 
-        call bfeval(this%bfv, r, bfvec)
-        call dfdr(this%dfr, r, drvec)
-        call mkdbop(this%dop, r, dbop)
+        call bfeval(this%bfv, r, this%bfvec)
+        call dfdr(this%dfr, r, this%drvec)
+        call mkdbop(this%dop, r, this%dbop)
         if (settings%use_giao) then
-            call dfdb(this%dbt, r, bfvec, dbop, dbvec)
-            call d2fdrdb(this%d2f, r, bfvec, drvec, dbop, d2fvec)
+            call dfdb(this%dbt, r, this%bfvec, this%dbop, this%dbvec)
+            call d2fdrdb(this%d2f, r, this%bfvec, this%drvec, this%dbop, this%d2fvec)
         end if
 
         call contract2(this, pj%t, dj%t, spin)
@@ -284,22 +284,23 @@ contains
         real(DP) :: ppd                ! paramagnetic probability density
         real(DP), dimension(3) :: dpd  ! diamagnetic probability density
         real(DP) :: diapam
+        real(DP), dimension(3) :: rho
 
-        call get_dens(this%xdens, aodens, spin)  
-        this%denbf=matmul(bfvec, aodens)
+        call get_dens(this%xdens, this%aodens, spin)  
+        this%denbf=matmul(this%bfvec, this%aodens)
 
         k=1
-        diapam=dot_product(this%denbf, bfvec)
+        diapam=dot_product(this%denbf, this%bfvec)
         do i=1,3! dB <x,y,z>
             ! get perturbed densities: x,y,z
-            call get_pdens(this%xdens, i, pdens,spin) 
-            this%pdbf=matmul(bfvec, pdens)
-            this%dendb=matmul(dbvec(:,i), aodens)
+            call get_pdens(this%xdens, i, this%pdens,spin) 
+            this%pdbf=matmul(this%bfvec, this%pdens)
+            this%dendb=matmul(this%dbvec(:,i), this%aodens)
             dpd(i)=diapam*rho(i) ! diamag. contr. to J
             do j=1,3 !dm <x,y,z>
-                prsp1=-dot_product(this%dendb, drvec(:,j))    ! (-i)**2=-1 
-                prsp2=dot_product(this%denbf, d2fvec(:,k))
-                ppd=dot_product(this%pdbf, drvec(:,j))
+                prsp1=-dot_product(this%dendb, this%drvec(:,j))    ! (-i)**2=-1 
+                prsp2=dot_product(this%denbf, this%d2fvec(:,k))
+                ppd=dot_product(this%pdbf, this%drvec(:,j))
                 ctp(j,i)=ZETA*ppd
                 if (settings%use_giao) ctp(j,i)=ctp(j,i)+ZETA*(prsp1+prsp2)
                 k=k+1
@@ -332,23 +333,24 @@ contains
         real(DP) :: ppd                ! paramagnetic probability density
         real(DP), dimension(3) :: dpd  ! diamagnetic probability density
         real(DP) :: diapam
+        real(DP), dimension(3) :: rho
 
-        call get_dens(this%xdens, aodens, spin)  
+        call get_dens(this%xdens, this%aodens, spin)  
         
-        this%denbf=matmul(bfvec, aodens)
+        this%denbf=matmul(this%bfvec, this%aodens)
 
         k=1
-        diapam=dot_product(this%denbf, bfvec)
+        diapam=dot_product(this%denbf, this%bfvec)
         do b=1,3! dB <x,y,z>
             ! get perturbed densities: x,y,z
-            call get_pdens(this%xdens, b, pdens, spin) 
-            this%pdbf=matmul(bfvec, pdens)
-            this%dendb=matmul(dbvec(:,b), aodens)
+            call get_pdens(this%xdens, b, this%pdens, spin) 
+            this%pdbf=matmul(this%bfvec, this%pdens)
+            this%dendb=matmul(this%dbvec(:,b), this%aodens)
             dpd(b)=diapam*rho(b) ! diamag. contr. to J
             do m=1,3 !dm <x,y,z>
-                prsp1=-dot_product(this%dendb, drvec(:,m))    ! (-i)**2=-1 
-                prsp2=dot_product(this%denbf, d2fvec(:,k))
-                ppd=dot_product(this%pdbf, drvec(:,m))
+                prsp1=-dot_product(this%dendb, this%drvec(:,m))    ! (-i)**2=-1 
+                prsp2=dot_product(this%denbf, this%d2fvec(:,k))
+                ppd=dot_product(this%pdbf, this%drvec(:,m))
                 ct(m,b)=ZETA*ppd
                 if (settings%use_giao) ct(m,b)=ct(m,b)+ZETA*(prsp1+prsp2)
 !                print *, m,b
@@ -394,9 +396,9 @@ contains
 !        q=0.0
 !        do mu=1,n
 !            do nu=1,n 
-!                q=q+aodens(nu,mu)*( dbvec(mu,mag)*drvec(nu,nuc)- &
-!                  bfvec(mu)*(d2fvec(nu,k)))- &
-!                  pdens(nu,mu)*bfvec(mu)*drvec(nu,nuc)
+!                q=q+this%aodens(nu,mu)*( this%dbvec(mu,mag)*this%drvec(nu,nuc)- &
+!                  bfvec(mu)*(this%d2fvec(nu,k)))- &
+!                  pdens(nu,mu)*bfvec(mu)*this%drvec(nu,nuc)
 !            end do
 !        end do
 !        jj=q
@@ -409,57 +411,57 @@ contains
         integer(I4) :: i, b
         integer(I4), save :: notify=1
 
-        call bfeval(this%bfv, r, bfvec)
-        call dfdr(this%dfr, r, drvec)
-        call mkdbop(this%dop, r, dbop)
-        call dfdb(this%dbt, r, bfvec, dbop, dbvec)
-        call d2fdrdb(this%d2f, r, bfvec, drvec, dbop, d2fvec)
+        call bfeval(this%bfv, r, this%bfvec)
+        call dfdr(this%dfr, r, this%drvec)
+        call mkdbop(this%dop, r, this%dbop)
+        call dfdb(this%dbt, r, this%bfvec, this%dbop, this%dbvec)
+        call d2fdrdb(this%d2f, r, this%bfvec, this%drvec, this%dbop, this%d2fvec)
         
         print *, 'bfvec'
         print *, repeat('-', 70)
-        print *, bfvec
+        print *, this%bfvec
         print *
 
         print *, 'drvec'
         print *, repeat('-', 70)
         print 45
-        print 41, drvec(1,:)
-        print 42, drvec(2,:)
-        print 43, drvec(3,:)
-        print 44, drvec(4,:)
+        print 41, this%drvec(1,:)
+        print 42, this%drvec(2,:)
+        print 43, this%drvec(3,:)
+        print 44, this%drvec(4,:)
         print *
 
         print *, 'dbvec'
         print *, repeat('-', 70)
         print 45
-        print 41, dbvec(1,:)
-        print 42, dbvec(2,:)
-        print 43, dbvec(3,:)
-        print 44, dbvec(4,:)
+        print 41, this%dbvec(1,:)
+        print 42, this%dbvec(2,:)
+        print 43, this%dbvec(3,:)
+        print 44, this%dbvec(4,:)
         print *
 
         print *, 'd2fvec'
         print *, repeat('-', 70)
         print *, 'X'
         print 45
-        print 41, d2fvec(1,1:3)
-        print 42, d2fvec(2,1:3)
-        print 43, d2fvec(3,1:3)
-        print 44, d2fvec(4,1:3)
+        print 41, this%d2fvec(1,1:3)
+        print 42, this%d2fvec(2,1:3)
+        print 43, this%d2fvec(3,1:3)
+        print 44, this%d2fvec(4,1:3)
         print *
         print *, 'Y'
         print 45
-        print 41, d2fvec(1,4:6)
-        print 42, d2fvec(2,4:6)
-        print 43, d2fvec(3,4:6)
-        print 44, d2fvec(4,4:6)
+        print 41, this%d2fvec(1,4:6)
+        print 42, this%d2fvec(2,4:6)
+        print 43, this%d2fvec(3,4:6)
+        print 44, this%d2fvec(4,4:6)
         print *
         print *, 'Z'
         print 45
-        print 41, d2fvec(1,7:9)
-        print 42, d2fvec(2,7:9)
-        print 43, d2fvec(3,7:9)
-        print 44, d2fvec(4,7:9)
+        print 41, this%d2fvec(1,7:9)
+        print 42, this%d2fvec(2,7:9)
+        print 43, this%d2fvec(3,7:9)
+        print 44, this%d2fvec(4,7:9)
 41 format('s ',3f15.10)
 42 format('px',3f15.10)
 43 format('py',3f15.10)

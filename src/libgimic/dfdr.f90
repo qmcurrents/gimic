@@ -18,13 +18,6 @@ module dfdr_class
 
     private
     
-    integer(I4) :: i, j, k, natoms, nctr, nccomp, axis
-    type(atom_t), pointer :: atom
-    type(basis_t), pointer :: basis
-    type(contraction_t), pointer :: ctr
-    real(DP), dimension(3) :: rr, coord
-    integer(I4) :: idx
-        
 contains
 
     subroutine new_dfdr(this, mol)
@@ -52,6 +45,12 @@ contains
         integer(I4), dimension(99) :: posvec
         integer(I4) :: idx1, idx2
         
+        integer(I4) :: i, j, k, natoms, nctr, nccomp, axis
+        type(atom_t), pointer :: atom
+        type(basis_t), pointer :: basis
+        type(contraction_t), pointer :: ctr
+        real(DP), dimension(3) :: rr, coord
+        integer(I4) :: idx
         natoms=get_natoms(this%mol)
         
         idx2=0

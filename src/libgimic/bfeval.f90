@@ -20,13 +20,6 @@ module bfeval_class
     end type
 
     private
-    
-    integer(I4) :: i, j, k, natoms, nctr, ncomp, nccomp, idx
-    type(atom_t), pointer :: atom
-    type(basis_t), pointer :: basis
-    type(contraction_t), pointer :: ctr
-    real(DP), dimension(3) :: rr, coord
-        
 contains
 
     subroutine new_bfeval(this, mol)
@@ -54,6 +47,12 @@ contains
 
         integer(I4), dimension(99) :: posvec
         integer(I4) :: idx1, idx2
+    
+        integer(I4) :: i, j, k, natoms, nctr, ncomp, nccomp, idx
+        type(atom_t), pointer :: atom
+        type(basis_t), pointer :: basis
+        type(contraction_t), pointer :: ctr
+        real(DP), dimension(3) :: rr, coord
         
         natoms=get_natoms(this%mol)
         
@@ -91,6 +90,12 @@ contains
 
         integer(I4), dimension(99) :: posvec
         integer(I4) :: idx1, idx2
+
+        integer(I4) :: i, j, k, natoms, nctr, ncomp, nccomp, idx
+        type(atom_t), pointer :: atom
+        type(basis_t), pointer :: basis
+        type(contraction_t), pointer :: ctr
+        real(DP), dimension(3) :: rr, coord
 
         natoms=get_natoms(this%mol)
         

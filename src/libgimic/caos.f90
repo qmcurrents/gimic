@@ -14,8 +14,6 @@ module caos_m
 
     private
 
-    real(DP) :: rr2
-
 contains
 
     subroutine cgto(r, ctr, val)
@@ -27,11 +25,12 @@ contains
         real(DP) :: q
         integer(I4) :: i
         real(DP), dimension(:,:), pointer :: f
+        real(DP) :: rr2
 
         rr2=sum(r**2)
 
         call get_gto_nlm(ctr%l, f)
-        q=cao(ctr)
+        q=cao(ctr, rr2)
         do i=1,ctr%nccomp 
             p=product(r**f(:,i))*q
 !            if (abs(p) > 1.d-20) val(i)=p
@@ -50,11 +49,12 @@ contains
         real(DP), dimension(3) :: df
         real(DP) :: up, down
         integer(I4) :: i, j
+        real(DP) :: rr2
 
         rr2=sum(r**2)
         
         call get_gto_nlm(ctr%l,f)
-        call cao2(ctr, bfval, dbfval)
+        call cao2(ctr, rr2, bfval, dbfval)
         do i=1,ctr%nccomp 
             df=f(:,i)
             df(ax)=df(ax)-1.d0
@@ -66,8 +66,9 @@ contains
     end subroutine
     
     ! Evaluate one contracted CAO 
-    function cao(cc) result(ff)
+    function cao(cc, rr2) result(ff)
         type(contraction_t), intent(in)  :: cc
+        real(DP) :: rr2
         real(DP) :: ff
 
         integer(I4) :: i
@@ -79,8 +80,9 @@ contains
     end function
     
     ! Evaluate one differentiated CAO
-    function dcao(cc) result(ff)
+    function dcao(cc, rr2) result(ff)
         type(contraction_t), intent(in) :: cc
+        real(DP) :: rr2
         real(DP) :: ff
 
         integer(I4) :: i
@@ -91,8 +93,9 @@ contains
         end do
     end function
 
-    subroutine cao2(cc, vcao, vdcao)
+    subroutine cao2(cc, rr2, vcao, vdcao)
         type(contraction_t), intent(in)  :: cc
+        real(DP) :: rr2
         real(DP), intent(out) :: vcao, vdcao
         
         integer(I4) :: i

@@ -146,12 +146,18 @@ contains
         real(DP), dimension(:,:), pointer :: a
         integer(I4), optional :: spin
 
-        dens=>this%da
+!        dens=>this%da
         if (present(spin)) then
-            if (spin == spin_b) dens=>this%db
+            if (spin == spin_b) then
+                a=>this%db(:,:,0)
+            else 
+                a=>this%da(:,:,0)
+            end if
+        else
+            a=>this%da(:,:,0)
         end if
         
-        a=>dens(:,:,0)
+!        a=>dens(:,:,0)
     end subroutine  
 
     subroutine set_dens(this,a,spin)
@@ -172,11 +178,15 @@ contains
         real(DP), dimension(:,:), pointer :: a
         integer(I4), optional :: spin
 
-        dens=>this%da
         if (present(spin)) then
-            if (spin == spin_b) dens=>this%db
+            if (spin == spin_b) then
+                a=>this%db(:,:,b)
+            else 
+                a=>this%da(:,:,b)
+            end if
+        else
+            a=>this%da(:,:,b)
         end if
-        a=>dens(:,:,b)
     end subroutine  
 
     subroutine  set_pdens(this,b,a,spin)
