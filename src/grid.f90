@@ -29,7 +29,7 @@ module grid_class
 
     public grid_t
     public new_grid, del_grid, gridpoint, get_grid_normal
-    public get_grid_size, get_weight, write_grid, read_grid
+    public get_grid_size, get_weight 
     public get_grid_length, is_gauss_grid, realpoint, copy_grid
     public grid_center, plot_grid_xyz, get_basvec, get_ortho
     public get_grid_range
@@ -96,8 +96,6 @@ contains
                 call setup_even_grid(this)
             case ('gauss')
                 call setup_gauss_grid(this, 'gauss')
-            case ('lobato')
-                call setup_gauss_grid(this, 'lobato')
             case default
                 call msg_error('Unknown grid type: ' // trim(this%gtype))
                 stop
@@ -110,8 +108,6 @@ contains
             product(this%npts)
         call msg_out(str_g)
         call nl
-!        call write_grid(this, 50)
-
     end subroutine
 
     subroutine setup_std_grid(this)
@@ -616,88 +612,6 @@ contains
         close(77)
     end subroutine
 
-    subroutine plot_grid_xyz_old(fname, this, mol, np)
-        character(*), intent(in) :: fname
-        type(grid_t), intent(inout) :: this
-        type(molecule_t) :: mol
-        integer(I4), intent(in) :: np
-
-        integer(I4) :: natoms, i, j, k, ir, jr, kr
-        integer(I4) :: p1, p2, p3, d1, d2, d3
-        real(DP), dimension(3) :: r, coord
-        character(2) :: symbol
-        type(atom_t), pointer :: atom
-        
-        natoms=get_natoms(mol)
-        
-        if (np > 0) then
-            call get_grid_size(this,p1,p2,p3)
-            if (mod(p1,2) > 0) then
-                d1=pltdiv(p1-1,np)
-            else
-                d1=pltdiv(p1,np)
-            end if
-            if (mod(p2,2) > 0) then
-                d2=pltdiv(p2-1,np)
-            else
-                d2=pltdiv(p2,np)
-            end if
-            if (mod(p3,2) > 0) then
-                d3=pltdiv(p3-1,np)
-            else
-                d3=pltdiv(p3,np)
-            end if
-            i=p1/d1+1
-            j=p2/d2+1
-            k=p3/d3+1
-        else
-            i=0; j=0; k=0
-            p1=-1; p2=-1; p3=-1;
-            d1=1; d2=1; d3=1;
-        end if
-
-        write(str_g, '(3a,3i6)') 'Grid plot in ', trim(fname),':', i,j,k
-        call msg_note(str_g)
-        open(77,file=trim(fname))
-        write(77,*) natoms+i*j*k
-        write(77,*)
-        
-        do k=0,p3,d3
-            do j=0,p2,d2
-                do i=0,p1,d1
-                    if (i == 0) then
-                        ir=1
-                    else 
-                        ir=i
-                    end if
-
-                    if (j == 0) then
-                        jr=1
-                    else 
-                        jr=j
-                    end if
-
-                    if (k == 0) then
-                        kr=1
-                    else 
-                        kr=k
-                    end if
-                    
-                    r=gridpoint(this,jr,ir,kr)
-                    write(77,'(a,3f16.10)') 'X ', r*au2a
-                end do
-            end do
-        end do
-
-        do i=1,natoms
-            call get_atom(mol, i, atom)
-            call get_symbol(atom, symbol)
-            call get_coord(atom, coord)
-            write(77,'(a, 3f16.10)') symbol, coord*au2a
-        end do
-        close(77)
-    end subroutine
-
     function pltdiv(p,np) result(d)
         integer(I4), intent(in) :: p, np
         integer(I4) :: d
@@ -722,54 +636,6 @@ contains
         end if
     end function
 
-    subroutine write_grid(this, fd)
-        type(grid_t), intent(in) :: this
-        integer(I4), intent(in) :: fd
-
-        integer(I4) :: i
-
-        write(fd, *) this%mode
-        write(fd, *) this%gauss
-        write(fd, *) this%basv
-        write(fd, *) this%l
-        write(fd, *) this%origin
-        write(fd, *) this%step
-        write(fd, *) this%npts
-        do i=1,3
-            write(fd, *) this%gdata(i)%pts
-            write(fd, *) this%gdata(i)%wgt
-        end do
-        write(fd, *)
-
-    end subroutine
-
-    subroutine read_grid(this, fd)
-        type(grid_t), intent(inout) :: this
-        integer(I4), intent(in) :: fd
-
-        integer(I4) :: i
-
-        read(fd, *) this%gauss
-        read(fd, *) this%basv
-        read(fd, *) this%l
-        read(fd, *) this%origin
-        read(fd, *) this%step
-        read(fd, *) this%npts
-        do i=1,3
-            allocate(this%gdata(i)%pts(this%npts(i)))
-            allocate(this%gdata(i)%wgt(this%npts(i)))
-            read(fd, *) this%gdata(i)%pts
-            read(fd, *) this%gdata(i)%wgt
-        end do
-        write(str_g, '(a,3i5)') 'Number of grid points <v1,v2>:', &
-            this%npts(1), this%npts(2), this%npts(3)
-        call msg_out(str_g)
-        write(str_g, '(a,i7)') 'Total number of grid points  :', &
-            product(this%npts)
-        call msg_out(str_g)
-        call nl
-    end subroutine
-    
     ! rotate basis vectors (prior to grid setup)
     subroutine rotate(this, angle)
         type(grid_t) :: this
@@ -840,134 +706,6 @@ contains
         this%origin=matmul(euler,this%origin)
     end subroutine
 
-!
-! Obsolete stuff
-! 
-    subroutine hcsmbd(this)
-        type(grid_t), intent(inout) :: this
-
-        integer(I4) :: i
-        real(DP), dimension(3) :: v1, v2, v3, oo
-        real(DP), dimension(2) :: lh, ht
-        real(DP) :: l3, r1, r2
-
-        call msg_critical("Sorry, you just stumbled upon a piece of dead &
-            &code. Better luck next time.")
-        l3=-1.d0
-        lh=-1.d0
-        ht=-1.d0
-        call getkw(input, 'Grid.distance', l3)
-        call getkw(input, 'Grid.width', lh)
-        call getkw(input, 'Grid.height', ht)
-        if ( l3 < 0.d0 ) then
-            call msg_critical('Grid.distace < 0!')
-            stop 
-        end if
-        if ( sum(lh) < 0.d0 ) then
-            call msg_critical('Grid.width < 0!')
-            stop 
-        end if
-        if ( sum(ht) < 0.d0 ) then
-            call msg_critical('Grid.height < 0!')
-            stop 
-        end if
-
-        i=len(trim(this%mode))
-        if (this%mode(1:i) == 'foo') then
-            v1=norm(this%basv(:,1)-this%basv(:,2))
-            oo=this%basv(:,1)-l3*v1
-            v2=norm(oo-this%origin)
-            v3=norm(cross_product(v1, v2))
-            v1=cross_product(v2, v3)
-            this%origin=oo-lh(1)*v2+ht(2)*v3
-        else if (this%mode(1:i) == 'bond') then
-            v1=norm(this%basv(:,1)-this%basv(:,2))
-            oo=this%basv(:,1)-l3*v1
-            v3=norm(cross_product(v1, this%origin-oo))
-            v2=cross_product(v1, v3)
-            this%origin=oo-lh(1)*v2+ht(2)*v3
-        else if (this%mode(1:i) == 'bar') then
-            v3=norm(this%basv(:,1)-this%basv(:,2))
-            oo=this%basv(:,1)-sqrt(sum((this%basv(:,1)-&
-            this%basv(:,2))**2))*v3*0.5d0
-            v1=norm(cross_product(v3, this%origin-oo))
-            v2=norm(cross_product(v1, v3))
-            oo=oo+2.d0*v2 !uhh...
-            this%origin=oo-lh(1)*v2+ht(2)*v3+l3*v1
-        else
-            call msg_error('Unknown grid mode: ' // trim(this%mode))
-            call exit(1)
-        end if
-
-        this%basv(:,1)=this%origin+sum(lh)*v2
-        this%basv(:,2)=this%origin-sum(ht)*v3
-
-        r1=sqrt(sum((this%origin+v2)**2))
-        r2=sqrt(sum((this%origin-v2)**2))
-
-        call nl
-        call msg_out('Grid data')
-        call msg_out('------------------------------------------------')
-        write(str_g, '(a,3f12.6)') 'v1     ', v1
-        call msg_out(str_g)
-        write(str_g, '(a,3f12.6)') 'v2     ', v2 
-        call msg_out(str_g)
-        write(str_g, '(a,3f12.6)') 'v3     ', v3
-        call msg_out(str_g)
-        write(str_g, '(a,3f12.6)') 'center ', oo
-        call msg_out(str_g)
-        write(str_g, '(a,3f12.6)') 'origin ', this%origin
-        call msg_out(str_g)
-        write(str_g, '(a,3f12.6)') 'basv1  ', this%basv(:,1)
-        call msg_out(str_g)
-        write(str_g, '(a,3f12.6)') 'basv2  ', this%basv(:,2)
-        call msg_out(str_g)
-        write(str_g, '(a,3f12.6)') '|basv1|', &
-            sqrt(sum((this%basv(:,1)-this%origin)**2))
-        call msg_out(str_g)
-        write(str_g, '(a,3f12.6)') '|basv2|', &
-            sqrt(sum((this%basv(:,2)-this%origin)**2))
-        call msg_out(str_g)
-        call nl
-
-    end subroutine
-
-    subroutine bondage(this)
-        type(grid_t), intent(inout) :: this
-
-        real(DP), dimension(3) :: v1, v2, v3, oo
-        real(DP) :: l3, r
-
-        l3=-1.d0
-        r=-1.d0
-        call getkw(input, 'Grid.l3', l3)
-        call getkw(input, 'Grid.radius', this%radius)
-        r = this%radius
-        if ( l3 < 0.d0 ) stop 'Grid.l3 < 0!'
-        if ( r < 0.d0 ) stop 'Grid.radius < 0!'
-
-        v1=norm(this%basv(:,2)-this%basv(:,1))
-        v2(1)=-v1(2)-v1(3)
-        v2(2)=v1(1)-v1(3)
-        v2(3)=v1(1)+v1(2)
-        v2=norm(v2)
-        v3=cross_product(v1, v2)
-
-        oo=this%basv(:,1)+l3*v1
-        this%origin=oo+r*(v2+v3)
-        this%basv(:,1)=oo-r*(v2-v3)
-        this%basv(:,2)=oo-r*(-v2+v3)
-!        print *
-!        print *, 'center', oo
-!        print *, 'origin', this%origin
-!        print *, 'basv1', this%basv(:,1)
-!        print *, 'basv2', this%basv(:,2)
-!        print *, '|basv1|', sqrt(sum((this%basv(:,1)-this%origin)**2))
-!        print *, '|basv2|', sqrt(sum((this%basv(:,2)-this%origin)**2))
-!        print *
-        
-    end subroutine
-
     subroutine get_basv3(this, i, j, k)
         type(grid_t) :: this
         real(DP), dimension(3) :: i, j, k
@@ -1023,8 +761,6 @@ contains
                 ' => ', v3
             end do
         end do
-!        stop
-
     end subroutine
 
     function get_grid_range(this,crd) result(r)
@@ -1037,28 +773,5 @@ contains
     end function
 
 end module
-
-!    function gridmap(this, i, j) result(r)
-!        type(grid_t), intent(in) :: this
-!        integer(I4), intent(in) :: i, j
-!        real(DP), dimension(2) :: r
-
-!        real(DP), dimension(2) :: m1, m2
-!        real(DP) :: q1, q2, w1, w2
-
-!        if (this%gtype == 'file') then
-!            r=0.d0
-!            return
-!        end if
-
-!        m1=(/0.0, 1.0/)
-!        m2=(/1.0, 0.0/)
-
-!        q1=this%gdata(1)%pts(i)
-!        q2=this%gdata(2)%pts(j)
-
-!        r=this%map+q1*m1+q2*m2 
-!    end function 
-
 
 ! vim:et:sw=4:ts=4

@@ -17,12 +17,12 @@ module edens_field_class
     implicit none
     
     public new_edens_field, del_edens_field, edens_field_t
-    public edens_direct, edens_plot, edens_field
+    public edens_plot, edens_field
     
     type edens_field_t
         type(edens_t) :: edens
         type(grid_t), pointer :: grid
-        real(DP), dimension(:,:), pointer :: buf
+        real(DP), dimension(:,:,:), pointer :: buf
     end type
 
     private
@@ -36,16 +36,12 @@ contains
         character(*), intent(in) :: densfile
 
         integer(I4) :: n
-        integer(I4) :: p1, p2
+        integer(I4) :: p1, p2, p3
 
         call new_edens(this%edens, mol, dens)
-        call get_grid_size(grid, p1, p2)
-        allocate(this%buf(p1,p2))
+        call get_grid_size(grid, p1, p2, p3)
+        allocate(this%buf(p1,p2,p3))
         this%grid=>grid
-
-        if (mpi_rank == 0) then
-            open(EDFD, file=trim(densfile), access='direct', recl=p1*p2*DP)
-        end if
     end subroutine
 
     subroutine del_edens_field(this)
@@ -54,16 +50,6 @@ contains
         if (associated(this%buf)) deallocate(this%buf)
         call del_edens(this%edens)
         nullify(this%grid)
-        if (mpi_rank == 0) then
-            close(EDFD)
-        end if
-    end subroutine
-
-    subroutine set_edens(this, k)
-        type(edens_field_t), intent(in) :: this
-        integer(I4), intent(in) :: k
-
-        write(EDFD, rec=k) this%buf
     end subroutine
 
     subroutine edens_plot(this, basename)
@@ -73,7 +59,7 @@ contains
         integer(I4) :: i,j,p1,p2,p3
         real(DP) :: amax
         real(DP), dimension(3) :: rr
-        real(DP), dimension(:,:), pointer :: buf
+        real(DP), dimension(:,:,:), pointer :: buf
         character(BUFLEN) :: fname
 
         fname = trim(basename) // '.txt'
@@ -82,13 +68,12 @@ contains
         buf=>this%buf
 
         amax=D0
-        read(EDFD, rec=1) this%buf
         open(EDPFD, file=trim(fname))
         do j=1,p2
             do i=1,p1
                 rr=gridpoint(this%grid, i, j, 1)
-                write(EDPFD, '(4f19.8)') rr, buf(i,j)
-                if (abs(buf(i,j)) > amax) amax=abs(buf(i,j))
+                write(EDPFD, '(4f19.8)') rr, buf(i,j,1)
+                if (abs(buf(i,j,1)) > amax) amax=abs(buf(i,j,1))
             end do
             write(EDPFD, *) 
         end do
@@ -98,53 +83,25 @@ contains
         call edens_cube(this, basename)
     end subroutine
 
-    subroutine edens_direct(this, k)
-        type(edens_field_t) :: this
-        integer(I4), intent(in) :: k
-
-        integer(I4) :: i, j, p1, p2
-        integer(I4) :: lo, hi
-        real(DP), dimension(3) :: rr
-        real(DP), dimension(:,:), pointer :: buf
-        real(DP), dimension(:), pointer :: bfvec
-
-        call get_grid_size(this%grid, p1, p2)
-        call schedule(p2, lo, hi)
-
-        buf=>this%buf
-
-        do j=lo,hi
-            do i=1,p1
-                rr=gridpoint(this%grid, i, j, k)
-                this%buf(i,j)=edens(this%edens, rr)
-            end do
-        end do
-        call gather_data(this%buf, this%buf(:,lo:hi))
-    end subroutine
-
     subroutine edens_field(this)
         type(edens_field_t) :: this
 
         integer(I4) :: i, j, k, p1, p2, p3
-        integer(I4) :: lo, hi
         real(DP), dimension(3) :: rr
-        real(DP), dimension(:,:), pointer :: buf
+        real(DP), dimension(:,:,:), pointer :: buf
         real(DP), dimension(:), pointer :: bfvec
 
         call get_grid_size(this%grid, p1, p2, p3)
-        call schedule(p2, lo, hi)
 
         buf=>this%buf
     
         do k=1,p3
-            do j=lo, hi
+            do j=1,p2
                 do i=1,p1
                     rr=gridpoint(this%grid, i, j, k)
-                    this%buf(i,j)=edens(this%edens, rr)
+                    this%buf(i,j,k)=edens(this%edens, rr)
                 end do
             end do
-            call gather_data(this%buf, this%buf(:,lo:hi))
-            if (mpi_rank == 0) write(EDFD, rec=k) this%buf
         end do
     end subroutine
 

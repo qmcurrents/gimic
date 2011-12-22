@@ -216,14 +216,14 @@ contains
         
         if (settings%dryrun) return
 
-        call int_s_direct(it)
+        call integrate_current(it)
         call nl
         
         call msg_note('Integrating |J|')
-        call int_mod_direct(it)
+        call integrate_modulus(it)
         
-        call msg_note('Integrating current tensor')
-        call int_t_direct(it)  ! tensor integral
+!        call msg_note('Integrating current tensor')
+!        call int_t_direct(it)  ! tensor integral
 !        call write_integral(it)
         call del_integral(it)
     end subroutine

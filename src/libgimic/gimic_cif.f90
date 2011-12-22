@@ -34,4 +34,3 @@ subroutine gimic_finalize()
     use gimic_cif
     call del_gimic(run)
 end subroutine
-
