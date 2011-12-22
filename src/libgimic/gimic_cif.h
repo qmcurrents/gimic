@@ -7,7 +7,7 @@
 #define gimic_finalize FC_FUNC_(gimic_finalize, GIMIC_FINALIZE)
 
 extern "C" {
-	void gimic_init(const char *);
+	void gimic_init(const char *, const char *);
 	void gimic_finalize();
 }
 

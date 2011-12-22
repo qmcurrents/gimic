@@ -1,4 +1,6 @@
-add_library(gimic STATIC
+include_directories(${CMAKE_CURRENT_SOURCE_DIR})
+
+add_library(gimic SHARED
     globals.f90
     getkw.f90  
     basis.f90
@@ -24,4 +26,30 @@ add_library(gimic STATIC
     teletype.f90
     tensor.f90
     timer.f90
+    gimic_cif.f90
+    gimic_cif.h
+    GimicInterface.cpp
+    GimicInterface.h
     )
+
+set_source_files_properties(
+    ${CMAKE_CURRENT_SOURCE_DIR}/gimic.pxd
+    ${CMAKE_CURRENT_SOURCE_DIR}/gimic.pyx
+    PROPERTIES CYTHON_IS_CXX TRUE 
+    )
+
+cython_add_module(pygimic 
+    gimic.pxd 
+    gimic.pyx 
+    )
+target_link_libraries(pygimic 
+    gimic
+    )
+
+install(TARGETS gimic pygimic 
+    RUNTIME DESTINATION bin
+    ARCHIVE DESTINATION lib
+    LIBRARY DESTINATION lib
+    CONFIGURATIONS Release
+    )
+

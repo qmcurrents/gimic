@@ -18,6 +18,11 @@ include(ConfigSafeGuards)
 include(ConfigFortranCompilerFlags)
 include(ConfigCCompilerFlags)
 
+find_package(PythonInterp REQUIRED)
+include(UseCython)
+include(ConfigureScript)
+include(FortranNameManglingScheme)
+
 set(LIBS)
 if (BLAS_FOUND)
     add_definitions(-DHAVE_BLAS)

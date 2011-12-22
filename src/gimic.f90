@@ -145,7 +145,6 @@ contains
         end if
 
         call new_dens(xdens, mol)
-        call new_jtensor(jt, mol, xdens)
         call read_dens(xdens, settings%xdens)
 
         call new_grid(grid, input, mol)
@@ -170,7 +169,7 @@ contains
         if (settings%calc(1:5) == 'cdens') then 
             call run_cdens(jf, xdens)
         else if (settings%calc(1:8) == 'integral') then 
-            call run_integral(jf, jt)
+            call run_integral()
         else if (settings%calc(1:4) == 'divj') then 
             call run_divj()
         else if (settings%calc(1:5) == 'edens') then 
@@ -183,7 +182,6 @@ contains
             call del_c2sop(c2s)
         end if
         call del_dens(xdens)
-        call del_jtensor(jt)
         call del_grid(grid)
     end subroutine
 
@@ -203,10 +201,8 @@ contains
         call del_jfield(jf)
     end subroutine
 
-    subroutine run_integral(jf, jt)
+    subroutine run_integral()
         use integral_class
-        type(jfield_t) :: jf
-        type(jtensor_t) :: jt
         type(integral_t) :: it
         call msg_out('Integrating current density')
         call msg_out('*****************************************')

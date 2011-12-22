@@ -21,4 +21,7 @@
 
 #cmakedefine HAVE_LAPACK
 
+@DEFINE_FC_FUNC@
+@DEFINE_FC_FUNC_@
+
 #endif
