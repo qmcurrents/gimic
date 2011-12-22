@@ -18,9 +18,6 @@ module d2fdrdb_class
     end type
 
     private
-    real(DP), dimension(3) :: dbov
-    real(DP) :: ror1, ror2, ror3
-    
 contains
 
     subroutine new_d2fdrdb(this, mol)
@@ -65,6 +62,8 @@ contains
 
         integer(I4), dimension(99) :: posvec
         integer(I4) :: l, idx1
+        real(DP), dimension(3) :: dbov
+        real(DP) :: ror1, ror2, ror3
         
         natoms=get_natoms(this%mol)
         

@@ -17,7 +17,6 @@ module dfdr_class
     end type
 
     private
-    
 contains
 
     subroutine new_dfdr(this, mol)
@@ -51,6 +50,7 @@ contains
         type(contraction_t), pointer :: ctr
         real(DP), dimension(3) :: rr, coord
         integer(I4) :: idx
+
         natoms=get_natoms(this%mol)
         
         idx2=0

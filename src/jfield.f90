@@ -108,6 +108,7 @@ contains
             end do
             !$OMP END DO
         end do
+        call del_jtensor(jt)
 !$OMP END PARALLEL
     end subroutine 
     
@@ -165,6 +166,7 @@ contains
         end do
         call etime(times, tim2)
         tim2=times(1)
+        call del_jtensor(jt)
         
         delta_t=tim2-tim1
         if ( present(fac) ) delta_t=delta_t*fac
@@ -244,12 +246,14 @@ contains
             fd1= open_plot('jvec',ispin)
             fd2= open_plot('jmod',ispin)
 
+            jv=>getvecs(this,ispin)
             do k=1,p3
-                jv=>getvecs(this,ispin)
                 do j=1,p2
                     do i=1,p1
                         rr=gridpoint(this%grid, i,j,k)*AU2A
                         v=jv(i,j,k)%v*AU2A
+                        call wrt_jvec(rr,v,fd1)
+                        call wrt_jmod(rr,v,fd2)
                     end do
                     if (fd1 /= 0) write(fd1, *)
                     if (fd2 /= 0) write(fd2, *)
@@ -261,6 +265,58 @@ contains
             if (p3 > 1) call jmod_cubeplot(this, 'jmod', ispin)
         end do
     end subroutine
+
+    subroutine wrt_jvec(rr,v,fd)
+        real(DP), dimension(:), intent(in) :: rr, v
+        integer(I4), intent(in) :: fd
+
+        if (fd == 0) return
+
+        write(fd, '(6f11.7)')  rr, v
+    end subroutine	
+
+    subroutine wrt_njvec(rr,v,fd)
+        real(DP), dimension(:), intent(in) :: rr, v
+        integer(I4), intent(in) :: fd
+
+        real(DP) :: nfac
+
+        if (fd == 0) return
+
+        nfac=sqrt(sum(v(:)**2))
+        if (nfac < 1.d-15) then
+            write(fd, '(6f11.7)')  rr, 0.d0, 0.d0, 0.d0
+        else 
+            write(fd, '(6f11.7)')  rr, v/nfac
+        end if
+    end subroutine	
+
+    subroutine wrt_jproj(rr,v,grid,fd)
+        real(DP), dimension(:), intent(in) :: rr, v
+        type(grid_t) :: grid
+        integer(I4), intent(in) :: fd
+
+        real(DP) :: jprj
+        real(DP), dimension(3) :: norm
+
+        if (fd == 0) return
+        norm=get_grid_normal(grid)
+
+        jprj=dot_product(norm,v)
+        write(fd, '(3e19.12)') rr, jprj
+    end subroutine	
+
+    subroutine wrt_jmod(rr,v,fd)
+        real(DP), dimension(:), intent(in) :: rr, v
+        integer(I4), intent(in) :: fd
+
+        real(DP) :: jmod
+
+        if (fd == 0) return
+
+        jmod=sqrt(sum(v**2))
+        write(fd, '(6f11.7)')  rr, jmod
+    end subroutine	
 
     subroutine print_jt(rr, jt)
         real(DP), dimension(3), intent(in) :: rr
@@ -301,8 +357,7 @@ contains
 
         mag = this%b
 
-        allocate(buf(p1,p2,p3))
-        buf = getvecs(this, spin)
+        buf => getvecs(this, spin)
         maxi=0.d0
         mini=0.d0
         l=0
@@ -333,7 +388,6 @@ contains
                 end do
             end do
         end do
-        deallocate(buf)
         print *, 'maximini:', maxi, mini
     end subroutine
 

@@ -13,7 +13,6 @@ module dbop_class
         real(DP), dimension(:,:), pointer :: db
     end type
     private
-
 contains
     subroutine new_dbop(this, mol)
         type(dbop_t) :: this

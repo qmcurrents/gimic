@@ -28,6 +28,7 @@ module jtensor_class
         type(dfdr_t) :: dfr
         type(bfeval_t) :: bfv
         real(DP), dimension(:), pointer :: pdbf, denbf, dendb
+        real(DP), dimension(3) :: rho
         ! scratch mem
         real(DP), dimension(:), pointer :: bfvec
         real(DP), dimension(:,:), pointer :: dbvec, drvec, d2fvec, dbop
@@ -213,10 +214,8 @@ contains
 
         integer(I4) :: i, b
         integer(I4), save :: notify=1
-        real(DP), dimension(3) :: rho
 
-        rho=DP50*r ! needed for diamag. contr.
-
+        this%rho=DP50*r ! needed for diamag. contr.
         call bfeval(this%bfv, r, this%bfvec)
         call mkdbop(this%dop, r, this%dbop)
         call dfdr(this%dfr, r, this%drvec)
@@ -250,10 +249,8 @@ contains
 !        real(DP), dimension(:,:), pointer :: dbop
         integer(I4) :: i, b
         integer(I4), save :: notify=1
-        real(DP), dimension(3) :: rho
 
-        rho=DP50*r ! needed for diamag. contr.
-
+        this%rho=DP50*r ! needed for diamag. contr.
         call bfeval(this%bfv, r, this%bfvec)
         call dfdr(this%dfr, r, this%drvec)
         call mkdbop(this%dop, r, this%dbop)
@@ -284,7 +281,6 @@ contains
         real(DP) :: ppd                ! paramagnetic probability density
         real(DP), dimension(3) :: dpd  ! diamagnetic probability density
         real(DP) :: diapam
-        real(DP), dimension(3) :: rho
 
         call get_dens(this%xdens, this%aodens, spin)  
         this%denbf=matmul(this%bfvec, this%aodens)
@@ -296,7 +292,7 @@ contains
             call get_pdens(this%xdens, i, this%pdens,spin) 
             this%pdbf=matmul(this%bfvec, this%pdens)
             this%dendb=matmul(this%dbvec(:,i), this%aodens)
-            dpd(i)=diapam*rho(i) ! diamag. contr. to J
+            dpd(i)=diapam*this%rho(i) ! diamag. contr. to J
             do j=1,3 !dm <x,y,z>
                 prsp1=-dot_product(this%dendb, this%drvec(:,j))    ! (-i)**2=-1 
                 prsp2=dot_product(this%denbf, this%d2fvec(:,k))
@@ -333,7 +329,6 @@ contains
         real(DP) :: ppd                ! paramagnetic probability density
         real(DP), dimension(3) :: dpd  ! diamagnetic probability density
         real(DP) :: diapam
-        real(DP), dimension(3) :: rho
 
         call get_dens(this%xdens, this%aodens, spin)  
         
@@ -346,7 +341,7 @@ contains
             call get_pdens(this%xdens, b, this%pdens, spin) 
             this%pdbf=matmul(this%bfvec, this%pdens)
             this%dendb=matmul(this%dbvec(:,b), this%aodens)
-            dpd(b)=diapam*rho(b) ! diamag. contr. to J
+            dpd(b)=diapam*this%rho(b) ! diamag. contr. to J
             do m=1,3 !dm <x,y,z>
                 prsp1=-dot_product(this%dendb, this%drvec(:,m))    ! (-i)**2=-1 
                 prsp2=dot_product(this%denbf, this%d2fvec(:,k))

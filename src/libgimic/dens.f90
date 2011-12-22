@@ -146,7 +146,6 @@ contains
         real(DP), dimension(:,:), pointer :: a
         integer(I4), optional :: spin
 
-!        dens=>this%da
         if (present(spin)) then
             if (spin == spin_b) then
                 a=>this%db(:,:,0)
@@ -156,8 +155,6 @@ contains
         else
             a=>this%da(:,:,0)
         end if
-        
-!        a=>dens(:,:,0)
     end subroutine  
 
     subroutine set_dens(this,a,spin)

@@ -11,9 +11,7 @@ module caos_m
     implicit none
     
     public  cgto, dcgto
-
     private
-
 contains
 
     subroutine cgto(r, ctr, val)
@@ -68,7 +66,7 @@ contains
     ! Evaluate one contracted CAO 
     function cao(cc, rr2) result(ff)
         type(contraction_t), intent(in)  :: cc
-        real(DP) :: rr2
+        real(DP), intent(in) :: rr2
         real(DP) :: ff
 
         integer(I4) :: i
@@ -82,7 +80,7 @@ contains
     ! Evaluate one differentiated CAO
     function dcao(cc, rr2) result(ff)
         type(contraction_t), intent(in) :: cc
-        real(DP) :: rr2
+        real(DP), intent(in) :: rr2
         real(DP) :: ff
 
         integer(I4) :: i
@@ -95,7 +93,7 @@ contains
 
     subroutine cao2(cc, rr2, vcao, vdcao)
         type(contraction_t), intent(in)  :: cc
-        real(DP) :: rr2
+        real(DP), intent(in) :: rr2
         real(DP), intent(out) :: vcao, vdcao
         
         integer(I4) :: i
