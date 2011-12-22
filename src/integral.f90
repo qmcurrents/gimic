@@ -8,6 +8,7 @@ module integral_class
     use settings_m
     use grid_class
     use jfield_class
+    use dens_class
     use jtensor_class
     use gaussint_m
     use lip_m
@@ -17,9 +18,7 @@ module integral_class
     implicit none
 
     type integral_t
-        type(jtensor_t), pointer :: jt
         type(grid_t), pointer :: grid
-        real(DP), dimension(3,3) :: tint
     end type
 
     public new_integral, del_integral, integral_t
@@ -31,22 +30,21 @@ module integral_class
     character(8) :: spin='total'
     integer(I4) :: nlip
 contains
-    subroutine new_integral(this, jt, grid)
+    subroutine new_integral(this, grid)
         type(integral_t) :: this
-        type(jtensor_t), target :: jt
         type(grid_t), target :: grid
         
-        this%jt=>jt
         this%grid=>grid
-        this%tint=D0
     end subroutine
 
     subroutine del_integral(this)
         type(integral_t) :: this
     end subroutine
 
-    subroutine integrate_current(this)
+    subroutine integrate_current(this, mol, xdens)
         type(integral_t), intent(inout) :: this
+        type(molecule_t) :: mol
+        type(dens_t) :: xdens
 
         integer(I4) :: i, j, k, p1, p2, p3
         real(DP), dimension(3) :: normal, rr, center, bb
@@ -55,7 +53,8 @@ contains
         real(DP) :: psum3, nsum3
         real(DP) :: xsum, xsum2, xsum3
         type(vector_t) :: jvec
-        type(tensor_t) :: jt
+        type(tensor_t) :: tt
+        type(jtensor_t) :: jt
 
         if (settings%is_uhf) then
             select case(spin)
@@ -91,10 +90,16 @@ contains
         xsum3=0.d0
         psum3=0.d0
         nsum3=0.d0
+!$OMP PARALLEL PRIVATE(i,j,k,r,rr,xsum,psum,nsum,xsum2,psum2,nsum2) &
+!$OMP PRIVATE(jt,w,jp,tt,jvec) &
+!$OMP SHARED(p1,p2,p3,this,center,spin,bb,normal,mol,xdens) &
+!$OMP REDUCTION(+:xsum3,psum3,nsum3) 
+        call new_jtensor(jt, mol, xdens)
         do k=1,p3
             xsum2=0.d0
             psum2=0.d0
             nsum2=0.d0
+            !$OMP DO SCHEDULE(STATIC) 
             do j=1,p2
                 xsum=0.d0
                 psum=0.d0
@@ -102,8 +107,8 @@ contains
                 do i=1,p1
                     rr=gridpoint(this%grid, i, j, k)
                     r=sqrt(sum((rr-center)**2))
-                    call ctensor(this%jt, rr, jt, spin)
-                    jvec%v=matmul(jt%t,bb)
+                    call ctensor(jt, rr, tt, spin)
+                    jvec%v=matmul(tt%t,bb)
                     if ( r > bound ) then
                         w=0.d0
                         jp=0.d0
@@ -123,6 +128,7 @@ contains
                 psum2=psum2+psum*w
                 nsum2=nsum2+nsum*w
             end do
+            !$OMP END DO
             call collect_sum(xsum2, xsum)
             call collect_sum(psum2, psum)
             call collect_sum(nsum2, nsum)
@@ -131,6 +137,8 @@ contains
             psum3=psum3+psum*w
             nsum3=nsum3+nsum*w
         end do
+        call del_jtensor(jt)
+!$OMP END PARALLEL
 
         call nl
         call msg_out(repeat('*', 60))
@@ -148,12 +156,15 @@ contains
         write(str_g, '(a,f13.6)') '      (conversion factor)  :', au2si(1.d0)
         call msg_out(str_g)
         call msg_out(repeat('*', 60))
+        call nl
     end subroutine
 
     ! integrate the modulus of the current, retaining the sign
     ! test version
-    subroutine integrate_modulus(this)
+    subroutine integrate_modulus(this, mol, xdens)
         type(integral_t), intent(inout) :: this
+        type(molecule_t) :: mol
+        type(dens_t) :: xdens
 
         integer(I4) :: i, j, k, p1, p2, p3
         real(DP), dimension(3) :: normal, rr, center, bb
@@ -162,7 +173,8 @@ contains
         real(DP) :: psum3, nsum3
         real(DP) :: xsum, xsum2, xsum3
         type(vector_t) :: jvec
-        type(tensor_t) :: jt
+        type(tensor_t) :: tt
+        type(jtensor_t) :: jt
 
         if (settings%is_uhf) then
             select case(spin)
@@ -196,10 +208,15 @@ contains
         xsum3=0.d0
         psum3=0.d0
         nsum3=0.d0
+!$OMP PARALLEL PRIVATE(i,j,k,r,rr,sgn,xsum2,xsum,psum2,psum,nsum2,nsum) &
+!$OMP PRIVATE(jt,w,jp,tt,jvec) SHARED(p1,p2,p3,this,center,spin,bb,normal) &
+!$OMP REDUCTION(+:xsum3,psum3,nsum3)
+        call new_jtensor(jt, mol, xdens)
         do k=1,p3
             xsum2=0.d0
             psum2=0.d0
             nsum2=0.d0
+            !$OMP DO SCHEDULE(STATIC) 
             do j=1,p2
                 xsum=0.d0
                 psum=0.d0
@@ -207,8 +224,8 @@ contains
                 do i=1,p1
                     rr=gridpoint(this%grid, i, j, k)
                     r=sqrt(sum((rr-center)**2))
-                    call ctensor(this%jt, rr, jt, spin)
-                    jvec%v=matmul(jt%t,bb)
+                    call ctensor(jt, rr, tt, spin)
+                    jvec%v=matmul(tt%t,bb)
                     if ( r > bound ) then
                         w=0.d0
                     else
@@ -235,6 +252,7 @@ contains
                 psum2=psum2+psum*w
                 nsum2=nsum2+nsum*w
             end do
+            !$OMP END DO
             call collect_sum(xsum2, xsum)
             call collect_sum(psum2, psum)
             call collect_sum(nsum2, nsum)
@@ -243,6 +261,8 @@ contains
             psum3=psum3+psum*w
             nsum3=nsum3+nsum*w
         end do
+        call del_jtensor(jt)
+!$OMP END PARALLEL
 
         call nl
         call msg_out(repeat('*', 60))
@@ -260,19 +280,24 @@ contains
         write(str_g, '(a,f13.6)') '      (conversion factor)  :', au2si(1.d0)
         call msg_out(str_g)
         call msg_out(repeat('*', 60))
+        call nl
     end subroutine
 
-    subroutine integrate_tensor_field(this)
+    subroutine integrate_tensor_field(this, mol, xdens)
         type(integral_t) :: this
+        type(molecule_t) :: mol
+        type(dens_t) :: xdens
 
         integer(I4) :: i, j, k, p1, p2, p3
         real(DP), dimension(3) :: rr
         real(DP), dimension(3,3) :: xsum
         type(tensor_t), dimension(:), allocatable  :: jt1, jt2, jt3
+        type(jtensor_t) :: jt
         
         !call jfield_eta(this%jf)
         call get_grid_size(this%grid, p1, p2, p3)
 
+        call new_jtensor(jt, mol, xdens)
         allocate(jt1(p1))
         allocate(jt2(p2))
         allocate(jt3(p3))
@@ -281,7 +306,7 @@ contains
             do j=1,p2
                 do i=1,p1
                     rr=gridpoint(this%grid, i, j, k)
-                    call ctensor(this%jt, rr, jt1(i), 'total')
+                    call ctensor(jt, rr, jt1(i), 'total')
                 end do
                 jt2(j)%t=int_t_1d(jt1,this%grid,1)
             end do
@@ -290,6 +315,7 @@ contains
         xsum=int_t_1d(jt3,this%grid,3)
 
         call print_tensor_int(xsum)
+        call del_jtensor(jt)
         deallocate(jt1, jt2, jt3)
     end subroutine
 
@@ -366,6 +392,7 @@ contains
         write(str_g, '(a,f13.6)') '        Conversion Factor   :', au2si(1.d0)
         call msg_out(str_g)
         call msg_out(repeat('*', 70))
+        call nl
     end subroutine
 end module
 

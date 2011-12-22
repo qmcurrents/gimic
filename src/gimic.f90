@@ -210,16 +210,16 @@ contains
         type(integral_t) :: it
         call msg_out('Integrating current density')
         call msg_out('*****************************************')
-!        call new_integral(it, jt, jf, grid)
-        call new_integral(it, jt, grid)
+        call new_integral(it, grid)
         
         if (settings%dryrun) return
 
-        call integrate_current(it)
-        call nl
-        
         call msg_note('Integrating |J|')
-        call integrate_modulus(it)
+        call integrate_modulus(it, mol, xdens)
+        
+        call msg_note('Integrating current')
+        call integrate_current(it, mol, xdens)
+        call nl
         
 !        call msg_note('Integrating current tensor')
 !        call int_t_direct(it)  ! tensor integral

@@ -66,9 +66,6 @@ contains
             call check_field(v,mag)
         end if
 
-        write(str_g, '(a,3f10.5)') '   Magnetic field <x,y,z> =', mag
-        call msg_out(str_g)
-        call nl
     end subroutine
 
     subroutine check_field(dir,mag) 
@@ -86,6 +83,9 @@ contains
         if (abs(x)-1.d0 > 1.d-12 .and. abs(x) > 1.d-12) then
             call msg_warn('Magnetic field not orthogonal to grid')
         end if
+        write(str_g, '(a,3f10.5)') '   Magnetic field <x,y,z> =', mag
+        call msg_out(str_g)
+        call nl
     end subroutine
 
     function is_diamagnetic(g)  result(dia)
