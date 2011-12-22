@@ -85,8 +85,9 @@ contains
 
         call msg_note( 'Contracting j-tensors with magnetic field.')
         call nl
-!$xOMP TASK PRIVATE(i,j,k) SHARED(p1,p2,p3,settings,this)
+!$OMP PARALLEL PRIVATE(i,j,k) SHARED(p1,p2,p3,settings,this)
         do k=1,p3
+            !$OMP DO SCHEDULE(STATIC) 
             do j=1,p2
                 do i=1,p1
                     this%vv(i,j,k)%v=matmul(this%jj(i,j,k)%t, this%b)
@@ -97,8 +98,9 @@ contains
                     end if
                 end do
             end do
+            !$OMP END DO
         end do
-!$xOMP END TASK
+!$OMP END PARALLEL
     end subroutine
 
     subroutine jfield_eta(this, fac)
