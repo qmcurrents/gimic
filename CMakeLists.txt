@@ -8,7 +8,7 @@ option(ENABLE_PROFILING      "Enable profiling"              OFF)
 option(ENABLE_BOUNDS_CHECK   "Enable bounds check"           OFF)
 option(ENABLE_CODE_COVERAGE  "Enable code coverage"          OFF)
 option(ENABLE_MPI            "Enable MPI parallelization"    OFF)
-option(ENABLE_OMP            "Enable OpenMP parallelization" ON)
+option(ENABLE_OMP            "Enable OpenMP parallelization" OFF)
 option(ENABLE_CFOUR          "Enable the CFOUR interface" OFF)
 option(ENABLE_TESTS          "Enable the test suite" ON)
 

@@ -75,6 +75,36 @@ contains
             deallocate(this%vsd)
         end if
     end subroutine
+
+    subroutine jfield(this)
+        type(jfield_t) :: this
+
+        integer(I4) :: i, j, k, p1, p2, p3
+        real(DP), dimension(3) :: rr
+        character(10) :: op
+        integer(I4) :: lo, hi, npts
+
+        call jfield_eta(this)
+        call get_grid_size(this%grid, p1, p2, p3)
+
+!$OMP PARALLEL PRIVATE(i,j,k,rr) SHARED(p1,p2,p3,settings,this)
+        do k=1,p3
+            !$OMP DO SCHEDULE(STATIC) 
+            do j=1,p2
+                do i=1,p1
+                    rr=gridpoint(this%grid, i, j, k)
+                    call ctensor(this%jt, rr, this%jj(i,j,k), 'total')
+                    if (settings%is_uhf) then
+                        call ctensor(this%jt, rr, this%jja(i,j,k), 'alpha')
+                        call ctensor(this%jt, rr, this%jjb(i,j,k), 'beta')
+                        call ctensor(this%jt, rr, this%jsd(i,j,k), 'spindens')
+                    end if
+                end do
+            end do
+            !$OMP END DO
+        end do
+!$OMP END PARALLEL
+    end subroutine 
     
     subroutine jvectors(this)
         type(jfield_t), intent(inout) :: this
@@ -222,32 +252,6 @@ contains
             if (p3 > 1) call jmod_cubeplot(this, 'jmod', ispin)
         end do
     end subroutine
-
-    subroutine jfield(this)
-        type(jfield_t) :: this
-
-        integer(I4) :: i, j, k, p1, p2, p3
-        real(DP), dimension(3) :: rr
-        character(10) :: op
-        integer(I4) :: lo, hi, npts
-
-        call jfield_eta(this)
-        call get_grid_size(this%grid, p1, p2, p3)
-
-        do k=1,p3
-            do j=1,p2
-                do i=1,p1
-                    rr=gridpoint(this%grid, i, j, k)
-                    call ctensor(this%jt, rr, this%jj(i,j,k), 'total')
-                    if (settings%is_uhf) then
-                        call ctensor(this%jt, rr, this%jja(i,j,k), 'alpha')
-                        call ctensor(this%jt, rr, this%jjb(i,j,k), 'beta')
-                        call ctensor(this%jt, rr, this%jsd(i,j,k), 'spindens')
-                    end if
-                end do
-            end do
-        end do
-    end subroutine 
 
     subroutine print_jt(rr, jt)
         real(DP), dimension(3), intent(in) :: rr
