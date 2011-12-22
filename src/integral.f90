@@ -123,6 +123,9 @@ contains
                 psum2=psum2+psum*w
                 nsum2=nsum2+nsum*w
             end do
+            call collect_sum(xsum2, xsum)
+            call collect_sum(psum2, psum)
+            call collect_sum(nsum2, nsum)
             w=get_weight(this%grid,k,3)
             xsum3=xsum3+xsum*w
             psum3=psum3+psum*w
@@ -232,6 +235,9 @@ contains
                 psum2=psum2+psum*w
                 nsum2=nsum2+nsum*w
             end do
+            call collect_sum(xsum2, xsum)
+            call collect_sum(psum2, psum)
+            call collect_sum(nsum2, nsum)
             w=get_weight(this%grid,k,3)
             xsum3=xsum3+xsum*w
             psum3=psum3+psum*w
