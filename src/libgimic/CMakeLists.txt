@@ -1,6 +1,6 @@
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
-add_library(gimic SHARED
+add_library(gimic2 SHARED
     globals.f90
     getkw.f90  
     basis.f90
@@ -32,21 +32,28 @@ add_library(gimic SHARED
     GimicInterface.h
     )
 
+if (CYTHON_FOUND)
 set_source_files_properties(
     ${CMAKE_CURRENT_SOURCE_DIR}/gimic.pxd
     ${CMAKE_CURRENT_SOURCE_DIR}/gimic.pyx
     PROPERTIES CYTHON_IS_CXX TRUE 
     )
 
-cython_add_module(pygimic 
+cython_add_module(gimic 
     gimic.pxd 
     gimic.pyx 
     )
-target_link_libraries(pygimic 
-    gimic
+target_link_libraries(gimic 
+    gimic2
     )
+install(TARGETS gimic 
+    ARCHIVE DESTINATION lib/${PYTHON_INST_DIR}
+    LIBRARY DESTINATION lib
+    CONFIGURATIONS Release
+    )
+endif()
 
-install(TARGETS gimic pygimic 
+install(TARGETS gimic2 
     RUNTIME DESTINATION bin
     ARCHIVE DESTINATION lib
     LIBRARY DESTINATION lib

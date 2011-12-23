@@ -23,6 +23,19 @@ include(UseCython)
 include(ConfigureScript)
 include(FortranNameManglingScheme)
 
+if (PYTHONINTERP_FOUND) 
+    execute_process(
+        COMMAND ${PYTHON_EXECUTABLE} --version
+        ERROR_VARIABLE PYTHON_VERSION
+        )
+    string(REGEX REPLACE "Python *([0-9][.][0-9])[.].*" \\1
+        PYTHON_VERSION ${PYTHON_VERSION}
+        )
+    set (PYTHON_INST_DIR 
+        python${PYTHON_VERSION}/site-packages
+        )
+endif()
+
 set(LIBS)
 if (BLAS_FOUND)
     add_definitions(-DHAVE_BLAS)

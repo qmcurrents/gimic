@@ -79,8 +79,6 @@ TRY_COMPILE(
     flib
     OUTPUT_VARIABLE MY_OUTPUT)
 
-#message("${MY_OUTPUT}")
-
 # Initialize the name mangling schemes for symbol names 
 # with and without underscores
 SET(SCHEME_NO_UNDERSCORES "" 
@@ -224,12 +222,12 @@ ENDIF(SCHEME_NO_UNDERSCORES)
 SET(DEFINE_FC_FUNC ${CPP_macro}
     CACHE INTERNAL "CPP macro for name mangling scheme of symbols without underscores")
 
-IF(SCHEME_NO_UNDERSCORES)
-    MESSAGE("-- Name mangling scheme for symbol names without underscores: " 
-        "mysub  ->  ${SCHEME_NO_UNDERSCORES}")
-ELSE(SCHEME_NO_UNDERSCORES)
-    MESSAGE("-- Unable to determine name mangling scheme for symbol names without underscores!")
-ENDIF(SCHEME_NO_UNDERSCORES)
+#IF(SCHEME_NO_UNDERSCORES)
+#    MESSAGE("-- Name mangling scheme for symbol names without underscores: " 
+#        "mysub  ->  ${SCHEME_NO_UNDERSCORES}")
+#ELSE(SCHEME_NO_UNDERSCORES)
+#    MESSAGE("-- Unable to determine name mangling scheme for symbol names without underscores!")
+#ENDIF(SCHEME_NO_UNDERSCORES)
 
 # If the name mangling scheme of symbol names containing underscores
 # was successfully determined, set the appropriate C preprocessor macro
@@ -267,9 +265,9 @@ ENDIF(SCHEME_WITH_UNDERSCORES)
 SET(DEFINE_FC_FUNC_ "${CPP_macro}" 
     CACHE INTERNAL "CPP macro for name mangling scheme of symbols with underscores")
 
-IF(SCHEME_WITH_UNDERSCORES)
-    MESSAGE("-- Name mangling scheme for symbol names with underscores: "
-        "my_sub ->  ${SCHEME_WITH_UNDERSCORES}")
-ELSE(SCHEME_WITH_UNDERSCORES)
-    MESSAGE("-- Unable to determine name mangling scheme for symbol names with underscores!")
-ENDIF(SCHEME_WITH_UNDERSCORES)
+#IF(SCHEME_WITH_UNDERSCORES)
+#    MESSAGE("-- Name mangling scheme for symbol names with underscores: "
+#        "my_sub ->  ${SCHEME_WITH_UNDERSCORES}")
+#ELSE(SCHEME_WITH_UNDERSCORES)
+#    MESSAGE("-- Unable to determine name mangling scheme for symbol names with underscores!")
+#ENDIF(SCHEME_WITH_UNDERSCORES)
