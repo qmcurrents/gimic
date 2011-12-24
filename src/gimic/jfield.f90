@@ -77,12 +77,14 @@ contains
         end if
     end subroutine
 
-    subroutine jfield(this, mol, xdens)
+    subroutine jfield(this, mol, xdens, z)
         type(jfield_t) :: this
         type(molecule_t) :: mol
         type(dens_t) :: xdens
+        integer, optional :: z
 
         integer(I4) :: i, j, k, p1, p2, p3
+        integer :: a, b
         real(DP), dimension(3) :: rr
         character(10) :: op
         integer(I4) :: lo, hi, npts
@@ -90,10 +92,18 @@ contains
 
         call jfield_eta(this, mol, xdens)
         call get_grid_size(this%grid, p1, p2, p3)
+        if (present(z)) then
+            a=z
+            b=z
+        else
+            a=1
+            b=p3
+        end if
 
-!$OMP PARALLEL PRIVATE(i,j,k,rr,jt) SHARED(p1,p2,p3,settings,this,mol,xdens)
+!$OMP PARALLEL PRIVATE(i,j,k,rr,jt) &
+!$OMP SHARED(p1,p2,p3,a,b,settings,this,mol,xdens)
         call new_jtensor(jt, mol, xdens)
-        do k=1,p3
+        do k=a,b
             !$OMP DO SCHEDULE(STATIC) 
             do j=1,p2
                 do i=1,p1
@@ -112,17 +122,28 @@ contains
 !$OMP END PARALLEL
     end subroutine 
     
-    subroutine jvectors(this)
-        type(jfield_t), intent(inout) :: this
+    subroutine jvectors(this, mol, xdens, z)
+        type(jfield_t) :: this
+        type(molecule_t) :: mol
+        type(dens_t) :: xdens
+        integer, optional :: z
 
-        integer(I4) :: i, j, k, p1, p2, p3
+        integer(I4) :: i, j, k, p1, p2, p3, a, b
 
         call get_grid_size(this%grid, p1, p2, p3)
-
+        if (present(z)) then
+            a=z
+            b=z
+        else
+            a=1
+            b=p3
+        end if
         call msg_note( 'Contracting j-tensors with magnetic field.')
         call nl
-!$OMP PARALLEL PRIVATE(i,j,k) SHARED(p1,p2,p3,settings,this)
-        do k=1,p3
+        do k=a,b
+            call jfield(this, mol, xdens, k)
+!$OMP PARALLEL PRIVATE(i,j) &
+!$OMP SHARED(p1,p2,p3,settings,this,a,b,k,mol,xdens)
             !$OMP DO SCHEDULE(STATIC) 
             do j=1,p2
                 do i=1,p1
@@ -135,8 +156,8 @@ contains
                 end do
             end do
             !$OMP END DO
-        end do
 !$OMP END PARALLEL
+        end do
     end subroutine
 
     subroutine jfield_eta(this, mol, xdens, fac)

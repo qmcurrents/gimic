@@ -35,8 +35,8 @@ module jtensor_class
         real(DP), dimension(:,:), pointer :: aodens, pdens
     end type
 
-    public new_jtensor, del_jtensor, jtensor, jtensor2, jvector
-    public ctensor, ctensor2
+    public new_jtensor, del_jtensor, jtensor, jtensor2, get_jvector
+    public ctensor, ctensor2, jvector
     public qtensor, qtensor2
     public jtensor_t, jdebug
     
@@ -263,7 +263,19 @@ contains
 
     end subroutine
 
-    subroutine jvector(pj, dj, bb, jv)
+    subroutine jvector(this, r, bb, jv, op)
+        type(jtensor_t) :: this
+        real(DP), dimension(3), intent(in) :: r
+        real(DP), dimension(:), intent(in) :: bb
+        real(DP), dimension(:), intent(out) :: jv
+        character(*) :: op
+
+        type(tensor_t) :: j
+        call ctensor(this, r, j, op)
+        jv=matmul(j%t, bb)
+    end subroutine
+
+    subroutine get_jvector(pj, dj, bb, jv)
         real(DP), dimension(:,:), intent(in) :: pj, dj
         real(DP), dimension(:), intent(in) :: bb
         real(DP), dimension(:), intent(out) :: jv

@@ -192,10 +192,10 @@ contains
         call msg_out('*****************************************')
         call new_jfield(jf, grid, magnet)
         if (settings%dryrun) return
-        call jfield(jf, mol, xdens)
+        !call jfield(jf, mol, xdens)
         ! Contract the tensors with B
+            call jvectors(jf, mol, xdens)
         if (mpi_rank == 0) then
-            call jvectors(jf)
             call jvector_plot(jf)
         end if
         call del_jfield(jf)
