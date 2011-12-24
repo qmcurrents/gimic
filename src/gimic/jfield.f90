@@ -21,8 +21,8 @@ module jfield_class
     type jfield_t
         !type(jtensor_t), pointer :: jt
         real(DP), dimension(3) :: b
-        type(tensor_t), dimension(:,:,:), pointer :: jj, jja, jjb, jsd
-        type(vector_t), dimension(:,:,:), pointer :: vv, vva, vvb, vsd
+        type(tensor_t), dimension(:,:,:), pointer :: jj
+        type(vector_t), dimension(:,:,:), pointer :: vv
         type(grid_t), pointer :: grid
     end type
 
@@ -31,7 +31,6 @@ module jfield_class
     private
 
     real(DP) :: vec_scale=D1
-    integer(I4) :: spin
     character(BUFLEN) :: jmod_plt, jvec_plt
 contains
     subroutine new_jfield(this, g, magnet)
@@ -49,14 +48,6 @@ contains
         call get_grid_size(g,i,j,k)
         allocate(this%jj(i,j,k))
         allocate(this%vv(i,j,k))
-        if (settings%is_uhf) then
-            allocate(this%jja(i,j,k))
-            allocate(this%jjb(i,j,k))
-            allocate(this%jsd(i,j,k))
-            allocate(this%vva(i,j,k))
-            allocate(this%vvb(i,j,k))
-            allocate(this%vsd(i,j,k))
-        end if
     end subroutine
 
     subroutine del_jfield(this)
@@ -67,29 +58,27 @@ contains
         deallocate(this%vv)
         nullify(this%jj)
         nullify(this%vv)
-        if (settings%is_uhf) then
-            deallocate(this%jja)
-            deallocate(this%jjb)
-            deallocate(this%jsd)
-            deallocate(this%vva)
-            deallocate(this%vvb)
-            deallocate(this%vsd)
-        end if
     end subroutine
 
-    subroutine jfield(this, mol, xdens, z)
+    subroutine jfield(this, mol, xdens, spin, z)
         type(jfield_t) :: this
         type(molecule_t) :: mol
         type(dens_t) :: xdens
+        character(*), optional :: spin
         integer, optional :: z
 
         integer(I4) :: i, j, k, p1, p2, p3
         integer :: a, b
         real(DP), dimension(3) :: rr
-        character(10) :: op
+        character(8) :: spincase
         integer(I4) :: lo, hi, npts
         type(jtensor_t) :: jt
 
+        if (present(spin)) then
+            spincase=spin
+        else
+            spincase='total'
+        end if
         call jfield_eta(this, mol, xdens)
         call get_grid_size(this%grid, p1, p2, p3)
         if (present(z)) then
@@ -108,12 +97,7 @@ contains
             do j=1,p2
                 do i=1,p1
                     rr=gridpoint(this%grid, i, j, k)
-                    call ctensor(jt, rr, this%jj(i,j,k), 'total')
-                    if (settings%is_uhf) then
-                        call ctensor(jt, rr, this%jja(i,j,k), 'alpha')
-                        call ctensor(jt, rr, this%jjb(i,j,k), 'beta')
-                        call ctensor(jt, rr, this%jsd(i,j,k), 'spindens')
-                    end if
+                    call ctensor(jt, rr, this%jj(i,j,k), spincase)
                 end do
             end do
             !$OMP END DO
@@ -122,13 +106,21 @@ contains
 !$OMP END PARALLEL
     end subroutine 
     
-    subroutine jvectors(this, mol, xdens, z)
+    subroutine jvectors(this, mol, xdens, spin, z)
         type(jfield_t) :: this
         type(molecule_t) :: mol
         type(dens_t) :: xdens
+        character(*), optional :: spin
         integer, optional :: z
 
+        character(8) :: spincase
         integer(I4) :: i, j, k, p1, p2, p3, a, b
+
+        if (present(spin)) then
+            spincase=spin
+        else
+            spincase='total'
+        end if
 
         call get_grid_size(this%grid, p1, p2, p3)
         if (present(z)) then
@@ -138,25 +130,16 @@ contains
             a=1
             b=p3
         end if
-        call msg_note( 'Contracting j-tensors with magnetic field.')
+        call msg_note('Contracting j-tensors with magnetic field.')
         call nl
         do k=a,b
-            call jfield(this, mol, xdens, k)
-!$OMP PARALLEL PRIVATE(i,j) &
-!$OMP SHARED(p1,p2,p3,settings,this,a,b,k,mol,xdens)
-            !$OMP DO SCHEDULE(STATIC) 
+            call jfield(this, mol, xdens, spincase, k)
             do j=1,p2
                 do i=1,p1
                     this%vv(i,j,k)%v=matmul(this%jj(i,j,k)%t, this%b)
-                    if (settings%is_uhf) then
-                        this%vva(i,j,k)%v=matmul(this%jja(i,j,k)%t, this%b)
-                        this%vvb(i,j,k)%v=matmul(this%jjb(i,j,k)%t, this%b)
-                        this%vsd(i,j,k)%v=matmul(this%jsd(i,j,k)%t, this%b)
-                    end if
                 end do
             end do
-            !$OMP END DO
-!$OMP END PARALLEL
+!            call plot()
         end do
     end subroutine
 
@@ -196,23 +179,6 @@ contains
         call msg_info(str_g)
         call nl
     end subroutine	
-
-    function getvecs(this, spin) result(jv)
-        type(jfield_t), intent(inout) :: this
-        integer(I4) :: spin
-
-        type(vector_t), dimension(:,:,:), pointer :: jv
-        select case(spin)
-            case(1)
-                jv=>this%vv
-            case(2)
-                jv=>this%vva
-            case(3)
-                jv=>this%vvb
-            case(4)
-                jv=>this%vsd
-        end select
-    end function
 
     function open_plot(basename, spin) result(fd)
         character(*), intent(in) :: basename
@@ -267,7 +233,7 @@ contains
             fd1= open_plot('jvec',ispin)
             fd2= open_plot('jmod',ispin)
 
-            jv=>getvecs(this,ispin)
+            jv=>this%vv
             do k=1,p3
                 do j=1,p2
                     do i=1,p1
@@ -284,6 +250,28 @@ contains
             call closefd(fd1)
             call closefd(fd2)
             if (p3 > 1) call jmod_cubeplot(this, 'jmod', ispin)
+        end do
+    end subroutine
+
+    subroutine write_jvectors(this, fd)
+        type(jfield_t), intent(inout) :: this
+        integer(I4) :: fd
+
+        integer(I4) :: i, j, k, p1, p2, spin, ispin
+        real(DP), dimension(3) :: v, rr
+        type(vector_t), dimension(:,:,:), pointer :: jv
+
+        call get_grid_size(this%grid, p1, p2)
+
+        k=1
+        jv=>this%vv
+        do j=1,p2
+            do i=1,p1
+                rr=gridpoint(this%grid, i,j,k)*AU2A
+                v=jv(i,j,k)%v*AU2A
+                call wrt_jvec(rr,v,fd)
+            end do
+            if (fd /= 0) write(fd, *)
         end do
     end subroutine
 
@@ -378,7 +366,7 @@ contains
 
         mag = this%b
 
-        buf => getvecs(this, spin)
+        buf => this%vv
         maxi=0.d0
         mini=0.d0
         l=0
