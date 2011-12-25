@@ -20,8 +20,8 @@ module jfield_class
 
     type jfield_t
         real(DP), dimension(3) :: b
-        type(tensor_t), dimension(:,:,:), pointer :: jj
-        type(vector_t), dimension(:,:,:), pointer :: vv
+        type(tensor_t), dimension(:), pointer :: jj
+        type(vector_t), dimension(:), pointer :: vv
         type(grid_t), pointer :: grid
     end type
 
@@ -44,8 +44,8 @@ contains
         this%grid=>g
 
         call get_grid_size(g,i,j,k)
-        allocate(this%jj(i,j,k))
-        allocate(this%vv(i,j,k))
+        allocate(this%jj(i*j*k))
+        allocate(this%vv(i*j*k))
     end subroutine
 
     subroutine del_jfield(this)
@@ -66,8 +66,8 @@ contains
         integer, optional :: z
 
         integer(I4) :: i, j, k, p1, p2, p3
-        integer :: a, b
-        real(DP), dimension(3) :: rr
+        integer :: a, b, n
+        real(DP), dimension(:,:), allocatable :: rr
         character(8) :: spincase
         integer(I4) :: lo, hi, npts
         type(jtensor_t) :: jt
@@ -87,21 +87,30 @@ contains
             b=p3
         end if
 
-!$OMP PARALLEL PRIVATE(i,j,k,rr,jt) &
-!$OMP SHARED(p1,p2,p3,a,b,settings,this,mol,xdens)
-        call new_jtensor(jt, mol, xdens)
-        do k=a,b
-            !$OMP DO SCHEDULE(STATIC) 
+        lo = (a-1)*p1*p2 + 1
+        hi = b*p1*p2
+        allocate(rr(p1*p2*p3,3))
+
+        n=1
+        do k=1,p3
             do j=1,p2
                 do i=1,p1
-                    rr=gridpoint(this%grid, i, j, k)
-                    call ctensor(jt, rr, this%jj(i,j,k), spincase)
+                    rr(n,:)=gridpoint(this%grid, i, j, k)
+                    n=n+1
                 end do
             end do
-            !$OMP END DO
         end do
+        !$OMP PARALLEL PRIVATE(k,jt) &
+        !$OMP SHARED(this,mol,xdens,spincase,lo,hi,rr)
+        call new_jtensor(jt, mol, xdens)
+        !$OMP DO SCHEDULE(STATIC) 
+        do k=lo,hi
+            call ctensor(jt, rr(k,:), this%jj(k), spincase)
+        end do
+        !$OMP END DO
         call del_jtensor(jt)
-!$OMP END PARALLEL
+        !$OMP END PARALLEL
+        deallocate(rr)
     end subroutine 
     
     subroutine calc_jvectors(this, mol, xdens, spin, z)
@@ -132,27 +141,23 @@ contains
         type(jfield_t) :: this
         integer, optional :: z
 
-        integer(I4) :: i, j, k, p1, p2, p3, a, b
+        integer(I4) :: k, p1, p2, p3, a, b
         call get_grid_size(this%grid, p1, p2, p3)
         if (present(z)) then
             a=z; b=z
         else
             a=1; b=p3
         end if
-!$OMP PARALLEL PRIVATE(i,j,k) &
-!$OMP SHARED(p1,p2,p3,this,a,b)
-        do k=a,b
-            !$OMP DO SCHEDULE(STATIC) 
-            do j=1,p2
-                do i=1,p1
-                    this%vv(i,j,k)%v=matmul(this%jj(i,j,k)%t, this%b)
-                end do
-            end do
-            !$OMP END DO
+        !$OMP PARALLEL DO PRIVATE(k) &
+        !$OMP SHARED(p1,p2,p3,this,a,b)
+        do k=1,p1*p2*p3
+            this%vv(k)%v=matmul(this%jj(k)%t, this%b)
         end do
-!$OMP END PARALLEL
+        !$OMP END PARALLEL DO
     end subroutine
 
+! Make a rough estimate of how long the calculation will take
+! (using one core) 
     subroutine jfield_eta(this, mol, xdens, fac)
         type(jfield_t) :: this
         type(molecule_t) :: mol
@@ -211,10 +216,10 @@ contains
         type(jfield_t), intent(inout) :: this
         character(*), optional :: tag
 
-        integer(I4) :: i, j, k, p1, p2, p3, spin
+        integer(I4) :: i, j, k, p1, p2, p3
         integer(I4) :: fd1, fd2, fd3, fd4
         real(DP), dimension(3) :: v, rr
-        type(vector_t), dimension(:,:,:), pointer :: jv
+        type(vector_t), dimension(:), pointer :: jv
 
         if (mpi_rank > 0) return
 
@@ -232,7 +237,7 @@ contains
             do j=1,p2
                 do i=1,p1
                     rr=gridpoint(this%grid, i,j,k)*AU2A
-                    v=jv(i,j,k)%v*AU2A
+                    v=jv(i+(j-1)*p1+(k-1)*p1*p2)%v*AU2A
                     call wrt_jvec(rr,v,fd1)
                     call wrt_jmod(rr,v,fd2)
                 end do
@@ -250,6 +255,98 @@ contains
             end if
         end if
     end subroutine
+
+    subroutine jmod_cubeplot(this, tag)
+        type(jfield_t) :: this
+        character(*), optional :: tag
+
+        integer(I4) :: p1, p2, p3, fd1, fd2
+        integer(I4) :: i, j, k, l
+        real(DP), dimension(3) :: qmin, qmax
+        real(DP), dimension(3) :: norm, step, mag, v, rr
+        real(DP) :: maxi, mini, val, sgn 
+        integer(I4), dimension(3) :: npts
+        type(vector_t), dimension(:), pointer :: buf
+
+        if (mpi_rank > 0) return
+
+        call get_grid_size(this%grid, p1, p2, p3)
+        npts=(/p1,p2,p3/)
+        norm=get_grid_normal(this%grid)
+        qmin=gridpoint(this%grid,1,1,1)
+        qmax=gridpoint(this%grid,p1,p2,p3)
+
+        step=(qmax-qmin)/(npts-1)
+
+        if (present(tag)) then
+            fd1=opencube('jmod_'// tag // '.cube', qmin, step, npts)
+            fd2=opencube('jmod_quasi'// tag // '.cube', qmin, step, npts)
+        else
+            fd1=opencube('jmod.cube', qmin, step, npts)
+            fd2=opencube('jmod_quasi.cube', qmin, step, npts)
+        end if
+
+
+        mag = this%b
+
+        buf => this%vv
+        maxi=0.d0
+        mini=0.d0
+        l=0
+        do i=1,p1
+            do j=1,p2
+                do k=1,p3
+                    v=buf(i+(j-1)*p1+(k-1)*p1*p2)%v
+                    rr=gridpoint(this%grid,i,j,k)
+                    val=(sqrt(sum(v**2)))
+                    rr=rr-dot_product(mag,rr)*mag
+                    norm=cross_product(mag,rr)
+                    sgn=dot_product(norm,v)
+                    if (val > maxi) maxi=val
+                    if (val < mini) mini=val
+                    if (fd1 /= 0) then 
+                        write(fd1,'(f12.6)',advance='no') val
+                        if (mod(l,6) == 5) write(fd1,*)
+                    end if
+                    if (fd2 /= 0) then 
+                        if (sgn >= 0.d0 ) then
+                            write(fd2,'(f12.6)',advance='no') val
+                        else
+                            write(fd2,'(f12.6)',advance='no') -1.d0*val
+                        end if
+                        if (mod(l,6) == 5) write(fd2,*)
+                    end if
+                    l=l+1
+                end do
+            end do
+        end do
+        print *, 'maximini:', maxi, mini
+    end subroutine
+
+    function opencube(fname, origin, step, npts) result(fd)
+        character(*), intent(in) :: fname
+        real(DP), dimension(3), intent(in) :: origin, step
+        integer(I4), dimension(3), intent(in) :: npts
+
+        integer(I4) :: fd
+
+        fd=0
+        if (mpi_rank > 0) return
+        if (trim(fname) == '') return
+
+        call getfd(fd)
+        if (fd == 0) then
+            stop 1
+        end if
+
+        open(fd,file=trim(fname),form='formatted',status='unknown')
+        write(fd,*) 'Gaussian cube data, generated by genpot'
+        write(fd,*) 
+        write(fd, '(i5,3f12.6)') 0, origin
+        write(fd, '(i5,3f12.6)') npts(1), step(1), 0.d0, 0.d0
+        write(fd, '(i5,3f12.6)') npts(2), 0.d0, step(2), 0.d0
+        write(fd, '(i5,3f12.6)') npts(3), 0.d0, 0.d0, step(3)
+    end function
 
     subroutine wrt_jvec(rr,v,fd)
         real(DP), dimension(:), intent(in) :: rr, v
@@ -315,98 +412,6 @@ contains
         print *
         print '(a,e19.12)', ' Trace:', jt(1,1)+jt(2,2)+jt(3,3)
     end subroutine
-
-    subroutine jmod_cubeplot(this, tag)
-        type(jfield_t) :: this
-        character(*), optional :: tag
-
-        integer(I4) :: p1, p2, p3, fd1, fd2
-        integer(I4) :: i, j, k, l
-        real(DP), dimension(3) :: qmin, qmax
-        real(DP), dimension(3) :: norm, step, mag, v, rr
-        real(DP) :: maxi, mini, val, sgn 
-        integer(I4), dimension(3) :: npts
-        type(vector_t), dimension(:,:,:), pointer :: buf
-
-        if (mpi_rank > 0) return
-
-        call get_grid_size(this%grid, p1, p2, p3)
-        npts=(/p1,p2,p3/)
-        norm=get_grid_normal(this%grid)
-        qmin=gridpoint(this%grid,1,1,1)
-        qmax=gridpoint(this%grid,p1,p2,p3)
-
-        step=(qmax-qmin)/(npts-1)
-
-        if (present(tag)) then
-            fd1=opencube('jmod_'// tag // '.cube', qmin, step, npts)
-            fd2=opencube('jmod_quasi'// tag // '.cube', qmin, step, npts)
-        else
-            fd1=opencube('jmod.cube', qmin, step, npts)
-            fd2=opencube('jmod_quasi.cube', qmin, step, npts)
-        end if
-
-
-        mag = this%b
-
-        buf => this%vv
-        maxi=0.d0
-        mini=0.d0
-        l=0
-        do i=1,p1
-            do j=1,p2
-                do k=1,p3
-                    v=buf(i,j,k)%v
-                    rr=gridpoint(this%grid,i,j,k)
-                    val=(sqrt(sum(v**2)))
-                    rr=rr-dot_product(mag,rr)*mag
-                    norm=cross_product(mag,rr)
-                    sgn=dot_product(norm,v)
-                    if (val > maxi) maxi=val
-                    if (val < mini) mini=val
-                    if (fd1 /= 0) then 
-                        write(fd1,'(f12.6)',advance='no') val
-                        if (mod(l,6) == 5) write(fd1,*)
-                    end if
-                    if (fd2 /= 0) then 
-                        if (sgn >= 0.d0 ) then
-                            write(fd2,'(f12.6)',advance='no') val
-                        else
-                            write(fd2,'(f12.6)',advance='no') -1.d0*val
-                        end if
-                        if (mod(l,6) == 5) write(fd2,*)
-                    end if
-                    l=l+1
-                end do
-            end do
-        end do
-        print *, 'maximini:', maxi, mini
-    end subroutine
-
-    function opencube(fname, origin, step, npts) result(fd)
-        character(*), intent(in) :: fname
-        real(DP), dimension(3), intent(in) :: origin, step
-        integer(I4), dimension(3), intent(in) :: npts
-
-        integer(I4) :: fd
-
-        fd=0
-        if (mpi_rank > 0) return
-        if (trim(fname) == '') return
-
-        call getfd(fd)
-        if (fd == 0) then
-            stop 1
-        end if
-
-        open(fd,file=trim(fname),form='formatted',status='unknown')
-        write(fd,*) 'Gaussian cube data, generated by genpot'
-        write(fd,*) 
-        write(fd, '(i5,3f12.6)') 0, origin
-        write(fd, '(i5,3f12.6)') npts(1), step(1), 0.d0, 0.d0
-        write(fd, '(i5,3f12.6)') npts(2), 0.d0, step(2), 0.d0
-        write(fd, '(i5,3f12.6)') npts(3), 0.d0, 0.d0, step(3)
-    end function
 end module
 
 ! vim:et:sw=4:ts=4
