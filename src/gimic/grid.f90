@@ -32,7 +32,7 @@ module grid_class
     public get_grid_size, get_weight 
     public get_grid_length, is_gauss_grid, realpoint, copy_grid
     public grid_center, plot_grid_xyz, get_basvec, get_ortho
-    public get_grid_range
+    public get_grid_range, grid_is_3d
 
     interface get_basvec
         module procedure get_basv1
@@ -772,6 +772,15 @@ contains
         r(2)=this%gdata(crd)%pts(this%npts(crd))
     end function
 
+    function grid_is_3d(this) result(r)
+        type(grid_t) :: this
+        logical :: r
+        if (this%npts(1) > 1 .and.this%npts(2)> 1 .and.this%npts(3) > 1) then
+            r = .true.
+        else
+            r = .false.
+        end if 
+    end function
 end module
 
 ! vim:et:sw=4:ts=4

@@ -19,15 +19,15 @@ module jfield_class
     implicit none
 
     type jfield_t
-        !type(jtensor_t), pointer :: jt
         real(DP), dimension(3) :: b
         type(tensor_t), dimension(:,:,:), pointer :: jj
         type(vector_t), dimension(:,:,:), pointer :: vv
         type(grid_t), pointer :: grid
     end type
 
-    public new_jfield, del_jfield, jfield, jvectors
-    public jfield_t, jvector_plot, jfield_eta
+    public new_jfield, del_jfield, calc_jtensors, calc_jvectors
+    public jfield_t, jvector_plots, jfield_eta, compute_jvectors
+    public jmod_cubeplot
     private
 
     real(DP) :: vec_scale=D1
@@ -35,14 +35,12 @@ module jfield_class
 contains
     subroutine new_jfield(this, g, magnet)
         type(jfield_t) :: this
-!        type(jtensor_t), target :: jt
         type(grid_t), target :: g
         real(DP), dimension(3), intent(in) :: magnet
 
         integer(I4) :: i, j, k
 
         this%b=magnet
-!        this%jt=>jt
         this%grid=>g
 
         call get_grid_size(g,i,j,k)
@@ -60,7 +58,7 @@ contains
         nullify(this%vv)
     end subroutine
 
-    subroutine jfield(this, mol, xdens, spin, z)
+    subroutine calc_jtensors(this, mol, xdens, spin, z)
         type(jfield_t) :: this
         type(molecule_t) :: mol
         type(dens_t) :: xdens
@@ -106,7 +104,7 @@ contains
 !$OMP END PARALLEL
     end subroutine 
     
-    subroutine jvectors(this, mol, xdens, spin, z)
+    subroutine calc_jvectors(this, mol, xdens, spin, z)
         type(jfield_t) :: this
         type(molecule_t) :: mol
         type(dens_t) :: xdens
@@ -114,7 +112,6 @@ contains
         integer, optional :: z
 
         character(8) :: spincase
-        integer(I4) :: i, j, k, p1, p2, p3, a, b
 
         if (present(spin)) then
             spincase=spin
@@ -122,25 +119,38 @@ contains
             spincase='total'
         end if
 
+        if (present(z)) then
+            call calc_jtensors(this, mol, xdens, spincase, z)
+            call compute_jvectors(this, z)
+        else
+            call calc_jtensors(this, mol, xdens, spincase)
+            call compute_jvectors(this)
+        end if
+    end subroutine
+
+    subroutine compute_jvectors(this, z)
+        type(jfield_t) :: this
+        integer, optional :: z
+
+        integer(I4) :: i, j, k, p1, p2, p3, a, b
         call get_grid_size(this%grid, p1, p2, p3)
         if (present(z)) then
-            a=z
-            b=z
+            a=z; b=z
         else
-            a=1
-            b=p3
+            a=1; b=p3
         end if
-        call msg_note('Contracting j-tensors with magnetic field.')
-        call nl
+!$OMP PARALLEL PRIVATE(i,j,k) &
+!$OMP SHARED(p1,p2,p3,this,a,b)
         do k=a,b
-            call jfield(this, mol, xdens, spincase, k)
+            !$OMP DO SCHEDULE(STATIC) 
             do j=1,p2
                 do i=1,p1
                     this%vv(i,j,k)%v=matmul(this%jj(i,j,k)%t, this%b)
                 end do
             end do
-!            call plot()
+            !$OMP END DO
         end do
+!$OMP END PARALLEL
     end subroutine
 
     subroutine jfield_eta(this, mol, xdens, fac)
@@ -180,99 +190,65 @@ contains
         call nl
     end subroutine	
 
-    function open_plot(basename, spin) result(fd)
-        character(*), intent(in) :: basename
-        integer(I4), intent(in) :: spin
+    function open_plot(fname) result(fd)
+        character(*), intent(in) :: fname
 
         integer(I4) :: fd
-        character(132) :: fname
 
         fd=0
         if (mpi_rank > 0) return
-        if (trim(basename) == '') return
+        if (trim(fname) == '') return
 
         call getfd(fd)
         if (fd == 0) then
             stop 1
         end if
-
-        select case(spin)
-            case(1)
-                fname=trim(basename)//'.txt'
-            case(2)
-                fname=trim(basename)//'_a.txt'
-            case(3)
-                fname=trim(basename)//'_b.txt'
-            case(4)
-                fname=trim(basename)//'_sd.txt'
-        end select
-
-        write(str_g, *) 'Writing ', trim(basename), ' in ', trim(fname)
-        call msg_note(str_g)
         open(fd,file=trim(fname),status='unknown')
-
         return 
     end function
 
-    subroutine jvector_plot(this)
+    subroutine jvector_plots(this, tag)
         type(jfield_t), intent(inout) :: this
+        character(*), optional :: tag
 
-        integer(I4) :: i, j, k, p1, p2, p3, spin, ispin
+        integer(I4) :: i, j, k, p1, p2, p3, spin
         integer(I4) :: fd1, fd2, fd3, fd4
         real(DP), dimension(3) :: v, rr
         type(vector_t), dimension(:,:,:), pointer :: jv
 
-        spin=1
-        if (settings%is_uhf) then
-            spin=4
+        if (mpi_rank > 0) return
+
+        if (present(tag)) then
+            fd1 = open_plot('jvec_' // tag // '.txt')
+            fd2 = open_plot('jmod_' // tag // '.txt')
+        else
+            fd1 = open_plot('jvec.txt')
+            fd2 = open_plot('jmod.txt')
         end if
 
         call get_grid_size(this%grid, p1, p2, p3)
-
-        do ispin=1,spin
-            fd1= open_plot('jvec',ispin)
-            fd2= open_plot('jmod',ispin)
-
-            jv=>this%vv
-            do k=1,p3
-                do j=1,p2
-                    do i=1,p1
-                        rr=gridpoint(this%grid, i,j,k)*AU2A
-                        v=jv(i,j,k)%v*AU2A
-                        call wrt_jvec(rr,v,fd1)
-                        call wrt_jmod(rr,v,fd2)
-                    end do
-                    if (fd1 /= 0) write(fd1, *)
-                    if (fd2 /= 0) write(fd2, *)
-                end do
-            end do
-
-            call closefd(fd1)
-            call closefd(fd2)
-            if (p3 > 1) call jmod_cubeplot(this, 'jmod', ispin)
-        end do
-    end subroutine
-
-    subroutine write_jvectors(this, fd)
-        type(jfield_t), intent(inout) :: this
-        integer(I4) :: fd
-
-        integer(I4) :: i, j, k, p1, p2, spin, ispin
-        real(DP), dimension(3) :: v, rr
-        type(vector_t), dimension(:,:,:), pointer :: jv
-
-        call get_grid_size(this%grid, p1, p2)
-
-        k=1
         jv=>this%vv
-        do j=1,p2
-            do i=1,p1
-                rr=gridpoint(this%grid, i,j,k)*AU2A
-                v=jv(i,j,k)%v*AU2A
-                call wrt_jvec(rr,v,fd)
+        do k=1,p3
+            do j=1,p2
+                do i=1,p1
+                    rr=gridpoint(this%grid, i,j,k)*AU2A
+                    v=jv(i,j,k)%v*AU2A
+                    call wrt_jvec(rr,v,fd1)
+                    call wrt_jmod(rr,v,fd2)
+                end do
+                if (fd1 /= 0) write(fd1, *)
+                if (fd2 /= 0) write(fd2, *)
             end do
-            if (fd /= 0) write(fd, *)
         end do
+        call closefd(fd1)
+        call closefd(fd2)
+        if (grid_is_3d(this%grid)) then 
+            if (present(tag)) then
+                call jmod_cubeplot(this, tag)
+            else
+                call jmod_cubeplot(this)
+            end if
+        end if
     end subroutine
 
     subroutine wrt_jvec(rr,v,fd)
@@ -340,10 +316,9 @@ contains
         print '(a,e19.12)', ' Trace:', jt(1,1)+jt(2,2)+jt(3,3)
     end subroutine
 
-    subroutine jmod_cubeplot(this, fname, spin)
+    subroutine jmod_cubeplot(this, tag)
         type(jfield_t) :: this
-        character(*), intent(in) :: fname
-        integer(I4), intent(in) :: spin
+        character(*), optional :: tag
 
         integer(I4) :: p1, p2, p3, fd1, fd2
         integer(I4) :: i, j, k, l
@@ -353,6 +328,8 @@ contains
         integer(I4), dimension(3) :: npts
         type(vector_t), dimension(:,:,:), pointer :: buf
 
+        if (mpi_rank > 0) return
+
         call get_grid_size(this%grid, p1, p2, p3)
         npts=(/p1,p2,p3/)
         norm=get_grid_normal(this%grid)
@@ -361,8 +338,14 @@ contains
 
         step=(qmax-qmin)/(npts-1)
 
-        fd1=opencube(trim(fname), spin, qmin, step, npts)
-        fd2=opencube(trim(fname)//'_quasi', spin, qmin, step, npts)
+        if (present(tag)) then
+            fd1=opencube('jmod_'// tag // '.cube', qmin, step, npts)
+            fd2=opencube('jmod_quasi'// tag // '.cube', qmin, step, npts)
+        else
+            fd1=opencube('jmod.cube', qmin, step, npts)
+            fd2=opencube('jmod_quasi.cube', qmin, step, npts)
+        end if
+
 
         mag = this%b
 
@@ -400,17 +383,14 @@ contains
         print *, 'maximini:', maxi, mini
     end subroutine
 
-    function opencube(kname, spin, origin, step, npts) result(fd)
-        character(*), intent(in) :: kname
-        integer(I4), intent(in) :: spin
+    function opencube(fname, origin, step, npts) result(fd)
+        character(*), intent(in) :: fname
         real(DP), dimension(3), intent(in) :: origin, step
         integer(I4), dimension(3), intent(in) :: npts
 
         integer(I4) :: fd
-        character(132) :: fname
 
         fd=0
-        fname=kname
         if (mpi_rank > 0) return
         if (trim(fname) == '') return
 
@@ -419,20 +399,6 @@ contains
             stop 1
         end if
 
-        select case(spin)
-            case(1)
-                fname=trim(fname)//'.cube'
-            case(2)
-                fname=trim(fname)//'a'//'.cube'
-            case(3)
-                fname=trim(fname)//'b'//'.cube'
-            case(4)
-                fname=trim(fname)//'sd'//'.cube'
-        end select
-
-        write(str_g, *) 'Writing ', trim(kname), ' in ', trim(fname)
-        call msg_note(str_g)
-
         open(fd,file=trim(fname),form='formatted',status='unknown')
         write(fd,*) 'Gaussian cube data, generated by genpot'
         write(fd,*) 
@@ -440,11 +406,7 @@ contains
         write(fd, '(i5,3f12.6)') npts(1), step(1), 0.d0, 0.d0
         write(fd, '(i5,3f12.6)') npts(2), 0.d0, step(2), 0.d0
         write(fd, '(i5,3f12.6)') npts(3), 0.d0, 0.d0, step(3)
-
-        return 
-
     end function
-
 end module
 
 ! vim:et:sw=4:ts=4

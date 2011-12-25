@@ -191,13 +191,22 @@ contains
         call msg_out('Calculating current density')
         call msg_out('*****************************************')
         call new_jfield(jf, grid, magnet)
+        
         if (settings%dryrun) return
-        !call jfield(jf, mol, xdens)
-        ! Contract the tensors with B
-            call jvectors(jf, mol, xdens)
-        if (mpi_rank == 0) then
-            call jvector_plot(jf)
-        end if
+        
+        call calc_jvectors(jf, mol, xdens)
+        call jvector_plots(jf)
+        
+        if (settings%is_uhf) then
+            call calc_jvectors(jf, mol, xdens, 'alpha')
+            call jvector_plots(jf, 'alpha')
+
+            call calc_jvectors(jf, mol, xdens, 'beta')
+            call jvector_plots(jf, 'beta')
+            
+            call calc_jvectors(jf, mol, xdens, 'spindens')
+            call jvector_plots(jf, 'spindens')
+        endif
         call del_jfield(jf)
     end subroutine
 
