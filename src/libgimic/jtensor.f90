@@ -37,7 +37,6 @@ module jtensor_class
 
     public new_jtensor, del_jtensor, jtensor, jtensor2, get_jvector
     public ctensor, ctensor2, jvector
-    public qtensor, qtensor2
     public jtensor_t, jdebug
     
     private
@@ -81,58 +80,13 @@ contains
         deallocate(this%dendb)
     end subroutine
 
-
-    subroutine qtensor(this, r)
-        type(jtensor_t) :: this
-        real(DP), dimension(3), intent(in) :: r
-
-        type(tensor_t) :: jt1, jt2
-
-        if (settings%is_uhf) then
-            call jtensor(this, r, jt1, spin_a)
-            call jtensor(this, r, jt2, spin_b)
-            write(81, *) jt1%t
-            write(82, *) jt2%t
-            write(83, *) jt1%t+jt2%t
-            write(84, *) jt1%t-jt2%t
-        else
-            call jtensor(this, r, jt1, spin_a)
-            write(85, *) jt1%t
-        end if 
-    end subroutine
-
-    subroutine qtensor2(this, r)
-        type(jtensor_t) :: this
-        real(DP), dimension(3), intent(in) :: r
-
-        type(tensor_t) :: pjt1, pjt2
-        type(tensor_t) :: djt1, djt2
-
-        if (settings%is_uhf) then
-            call jtensor2(this, r, pjt1, djt1, spin_a)
-            call jtensor2(this, r, pjt2, djt2, spin_b)
-            write(90, *) pjt1%t
-            write(91, *) pjt2%t
-            write(92, *) djt1%t
-            write(93, *) djt2%t
-            write(94, *) pjt1%t+pjt2%t
-            write(95, *) djt1%t+djt2%t
-            write(96, *) pjt1%t-djt1%t
-            write(97, *) pjt2%t-djt2%t
-        else
-            call jtensor2(this, r, pjt1, djt1, spin_a)
-            write(98, *) pjt1%t
-            write(99, *) djt1%t
-        end if 
-    end subroutine
-
     subroutine ctensor(this, r, j, op)
         type(jtensor_t) :: this
         real(DP), dimension(3), intent(in) :: r
-        type(tensor_t), intent(inout) :: j
+        real(DP), dimension(9), intent(inout) :: j
         character(*) :: op
 
-        type(tensor_t) :: jt1, jt2
+        real(DP), dimension(9) :: jt1, jt2
 
         select case (op)
             case ('alpha')
@@ -149,7 +103,7 @@ contains
                 if (settings%is_uhf) then
                     call jtensor(this, r, jt1, spin_a)
                     call jtensor(this, r, jt2, spin_b)
-                    j%t=jt1%t+jt2%t
+                    j=jt1+jt2
                 else
                     call jtensor(this, r, j, spin_a)
                 end if
@@ -161,17 +115,17 @@ contains
                 end if
                 call jtensor(this, r, jt1, spin_a)
                 call jtensor(this, r, jt2, spin_b)
-                j%t=jt1%t-jt2%t
+                j=jt1-jt2
         end select
     end subroutine
 
     subroutine ctensor2(this, r, pj, dj, op)
         type(jtensor_t) :: this
         real(DP), dimension(3), intent(in) :: r
-        type(tensor_t), intent(inout) :: pj, dj
+        real(DP), dimension(9), intent(inout) :: pj, dj
         character(*) :: op
 
-        type(tensor_t) :: pj1, pj2, dj1, dj2
+        real(DP), dimension(9) :: pj1, pj2, dj1, dj2
 
         select case (op)
             case ('alpha')
@@ -188,8 +142,8 @@ contains
                 if (settings%is_uhf) then
                     call jtensor2(this, r, pj1, dj1, spin_a)
                     call jtensor2(this, r, pj2, dj2, spin_b)
-                    pj%t=pj1%t+pj2%t
-                    dj%t=dj1%t+dj2%t
+                    pj=pj1+pj2
+                    dj=dj1+dj2
                 else
                     call jtensor2(this, r, pj, dj, spin_a)
                 end if
@@ -201,15 +155,15 @@ contains
                 end if
                 call jtensor2(this, r, pj1, dj1, spin_a)
                 call jtensor2(this, r, pj2, dj2, spin_b)
-                pj%t=pj1%t-dj1%t
-                dj%t=pj2%t-dj2%t
+                pj=pj1-dj1
+                dj=pj2-dj2
         end select
     end subroutine
 
     subroutine jtensor(this, r, j, spin)
         type(jtensor_t) :: this
         real(DP), dimension(:), intent(in) :: r
-        type(tensor_t), intent(inout) :: j
+        real(DP), dimension(9), intent(inout) :: j
         integer(I4) :: spin
 
         integer(I4) :: i, b
@@ -224,26 +178,13 @@ contains
             call d2fdrdb(this%d2f, r, this%bfvec, this%drvec, this%dbop, this%d2fvec)
         end if
 
-        call contract(this, j%t, spin)
-
-!        write(75,*) jt1(:,:,1)
-!        write(76,*) jt1(:,:,2)
-!        write(77,*) j%t
-!        write(78,*) j%t/2.d0
-
-
-!		if (mod(notify,NOTIFICATION) == 0) then
-!			print '(a, i6)', '* points done:', notify
-!			call flush(6)
-!		end i
-!		notify=notify+1
-        
+        call contract(this, j, spin)
     end subroutine
 
     subroutine jtensor2(this, r, pj, dj, spin)
         type(jtensor_t) :: this
         real(DP), dimension(3), intent(in) :: r
-        type(tensor_t), intent(inout) :: pj, dj
+        real(DP), dimension(9), intent(inout) :: pj, dj
         integer(I4) :: spin
 
 !        real(DP), dimension(:,:), pointer :: dbop
@@ -259,7 +200,7 @@ contains
             call d2fdrdb(this%d2f, r, this%bfvec, this%drvec, this%dbop, this%d2fvec)
         end if
 
-        call contract2(this, pj%t, dj%t, spin)
+        call contract2(this, pj, dj, spin)
 
     end subroutine
 
@@ -270,17 +211,17 @@ contains
         real(DP), dimension(:), intent(out) :: jv
         character(*) :: op
 
-        type(tensor_t) :: j
+        real(DP), dimension(9) :: j
         call ctensor(this, r, j, op)
-        jv=matmul(j%t, bb)
+        jv=matmul(reshape(j,(/3,3/)), bb)
     end subroutine
 
     subroutine get_jvector(pj, dj, bb, jv)
-        real(DP), dimension(:,:), intent(in) :: pj, dj
+        real(DP), dimension(:), intent(in) :: pj, dj
         real(DP), dimension(:), intent(in) :: bb
         real(DP), dimension(:), intent(out) :: jv
         
-        jv=matmul(pj+dj, bb)
+        jv=matmul(reshape(pj+dj,(/3,3/)), bb)
     end subroutine
 
     subroutine contract2(this, ctp, ctd, spin)
@@ -390,27 +331,6 @@ contains
 
     end subroutine
 
-
-! Debug function...
-!    function contract_killer(nuc, mag, k) result(jj)
-!        integer(I4), intent(in) :: nuc, mag, k
-!
-!        real(DP) :: jj
-!        integer(I4) :: mu, nu, n
-!        real(DP) :: q
-!
-!        n=get_ncgto()
-!        q=0.0
-!        do mu=1,n
-!            do nu=1,n 
-!                q=q+this%aodens(nu,mu)*( this%dbvec(mu,mag)*this%drvec(nu,nuc)- &
-!                  bfvec(mu)*(this%d2fvec(nu,k)))- &
-!                  pdens(nu,mu)*bfvec(mu)*this%drvec(nu,nuc)
-!            end do
-!        end do
-!        jj=q
-!    end function
-    
     subroutine jdebug(this, r)
         type(jtensor_t) :: this
         real(DP), dimension(3), intent(in) :: r

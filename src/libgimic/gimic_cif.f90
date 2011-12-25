@@ -123,7 +123,7 @@ subroutine gimic_calc_jtensor(r, jt)
     real(8), dimension(3), intent(in) :: r
     real(8), dimension(9), intent(out) :: jt
 
-    type(tensor_t) :: t
+    real(DP), dimension(9) :: t
     type(jtensor_t) :: jtens
     integer :: i,j,k
 
@@ -133,7 +133,7 @@ subroutine gimic_calc_jtensor(r, jt)
     k=1
     do j=1,3
         do i=1,3
-            jt(k)=t%t(i,j)
+            jt(k)=t(i+(j-1)*3)
             k=k+1
         end do
     end do
@@ -144,7 +144,7 @@ subroutine gimic_calc_jvector(r, jv)
     real(8), dimension(3), intent(in) :: r
     real(8), dimension(3), intent(out) :: jv
 
-    type(tensor_t) :: t
+    real(DP), dimension(9) :: t
     type(jtensor_t) :: jtens
     integer :: i
 

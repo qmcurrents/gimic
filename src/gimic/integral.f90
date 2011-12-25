@@ -52,8 +52,8 @@ contains
         real(DP) :: psum2, nsum2
         real(DP) :: psum3, nsum3
         real(DP) :: xsum, xsum2, xsum3
-        type(vector_t) :: jvec
-        type(tensor_t) :: tt
+        real(DP), dimension(3) :: jvec
+        real(DP), dimension(9) :: tt
         type(jtensor_t) :: jt
 
         if (settings%is_uhf) then
@@ -108,13 +108,13 @@ contains
                     rr=gridpoint(this%grid, i, j, k)
                     r=sqrt(sum((rr-center)**2))
                     call ctensor(jt, rr, tt, spin)
-                    jvec%v=matmul(tt%t,bb)
+                    jvec=matmul(reshape(tt,(/3,3/)),bb)
                     if ( r > bound ) then
                         w=0.d0
                         jp=0.d0
                     else
                         w=get_weight(this%grid, i, 1) 
-                        jp=dot_product(normal,jvec%v)*w
+                        jp=dot_product(normal,jvec)*w
                     end if
                     xsum=xsum+jp
                     if (jp > 0.d0) then
@@ -172,8 +172,8 @@ contains
         real(DP) :: psum2, nsum2
         real(DP) :: psum3, nsum3
         real(DP) :: xsum, xsum2, xsum3
-        type(vector_t) :: jvec
-        type(tensor_t) :: tt
+        real(DP), dimension(3) :: jvec
+        real(DP), dimension(9) :: tt
         type(jtensor_t) :: jt
 
         if (settings%is_uhf) then
@@ -225,12 +225,12 @@ contains
                     rr=gridpoint(this%grid, i, j, k)
                     r=sqrt(sum((rr-center)**2))
                     call ctensor(jt, rr, tt, spin)
-                    jvec%v=matmul(tt%t,bb)
+                    jvec=matmul(reshape(tt,(/3,3/)),bb)
                     if ( r > bound ) then
                         w=0.d0
                     else
                         w=get_weight(this%grid, i, 1) 
-                        jp=dot_product(normal,jvec%v)
+                        jp=dot_product(normal,jvec)
                         if (abs(jp) < 1.d-12) then ! prob. parallel component
                             sgn=0.d0
                         else if (jp > 0) then
@@ -239,7 +239,7 @@ contains
                             sgn=-1.d0
                         end if
                     end if
-                    jp=sgn*sqrt(sum(jvec%v**2))
+                    jp=sgn*sqrt(sum(jvec**2))
                     xsum=xsum+jp*w
                     if (jp > 0.d0) then
                         psum=psum+jp*w
@@ -290,27 +290,27 @@ contains
 
         integer(I4) :: i, j, k, p1, p2, p3
         real(DP), dimension(3) :: rr
-        real(DP), dimension(3,3) :: xsum
-        type(tensor_t), dimension(:), allocatable  :: jt1, jt2, jt3
+        real(DP), dimension(9) :: xsum
+        real(DP), dimension(:,:), allocatable  :: jt1, jt2, jt3
         type(jtensor_t) :: jt
         
         !call jfield_eta(this%jf)
         call get_grid_size(this%grid, p1, p2, p3)
 
         call new_jtensor(jt, mol, xdens)
-        allocate(jt1(p1))
-        allocate(jt2(p2))
-        allocate(jt3(p3))
+        allocate(jt1(9,p1))
+        allocate(jt2(9,p2))
+        allocate(jt3(9,p3))
 
         do k=1,p3
             do j=1,p2
                 do i=1,p1
                     rr=gridpoint(this%grid, i, j, k)
-                    call ctensor(jt, rr, jt1(i), 'total')
+                    call ctensor(jt, rr, jt1(:,i), 'total')
                 end do
-                jt2(j)%t=int_t_1d(jt1,this%grid,1)
+                jt2(:,j)=int_t_1d(jt1,this%grid,1)
             end do
-            jt3(k)%t=int_t_1d(jt2,this%grid,2)
+            jt3(:,k)=int_t_1d(jt2,this%grid,2)
         end do
         xsum=int_t_1d(jt3,this%grid,3)
 
@@ -320,10 +320,10 @@ contains
     end subroutine
 
     function int_t_1d(jt, grid, axis) result(xsum)
-        type(tensor_t), dimension(:), intent(in) :: jt
+        real(DP), dimension(:,:), intent(in) :: jt
         type(grid_t), intent(in) :: grid
         integer(I4), intent(in) :: axis
-        real(DP), dimension(3,3) :: xsum
+        real(DP), dimension(9) :: xsum
 
         integer(I4) :: i, pts
         real(DP) :: w
@@ -333,7 +333,7 @@ contains
         xsum=0.d0
         do i=1,pts
             w=get_weight(grid, i, axis) 
-            xsum=xsum+jt(i)%t*w
+            xsum=xsum+jt(:,i)*w
         end do
     end function
 

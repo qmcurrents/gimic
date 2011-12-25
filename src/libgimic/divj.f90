@@ -34,7 +34,7 @@ contains
 
         type(jtensor_t) :: jt
         integer(I4) :: q
-        type(tensor_t) :: jtx, jty, jtz
+        real(DP), dimension(9) :: jtx, jty, jtz
         real(DP) :: djx,djy,djz
         real(DP), dimension(5) :: jx,jy,jz
         real(DP), dimension(3) :: tvec
@@ -45,11 +45,11 @@ contains
             call ctensor(jt, rr+(/step*real(q),D0,D0/), jtx, 'total')
             call ctensor(jt, rr+(/D0,step*real(q),D0/), jty, 'total')
             call ctensor(jt, rr+(/D0,D0,step*real(q)/), jtz, 'total')
-            tvec=matmul(jtx%t, bb)
+            tvec=matmul(reshape(jtx,(/3,3/)), bb)
             jx(q+3)=tvec(1)
-            tvec=matmul(jty%t, bb)
+            tvec=matmul(reshape(jty,(/3,3/)), bb)
             jy(q+3)=tvec(2)
-            tvec=matmul(jtz%t, bb)
+            tvec=matmul(reshape(jtz,(/3,3/)), bb)
             jz(q+3)=tvec(3)
         end do
         djx=hx*sum(wgt*jx)
@@ -64,8 +64,8 @@ contains
 
         type(jtensor_t) :: jt
         integer(I4) :: q
-        type(tensor_t) :: jtxp, jtyp, jtzp
-        type(tensor_t) :: jtxd, jtyd, jtzd
+        real(DP), dimension(9) :: jtxp, jtyp, jtzp
+        real(DP), dimension(9) :: jtxd, jtyd, jtzd
         real(DP) :: djx,djy,djz
         real(DP), dimension(5) :: jx,jy,jz
         real(DP), dimension(3) :: tvec
@@ -75,11 +75,11 @@ contains
             call ctensor2(jt, rr+(/step*real(q),D0,D0/), jtxp,jtxd, 'total')
             call ctensor2(jt, rr+(/D0,step*real(q),D0/), jtyp,jtyd, 'total')
             call ctensor2(jt, rr+(/D0,D0,step*real(q)/), jtzp,jtzd, 'total')
-            call get_jvector(jtxp%t, jtxd%t, bb, tvec)
+            call get_jvector(jtxp, jtxd, bb, tvec)
             jx(q+3)=tvec(1)
-            call get_jvector(jtyp%t, jtyd%t, bb, tvec)
+            call get_jvector(jtyp, jtyd, bb, tvec)
             jy(q+3)=tvec(2)
-            call get_jvector(jtzp%t, jtzd%t, bb, tvec)
+            call get_jvector(jtzp, jtzd, bb, tvec)
             jz(q+3)=tvec(3)
         end do
         djx=hx*sum(wgt*jx)

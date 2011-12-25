@@ -206,7 +206,6 @@ contains
         type(tensor_t), intent(out) :: dest
 
         dest%t=src%t
-
     end subroutine
 
     subroutine copy_tensor_1d(src,dest)

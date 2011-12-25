@@ -18,7 +18,6 @@ module parallel_m
         module procedure gather_data1d
         module procedure gather_data2d
         module procedure gather_data1d_tensor
-        module procedure gather_data2d_tensor
     end interface
 
     integer(I4) :: ierr
@@ -76,7 +75,7 @@ contains
         integer(I4), intent(in) :: npts
         integer(I4), intent(out) :: lo, hi
 
-        integer(I4) :: sz, num, reminder, i
+        integer(I4) :: nPerHost, nLeftOver 
 
         if (mpi_world_size == 1) then
             lo=1
@@ -84,15 +83,17 @@ contains
             return
         end if
 #ifdef HAVE_MPI
-        call mpi_comm_size(MPI_COMM_WORLD, sz,ierr)
-        reminder=mod(npts,sz)
-        num=(npts-reminder)/sz
-        hi=0
-        do i=0,rank
-            lo=hi+1
-            hi=hi+num
-            if (rank < reminder) hi=hi+1
-        end do
+!        call mpi_comm_size(MPI_COMM_WORLD, sz,ierr)
+        nPerHost = (npts - 1) / mpi_world_size
+        nLeftOver = npts - nPerHost * mpi_world_size
+        if (rank < nLeftOver) then
+            lo = rank * (nPerHost + 1)
+            hi = lo + (nPerHost + 1)
+        else
+            lo = nLeftOver + rank * nPerHost 
+            hi = lo + nPerHost
+        end if
+        print *, "lohi", lo, hi
 #endif
     end subroutine
 
@@ -216,57 +217,6 @@ contains
             call unpack_tensors(source, tmp)
             call mpi_send(tmp,ni*9,MPI_DOUBLE_PRECISION,0, &
                 GATHER_DATA_TAG, MPI_COMM_WORLD, ierr)
-        end if
-        deallocate(tmp)
-#endif
-    end subroutine
-
-    subroutine gather_data2d_tensor(dest, source)
-        type(tensor_t), dimension(:,:), intent(out) :: dest
-        type(tensor_t), dimension(:,:), intent(in) :: source
-
-        integer(I4) :: nproc, client, ni, nj
-        integer(I4) :: lo, hi,i 
-        real(8), dimension(:), allocatable :: tmp
-
-        if (mpi_world_size == 1) then
-            call copy_tensor(source,dest)
-            return
-        end if
-#ifdef HAVE_MPI
-
-        ni=size(source(:,1))
-        nj=size(source(1,:))
-        if (size(dest(:,1)) /= ni) then
-            call msg_error('gather_data2d(): dimension mismatch!')
-            stop
-        end if
-
-        allocate(tmp(ni*9))
-
-        if (rank == 0) then
-            call mpi_comm_size(MPI_COMM_WORLD, nproc,ierr)
-            call copy_tensor(source(:,1:nj),dest(:,1:nj))
-            lo=nj+1
-            do client=1,nproc-1
-                call mpi_recv(nj,1,MPI_INTEGER,client,&
-                    DATA_SIZE_TAG, MPI_COMM_WORLD, MPI_STATUS_IGNORE, ierr)
-                hi=lo+nj-1
-                do i=lo,lo+nj-1
-                    call mpi_recv(tmp,ni*9,MPI_DOUBLE_PRECISION,client,&
-                    GATHER_DATA_TAG, MPI_COMM_WORLD, MPI_STATUS_IGNORE, ierr)
-                    call pack_tensors(tmp,dest(:,i)) 
-                end do
-                lo=hi+1
-            end do
-        else
-            call mpi_send(nj,1,MPI_INTEGER,0, DATA_SIZE_TAG, &
-                MPI_COMM_WORLD, ierr)
-            do i=1,nj
-                call unpack_tensors(source(:,i), tmp)
-                call mpi_send(tmp,ni*9,MPI_DOUBLE_PRECISION,0, &
-                    GATHER_DATA_TAG, MPI_COMM_WORLD, ierr)
-            end do
         end if
         deallocate(tmp)
 #endif

@@ -20,8 +20,8 @@ module jfield_class
 
     type jfield_t
         real(DP), dimension(3) :: b
-        type(tensor_t), dimension(:), pointer :: jj
-        type(vector_t), dimension(:), pointer :: vv
+        real(DP), dimension(:,:), pointer :: tens
+        real(DP), dimension(:,:), pointer :: vec
         type(grid_t), pointer :: grid
     end type
 
@@ -44,18 +44,18 @@ contains
         this%grid=>g
 
         call get_grid_size(g,i,j,k)
-        allocate(this%jj(i*j*k))
-        allocate(this%vv(i*j*k))
+        allocate(this%tens(9,i*j*k))
+        allocate(this%vec(3,i*j*k))
     end subroutine
 
     subroutine del_jfield(this)
         type(jfield_t), intent(inout) :: this
         
         this%b=0.d0
-        deallocate(this%jj)
-        deallocate(this%vv)
-        nullify(this%jj)
-        nullify(this%vv)
+        deallocate(this%tens)
+        deallocate(this%vec)
+        nullify(this%tens)
+        nullify(this%vec)
     end subroutine
 
     subroutine calc_jtensors(this, mol, xdens, spin, z)
@@ -89,23 +89,24 @@ contains
 
         lo = (a-1)*p1*p2 + 1
         hi = b*p1*p2
-        allocate(rr(p1*p2*p3,3))
-
+        allocate(rr(lo:hi,3))
         n=1
         do k=1,p3
             do j=1,p2
                 do i=1,p1
+                    if (i+(j-1)*p1+(k-1)*p1*p2 < lo) cycle
+                    if (i+(j-1)*p1+(k-1)*p1*p2 > hi) continue
                     rr(n,:)=gridpoint(this%grid, i, j, k)
                     n=n+1
                 end do
             end do
         end do
-        !$OMP PARALLEL PRIVATE(k,jt) &
+        !$OMP PARALLEL PRIVATE(k,jt,n) &
         !$OMP SHARED(this,mol,xdens,spincase,lo,hi,rr)
         call new_jtensor(jt, mol, xdens)
         !$OMP DO SCHEDULE(STATIC) 
         do k=lo,hi
-            call ctensor(jt, rr(k,:), this%jj(k), spincase)
+            call ctensor(jt, rr(k,:), this%tens(:,k), spincase)
         end do
         !$OMP END DO
         call del_jtensor(jt)
@@ -151,7 +152,7 @@ contains
         !$OMP PARALLEL DO PRIVATE(k) &
         !$OMP SHARED(p1,p2,p3,this,a,b)
         do k=1,p1*p2*p3
-            this%vv(k)%v=matmul(this%jj(k)%t, this%b)
+            this%vec(:,k)=matmul(reshape(this%tens(:,k),(/3,3/)), this%b)
         end do
         !$OMP END PARALLEL DO
     end subroutine
@@ -165,7 +166,7 @@ contains
         real(DP), intent(in), optional :: fac
 
         integer(I4) :: i, j, p1, p2, p3
-        type(tensor_t) :: foo
+        real(DP), dimension(9) :: foo
         type(jtensor_t) :: jt
         real(DP) :: delta_t
         real(4) :: tim1, tim2
@@ -181,7 +182,7 @@ contains
         tim1=times(1)
         do i=1,100
             call jtensor(jt, (/i*SC, i*SC, i*SC/), foo, spin_a)
-            foobar=matmul(bar,foo%t)
+            foobar=matmul(bar,reshape(foo,(/3,3/)))
         end do
         call etime(times, tim2)
         tim2=times(1)
@@ -219,7 +220,7 @@ contains
         integer(I4) :: i, j, k, p1, p2, p3
         integer(I4) :: fd1, fd2, fd3, fd4
         real(DP), dimension(3) :: v, rr
-        type(vector_t), dimension(:), pointer :: jv
+        real(DP), dimension(:,:), pointer :: jv
 
         if (mpi_rank > 0) return
 
@@ -232,12 +233,12 @@ contains
         end if
 
         call get_grid_size(this%grid, p1, p2, p3)
-        jv=>this%vv
+        jv=>this%vec
         do k=1,p3
             do j=1,p2
                 do i=1,p1
                     rr=gridpoint(this%grid, i,j,k)*AU2A
-                    v=jv(i+(j-1)*p1+(k-1)*p1*p2)%v*AU2A
+                    v=jv(:,i+(j-1)*p1+(k-1)*p1*p2)*AU2A
                     call wrt_jvec(rr,v,fd1)
                     call wrt_jmod(rr,v,fd2)
                 end do
@@ -266,7 +267,7 @@ contains
         real(DP), dimension(3) :: norm, step, mag, v, rr
         real(DP) :: maxi, mini, val, sgn 
         integer(I4), dimension(3) :: npts
-        type(vector_t), dimension(:), pointer :: buf
+        real(DP), dimension(:,:), pointer :: buf
 
         if (mpi_rank > 0) return
 
@@ -289,14 +290,14 @@ contains
 
         mag = this%b
 
-        buf => this%vv
+        buf => this%vec
         maxi=0.d0
         mini=0.d0
         l=0
         do i=1,p1
             do j=1,p2
                 do k=1,p3
-                    v=buf(i+(j-1)*p1+(k-1)*p1*p2)%v
+                    v=buf(:,i+(j-1)*p1+(k-1)*p1*p2)
                     rr=gridpoint(this%grid,i,j,k)
                     val=(sqrt(sum(v**2)))
                     rr=rr-dot_product(mag,rr)*mag
