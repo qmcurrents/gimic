@@ -48,7 +48,7 @@ target_link_libraries(gimic
     )
 install(TARGETS gimic 
     ARCHIVE DESTINATION lib/${PYTHON_INST_DIR}
-    LIBRARY DESTINATION lib
+    LIBRARY DESTINATION lib/${PYTHON_INST_DIR}
     CONFIGURATIONS Release
     )
 endif()
