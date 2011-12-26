@@ -1,6 +1,13 @@
 #include(LocalBuildTree)
 include_directories (${PROJECT_SOURCE_DIR}/src)
 
+if (MPI_FOUND)
+    set(MPI_NUMPROC 3)
+    set(MPIEXEC_PREFLAGS "")
+    set (MPIRUN ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${MPI_NUMPROC}
+        ${MPIEXEC_PREFLAGS})
+endif()
+
 # Configure driver
 set (GIMIC_EXECUTABLE ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/gimic.bin)
 set (INST_LIBDIR ${PROJECT_SOURCE_DIR}/src/gimic)
@@ -39,3 +46,12 @@ add_test(NAME BondIntegral
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     )
 
+add_test(NAME VectorsMPI
+    COMMAND ${MPIRUN} ${CMAKE_CURRENT_BINARY_DIR}/test.py vectors
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    )
+
+add_test(NAME BondIntegralMPI
+    COMMAND ${MPIRUN} ${CMAKE_CURRENT_BINARY_DIR}/test.py bond_integral
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    )

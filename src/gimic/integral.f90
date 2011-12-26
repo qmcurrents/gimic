@@ -1,6 +1,7 @@
 ! Integrate the current density using quadrature.
 !
 ! Written by Jonas Juselius, University of Helsinki, 2003 (I think).
+! Improvements by jj, University of Tromsø, 2011 (I'm sure).
 !
 
 module integral_class
@@ -46,7 +47,7 @@ contains
         type(molecule_t) :: mol
         type(dens_t) :: xdens
 
-        integer(I4) :: i, j, k, p1, p2, p3
+        integer(I4) :: i, j, k, p1, p2, p3, lo, hi
         real(DP), dimension(3) :: normal, rr, center, bb
         real(DP) :: psum, nsum, w, jp, r, bound
         real(DP) :: psum2, nsum2
@@ -86,21 +87,26 @@ contains
         end if
         
         call grid_center(this%grid,center)
+        call schedule(p2, lo, hi)
+        if (mpi_rank == 0) then
+            lo = 1
+        end if
 
         xsum3=0.d0
         psum3=0.d0
         nsum3=0.d0
-!$OMP PARALLEL PRIVATE(i,j,k,r,rr,xsum,psum,nsum,xsum2,psum2,nsum2) &
+!$OMP PARALLEL PRIVATE(i,j,k,r,rr,xsum,psum,nsum) &
 !$OMP PRIVATE(jt,w,jp,tt,jvec) &
-!$OMP SHARED(p1,p2,p3,this,center,spin,bb,normal,mol,xdens) &
+!$OMP SHARED(xsum2,psum2,nsum2) &
+!$OMP SHARED(p1,p2,p3,this,center,spin,bb,normal,mol,xdens,lo,hi) &
 !$OMP REDUCTION(+:xsum3,psum3,nsum3) 
         call new_jtensor(jt, mol, xdens)
         do k=1,p3
             xsum2=0.d0
             psum2=0.d0
             nsum2=0.d0
-            !$OMP DO SCHEDULE(STATIC) 
-            do j=1,p2
+            !$OMP DO SCHEDULE(STATIC) REDUCTION(+:xsum2,psum2,nsum2)
+            do j=lo,hi
                 xsum=0.d0
                 psum=0.d0
                 nsum=0.d0
@@ -129,6 +135,7 @@ contains
                 nsum2=nsum2+nsum*w
             end do
             !$OMP END DO
+            !$OMP MASTER 
             call collect_sum(xsum2, xsum)
             call collect_sum(psum2, psum)
             call collect_sum(nsum2, nsum)
@@ -136,6 +143,7 @@ contains
             xsum3=xsum3+xsum*w
             psum3=psum3+psum*w
             nsum3=nsum3+nsum*w
+            !$OMP END MASTER 
         end do
         call del_jtensor(jt)
 !$OMP END PARALLEL
@@ -166,7 +174,7 @@ contains
         type(molecule_t) :: mol
         type(dens_t) :: xdens
 
-        integer(I4) :: i, j, k, p1, p2, p3
+        integer(I4) :: i, j, k, p1, p2, p3, lo, hi
         real(DP), dimension(3) :: normal, rr, center, bb
         real(DP) :: psum, nsum, w, jp, r, bound, sgn
         real(DP) :: psum2, nsum2
@@ -203,21 +211,27 @@ contains
             call msg_out(str_g)
         end if
         call grid_center(this%grid,center)
+        call schedule(p2, lo, hi)
+        if (mpi_rank == 0) then
+            lo = 1
+        end if
 
         sgn=1.d0
         xsum3=0.d0
         psum3=0.d0
         nsum3=0.d0
-!$OMP PARALLEL PRIVATE(i,j,k,r,rr,sgn,xsum2,xsum,psum2,psum,nsum2,nsum) &
-!$OMP PRIVATE(jt,w,jp,tt,jvec) SHARED(p1,p2,p3,this,center,spin,bb,normal) &
+!$OMP PARALLEL PRIVATE(i,j,k,r,rr,sgn,xsum,psum,nsum) &
+!$OMP PRIVATE(jt,w,jp,tt,jvec) &
+!$OMP SHARED(xsum2,psum2,nsum2) &
+!$OMP SHARED(p1,p2,p3,this,center,spin,bb,normal,lo,hi) &
 !$OMP REDUCTION(+:xsum3,psum3,nsum3)
         call new_jtensor(jt, mol, xdens)
         do k=1,p3
             xsum2=0.d0
             psum2=0.d0
             nsum2=0.d0
-            !$OMP DO SCHEDULE(STATIC) 
-            do j=1,p2
+            !$OMP DO SCHEDULE(STATIC) REDUCTION(+:xsum2,psum2,nsum2)
+            do j=lo,hi
                 xsum=0.d0
                 psum=0.d0
                 nsum=0.d0
@@ -253,6 +267,7 @@ contains
                 nsum2=nsum2+nsum*w
             end do
             !$OMP END DO
+            !$OMP MASTER
             call collect_sum(xsum2, xsum)
             call collect_sum(psum2, psum)
             call collect_sum(nsum2, nsum)
@@ -260,6 +275,7 @@ contains
             xsum3=xsum3+xsum*w
             psum3=psum3+psum*w
             nsum3=nsum3+nsum*w
+            !$OMP END MASTER 
         end do
         call del_jtensor(jt)
 !$OMP END PARALLEL

@@ -115,8 +115,8 @@ contains
             return
         end if
 #ifdef HAVE_MPI
-        call mpi_reduce(source,dest,1,MPI_DOUBLE_PRECISION,MPI_SUM,0,&
-            MPI_COMM_WORLD,ierr)
+        call mpi_reduce(source, dest, 1, MPI_DOUBLE_PRECISION, MPI_SUM, 0, &
+            MPI_COMM_WORLD, ierr)
 #endif
     end subroutine
 
