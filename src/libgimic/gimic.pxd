@@ -1,12 +1,12 @@
 cdef extern from "GimicInterface.h":
     cdef cppclass GimicInterface:
-        GimicInterface()
-        set_uhf(int)
-        set_magnet(double *b)
-        set_spin(char *s)
-        set_screening(double thrs)
-        calc_jtensor(double *r, double *jt)
-        calc_jvector(double *r, double *jt)
-        calc_divj(double *r, double *dj)
-        calc_edens(double *r, double *ed)
+        GimicInterface(char *, char *)
+        void set_uhf(int)
+        void set_magnet(double *b)
+        void set_spin(char *s)
+        void set_screening(double thrs)
+        void calc_jtensor(double *r, double *jt)
+        void calc_jvector(double *r, double *jt)
+        void calc_divj(double *r, double *dj)
+        void calc_edens(double *r, double *ed)
 

@@ -11,7 +11,7 @@ class GimicInterface {
         void set_screening(double thrs);
         void calc_jtensor(double r[3], double jt[9]);
         void calc_jvector(double r[3], double jv[3]);
-        void calc_divj(double r[3], double dj);
-        void calc_edens(double r[3], double ed);
+        void calc_divj(double r[3], double *dj);
+        void calc_edens(double r[3], double *ed);
 };
 #endif

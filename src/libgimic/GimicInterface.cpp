@@ -32,11 +32,11 @@ void GimicInterface::calc_jvector(double r[3], double jv[3]) {
     gimic_calc_jvector(r, jv);
 }
 
-void GimicInterface::calc_divj(double r[3], double dj) {
-    gimic_calc_divj(r, &dj);
+void GimicInterface::calc_divj(double r[3], double *dj) {
+    gimic_calc_divj(r, dj);
 }
 
-void GimicInterface::calc_edens(double r[3], double ed) {
-    gimic_calc_edens(r, &ed);
+void GimicInterface::calc_edens(double r[3], double *ed) {
+    gimic_calc_edens(r, ed);
 }
 
