@@ -258,6 +258,8 @@ def main():
     setup_build_path(build_path, args.show)
     if args.host:
         configure_host(args.host)
+    else:
+        configure_generic()
     command = gen_cmake_command()
     status = run_cmake(command, build_path)
 
@@ -277,6 +279,18 @@ def configure_host(host):
     else:
         print("Unknown host/system: {0}".format(host))
         sys.exit(1)
+
+def configure_generic():
+#    if not args.cc:
+#        args.cc = 'gcc'
+#    if not args.cxx:
+#        args.cxx = 'g++'
+#    if not args.fc:
+#        args.fc = 'gfortran'
+    if args.mpi:
+        args.fc = 'mpif90'
+        args.cc = 'mpicc'
+        args.cxx = 'mpicxx'
 
 def configure_linux():
     if not args.cc:

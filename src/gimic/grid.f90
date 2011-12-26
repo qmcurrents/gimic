@@ -29,7 +29,7 @@ module grid_class
 
     public grid_t
     public new_grid, del_grid, gridpoint, get_grid_normal
-    public get_grid_size, get_weight 
+    public get_grid_size, get_weight, get_grid_index
     public get_grid_length, is_gauss_grid, realpoint, copy_grid
     public grid_center, plot_grid_xyz, get_basvec, get_ortho
     public get_grid_range, grid_is_3d
@@ -436,6 +436,25 @@ contains
         
         l=this%l
     end function
+
+    subroutine get_grid_index(this, idx, i, j, k)
+        type(grid_t) :: this
+        integer(I4), intent(in) :: idx
+        integer(I4), intent(out) :: i, j, k
+
+        integer(I4) :: p1, p2, p3, n
+
+        n = idx - 1
+        call get_grid_size(this, p1, p2, p3)
+
+        k=int(n/(p1*p2)) 
+        j=int((n-k*p1*p2)/p1)
+        i=n-k*p1*p2-j*p1 
+        
+        i = i + 1
+        j = j + 1
+        k = k + 1
+    end subroutine
 
     function gridpoint(this, i, j, k) result(r)
         type(grid_t), intent(in) :: this

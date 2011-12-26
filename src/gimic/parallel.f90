@@ -6,19 +6,11 @@ module parallel_m
     implicit none
 #ifdef HAVE_MPI
     include 'mpif.h'
-    integer(I4), parameter :: GATHER_DATA_TAG=1
-    integer(I4), parameter :: DATA_SIZE_TAG=2
 #endif
 
     public init_mpi, stop_mpi, get_mpi_rank, rankname, schedule
     public gather_data, collect_sum
     private
-
-    interface gather_data
-        module procedure gather_data1d
-        module procedure gather_data2d
-        module procedure gather_data1d_tensor
-    end interface
 
     integer(I4) :: ierr
     integer(I4) :: rank
@@ -79,186 +71,41 @@ contains
 
         if (mpi_world_size == 1) then
             lo=1
-            hi=npts
+            hi=npts 
             return
         end if
 #ifdef HAVE_MPI
-!        call mpi_comm_size(MPI_COMM_WORLD, sz,ierr)
-        nPerHost = (npts - 1) / mpi_world_size
-        nLeftOver = npts - nPerHost * mpi_world_size
-        if (rank < nLeftOver) then
-            lo = rank * (nPerHost + 1)
-            hi = lo + (nPerHost + 1)
-        else
-            lo = nLeftOver + rank * nPerHost 
-            hi = lo + nPerHost
-        end if
-        print *, "lohi", lo, hi
+
+        nPerHost = npts / mpi_world_size
+        nLeftOver = mod(npts, mpi_world_size)
+        lo = nLeftOver + rank * nPerHost + 1
+        hi = lo + nPerHost - 1
 #endif
     end subroutine
 
-    subroutine gather_data1d(dest, source)
-        real(DP), dimension(:) :: dest
-        real(DP), dimension(:), intent(in) :: source
-#ifdef HAVE_MPI
-        integer(I4) :: nproc, client, npts
-        integer(I4) :: lo, hi 
-        npts=size(source)
-
-        if (mpi_world_size == 1) then
-            dest=source
-            return
-        end if
-!        call mpi_barrier(MPI_COMM_WORLD, ierr)
-
-        if (rank == 0) then
-            call mpi_comm_size(MPI_COMM_WORLD, nproc,ierr)
-            dest(1:npts)=source
-            lo=npts+1
-            do client=1,nproc-1
-                call mpi_recv(npts,1,MPI_INTEGER,client,&
-                    DATA_SIZE_TAG, MPI_COMM_WORLD, MPI_STATUS_IGNORE, ierr)
-                hi=lo+npts-1
-                call mpi_recv(dest(lo:hi),npts,MPI_DOUBLE_PRECISION,client,&
-                    GATHER_DATA_TAG, MPI_COMM_WORLD, MPI_STATUS_IGNORE, ierr)
-                lo=hi+1
-            end do
-        else
-            call mpi_send(npts,1,MPI_INTEGER,0, DATA_SIZE_TAG, &
-                MPI_COMM_WORLD, ierr)
-            call mpi_send(source,npts,MPI_DOUBLE_PRECISION,0,GATHER_DATA_TAG, &
-                MPI_COMM_WORLD, ierr)
-        end if
-#endif
-    end subroutine
-
-    subroutine gather_data2d(dest, source)
-        real(DP), dimension(:,:), intent(out) :: dest
+    subroutine gather_data(source, dest)
         real(DP), dimension(:,:), intent(in) :: source
-
-        integer(I4) :: nproc, client, ni, nj
-        integer(I4) :: lo, hi,i 
+        real(DP), dimension(:,:), intent(out) :: dest
 
         if (mpi_world_size == 1) then
             dest=source
             return
         end if
 #ifdef HAVE_MPI
-        ni=size(source(:,1))
-        nj=size(source(1,:))
-        if (size(dest(:,1)) /= ni) then
-            call msg_error('gather_data2d(): dimension mismatch!')
-            stop
-        end if
-
 !        call mpi_barrier(MPI_COMM_WORLD, ierr)
 
-        if (rank == 0) then
-            call mpi_comm_size(MPI_COMM_WORLD, nproc,ierr)
-            dest(:,1:nj)=source(:,1:nj)
-            lo=nj+1
-            do client=1,nproc-1
-                call mpi_recv(nj,1,MPI_INTEGER,client,&
-                    DATA_SIZE_TAG, MPI_COMM_WORLD, MPI_STATUS_IGNORE, ierr)
-                hi=lo+nj-1
-                do i=lo,lo+nj-1
-                    call mpi_recv(dest(:,i),ni,MPI_DOUBLE_PRECISION,client,&
-                    GATHER_DATA_TAG, MPI_COMM_WORLD, MPI_STATUS_IGNORE, ierr)
-                end do
-                lo=hi+1
-            end do
-        else
-            call mpi_send(nj,1,MPI_INTEGER,0, DATA_SIZE_TAG, &
-                MPI_COMM_WORLD, ierr)
-            do i=1,nj
-                call mpi_send(source(:,i),ni,MPI_DOUBLE_PRECISION,0, &
-                    GATHER_DATA_TAG, MPI_COMM_WORLD, ierr)
-            end do
+        call mpi_gather(source, size(source), MPI_DOUBLE_PRECISION, &
+            dest, size(source), MPI_DOUBLE_PRECISION, 0, &
+            MPI_COMM_WORLD, ierr)
+!        call mpi_gather(dest, n, MPI_DOUBLE_PRECISION, &
+!            MPI_IN_PLACE, n, MPI_DOUBLE_PRECISION, 0, &
+!            MPI_COMM_WORLD, ierr)
+        if (ierr /= 0) then
+            stop 'MPI error in gather_data()'
         end if
 #endif
     end subroutine
 
-    subroutine gather_data1d_tensor(dest, source)
-        type(tensor_t), dimension(:), intent(out) :: dest
-        type(tensor_t), dimension(:), intent(in) :: source
-
-        integer(I4) :: nproc, client, ni
-        integer(I4) :: lo, hi,i 
-        real(8), dimension(:), allocatable :: tmp
-
-        if (mpi_world_size == 1) then
-            call copy_tensor(source,dest)
-            return
-        end if
-#ifdef HAVE_MPI
-
-        if (mpi_rank == 0) call msg_warn('gather_1d_tensor(): not tested, pls vrfy')
-
-        ni=size(source)
-
-        allocate(tmp(ni*9))
-
-        if (rank == 0) then
-            call mpi_comm_size(MPI_COMM_WORLD, nproc,ierr)
-            call copy_tensor(source(1:ni),dest(1:ni))
-            lo=ni+1
-            do client=1,nproc-1
-                call mpi_recv(ni,1,MPI_INTEGER,client,&
-                    DATA_SIZE_TAG, MPI_COMM_WORLD, MPI_STATUS_IGNORE, ierr)
-                hi=lo+ni-1
-                call mpi_recv(tmp,ni*9,MPI_DOUBLE_PRECISION,client,&
-                GATHER_DATA_TAG, MPI_COMM_WORLD, MPI_STATUS_IGNORE, ierr)
-                call pack_tensors(tmp,dest(lo:hi)) 
-                lo=hi+1
-            end do
-        else
-            call mpi_send(ni,1,MPI_INTEGER,0, DATA_SIZE_TAG, &
-                MPI_COMM_WORLD, ierr)
-            call unpack_tensors(source, tmp)
-            call mpi_send(tmp,ni*9,MPI_DOUBLE_PRECISION,0, &
-                GATHER_DATA_TAG, MPI_COMM_WORLD, ierr)
-        end if
-        deallocate(tmp)
-#endif
-    end subroutine
-
-#ifdef HAVE_MPI
-    subroutine pack_tensors(tmp, foo)
-        real(DP), dimension(:) :: tmp
-        type(tensor_t), dimension(:) :: foo
-        
-        integer(I4) :: i,j,k,l
-
-        k=1
-        do l=1,size(foo)
-            do j=1,3
-                do i=1,3
-                    foo(l)%t(i,j)=tmp(k)
-                    k=k+1
-                end do
-            end do
-        end do
-    end subroutine
-
-    subroutine unpack_tensors(foo,tmp)
-        type(tensor_t), dimension(:) :: foo
-        real(DP), dimension(:) :: tmp
-        
-        integer(I4) :: i,j,k,l
-
-        k=1
-        do l=1,size(foo)
-            do j=1,3
-                do i=1,3
-                    tmp(k)=foo(l)%t(i,j)
-                    k=k+1
-                end do
-            end do
-        end do
-
-    end subroutine
-#endif
-    
     subroutine collect_sum(source, dest)
         real(DP), intent(in) :: source
         real(DP), intent(out) :: dest

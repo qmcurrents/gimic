@@ -54,8 +54,6 @@ contains
         this%b=0.d0
         deallocate(this%tens)
         deallocate(this%vec)
-        nullify(this%tens)
-        nullify(this%vec)
     end subroutine
 
     subroutine calc_jtensors(this, mol, xdens, spin, z)
@@ -66,52 +64,68 @@ contains
         integer, optional :: z
 
         integer(I4) :: i, j, k, p1, p2, p3
-        integer :: a, b, n
-        real(DP), dimension(:,:), allocatable :: rr
+        integer :: n, m
+        real(DP), dimension(3) :: rr
+        real(DP), dimension(:,:), pointer :: tens
         character(8) :: spincase
-        integer(I4) :: lo, hi, npts
+        integer(I4) :: lo, hi, npts, first, last
         type(jtensor_t) :: jt
+
+        call get_grid_size(this%grid, p1, p2, p3)
+        if (present(z)) then
+            n=z
+            m=z
+        else
+            n=1
+            m=p3
+        end if
+
+        lo = (n-1)*p1*p2 + 1
+        hi = m*p1*p2
+        npts = hi - lo + 1
+
+        call schedule(npts, lo, hi)
+        npts = hi - lo + 1
+
+        first = 1
+        last = npts
+        ! rank 0 handles any leftover nodes, located at the beginning
+        if (mpi_world_size > 1 .and. mpi_rank == 0) then
+            first=lo
+            last = hi
+            lo = 1
+            npts = hi - lo + 1
+            allocate(tens(9,npts))
+        else
+            tens=>this%tens
+        end if
 
         if (present(spin)) then
             spincase=spin
         else
             spincase='total'
         end if
-        call jfield_eta(this, mol, xdens)
-        call get_grid_size(this%grid, p1, p2, p3)
-        if (present(z)) then
-            a=z
-            b=z
-        else
-            a=1
-            b=p3
-        end if
 
-        lo = (a-1)*p1*p2 + 1
-        hi = b*p1*p2
-        allocate(rr(lo:hi,3))
-        n=1
-        do k=1,p3
-            do j=1,p2
-                do i=1,p1
-                    if (i+(j-1)*p1+(k-1)*p1*p2 < lo) cycle
-                    if (i+(j-1)*p1+(k-1)*p1*p2 > hi) continue
-                    rr(n,:)=gridpoint(this%grid, i, j, k)
-                    n=n+1
-                end do
-            end do
-        end do
-        !$OMP PARALLEL PRIVATE(k,jt,n) &
-        !$OMP SHARED(this,mol,xdens,spincase,lo,hi,rr)
+        call jfield_eta(this, mol, xdens)
+        !$OMP PARALLEL PRIVATE(jt,rr,n,i,j,k) &
+        !$OMP SHARED(mol,xdens,spincase,tens,lo,hi)
         call new_jtensor(jt, mol, xdens)
         !$OMP DO SCHEDULE(STATIC) 
-        do k=lo,hi
-            call ctensor(jt, rr(k,:), this%tens(:,k), spincase)
+        do n=lo,hi
+            call get_grid_index(this%grid, n, i, j, k)
+            rr = gridpoint(this%grid, i, j, k)
+            call ctensor(jt, rr, tens(:,n-lo+1), spincase)
         end do
         !$OMP END DO
         call del_jtensor(jt)
         !$OMP END PARALLEL
-        deallocate(rr)
+        if (mpi_world_size > 1) then
+            call gather_data(tens(:,first:last), this%tens(:,first:))
+            if (mpi_rank == 0) then
+                this%tens(:,1:first) = tens(:,1:first)
+                deallocate(tens)
+            end if
+        end if
     end subroutine 
     
     subroutine calc_jvectors(this, mol, xdens, spin, z)
@@ -131,27 +145,22 @@ contains
 
         if (present(z)) then
             call calc_jtensors(this, mol, xdens, spincase, z)
-            call compute_jvectors(this, z)
         else
             call calc_jtensors(this, mol, xdens, spincase)
+        end if
+        if (mpi_rank == 0) then
             call compute_jvectors(this)
         end if
     end subroutine
 
-    subroutine compute_jvectors(this, z)
+    subroutine compute_jvectors(this)
         type(jfield_t) :: this
-        integer, optional :: z
 
-        integer(I4) :: k, p1, p2, p3, a, b
-        call get_grid_size(this%grid, p1, p2, p3)
-        if (present(z)) then
-            a=z; b=z
-        else
-            a=1; b=p3
-        end if
-        !$OMP PARALLEL DO PRIVATE(k) &
-        !$OMP SHARED(p1,p2,p3,this,a,b)
-        do k=1,p1*p2*p3
+        integer(I4) :: k 
+        integer(I4), dimension(2) :: dims
+        dims = shape(this%vec)
+        !$OMP PARALLEL DO PRIVATE(k) SHARED(this,dims)
+        do k=1,dims(2)
             this%vec(:,k)=matmul(reshape(this%tens(:,k),(/3,3/)), this%b)
         end do
         !$OMP END PARALLEL DO
@@ -190,7 +199,7 @@ contains
         
         delta_t=tim2-tim1
         if ( present(fac) ) delta_t=delta_t*fac
-        write(str_g, '(a,f9.2,a)') 'Estimated CPU time for &
+        write(str_g, '(a,f9.2,a)') 'Estimated CPU time for single core &
             &calculation: ', delta_t*real(p1*p2*p3)/100.d0, ' sec'
         call msg_info(str_g)
         call nl
