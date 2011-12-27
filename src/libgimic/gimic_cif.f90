@@ -39,7 +39,8 @@ subroutine gimic_init(molfile, densfile, spherical)
         end if
     end if
 
-    settings%magnet=(/0.0, 0.0, 0.0/)
+    magnet=(/0.0, 0.0, 1.0/)
+    settings%magnet=magnet
     settings%is_uhf=.false.
     settings%screen_thrs = SCREEN_THRS
     settings%use_giao = .true.
@@ -54,8 +55,6 @@ subroutine gimic_init(molfile, densfile, spherical)
 !    settings%magnet_axis="X"
 
     call set_debug_level(3)
-    call new_basis(mol, settings%basis, settings%screen_thrs)
-
     if (settings%use_screening) then
         call new_basis(mol, settings%basis, settings%screen_thrs)
     else
@@ -63,7 +62,7 @@ subroutine gimic_init(molfile, densfile, spherical)
     end if
 
     if (settings%use_spherical) then
-        call new_c2sop(c2s,mol)
+        call new_c2sop(c2s, mol)
         call set_c2sop(mol, c2s)
     end if
 
@@ -93,6 +92,7 @@ subroutine gimic_set_magnet(b)
     use gimic_cif
     real(8), dimension(3), intent(in) :: b
     settings%magnet = b
+    magnet = b
 end subroutine
 
 subroutine gimic_set_spin(s)
@@ -144,16 +144,15 @@ subroutine gimic_calc_jvector(r, jv)
     real(8), dimension(3), intent(in) :: r
     real(8), dimension(3), intent(out) :: jv
 
-    real(DP), dimension(9) :: t
+    real(DP), dimension(3) :: v
     type(jtensor_t) :: jtens
     integer :: i
 
     call new_jtensor(jtens, mol, xdens)
-    call ctensor(jtens, r, t, spin)
+    call jvector(jtens, r, magnet, jv, spin)
     call del_jtensor(jtens)
-    do i=1,3
-        !jt(i)=t%t(i,j)
-    end do
+    print *, r
+    print *, jv
 end subroutine
 
 subroutine gimic_calc_divj(r, dj)

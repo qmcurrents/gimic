@@ -2,6 +2,7 @@ add_subdirectory(libgimic)
 add_subdirectory(gimic)
 
 if (ENABLE_MRCPP)
+    add_subdirectory(gimlet)
     find_package(Git)
     include(ExternalProject)
 

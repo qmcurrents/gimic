@@ -42,20 +42,20 @@ contains
         call calc_basdim(this)
         
         call msg_out('Normalizing basis')
-        call msg_out(repeat('=', 45))
+!        call msg_out(repeat('=', 45))
         atoms=>this%atoms
         do i=1,natoms
-            call nl
-            write(str_g, '(a,i4,a4)') 'Normalizing basis for atom: ', &
-                i, atoms(i)%symbol
-            call msg_out(str_g)
+!            call nl
+!            write(str_g, '(a,i4,a4)') 'Normalizing basis for atom: ', &
+!                i, atoms(i)%symbol
+!            call msg_out(str_g)
             call normalize(atoms(i)%basis)
         end do
         call nl
 
-        do i=1,natoms
-            call print_atom_data(atoms(i),i)
-        end do
+!        do i=1,natoms
+!            call print_atom_data(atoms(i),i)
+!        end do
         write(str_g, 77) '  Total number of primitive  GTO''s ', this%ngto
         call msg_out(str_g)
         write(str_g, 77) '  Total number of contracted GTO''s ', this%ncgto
@@ -145,10 +145,10 @@ contains
         do i=1,basis%nctr
             call norm_ctr(basis%ctr(i))
         end do
-        write(str_g,'(a,i5,a)') '         Normalized', basis%nctr, &
-        ' contractions'
-        call msg_out(str_g)
-        call nl
+!        write(str_g,'(a,i5,a)') '         Normalized', basis%nctr, &
+!        ' contractions'
+!        call msg_out(str_g)
+!        call nl
     end subroutine 
     
 
