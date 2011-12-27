@@ -11,6 +11,7 @@ option(ENABLE_MPI            "Enable MPI parallelization"    OFF)
 option(ENABLE_OMP            "Enable OpenMP parallelization" ON)
 option(ENABLE_CFOUR          "Enable the CFOUR interface" OFF)
 option(ENABLE_TESTS          "Enable the test suite" ON)
+option(ENABLE_MRCPP          "Enable the MRCPP wavelet librbary" ON)
 
 include(ConfigProjectVersion)
 include(ConfigSafeGuards)

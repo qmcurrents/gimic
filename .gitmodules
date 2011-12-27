@@ -1,0 +1,3 @@
+[submodule "src/libmwrepr"]
+	path = src/libmwrepr
+	url = /home/jonas/src/libmwrepr
