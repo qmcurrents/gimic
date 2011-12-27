@@ -60,3 +60,8 @@ install(TARGETS gimic2
     CONFIGURATIONS Release
     )
 
+install(FILES GimicInterface.h gimic_cif.h
+    DESTINATION include
+    CONFIGURATIONS Release
+    )
+
