@@ -37,21 +37,21 @@ execute_process(
 
 # Add tests
 add_test(NAME Vectors
-    COMMAND ${CMAKE_CURRENT_BINARY_DIR}/test.py vectors
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    COMMAND ${CMAKE_CURRENT_BINARY_DIR}/test.py vectors
     )
 
 add_test(NAME BondIntegral
-    COMMAND ${CMAKE_CURRENT_BINARY_DIR}/test.py bond_integral
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    COMMAND ${CMAKE_CURRENT_BINARY_DIR}/test.py bond_integral
     )
 
 add_test(NAME VectorsMPI
-    COMMAND ${MPIRUN} ${CMAKE_CURRENT_BINARY_DIR}/test.py vectors
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    COMMAND ${MPIRUN} ${CMAKE_CURRENT_BINARY_DIR}/test.py vectors
     )
 
 add_test(NAME BondIntegralMPI
-    COMMAND ${MPIRUN} ${CMAKE_CURRENT_BINARY_DIR}/test.py bond_integral
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    COMMAND ${MPIRUN} ${CMAKE_CURRENT_BINARY_DIR}/test.py bond_integral
     )
