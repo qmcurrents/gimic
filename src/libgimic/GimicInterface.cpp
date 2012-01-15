@@ -12,7 +12,7 @@ void GimicInterface::set_uhf(int uhf) {
     gimic_set_uhf(&uhf);
 }
 
-void GimicInterface::set_magnet(double b[3]) {
+void GimicInterface::set_magnet(const double b[3]) {
     gimic_set_magnet(b);
 }
 
@@ -24,19 +24,19 @@ void GimicInterface::set_screening(double thrs) {
     gimic_set_screening(&thrs);
 }
 
-void GimicInterface::calc_jtensor(double r[3], double jt[9]) {
+void GimicInterface::calc_jtensor(const double r[3], double jt[9]) {
     gimic_calc_jtensor(r, jt);
 }
 
-void GimicInterface::calc_jvector(double r[3], double jv[3]) {
+void GimicInterface::calc_jvector(const double r[3], double jv[3]) {
     gimic_calc_jvector(r, jv);
 }
 
-void GimicInterface::calc_divj(double r[3], double *dj) {
+void GimicInterface::calc_divj(const double r[3], double *dj) {
     gimic_calc_divj(r, dj);
 }
 
-void GimicInterface::calc_edens(double r[3], double *ed) {
+void GimicInterface::calc_edens(const double r[3], double *ed) {
     gimic_calc_edens(r, ed);
 }
 

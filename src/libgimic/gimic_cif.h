@@ -18,13 +18,13 @@ extern "C" {
 	void gimic_init(const char *, const char *);
     void gimic_finalize();
     void gimic_set_uhf(int *); 
-    void gimic_set_magnet(double *); 
+    void gimic_set_magnet(const double *); 
     void gimic_set_spin(char *); 
     void gimic_set_screening(double *); 
-    void gimic_calc_jtensor(double *, double *); 
-    void gimic_calc_jvector(double *, double *); 
-    void gimic_calc_divj(double *, double *); 
-    void gimic_calc_edens(double *, double *); 
+    void gimic_calc_jtensor(const double *, double *); 
+    void gimic_calc_jvector(const double *, double *); 
+    void gimic_calc_divj(const double *, double *); 
+    void gimic_calc_edens(const double *, double *); 
 }
 
 #endif

@@ -151,8 +151,6 @@ subroutine gimic_calc_jvector(r, jv)
     call new_jtensor(jtens, mol, xdens)
     call jvector(jtens, r, magnet, jv, spin)
     call del_jtensor(jtens)
-    print *, r
-    print *, jv
 end subroutine
 
 subroutine gimic_calc_divj(r, dj)
