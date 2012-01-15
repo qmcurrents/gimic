@@ -78,3 +78,16 @@ Advanced {
 #     file=gridfile.grd
 # }
 
+# Gimlet {
+#     max_depth = 25
+#     order = 5
+#     rel_prec = 1.e-3
+#     wavelet = "I"
+#     printlevel = 1
+#     teletype = true
+#
+#     boxes = [ 1, 1, 1 ]
+#     initial_scale = -2
+#     origin = [ -4.0, -4.0, -4.0 ]
+# }
+

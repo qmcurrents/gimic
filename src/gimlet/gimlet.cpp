@@ -24,10 +24,10 @@ int main(int argc, char **argv) {
     j << 0.0, 0.0, 0.0;
 
     GimicInterface gimic("mol", "xdens");
-    gimic.set_magnet(b.data());
-//    gimic.set_spin("total");
-    gimic.set_uhf(0);
-    gimic.calc_jvector(r.data(), j.data());
+    gimic.setMagnet(b.data());
+//    gimic.setSpin("total");
+    gimic.setUhf(0);
+    gimic.calcJVector(r.data(), j.data());
     cout << "Magnet: " << endl << b << endl;
     cout << "Coord: " << endl << r << endl;
     cout << "Current: " << endl << j << endl;

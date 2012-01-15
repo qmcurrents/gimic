@@ -15,19 +15,11 @@
 
 class CurrentFunc: public GimicFunc {
 public:
-        CurrentFunc(GimicInterface &g);
+        CurrentFunc(GimicInterface &g, int comp);
         virtual ~CurrentFunc() {}
-
         virtual double evalf(const double *r) const;
-
-        friend std::ostream& operator<<(std::ostream &o,
-                                        const CurrentFunc &func)
-	{
-                o << "Not implemented yet." << std::endl;
-		return o;
-	}
 protected:
-
+    int component;
 };
 
 #endif /* CURRENTFUNC_H_ */

@@ -26,7 +26,6 @@ add_executable(gimlet.bin
     gimlet.cpp
     MREnv.cpp
     MREnv.h
-    GimicFunc.cpp
     GimicFunc.h
     CurrentFunc.cpp
     CurrentFunc.h
@@ -39,7 +38,29 @@ target_link_libraries(gimlet.bin
     ${BLAS_LIBRARIES}
     ${Boost_LIBRARIES})
 
+# This is the "developer" driver
+set (INST_LIBDIR ${CMAKE_CURRENT_SOURCE_DIR})
+set (GIMIC_EXECUTABLE ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/gimlet.bin)
+
+configure_file(${PROJECT_SOURCE_DIR}/src/gimic/gimic.in
+    ${PROJECT_BINARY_DIR}/gimlet)
+execute_process(COMMAND
+    chmod 755 ${PROJECT_BINARY_DIR}/gimlet OUTPUT_QUIET)
+
+# This is the "installed" driver
+set (INST_LIBDIR ${CMAKE_INSTALL_PREFIX}/lib/${PYTHON_INST_DIR})
+configure_file(${PROJECT_SOURCE_DIR}/src/gimic/gimic.in
+    ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/gimlet)
+execute_process(COMMAND
+    chmod 755
+    ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/gimlet
+    OUTPUT_QUIET)
+
 install(TARGETS gimlet.bin
     RUNTIME DESTINATION bin
+    CONFIGURATIONS Release
+    )
+install(PROGRAMS ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/gimlet 
+    DESTINATION bin
     CONFIGURATIONS Release
     )

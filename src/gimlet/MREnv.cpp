@@ -5,6 +5,7 @@
 #include <cmath>
 
 #include "MREnv.h"
+#include "Getkw.h"
 #include "TelePrompter.h"
 #include "LegendreBasis.h"
 #include "InterpolatingBasis.h"
@@ -22,18 +23,28 @@ void MREnv::initializeMRCPP(int argc, char **argv, const char *fname) {
     int nThreads = omp_get_max_threads();
 
     Eigen::internal::setNbThreads(1);
+    const char *infile = 0;
+    if (argc == 1) {
+            infile = "STDIN";
+    } else if (argc == 2) {
+            infile = argv[1];
+    } else {
+            MSG_ERROR("Ivalid number of arguments!");
+    }
+    Getkw Input = Getkw(infile, false, true);
 
-    int printLevel = 0;
-    bool teletype = false;
+    Debug = false;
+    int printLevel = Input.get<int>("printlevel");
+    bool teletype = Input.get<bool>("teletype");
 
     if (fname != 0) {
-        TelePrompter::init(printLevel, teletype, fname);
+            TelePrompter::init(printLevel, teletype, fname);
     } else {
-        TelePrompter::init(printLevel, teletype, "GIMLET");
+            TelePrompter::init(printLevel, teletype, "GIMLET");
     }
 
     println(0, endl << endl);
-    println(0, "*** Using code from the MRCPP project: " << PROJECT_VERSION);
+    println(0, "*** Using the wavlet code from the MRCPP project by:");
     println(0, "***    Jonas Juselius   <jonas.juselius@uit.no> ");
     println(0, "***    Stig Rune Jensen <stig.r.jensen@uit.no>  ");
     println(0, "***    Luca Frediani    <luca.frediani@uit.no>  ");
@@ -52,21 +63,21 @@ void MREnv::initializeMRCPP(int argc, char **argv, const char *fname) {
     getQuadratureCache(qCache);
     qCache.setBounds(0.0, 1.0);
 
-
+    Getkw Input;
     //Initialize world
-    int order = 7;
-    int max_depth = 25;
-    double rel_prec = 10e-5;
-    string wlet = "I";
+    int order = Input.get<int>("Gimlet.order");
+    int max_depth = Input.get<int>("Gimlet.max_depth");
+    double rel_prec = Input.get<double>("Gimlet.rel_prec");
+    string wlet = Input.get<string>("Gimlet.wavelet");
 
-    int rootScale = 0;
-    const int nbox[3]= {1,1,1};
-    const int transl[3] = {0,0,0};
-    double origin[3]= {0,0,0};
+    int rootScale = Input.get<int>("Gimlet.initial_scale");
+    const vector<int> &nbox = Input.getIntVec("Gimlet.boxes");
+    const vector<int> &transl = Input.getIntVec("Gimlet.translation");
+    const vector<double> &origin = Input.getDblVec("Gimlet.origin");
 
-    BoundingBox<1>::setWorldBox(rootScale, transl, nbox, origin);
-    BoundingBox<2>::setWorldBox(rootScale, transl, nbox, origin);
-    BoundingBox<3>::setWorldBox(rootScale, transl, nbox, origin);
+    BoundingBox<1>::setWorldBox(rootScale, transl.data(), nbox.data(), origin.data());
+    BoundingBox<2>::setWorldBox(rootScale, transl.data(), nbox.data(), origin.data());
+    BoundingBox<3>::setWorldBox(rootScale, transl.data(), nbox.data(), origin.data());
 
     const BoundingBox<3> &worldbox = BoundingBox<3>::getWorldBox();
     println(1, worldbox);

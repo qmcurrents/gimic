@@ -22,6 +22,7 @@ module gimic_cif
     type(cao2sao_t) :: c2s
     real(DP), dimension(3) :: magnet
     character(8) :: spin = 'total'
+    type(jtensor_t) :: jtens
 end module
 
 subroutine gimic_init(molfile, densfile, spherical)
@@ -68,6 +69,7 @@ subroutine gimic_init(molfile, densfile, spherical)
 
     call new_dens(xdens, mol)
     call read_dens(xdens, settings%xdens)
+    call new_jtensor(jtens, mol, xdens)
 end subroutine
 
 subroutine gimic_finalize()
@@ -77,6 +79,7 @@ subroutine gimic_finalize()
     end if
     call del_dens(xdens)
     call del_basis(mol)
+    call del_jtensor(jtens)
 end subroutine
 
 subroutine gimic_set_uhf(uhf)
@@ -124,12 +127,9 @@ subroutine gimic_calc_jtensor(r, jt)
     real(8), dimension(9), intent(out) :: jt
 
     real(DP), dimension(9) :: t
-    type(jtensor_t) :: jtens
     integer :: i,j,k
 
-    call new_jtensor(jtens, mol, xdens)
     call ctensor(jtens, r, t, spin)
-    call del_jtensor(jtens)
     k=1
     do j=1,3
         do i=1,3
@@ -144,26 +144,32 @@ subroutine gimic_calc_jvector(r, jv)
     real(8), dimension(3), intent(in) :: r
     real(8), dimension(3), intent(out) :: jv
 
-    real(DP), dimension(3) :: v
-    type(jtensor_t) :: jtens
-    integer :: i
-
-    call new_jtensor(jtens, mol, xdens)
     call jvector(jtens, r, magnet, jv, spin)
-    call del_jtensor(jtens)
 end subroutine
 
-subroutine gimic_calc_divj(r, dj)
+subroutine gimic_calc_modj(r, dj)
+    use gimic_cif
+    real(8), dimension(3), intent(in) :: r
+    real(8), intent(out) :: dj
+
+    real(8), dimension(3) :: jv
+    call jvector(jtens, r, magnet, jv, spin)
+    dj = sqrt(sum(jv**2))
+end subroutine
+
+subroutine gimic_calc_anapole(r, dj)
     use gimic_cif
     real(8), dimension(3), intent(in) :: r
     real(8), intent(out) :: dj
     stop 'Not implemented yet'
 end subroutine
 
-subroutine gimic_calc_edens(r, ed)
+subroutine gimic_calc_divj(r, dj)
     use gimic_cif
+    use divj_m
     real(8), dimension(3), intent(in) :: r
-    real(8), intent(out) :: ed
-    stop 'Not implemented yet'
+    real(8), intent(out) :: dj
+
+    dj = divj(r, magnet)
 end subroutine
 

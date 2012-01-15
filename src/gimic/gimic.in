@@ -96,8 +96,21 @@ def main():
     grid.add_kw("grid_points", 'INT_ARRAY', 3)
     grid.add_kw("gauss_order", 'INT', (7,))
 
+    gimlet=getkw.Section('Gimlet')
+    gimlet.add_kw('teletype', 'BOOL', (True,))
+    gimlet.add_kw('printlevel', 'INT', (3,))
+    gimlet.add_kw('rel_prec', 'DBL', (1.0e-4,))
+    gimlet.add_kw('order', 'INT', (7,))
+    gimlet.add_kw('max_depth', 'INT', (10,))
+    gimlet.add_kw('initial_scale', 'INT', (0,))
+    gimlet.add_kw('wavelet', 'STR', ('I',))
+    gimlet.add_kw('boxes', 'INT_ARRAY', (1,1,1))
+    gimlet.add_kw('translation', 'INT_ARRAY', (0,0,0))
+    gimlet.add_kw('origin', 'DBL_ARRAY', (0.0,0.0,0.0))
+
     top.add_sect(adv)
     top.add_sect(grid)
+    top.add_sect(gimlet)
     
     input=getkw.GetkwParser(top)
     inkw=input.parseFile(args.infile)

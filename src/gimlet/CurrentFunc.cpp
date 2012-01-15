@@ -9,11 +9,13 @@
 using namespace Eigen;
 using namespace std;
 
-CurrentFunc::CurrentFunc(GimicInterface &g) : GimicFunc(g) {
+CurrentFunc::CurrentFunc(GimicInterface &g, int comp) : GimicFunc(g) {
+    assert(comp >= 0 & comp <= 2);
+    component = comp;
 }
 
 double CurrentFunc::evalf(const double *r) const {
     Vector3d j;
-    gimic->calc_jvector(r, j.data());
-    return j(0);
+    gimic->calcJVector(r, j.data());
+    return j(component);
 }

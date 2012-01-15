@@ -17,16 +17,7 @@ class ModulusFunc: public GimicFunc {
 public:
         ModulusFunc(GimicInterface &g);
         virtual ~ModulusFunc() {}
-
         virtual double evalf(const double *r) const;
-
-        friend std::ostream& operator<<(std::ostream &o,
-                                        const ModulusFunc &func)
-	{
-                o << "Not implemented yet." << std::endl;
-		return o;
-	}
-protected:
 };
 
 #endif /* MODULUSFUNC_H_ */

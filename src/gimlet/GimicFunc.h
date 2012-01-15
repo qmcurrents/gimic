@@ -15,21 +15,21 @@
 
 class GimicFunc: public RepresentableFunction<3> {
 public:
-        GimicFunc(GimicInterface &g);
+        GimicFunc(GimicInterface &g) {
+             this->gimic = &g;
+        }
         virtual ~GimicFunc() {}
-
         virtual double evalf(const double *r) const = 0;
-
-        friend std::ostream& operator<<(std::ostream &o,
-                                        const GimicFunc &func)
-	{
-                o << "Not implemented yet." << std::endl;
-		return o;
-	}
 protected:
         GimicInterface *gimic;
 
-        bool isVisibleAtScale(int scale, int nQuadPts) const;
+        bool isVisibleAtScale(int scale, int nQuadPts) const {
+            int visibleScale = 1;
+            if (scale < visibleScale) {
+                return false;
+            }
+            return true;
+        }
 };
 
 #endif /* GIMICFUNC_H_ */
