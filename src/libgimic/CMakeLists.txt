@@ -2,7 +2,6 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
 add_library(gimic2 SHARED
     globals.f90
-    getkw.f90  
     basis.f90
     bfeval.f90
     cao2sao.f90

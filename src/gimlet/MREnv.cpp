@@ -33,7 +33,6 @@ void MREnv::initializeMRCPP(int argc, char **argv, const char *fname) {
     }
     Getkw Input = Getkw(infile, false, true);
 
-    Debug = false;
     int printLevel = Input.get<int>("printlevel");
     bool teletype = Input.get<bool>("teletype");
 
@@ -63,7 +62,6 @@ void MREnv::initializeMRCPP(int argc, char **argv, const char *fname) {
     getQuadratureCache(qCache);
     qCache.setBounds(0.0, 1.0);
 
-    Getkw Input;
     //Initialize world
     int order = Input.get<int>("Gimlet.order");
     int max_depth = Input.get<int>("Gimlet.max_depth");

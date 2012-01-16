@@ -6,6 +6,7 @@
 
 module grid_class
     use globals_m
+    use getkw_class
     use settings_m
     use tensor_m
     use gaussint_m

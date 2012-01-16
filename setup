@@ -50,11 +50,11 @@ group.add_argument('--cxx',
         default=None,
         help='set the C++ compiler [default: pick automatically or based on CXX=...]',
         metavar='STRING')
-group.add_argument('--netcdf-dir',
+group.add_argument('--hdf5-dir',
         action='store',
-        dest='netcdfdir',
+        dest='hdfdir',
         default=None,
-        help='directory containing NETCDF libraries [default: pick automatically based on NETCDF_ROOT (see INSTALL.rst)]',
+        help='directory containing HDF5 libraries [default: pick automatically based on HDF5_ROOT (see INSTALL.rst)]',
         metavar='PATH')
 group.add_argument('--mpi',
         action='store_true',
@@ -157,11 +157,11 @@ def gen_cmake_command():
     else:
         command += ' cmake'
 
-    if args.netcdfdir:
-        if not os.path.exists(args.netcdfdir):
-            print("Specified NETCDF directory does not exist!")
+    if args.hdfdir:
+        if not os.path.exists(args.hdfdir):
+            print("Specified HDF5 directory does not exist!")
             sys.exit(1)
-        command += ' -DNETCDF_ROOT="%s"' % args.netcdfdir
+        command += ' -DHDF5_ROOT="%s"' % args.hdfdir
 
     # if fc starts with 'mpi' turn on MPI
     if args.fc and (args.fc[:3] == 'mpi' or args.fc[:3] == 'MPI'):

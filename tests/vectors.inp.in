@@ -18,7 +18,7 @@ scale_vectors=1.0
 #mofile="mos"
 
 # grid type can be: base/std, bond or file (see examples below)
-Grid(base) {    
+Grid<base> {    
     type=even                   # even or gauss 
     origin=[-8.0, -8.0, -2.0]   # origin of grid
     ivec=[1.0, 0.0, 0.0]        # basis vector i
@@ -43,7 +43,7 @@ Advanced {
 ## Grid example collection
 ##############################
 
-# Grid(bond) {                    # define grid orthogonal to a bond 
+# Grid<bond> {                    # define grid orthogonal to a bond 
 #     type=gauss                  # gauss distribution of grid points
 #     bond=[1,2]                  # atom indeces for bond
 #     fixpoint=5
@@ -58,7 +58,7 @@ Advanced {
 ##    radius=1.0                  # round grid: cut off at radius
 # }
 
-# Grid(bond) {                    # define grid orthogonal to a bond 
+# Grid<bond> {                    # define grid orthogonal to a bond 
 #     type=gauss                  # gauss distribution of grid points
 #     coord1=[0.0, 0.0, 2.145166] # "atom" coordinates
 #     coord2=[0.0, 0.0, -2.145166] 
@@ -74,7 +74,7 @@ Advanced {
 # }
 
 ## Read in grid from external file. 
-# Grid(file) {   
+# Grid<file> {   
 #     file=gridfile.grd
 # }
 

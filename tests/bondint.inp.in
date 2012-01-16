@@ -18,7 +18,7 @@ scale_vectors=1.0
 #mofile="mos"
 
 # grid type can be: base/std, bond or file (see examples below)
-Grid(bond) {                    # define grid orthogonal to a bond 
+Grid<bond> {                    # define grid orthogonal to a bond 
     type=gauss                  # gauss distribution of grid points
     bond=[1,2]
     fixpoint=5
@@ -46,14 +46,14 @@ Advanced {
     paramag=on          # turn on/off paramagnetic contributions
     GIAO=on             # turn on/off GIAOs. Don't change unless you know why.
     screening=on        # use screening to speed up 
-    screening_thrs=1.d-8   # Screening threshold
+    screening_thrs=1.e-8   # Screening threshold
 }
 
 ##############################
 ## Grid example collection
 ##############################
 
-# Grid(bond) {                    # define grid orthogonal to a bond 
+# Grid<bond> {                    # define grid orthogonal to a bond 
 #     type=gauss                  # gauss distribution of grid points
 #     bond=[1,2]                  # atom indeces for bond
 #     fixpoint=5
@@ -69,7 +69,7 @@ Advanced {
 # }
 
 ## Read in grid from external file. 
-# Grid(file) {   
+# Grid<file> {   
 #     file=gridfile.grd
 # }
 
