@@ -121,6 +121,7 @@ add_executable(gimic.bin
 	timer.f90
 	)
 
+
 install(PROGRAMS ${CMAKE_BINARY_DIR}/bin/gimic 
 	DESTINATION bin
 	)
@@ -128,6 +129,14 @@ install(PROGRAMS ${CMAKE_BINARY_DIR}/bin/gimic
 install(TARGETS gimic.bin
 	DESTINATION bin
 	)
+
+if (NOT DEFINED CFOUR_ROOT)
+    if (EXISTS $ENV{CFOUR_ROOT})
+        set(CFOUR_ROOT $ENV{CFOUR_ROOT})
+    else()
+        set(CFOUR_ROOT /usr/local/cfour)
+    endif()
+endif()
 
 if (ENABLE_CFOUR)
     find_package(CFour)
@@ -144,3 +153,4 @@ if (ENABLE_CFOUR)
     endif()
 endif()
 
+add_subdirectory(tools)
