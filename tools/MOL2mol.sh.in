@@ -1,6 +1,6 @@
 #!/bin/sh
 
-ACES2=@inst_bindir@
+CFOUR=@CFOUR_ROOT@
 
 tmpdir="tmp.$$"
 mkdir $tmpdir
@@ -12,16 +12,16 @@ sed 's/SYMMETRY=ON/SYMMETRY=OFF/' ZMAT.sym >ZMAT
 if [ -d ../GENBAS ]; then 
 	ln -s ../GENBAS .
 else
-	cp $ACES/basis/GENBAS .
+	cp $CFOUR/basis/GENBAS .
 fi
 
 if [ -d ../ECPDATA ]; then 
 	ln -s ../ECPDATA .
 else
-	cp $ACES/basis/ECPDATA .
+	cp $CFOUR/basis/ECPDATA .
 fi
 
-$ACES2/bin/xjoda
+$CFOUR/bin/xjoda
 cp MOL ../mol
 
 cd ..

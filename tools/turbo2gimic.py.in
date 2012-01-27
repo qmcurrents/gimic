@@ -1,11 +1,11 @@
-#!/usr/bin/env @python_bin@
+#!@PYTHON_EXECUTABLE@
 #
 # This is a _HUGE_ mess... I'll clean it up when I feel like it.
 #
 #
 
 import sys, string, re
-sys.path.append('@inst_libdir@')
+sys.path.append('@CMAKE_INSTALL_PREFIX@')
 import QCTools
 from Elements import PeriodicTable as PTab
 

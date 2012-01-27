@@ -5,7 +5,7 @@
 #
 
 # defaults, these can be overriden in $HOME/.qgimic
-GIMIC="@prefix@"
+GIMIC="@CMAKE_INSTALL_PREFIX@"
 name="gimic.run"
 queue=""
 nodes="1"
@@ -17,7 +17,7 @@ outdir=""
 qsub="qsub"
 
 # no modifications below this line
-paratype="@MPI_TYPE@" 
+paratype="mpi" 
 jobtype="serial"
 
 usage () {
@@ -166,7 +166,7 @@ verify_time () {
 
 [ -f $HOME/.qgimic ] && . $HOME/.qgimic
 
-gimic_version="@PACKAGE_VERSION@ ($paratype)"
+gimic_version="@PROJECT_VERSION@ ($paratype)"
 run=0
 batchjob=1
 qopts=""
