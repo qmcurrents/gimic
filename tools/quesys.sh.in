@@ -12,8 +12,8 @@
 # University of Texas, 2006
 #
 
-paratype=@MPI_TYPE@
-pbsdsh=@pbsdsh@
+paratype=mpi
+pbsdsh=no
 shell="/bin/sh -l"
 qsubsys=""
 

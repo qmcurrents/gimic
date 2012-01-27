@@ -70,6 +70,7 @@ configure_file (
     )
 
 add_subdirectory(src)
+add_subdirectory(tools)
 
 if (ENABLE_TESTS)
     set (PROJECT_REPOSITORY "git@repo.ctcc.no:gimic.git")

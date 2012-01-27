@@ -65,15 +65,17 @@ install(TARGETS gimic.bin
     )
 
 if (ENABLE_CFOUR)
-    link_directories(${CFOUR_LIBRARY_DIR})
-    add_executable(xcpdens 
-        xcpdens.f90
-        )
-    target_link_libraries(xcpdens lib)
+    find_package(CFour)
+    if (CFOUR_FOUND)
+        link_directories(${CFOUR_LIBRARY_DIR})
+        add_executable(xcpdens 
+            xcpdens.f90
+            )
+        target_link_libraries(xcpdens libr)
 
-    install(PROGRAMS xcpdens
-        DESTINATION bin
-        CONFIGURATIONS Release
-        )
+        install(TARGETS xcpdens
+            DESTINATION bin
+            )
+    endif()
 endif()
 
