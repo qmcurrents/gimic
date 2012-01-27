@@ -64,6 +64,13 @@ group.add_argument('--show',
         action='store_true',
         default=False,
         help='show cmake command and exit [default: %(default)s]')
+group.add_argument('--cfour-dir',
+        action='store',
+        dest='cfour',
+        default=None,
+        help='set the path to the cfour install [default: %(default)s]',
+        metavar='PATH')
+
 parser.add_argument_group(group)
 
 group = parser.add_argument_group('Change default paths')
@@ -185,6 +192,9 @@ def gen_cmake_command():
 
     if args.enable_tests:
         command += ' -DENABLE_TESTS=1'
+
+    if args.cfour:
+        command += ' -DCFOUR_ROOT=' + args.cfour
 
     if args.cmake:
         for definition in args.cmake:

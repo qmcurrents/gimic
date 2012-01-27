@@ -1,5 +1,13 @@
 include(ConfigureScript)
 
+if (NOT DEFINED CFOUR_ROOT)
+    if (EXISTS $ENV{CFOUR_ROOT})
+        set(CFOUR_ROOT $ENV{CFOUR_ROOT})
+    else()
+        set(CFOUR_ROOT /usr/local/cfour)
+    endif()
+endif()
+
 configure_script(${CMAKE_CURRENT_SOURCE_DIR}/MOL2mol.sh.in
     ${CMAKE_CURRENT_BINARY_DIR}/MOL2mol.sh
     )
