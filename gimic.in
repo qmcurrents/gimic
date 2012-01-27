@@ -15,7 +15,7 @@ import re
 import optparse
 import getkw
 
-version="@GIMIC_VERSION_MAJOR@.@GIMIC_VERSION_MINOR@.@GIMIC_VERSION_PATCH@"
+version="@PROJECT_VERSION_MAJOR@.@PROJECT_VERSION_MINOR@.@PROJECT_VERSION_PATCH@"
 
 def main():
 	usage="%prog [options] [config]"
