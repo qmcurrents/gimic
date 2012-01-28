@@ -7,7 +7,7 @@
 #
 
 import sys,os
-sys.path.append("@INST_LIBDIR@")
+sys.path.append("@PYTHON_LIBDIR@")
 GIMIC_EXECUTABLE="@GIMIC_EXECUTABLE@"
 
 #from subprocess import Popen, PIPE

@@ -65,7 +65,7 @@ if (EXISTS ${CMAKE_SOURCE_DIR}/cmake/ConfigPackaging.cmake)
 endif()
 
 # This is the "developer" driver
-set (INST_LIBDIR ${CMAKE_SOURCE_DIR})
+set (PYTHON_LIBDIR ${CMAKE_SOURCE_DIR})
 set (GIMIC_EXECUTABLE ${CMAKE_BINARY_DIR}/gimic.bin)
 configure_file(${CMAKE_SOURCE_DIR}/gimic.in
 	${CMAKE_BINARY_DIR}/gimic)
@@ -73,7 +73,7 @@ execute_process(COMMAND
 	chmod 755 ${CMAKE_BINARY_DIR}/gimic OUTPUT_QUIET)
 
 # This is the "installed" driver
-set (INST_LIBDIR ${CMAKE_INSTALL_PREFIX}/lib/gimic)
+set (PYTHON_LIBDIR ${CMAKE_INSTALL_PREFIX}/lib/gimic)
 configure_file(${CMAKE_SOURCE_DIR}/gimic.in
 	${CMAKE_BINARY_DIR}/bin/gimic)
 execute_process(COMMAND
@@ -129,6 +129,10 @@ install(PROGRAMS ${CMAKE_BINARY_DIR}/bin/gimic
 install(TARGETS gimic.bin
 	DESTINATION bin
 	)
+
+install(FILES getkw.py pyparsing.py
+    DESTINATION lib/gimic
+    )
 
 if (NOT DEFINED CFOUR_ROOT)
     if (EXISTS $ENV{CFOUR_ROOT})
