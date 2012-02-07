@@ -1,0 +1,119 @@
+Giba is a script to simplify the process of studying an hydrogen bond 
+with GIMIC(1) by helping setting up the correct parameters for the gimic
+calculation (bond distance, width and height of the integration window
+and magnetic field orientation)
+
+Usage:
+
+In the command samples, parameters shown between [] are optional.
+when two parameters are shown between {}, one of them must be given
+
+
+*****Determining the distance:
+
+The best distance along the bond to place the integration window must be
+located.  Giba can run  the distance scan along the bond. First, all the 
+files needed for GIMIC to run must be in the current directory including 
+XDENS and gimic.inp with educated guessess for the integration window 
+size, palcement and magnetic field orientation.
+
+$PATH/giba.py -D [-l bond_lenght -s step_lenght]
+
+If the bond lenght defaults to 4 and the step lenght to 0.1 a.u.. 
+giba will run a series of GIMIC calculations along the bond (as defined 
+in gimic.inp) starting from 0 and taking staps of step_lenght until 
+bond_lenght. The results will be written in folders inside the current 
+directory. The names are meant to be read by the giba analysis routines.
+
+after these calculations are complete, the results can be analyzed with:
+
+$PATH/giba.py   [-t threshold  -c ]
+
+This will plot the negative and positive components of the current for
+all the distance scan points. In the positive current plot, it will mark 
+the points for which the absolute value of both components differ in 
+more than threshold (default: 0.01 a.u). If -c option is given, giba 
+will analyze the "Induced current". By default, giba will analyze the
+ "Induced mod current".
+
+To analyze distance scans is the default behavior of giba, so no option 
+is required. It can be made explicit with:
+
+$PATH/giba.py  -A  --group "_d" [-t threshold  -c ]
+
+After the analysis, giba will write to the gimic.inp file in the main 
+directory the distance corresponding to the minimun value found for the 
+positive currents. Always check the plots to ensure the correctness of
+the value written to the file!
+
+****Determining the integration window size.
+
+In order to scan for different plane sizes one must scan first width and 
+then heights of the plane:
+
+
+$PATH/giba {-W or -H} [-s slice_size]
+
+This sill run several GIMIC calculations in slices of slice_size 
+(default 0.1 a.u.) along the plane with to cover a maximun size of 
+10 a.u. (from -5.0 to 5.0 where 0 is the location of the bond).
+The -W option scans for width and the -H option for height.
+
+After the width or height scan is complete, analyze with:
+
+$PATH/giba.py  --group "_w" [-t threshold  -c ]
+
+for width or:
+
+$PATH/giba.py  --group "_h" [-t threshold  -c ]
+
+for height.
+
+It is important that width or height is scanned and analyzed before 
+starting with the other. Giba will produce graphs and write the points
+for minimun positive current along the bond for with or height. 
+Again: looks at the graphs!
+
+
+Finally, It might be desirable to scan the orientation of the magnetic
+field. This is done with:
+
+$PATH/giba -F [-s step] atom1 atom2 atom3
+
+atom1-atom3 are atom indices. atom1 and atom2 must correspond to the 
+bond.  atom1, atom2 and atom3 define the plane with respect to which the 
+field si normal when the angle is pi/2 radians. Giba will run GIMIC
+calculations with B pointing to different angles between 0 (normal to
+the bond, in the atom1, atom2, atom3 plane) and pi/2 (normal to the
+atom1, atom2, atom3 plane) with a step of step radians.
+
+To analyze the results form this scan run:
+
+$PATH/giba.py  --group "_a" [-t threshold  -c ]
+
+This will set the angle with less positive current and produce
+graphs to analyze the results.
+
+
+Finally, giba can be used to set the magnetic field orientation to an
+arbitrary angle between 0 and pi/2 as defined before.
+
+
+$PATH/giba.py -o [-a angle] atom1 atom2 atom3 
+
+wheere angle is the desired angle (default 0)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
