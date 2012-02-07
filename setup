@@ -2,7 +2,8 @@
 # vim:ft=python
 #
 # primitive frontend to cmake
-# (c) Jonas Juselius <jonas.juselius@uit.no> and Radovan Bast <radovan.bast@uit.no>
+# (c) Radovan Bast <radovan.bast@uit.no> 
+# (c) Jonas Juselius <jonas.juselius@uit.no> 
 # licensed under the GNU Lesser General Public License
 
 import os
@@ -30,11 +31,12 @@ parser = ArgumentParser(description="Setup build configurations.")
 
 # define options
 
+parser.add_argument('builddir', nargs='?',
+        action='store',
+        default=default_path,
+        help='build directory [default: %(default)s]',
+        metavar='build path')
 group = parser.add_argument_group('Basic options')
-group.add_argument('--auto',
-        action='store_true',
-        default=False,
-        help='try to configure --fc, --cc, --cxx  automatically [default: %(default)s]')
 group.add_argument('--fc',
         action='store',
         default=None,
@@ -52,33 +54,33 @@ group.add_argument('--cxx',
         metavar='STRING')
 group.add_argument('--netcdf-dir',
         action='store',
-        dest='netcdfdir',
         default=None,
         help='directory containing NETCDF libraries [default: pick automatically based on NETCDF_ROOT (see INSTALL.rst)]',
         metavar='PATH')
-group.add_argument('--mpi',
-        action='store_true',
-        default=False,
-        help='build using MPI parallelization [default: %(default)s]')
+group.add_argument('--enable-mpi',
+action='store_true',
+default=False,
+help='build using MPI parallelization [default: %(default)s]')
+group.add_argument('--enable-openmp',
+action='store_true',
+default=False,
+help='enable OpenMP [default: %(default)s]')
+group.add_argument('--blas-dir',
+action='store',
+default=None,
+help='directory containing BLAS libraries [default: pick automatically based on BLAS_ROOT (see INSTALL)]',
+metavar='PATH')
 group.add_argument('--show',
         action='store_true',
         default=False,
         help='show cmake command and exit [default: %(default)s]')
 group.add_argument('--cfour-dir',
         action='store',
-        dest='cfour',
         default=None,
         help='set the path to the cfour install [default: %(default)s]',
         metavar='PATH')
 
-parser.add_argument_group(group)
-
 group = parser.add_argument_group('Change default paths')
-group.add_argument('--build',
-        action='store',
-        default=default_path,
-        help='set the build path (you can build several binaries with the same source) [default: %(default)s]',
-        metavar='PATH')
 group.add_argument('--prefix',
         action='store',
         dest='prefix',
@@ -93,10 +95,18 @@ group.add_argument('--cmake',
         metavar='PATH')
 
 group = parser.add_argument_group('Advanced options')
+group.add_argument('--force',
+        action='store_true',
+        default=False,
+        help='Run setup even if build directory exists [default: %(default)s]')
 group.add_argument('--debug',
         action='store_true',
         default=False,
         help='build in debug mode (no optimization) [default: %(default)s]')
+group.add_argument('--release',
+        action='store_false',
+        dest='debug',
+        help='build in release mode (full optimization) [default: %(default)s]')
 group.add_argument('--enable-tests',
         action='store_true',
         default=False,
@@ -151,30 +161,36 @@ def gen_cmake_command():
 
     command = ''
 
-    if not args.auto:
-        if args.fc:
-            command += ' FC=%s' % args.fc
-        if args.cc:
-            command += ' CC=%s' % args.cc
-        if args.cxx:
-            command += ' CXX=%s' % args.cxx
+    if args.fc:
+        command += ' FC=%s' % args.fc
+    if args.cc:
+        command += ' CC=%s' % args.cc
+    if args.cxx:
+        command += ' CXX=%s' % args.cxx
 
     if args.alternative_cmake: 
         command += ' %s' % args.alternative_cmake
     else:
         command += ' cmake'
 
-    if args.netcdfdir:
-        if not os.path.exists(args.netcdfdir):
+    if args.netcdf_dir:
+        if not os.path.exists(args.netcdf_dir):
             print("Specified NETCDF directory does not exist!")
             sys.exit(1)
-        command += ' -DNETCDF_ROOT="%s"' % args.netcdfdir
+        command += ' -DNETCDF_ROOT="%s"' % args.netcdf_dir
 
     # if fc starts with 'mpi' turn on MPI
     if args.fc and (args.fc[:3] == 'mpi' or args.fc[:3] == 'MPI'):
-        args.mpi = True
-    if args.mpi:
+        args.enable_mpi = True
+
+    if args.enable_mpi:
         command += ' -DENABLE_MPI=ON'
+
+    if args.enable_openmp:
+        command += ' -DENABLE_OPENMP=ON'
+
+    if args.blas_dir:
+        command += ' -DBLAS_ROOT={0}'.format(args.blas_dir)
 
     if args.check:
         command += ' -DENABLE_BOUNDS_CHECK=ON'
@@ -191,10 +207,10 @@ def gen_cmake_command():
         command += ' -DCMAKE_BUILD_TYPE=Release'
 
     if args.enable_tests:
-        command += ' -DENABLE_TESTS=1'
+        command += ' -DENABLE_TESTS=ON'
 
-    if args.cfour:
-        command += ' -DCFOUR_ROOT=' + args.cfour
+    if args.cfour_dir:
+        command += ' -DCFOUR_ROOT=' + args.cfour_dir
 
     if args.cmake:
         for definition in args.cmake:
@@ -239,9 +255,14 @@ def setup_build_path(build_path, only_show_command):
         return
     if os.path.isdir(build_path):
         if not only_show_command:
-            print('aborting setup - build directory %s exists already' % build_path)
-            print('please first remove it and then rerun setup')
-            sys.exit()
+            if args.force:
+                fname = os.path.join(build_path, 'CMakeCache.txt')
+                if os.path.exists(fname):
+                    os.unlink(fname)
+            else:
+                print('aborting setup - build directory %s exists already' % build_path)
+                print('please first remove it and then rerun setup')
+                sys.exit()
     else:
         os.makedirs(build_path, 0755)
 
@@ -258,19 +279,12 @@ def run_cmake(command, build_path):
     return s
 
 def main():
-    if len(sys.argv) == 1:
-        # user has given no arguments: print help and exit
-        print(parser.format_help().strip())
-        sys.exit()
-
     check_cmake_exists()
-    build_path = args.build
-    setup_build_path(build_path, args.show)
-    if args.host:
-        configure_host(args.host)
-    else:
-        configure_generic()
+    build_path = args.builddir
+    if not configure_host():
+        configure_default_compilers()
     command = gen_cmake_command()
+    setup_build_path(build_path, args.show)
     status = run_cmake(command, build_path)
 
     if not 'Configuring incomplete' in status:
@@ -279,55 +293,46 @@ def main():
         print_build_help(build_path)
 
 # host/system specific configurations
-def configure_host(host):
-    if re.match('stallo', host, re.I):
-        configure_stallo()
-    elif re.match('ubuntu', host, re.I):
-        configure_ubuntu()
-    elif re.match('fedora', host, re.I):
-        configure_fedora()
+def configure_host():
+    if args.host:
+        host = args.host
     else:
-        print("Unknown host/system: {0}".format(host))
-        sys.exit(1)
+        u = os.uname()
+        host = string.join(u)
+    msg = None
+    # Generic systems
+    if re.search('ubuntu', host, re.I):
+        msg = "Configuring system: Ubuntu"
+        configure_ubuntu()
+    if re.search('fedora', host, re.I):
+        msg = "Configuring system: Fedora"
+        configure_fedora()
+    if re.search('osx', host, re.I):
+        msg = "Configuring system: MacOSX"
+        configure_osx()
+    if msg is None:
+        return False
+    if not args.show:
+        print msg
+    return True
 
-def configure_generic():
-#    if not args.cc:
-#        args.cc = 'gcc'
-#    if not args.cxx:
-#        args.cxx = 'g++'
-#    if not args.fc:
-#        args.fc = 'gfortran'
-    if args.mpi:
-        args.fc = 'mpif90'
-        args.cc = 'mpicc'
-        args.cxx = 'mpicxx'
-
-def configure_linux():
+def configure_default_compilers():
     if not args.cc:
         args.cc = 'gcc'
     if not args.cxx:
         args.cxx = 'g++'
     if not args.fc:
         args.fc = 'gfortran'
-    if args.mpi:
+    if args.enable_mpi:
         args.fc = 'mpif90'
         args.cc = 'mpicc'
         args.cxx = 'mpicxx'
-configure_ubuntu = configure_linux
-configure_fedora = configure_linux
+
+configure_ubuntu = configure_default_compilers
+configure_fedora = configure_default_compilers
+configure_osx = configure_default_compilers
 
 
-def configure_stallo():
-    if not args.cc:
-        args.cc = 'icc'
-    if not args.cxx:
-        args.cxx = 'icpc'
-    if not args.fc:
-        args.fc = 'ifort'
-    if args.mpi:
-        args.fc = 'mpif90'
-        args.cc = 'mpicc'
-        args.cxx = 'mpicxx'
 
 if __name__ == '__main__':
     main()
