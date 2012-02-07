@@ -1,10 +1,10 @@
 include(SaveCompilerFlags)
 
-if (NOT DEFINED HAVE_C_FLAGS)
+if (NOT DEFINED DEFAULT_C_FLAGS_SET)
 if (CMAKE_COMPILER_IS_GNUCC)
     set (CMAKE_C_FLAGS "-Wall -Wno-sign-compare")
     set (CMAKE_C_FLAGS_DEBUG "-O0 -g3 -DDEBUG")
-    set (CMAKE_C_FLAGS_RELEASE "-O3 -DNDEBUG -Wno-unused")
+    set (CMAKE_C_FLAGS_RELEASE "-Ofast -march=native -DNDEBUG -Wno-unused")
     if (ENABLE_CODE_COVERAGE)
         set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} --coverage")
     endif()

@@ -13,7 +13,7 @@
 #  BLAS_H Name of BLAS header file
 #
 # None of the above will be defined unless BLAS can be found.
-#
+# 
 #=============================================================================
 # Copyright 2011 Jonas Juselius <jonas.juselius@uit.no>
 #
@@ -28,6 +28,7 @@
 #  License text for the above reference.)
 
 include(MathLibFunctions)
+include(FindPackageMessage)
 
 if (EXISTS $ENV{MATH_ROOT})
     if (NOT DEFINED BLAS_ROOT})
@@ -61,7 +62,7 @@ if (BLAS_INCLUDE_DIRS AND BLAS_LIBRARIES)
   set(BLAS_FIND_QUIETLY TRUE)
 endif ()
 
-if (NOT BLAS_FIND_COMPONENTS)
+if (NOT BLAS_FIND_COMPONENTS) 
     set(BLAS_FIND_COMPONENTS MKL Atlas ACML default)
 endif()
 
@@ -130,17 +131,10 @@ macro(find_mkl)
     if(${CMAKE_HOST_SYSTEM_PROCESSOR} STREQUAL "x86_64")
             set(path_suffixes lib/intel64 lib/em64t)
             if(ENABLE_64BIT_INTEGERS)
-<<<<<<< HEAD
-                set(blas_libs mkl_core mkl_intel_ilp64 mkl_sequential
-                    guide pthread m)
-            else()
-                set(blas_libs mkl_core mkl_intel_lp64 mkl_sequential
-=======
                 set(blas_libs mkl_core mkl_intel_ilp64 mkl_sequential 
                     guide pthread m)
             else()
                 set(blas_libs mkl_core mkl_intel_lp64 mkl_sequential 
->>>>>>> ac65e1f7db7877a6b63112e1488c59108de49336
                     guide pthread m)
             endif()
     else()
@@ -159,6 +153,7 @@ endmacro()
 find_blas()
 
 if(BLAS_LIBRARIES)
+   find_package_message(BLAS "Found BLAS: ${BLAS_TYPE}" "[${BLAS_LIBRARIES}]")
    set(BLAS_FOUND TRUE)
 endif()
 

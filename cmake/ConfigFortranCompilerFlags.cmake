@@ -1,6 +1,6 @@
 include(SaveCompilerFlags)
 
-if (NOT DEFINED HAVE_Fortran_FLAGS)
+if (NOT DEFINED DEFAULT_Fortran_FLAGS_SET)
 if(CMAKE_Fortran_COMPILER_ID MATCHES GNU) # this is gfortran
     set(CMAKE_Fortran_FLAGS         "-cpp")
     set(CMAKE_Fortran_FLAGS_DEBUG   "-O0 -g -fbacktrace")
