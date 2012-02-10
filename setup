@@ -58,18 +58,18 @@ group.add_argument('--netcdf-dir',
         help='directory containing NETCDF libraries [default: pick automatically based on NETCDF_ROOT (see INSTALL.rst)]',
         metavar='PATH')
 group.add_argument('--enable-mpi',
-action='store_true',
-default=False,
-help='build using MPI parallelization [default: %(default)s]')
+        action='store_true',
+        default=False,
+        help='build using MPI parallelization [default: %(default)s]')
 group.add_argument('--enable-openmp',
-action='store_true',
-default=False,
-help='enable OpenMP [default: %(default)s]')
+        action='store_true',
+        default=False,
+        help='enable OpenMP [default: %(default)s]')
 group.add_argument('--blas-dir',
-action='store',
-default=None,
-help='directory containing BLAS libraries [default: pick automatically based on BLAS_ROOT (see INSTALL)]',
-metavar='PATH')
+        action='store',
+        default=None,
+        help='directory containing BLAS libraries [default: pick automatically based on BLAS_ROOT (see INSTALL)]',
+        metavar='PATH')
 group.add_argument('--show',
         action='store_true',
         default=False,
