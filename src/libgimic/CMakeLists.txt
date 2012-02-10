@@ -1,6 +1,6 @@
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
-add_library(gimic2 SHARED
+set(sources
     globals.f90
     getkw.f90  
     basis.f90
@@ -26,10 +26,20 @@ add_library(gimic2 SHARED
     teletype.f90
     tensor.f90
     timer.f90
-    gimic_cif.f90
-    gimic_cif.h
-    GimicInterface.cpp
-    GimicInterface.h
+    )
+
+if (FortranCInterface_GLOBAL_FOUND) 
+    set (sources 
+        ${sources}
+        gimic_cif.f90
+        gimic_cif.h
+        GimicInterface.cpp
+        GimicInterface.h
+        )
+endif()
+
+add_library(gimic2 SHARED
+    ${sources}
     )
 
 if (CYTHON_FOUND)

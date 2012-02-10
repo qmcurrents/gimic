@@ -2,17 +2,18 @@
 #define GIMIC_CIF_H
 
 #include "config.h"
+#include "fcmangle.h"
 
-#define gimic_init FC_FUNC_(gimic_init, GIMIC_INIT)
-#define gimic_finalize FC_FUNC_(gimic_finalize, GIMIC_FINALIZE)
-#define gimic_set_uhf FC_FUNC_(gimic_set_uhf, GIMIC_SET_UHF)
-#define gimic_set_magnet FC_FUNC_(gimic_set_magnet, GIMIC_SET_MAGNET)
-#define gimic_set_spin FC_FUNC_(gimic_set_spin, GIMIC_SET_SPIN)
-#define gimic_set_screening FC_FUNC_(gimic_set_screening, GIMIC_SET_SCREENING)
-#define gimic_calc_jtensor FC_FUNC_(gimic_calc_jtensor, GIMIC_CALC_JTENSOR)
-#define gimic_calc_jvector FC_FUNC_(gimic_calc_jvector, GIMIC_CALC_JVECTOR)
-#define gimic_calc_divj FC_FUNC_(gimic_calc_divj, GIMIC_CALC_DIVJ)
-#define gimic_calc_edens FC_FUNC_(gimic_calc_edens, GIMIC_CALC_EDENS)
+#define gimic_init FC_GLOBAL(gimic_init, GIMIC_INIT)
+#define gimic_finalize FC_GLOBAL(gimic_finalize, GIMIC_FINALIZE)
+#define gimic_set_uhf FC_GLOBAL(gimic_set_uhf, GIMIC_SET_UHF)
+#define gimic_set_magnet FC_GLOBAL(gimic_set_magnet, GIMIC_SET_MAGNET)
+#define gimic_set_spin FC_GLOBAL(gimic_set_spin, GIMIC_SET_SPIN)
+#define gimic_set_screening FC_GLOBAL(gimic_set_screening, GIMIC_SET_SCREENING)
+#define gimic_calc_jtensor FC_GLOBAL(gimic_calc_jtensor, GIMIC_CALC_JTENSOR)
+#define gimic_calc_jvector FC_GLOBAL(gimic_calc_jvector, GIMIC_CALC_JVECTOR)
+#define gimic_calc_divj FC_GLOBAL(gimic_calc_divj, GIMIC_CALC_DIVJ)
+#define gimic_calc_edens FC_GLOBAL(gimic_calc_edens, GIMIC_CALC_EDENS)
 
 extern "C" {
 	void gimic_init(const char *, const char *);

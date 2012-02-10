@@ -22,7 +22,16 @@ include(ConfigCCompilerFlags)
 find_package(PythonInterp REQUIRED)
 include(UseCython)
 include(ConfigureScript)
-include(FortranNameManglingScheme)
+
+include(FortranCInterface)
+if (FortranCInterface_GLOBAL_FOUND) 
+    FortranCInterface_HEADER(fcmangle.h
+        MACRO_NAMESPACE "FC_"
+        SYMBOL_NAMESPACE "FC_"
+        )
+else()
+    message(WARNING "Failed to detect Fortran name mangling scheme")
+endif()
 
 if (PYTHONINTERP_FOUND) 
     execute_process(
@@ -75,7 +84,7 @@ add_subdirectory(tools)
 if (ENABLE_TESTS)
     set (PROJECT_REPOSITORY "git@repo.ctcc.no:gimic.git")
     include(ConfigTesting)
-    add_subdirectory(tests)
+    add_subdirectory(test)
 endif()
 
 if (EXISTS ${CMAKE_SOURCE_DIR}/cmake/ConfigPackaging.cmake)
