@@ -63,6 +63,11 @@ macro(find_math_libs _service)
 endmacro()
 
 macro(cache_math_result math_type _service)
+    if (DEFINED ${_SERVICE}_TYPE)
+        if (NOT ${_SERVICE}_TYPE EQUAL ${math_type})
+            return()
+        endif()
+    endif()
     string(TOUPPER ${_service} _SERVICE)
     if (${_service}_h)
         set(${_SERVICE}_H ${${_service}_h})
@@ -88,7 +93,9 @@ macro(cache_math_result math_type _service)
     endif()
 
     if (${_SERVICE}_FOUND)
-        set(${_SERVICE}_TYPE ${math_type} PARENT_SCOPE)
+        set(${_SERVICE}_TYPE ${math_type} CACHE STRING 
+            "${_SERVICE} type")
+        mark_as_advanced(${_SERVICE}_TYPE)
 
         add_definitions(-DHAVE_${math_type}_${_SERVICE})
         set(HAVE_${_SERVICE} ON CACHE INTERNAL
