@@ -28,7 +28,7 @@ if (GIMIC_INCLUDE_DIRS AND GIMIC_LIBRARIES)
 endif ()
 
 find_path(GIMIC_INCLUDE_DIRS
-  NAMES GimicInterface.h 
+  NAMES GimicInterface.h
   PATHS ${GIMIC_ROOT} $ENV{GIMIC_ROOT}
   PATH_SUFFIXES include
   NO_DEFAULT_PATH

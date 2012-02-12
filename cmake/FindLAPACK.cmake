@@ -62,7 +62,11 @@ if (LAPACK_INCLUDE_DIRS AND LAPACK_LIBRARIES)
 endif ()
 
 if (NOT LAPACK_FIND_COMPONENTS)
-    set(LAPACK_FIND_COMPONENTS MKL MKL_LAPACK95 Atlas ACML default)
+    if(ENABLE_64BIT_INTEGERS)
+        set(LAPACK_FIND_COMPONENTS MKL MKL_LAPACK95)
+    else()
+        set(LAPACK_FIND_COMPONENTS MKL MKL_LAPACK95 Atlas ACML default)
+    endif()
 endif()
 
 function(find_lapack)
@@ -112,7 +116,7 @@ macro(find_atlas)
     set(lapack_libs lapack_atlas lapack)
     set(path_suffixes include/atlas include)
     find_math_header(lapack)
-    set(path_suffixes lib lib/atlas)
+    set(path_suffixes atlas lib/atlas lib/atlas-base lib)
     find_math_libs(lapack)
     cache_math_result(Atlas lapack)
 endmacro()
@@ -138,7 +142,7 @@ endmacro()
 find_lapack()
 
 if(LAPACK_LIBRARIES)
-   find_package_message(LAPACK "Found LAPACK: ${LAPACK_TYPE}" 
+   find_package_message(LAPACK "Found LAPACK: ${LAPACK_TYPE}"
        "[${LAPACK_LIBRARIES}]"
        )
    set(LAPACK_FOUND TRUE)

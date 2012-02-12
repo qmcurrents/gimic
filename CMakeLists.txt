@@ -1,8 +1,12 @@
 cmake_minimum_required(VERSION 2.8)
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/cmake)
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
 project(GIMIC)
 enable_language(Fortran)
+
+set (PROJECT_VERSION_MAJOR 1)
+set (PROJECT_VERSION_MINOR 5)
+set (PROJECT_VERSION_PATCH 1)
 
 option(ENABLE_PROFILING      "Enable profiling"              OFF)
 option(ENABLE_BOUNDS_CHECK   "Enable bounds check"           OFF)
@@ -13,11 +17,10 @@ option(ENABLE_CFOUR          "Enable the CFOUR interface" OFF)
 option(ENABLE_TESTS          "Enable the test suite" ON)
 option(ENABLE_MRCPP          "Enable the MRCPP wavelet librbary" OFF)
 
+include(GNUInstallDirs)
 include(ConfigProjectVersion)
 include(ConfigSafeGuards)
-
-include(ConfigFortranCompilerFlags)
-include(ConfigCCompilerFlags)
+include(ConfigCompilerFlags)
 
 find_package(PythonInterp REQUIRED)
 include(UseCython)
@@ -87,7 +90,16 @@ if (ENABLE_TESTS)
     add_subdirectory(test)
 endif()
 
-if (EXISTS ${CMAKE_SOURCE_DIR}/cmake/ConfigPackaging.cmake)
-    include(ConfigPackaging) 
-endif()
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY
+    "GIMIC - Gauge-Including Magnetically Induced Currents program")
+set(CPACK_PACKAGE_VENDOR "University of Helsinki")
+set(CPACK_PACKAGE_CONTACT "Jonas Juselius <jonas.juselius@uit.no>")
+set(CPACK_PACKAGE_EXECUTABLES "gimic" "The GIMIC program")
+set(CPACK_PACKAGE_URL "http://repo.ctcc.no/projects/gimic")
+set(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/INSTALL")
+set(CPACK_RESOURCE_FILE_README "${CMAKE_CURRENT_SOURCE_DIR}/README")
+set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/COPYING")
+#set(CPACK_RESOURCE_FILE_WELCOME "${CMAKE_CURRENT_SOURCE_DIR}/INFO")
+set(CPACK_GENERATOR TGZ DEB RPM)
+include(ConfigPackaging) 
 
