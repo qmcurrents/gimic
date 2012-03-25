@@ -23,282 +23,282 @@ qsubsys=""
 # pbsdsh is a brain damaged useless piece of shit, but unfortunately some 
 # mpiexec -comm none implementations are even more broken
 pshell () {
-	if [ "x$1" = "x-pernode" ]; then
-		shift
-		if [ $pbsdsh = "yes" ]; then
-			pbsdsh -u $shell -c "cd $workdir; $*"
-		else
-			case $paratype in
-				openmpi) mpirun -mca btl self,sm,vapi,tcp $* ;; #???
-				lam) lamexec C $* ;;
-				mpich) mpiexec -comm none -pernode $* ;;
-				mvapich) ibrun $* ;;
-				scali|scampi) mpiexec -comm none $* ;;
-				serial) $* ;;
-				*) echo "Error: Unknown job type '$*'."
-				exit 1	
-				;;
-			esac
-		fi
-	else
-		if [ $pbsdsh = "yes" ]; then
-			pbsdsh $shell -c "cd $workdir; $*"
-		else
-			case $paratype in
-				openmpi) mpirun -mca btl self,sm,vapi,tcp $* ;;
-				lam) lamexec N $* ;;
-				mpich) mpiexec -comm none $*;;
-				mvapich) ibrun $* ;;
-				scali|scampi) mpiexec -comm none $* ;;
-				serial) $* ;;
-				*) echo "Error: Unknown job type '$*'."
-				exit 1	
-				;;
-			esac
-		fi
-	fi
+    if [ "x$1" = "x-pernode" ]; then
+        shift
+        if [ $pbsdsh = "yes" ]; then
+            pbsdsh -u $shell -c "cd $workdir; $*"
+        else
+            case $paratype in
+                openmpi) mpirun -mca btl self,sm,vapi,tcp $* ;; #???
+                lam) lamexec C $* ;;
+                mpich) mpiexec -comm none -pernode $* ;;
+                mvapich) ibrun $* ;;
+                scali|scampi) mpiexec -comm none $* ;;
+                serial) $* ;;
+                *) echo "Error: Unknown job type '$*'."
+                exit 1	
+                ;;
+            esac
+        fi
+    else
+        if [ $pbsdsh = "yes" ]; then
+            pbsdsh $shell -c "cd $workdir; $*"
+        else
+            case $paratype in
+                openmpi) mpirun -mca btl self,sm,vapi,tcp $* ;;
+                lam) lamexec N $* ;;
+                mpich) mpiexec -comm none $*;;
+                mvapich) ibrun $* ;;
+                scali|scampi) mpiexec -comm none $* ;;
+                serial) $* ;;
+                *) echo "Error: Unknown job type '$*'."
+                exit 1	
+                ;;
+            esac
+        fi
+    fi
 }
 
 exenodes()
 {
-	if test "$1" = "-all"; then
-		shift
-		pshell $* 
-	else
-		pshell -pernode $* 
-	fi
+    if test "$1" = "-all"; then
+        shift
+        pshell $* 
+    else
+        pshell -pernode $* 
+    fi
 }
 
 parexe()
 {
-	case $paratype in
-		openmpi) mpirun -mca btl self,sm,vapi,tcp $* ;;
-		lam) mpirun C $* ;;
-		mpich) mpiexec $* ;;
-		mvapich) ibrun $* ;;
-		scali|scampi) mpimon $* -- `cat $nodefile` ;;
-		serial) $* ;;
-	esac
+    case $paratype in
+        openmpi) mpirun -mca btl self,sm,vapi,tcp $* ;;
+        lam) mpirun C $* ;;
+        mpich) mpiexec $* ;;
+        mvapich) ibrun $* ;;
+        scali|scampi) mpimon $* -- `cat $nodefile` ;;
+        serial) $* ;;
+    esac
 
-	if test "$?" != "0"; then
-		if [ x"$stop_on_crash" = xno ]; then
-			error_flag=0
-		else
-			error_flag=1
-		fi
-	fi
+    if test "$?" != "0"; then
+        if [ x"$stop_on_crash" = xno ]; then
+            error_flag=0
+        else
+            error_flag=1
+        fi
+    fi
 }
 
 run() {
-	local cwd=`pwd`
-	cd $workdir
-	case $1 in
-		-para*) shift; parexe $* ;;
-		-serial|-seq) shift; exenodes $* ;;
-		-driver|-drv) shift; $* ;;
-		-*) echo "run(): unknown option '$1'"; panic ;;
-		*) exenodes $* ;;
-	esac
-	# Do the thing you do, baby!
-	cd $cwd
+    local cwd=`pwd`
+    cd $workdir
+    case $1 in
+        -para*) shift; parexe $* ;;
+        -serial|-seq) shift; exenodes $* ;;
+        -driver|-drv) shift; $* ;;
+        -*) echo "run(): unknown option '$1'"; panic ;;
+        *) exenodes $* ;;
+    esac
+    # Do the thing you do, baby!
+    cd $cwd
 
-	# if the job crashed, dump job info and exit for post mortem
-	test $error_flag != 0 && panic
+    # if the job crashed, dump job info and exit for post mortem
+    test $error_flag != 0 && panic
 }
 
 setup_work_env()
 {
-	local cwd
-	if test $PBS_O_WORKDIR; then
-		qsubsys="PBS"
-		submitdir=$PBS_O_WORKDIR
-		jobid=$PBS_JOBID
-		nodefile=$PBS_NODEFILE
-	elif test $SGE_O_WORKDIR; then
-		qsubsys="SGE"
-		submitdir=$SGE_O_WORKDIR
-		jobid=$JOB_ID
-		make_sge_nodefile
-	elif test $LSB_JOBID; then
-		qsubsys="LSF"
-		submitdir=`pwd`
-		jobid=$LSB_JOBID
-		make_lsf_nodefile
-	else
-		qsubsys="none"
-		submitdir=`pwd`
-		jobid=$$
-		nodefile="/tmp/nodefile.$jobid"
-		echo "localhost" > $nodefile
-	fi
+    local cwd
+    if test $PBS_O_WORKDIR; then
+        qsubsys="PBS"
+        submitdir=$PBS_O_WORKDIR
+        jobid=$PBS_JOBID
+        nodefile=$PBS_NODEFILE
+    elif test $SGE_O_WORKDIR; then
+        qsubsys="SGE"
+        submitdir=$SGE_O_WORKDIR
+        jobid=$JOB_ID
+        make_sge_nodefile
+    elif test $LSB_JOBID; then
+        qsubsys="LSF"
+        submitdir=`pwd`
+        jobid=$LSB_JOBID
+        make_lsf_nodefile
+    else
+        qsubsys="none"
+        submitdir=`pwd`
+        jobid=$$
+        nodefile="/tmp/nodefile.$jobid"
+        echo "localhost" > $nodefile
+    fi
 
-	workdir="$workdir/$jobid"
+    workdir="$workdir/$jobid"
 
-	if test "x$outdir" = "x"; then
-		outdir="$submitdir"
-	else
-		cwd=`pwd`
-		cd $submitdir
-		if test ! -d "$outdir"; then 
-			mkdir $outdir
-			if test $? != 0; then
-				echo "setup_work_env(): could not create outdir '$outdir'!"
-				exit 1
-			fi
-		fi
-		cd $outdir
-		outdir=`pwd`
-		cd $cwd
-	fi
-	error_flag=0
+    if test "x$outdir" = "x"; then
+        outdir="$submitdir"
+    else
+        cwd=`pwd`
+        cd $submitdir
+        if test ! -d "$outdir"; then 
+            mkdir $outdir
+            if test $? != 0; then
+                echo "setup_work_env(): could not create outdir '$outdir'!"
+                exit 1
+            fi
+        fi
+        cd $outdir
+        outdir=`pwd`
+        cd $cwd
+    fi
+    error_flag=0
 }
 
 make_sge_nodefile() 
 {
-	nodefile=/tmp/mpinodes-$USER.$HOSTNAME
-	cat /dev/null > $nodefile
-	cat $PE_HOSTFILE | \
-	while read line; do
-		host=`echo $line | cut -f1 -d" "| cut -f1 -d"."`
-		nslots=`echo $line | cut -f2 -d" "`
-		echo "${host} cpu=${nslots}" >> $nodefile
-	done
-	has_nodefile=1
+    nodefile=/tmp/mpinodes-$USER.$HOSTNAME
+    cat /dev/null > $nodefile
+    cat $PE_HOSTFILE | \
+    while read line; do
+        host=`echo $line | cut -f1 -d" "| cut -f1 -d"."`
+        nslots=`echo $line | cut -f2 -d" "`
+        echo "${host} cpu=${nslots}" >> $nodefile
+    done
+    has_nodefile=1
 }
 
 make_lsf_nodefile()
 {
-	nodefile=/tmp/mpinodes-$USER.$HOSTNAME
-	cat /dev/null > $nodefile 
-	HOST=""
-	NUM_PROC=""
-	FLAG=""
-	TOTAL_CPUS=0
+    nodefile=/tmp/mpinodes-$USER.$HOSTNAME
+    cat /dev/null > $nodefile 
+    HOST=""
+    NUM_PROC=""
+    FLAG=""
+    TOTAL_CPUS=0
 
-	for TOKEN in $LSB_MCPU_HOSTS
-	do
-		if [ -z "$FLAG" ]; then
-			HOST="$TOKEN"
-			FLAG="0"
-		else
-			NUM_PROC="$TOKEN"
-			TOTAL_CPUS=`expr $TOTAL_CPUS + $NUM_PROC`
-			FLAG="1"
-		fi
+    for TOKEN in $LSB_MCPU_HOSTS
+    do
+        if [ -z "$FLAG" ]; then
+            HOST="$TOKEN"
+            FLAG="0"
+        else
+            NUM_PROC="$TOKEN"
+            TOTAL_CPUS=`expr $TOTAL_CPUS + $NUM_PROC`
+            FLAG="1"
+        fi
 
-		if [ "$FLAG" = "1" ]; then
-			_x=0
-			while [ $_x -lt $NUM_PROC ]
-			do
-				echo "${HOST}" >> $nodefile
-				_x=`expr $_x + 1`
-			done
+        if [ "$FLAG" = "1" ]; then
+            _x=0
+            while [ $_x -lt $NUM_PROC ]
+            do
+                echo "${HOST}" >> $nodefile
+                _x=`expr $_x + 1`
+            done
 
-			# get ready for the next host
-			FLAG=""
-			HOST=""
-			NUM_PROC=""
-		fi
-	done
+            # get ready for the next host
+            FLAG=""
+            HOST=""
+            NUM_PROC=""
+        fi
+    done
 
-	has_nodefile=1
+    has_nodefile=1
 }
 
 
 start_lam()
 {
-	lamboot -ssi boot rsh -ssi rsh_agent "ssh -q -x" $nodefile
+    lamboot -ssi boot rsh -ssi rsh_agent "ssh -q -x" $nodefile
 }
 
 rm_nodefile()
 {
-	if test $has_nodefile; then
-		test -f $nodefile && rm -f $nodefile
-	fi
+    if test $has_nodefile; then
+        test -f $nodefile && rm -f $nodefile
+    fi
 }
 
 dump_jobinfo()
 {
-	touch $1
-	for i in `uniq $nodefile`; do
-		echo $i:$workdir >>$1
-	done
+    touch $1
+    for i in `uniq $nodefile`; do
+        echo $i:$workdir >>$1
+    done
 }
 
 make_cleanup_script()
 {
 
-	echo "#!/bin/sh" > $cleanup_script
-	case $global_workdisk in
-		1|yes|YES|Yes|true|TRUE|True)
-		echo "echo \"rm -rf $workdir\"" >>$cleanup_script
-		echo "rm -rf $workdir" >>$cleanup_script
-		;;
-		*)
-		for i in `uniq $nodefile`; do
-			echo "echo \"ssh $i rm -rf $workdir\"" >>$cleanup_script
-			echo "ssh $i rm -rf $workdir" >>$cleanup_script
-		done ;;
-	esac
-	echo "rm -f $cleanup_script" >>$cleanup_script
-	echo "rm -f $jobid" >>$cleanup_script
-	#chmod 700 $cleanup_script
+    echo "#!/bin/sh" > $cleanup_script
+    case $global_workdisk in
+        1|yes|YES|Yes|true|TRUE|True)
+        echo "echo \"rm -rf $workdir\"" >>$cleanup_script
+        echo "rm -rf $workdir" >>$cleanup_script
+        ;;
+        *)
+        for i in `uniq $nodefile`; do
+            echo "echo \"ssh $i rm -rf $workdir\"" >>$cleanup_script
+            echo "ssh $i rm -rf $workdir" >>$cleanup_script
+        done ;;
+    esac
+    echo "rm -f $cleanup_script" >>$cleanup_script
+    echo "rm -f $jobid" >>$cleanup_script
+    #chmod 700 $cleanup_script
 }
 
 chmod_cleanup_script()
 {
-	if [ -f $cleanup_script ]; then
-		chmod 700 $cleanup_script
-	else
-		echo "Hmm... that's strange. The cleanup script is missing."
-	fi
+    if [ -f $cleanup_script ]; then
+        chmod 700 $cleanup_script
+    else
+        echo "Hmm... that's strange. The cleanup script is missing."
+    fi
 }
 
 # generate a script in $workdir to facilitate copy with globbing 
 setup_gather_script()
 {
-	local max_size=-1
-	local ext=""
-	local pre_delete=$gather_pre_delete
-	local tmp_script="$submitdir/gather.sh.$$"
-	local recurse="no"
-	local pattern=""
+    local max_size=-1
+    local ext=""
+    local pre_delete=$gather_pre_delete
+    local tmp_script="$submitdir/gather.sh.$$"
+    local recurse="no"
+    local pattern=""
 
-	while : ; do
-		[ "x$1" = "x" ] && break
-		i=$1
-		case $i in
-			-tag)
-			ext=".$HOSTNAME"
-			shift
-			;;
-			-recurse)
-			recurse="yes"
-			shift
-			;;
-			-maxsize)
-			shift
-			max_size=$1
-			echo $max_size | grep -q '^[0-9]\+'
-			if [ $? != 0 ]; then
-				echo "gather(): invalid size '$max_size'"
-				panic
-			fi
-			shift
-			;;
-			-*)
-			echo "gather(): invalid flag '$1'"
-			shift
-			panic
-			;;
-			*) 
-			pattern="$pattern $1"
-			shift
-			;;
-		esac
-	done
+    while : ; do
+        [ "x$1" = "x" ] && break
+        i=$1
+        case $i in
+            -tag)
+            ext=".$HOSTNAME"
+            shift
+            ;;
+            -recurse)
+            recurse="yes"
+            shift
+            ;;
+            -maxsize)
+            shift
+            max_size=$1
+            echo $max_size | grep -q '^[0-9]\+'
+            if [ $? != 0 ]; then
+                echo "gather(): invalid size '$max_size'"
+                panic
+            fi
+            shift
+            ;;
+            -*)
+            echo "gather(): invalid flag '$1'"
+            shift
+            panic
+            ;;
+            *) 
+            pattern="$pattern $1"
+            shift
+            ;;
+        esac
+    done
 
-	cat << EOF >$tmp_script
+    cat << EOF >$tmp_script
 #!/bin/sh
 
 echo 'in gather.sh'
@@ -311,113 +311,113 @@ skiplist="gather.sh $gather_skiplist"
 pattern="$pattern"
 
 filelist () {
-	local files=""
-	local tmp=""
-	[ "x\$pattern" = "x" ] && pattern="*"
-	for i in \$pattern; do
-		[ -f \$i ] && tmp="\$tmp \$i"
-	done
+    local files=""
+    local tmp=""
+    [ "x\$pattern" = "x" ] && pattern="*"
+    for i in \$pattern; do
+        [ -f \$i ] && tmp="\$tmp \$i"
+    done
 
-	for i in \$tmp; do
-		skip=0
-		for j in \$skiplist; do
-			[ "\$i" = "\$j" ] && skip=1
-		done
-		[ \$skip = 0 ] && files="\$files \$i"
-	done
-	echo "\$files"
+    for i in \$tmp; do
+        skip=0
+        for j in \$skiplist; do
+            [ "\$i" = "\$j" ] && skip=1
+        done
+        [ \$skip = 0 ] && files="\$files \$i"
+    done
+    echo "\$files"
 }
 
 dirlist () {
-	local dirs
-	if [ \$recurse = yes ]; then
-		dirs=\`find -type d\`
-	else
-		dirs="."
-	fi
-	echo "\$dirs"
+    local dirs
+    if [ \$recurse = yes ]; then
+        dirs=\`find -type d\`
+    else
+        dirs="."
+    fi
+    echo "\$dirs"
 }
 
 cd $workdir
 
 for j in \`dirlist\`; do
-	cd \$j
-	[ "\$j" != "." ] && mkdir -p \${todir}/\$j
+    cd \$j
+    [ "\$j" != "." ] && mkdir -p \${todir}/\$j
 
-	for i in \`filelist\`; do
-		test \$i = "*" && exit 0
-		test -z \$i && exit 0
-		sz=\`du -k \$i | sed -e 's/ *\([0-9]*\)\(.*\)/\1/'\`
-		if (( \$max_size < 0 )); then
-			cp \$i \${todir}/\${j}/\${i}\${ext}
-		elif (( \$sz < \$max_size ));then 
-			cp \$i \${todir}/\${j}/\${i}\${ext}
-		fi
-	done
-	cd $workdir
+    for i in \`filelist\`; do
+        test \$i = "*" && exit 0
+        test -z \$i && exit 0
+        sz=\`du -k \$i | sed -e 's/ *\([0-9]*\)\(.*\)/\1/'\`
+        if (( \$max_size < 0 )); then
+            cp \$i \${todir}/\${j}/\${i}\${ext}
+        elif (( \$sz < \$max_size ));then 
+            cp \$i \${todir}/\${j}/\${i}\${ext}
+        fi
+    done
+    cd $workdir
 done
 EOF
 
-	chmod 700 $tmp_script
-	exenodes cp $tmp_script $workdir/gather.sh
-	rm -f $tmp_script
+    chmod 700 $tmp_script
+    exenodes cp $tmp_script $workdir/gather.sh
+    rm -f $tmp_script
 }
 
 job_done()
 {
-	test "$paratype" = "lam" && lamhalt
-	rm_nodefile
-	:
+    test "$paratype" = "lam" && lamhalt
+    rm_nodefile
+    :
 }
 
 initialize_job() {
-	setup_work_env
-	cd $submitdir
+    setup_work_env
+    cd $submitdir
 
-	mail_notify START
+    mail_notify START
 
-	cleanup_script="$submitdir/cleanup.$jobid"
-	make_cleanup_script
-	trap panic 1 2 3 4 6 9 11 15
+    cleanup_script="$submitdir/cleanup.$jobid"
+    make_cleanup_script
+    trap panic 1 2 3 4 6 9 11 15
 
-	test -f "$nodefile" && cp $nodefile $submitdir/$jobid #.jobnodes
+    test -f "$nodefile" && cp $nodefile $submitdir/$jobid #.jobnodes
 
-	## start LAM-MPI
-	test "$paratype" = "lam" && start_lam
+    ## start LAM-MPI
+    test "$paratype" = "lam" && start_lam
 
-	## create local workdir on every node, with hack for pbsdsh
-	if [ $pbsdsh = "yes" ]; then
-		pbsdsh -u $shell -c "mkdir -p $workdir"
-	else
-		exenodes mkdir -p $workdir
-	fi
-		
+    ## create local workdir on every node, with hack for pbsdsh
+    if [ $pbsdsh = "yes" ]; then
+        pbsdsh -u $shell -c "mkdir -p $workdir"
+    else
+        exenodes mkdir -p $workdir
+    fi
+        
 
-	# scali uses the rather damaged mpimon which needs explicit access to 
-	# the nodefile...
-	if [ $paratype = "scali" -o $paratype = "scampi" ]; then
-		test -f "$nodefile" && cp $nodefile $submitdir/jobnodes
-		distribute $submitdir/jobnodes
-		rm $submitdir/jobnodes
-	fi
+    # scali uses the rather damaged mpimon which needs explicit access to 
+    # the nodefile...
+    if [ $paratype = "scali" -o $paratype = "scampi" ]; then
+        test -f "$nodefile" && cp $nodefile $submitdir/jobnodes
+        distribute $submitdir/jobnodes
+        rm $submitdir/jobnodes
+    fi
 }
 
 mail_notify() {
-	local jobnodes
-	local subj
-	local jid
-	[ -z $NOTIFY ] && return 
+    local jobnodes
+    local subj
+    local jid
+    [ -z $NOTIFY ] && return 
 
-	test -f $nodefile && jobnodes=`cat $nodefile`
+    test -f $nodefile && jobnodes=`cat $nodefile`
 
-	jid=`echo $jobid | sed 's/\(.[^\.]*\)\..*$/\\1/'`
+    jid=`echo $jobid | sed 's/\(.[^\.]*\)\..*$/\\1/'`
 
-	case $qsubsys in
-		PBS) subj="PBS JOB $jid: $1" ;;
-		*) subj="JOB $jid: $1" ;;
-	esac
+    case $qsubsys in
+        PBS) subj="PBS JOB $jid: $1" ;;
+        *) subj="JOB $jid: $1" ;;
+    esac
 
-	mail -s "JOB $jidi: $1" $NOTIFY <<EOF
+    mail -s "JOB $jidi: $1" $NOTIFY <<EOF
  SUBMIT DIR: $submitdir
  WORK DIR: $workdir
 
@@ -426,76 +426,76 @@ EOF
 }
 
 panic () {
-	#dump_jobinfo $submitdir/crash.$jobid
-	chmod_cleanup_script
-	job_done
-	exit 1
+    #dump_jobinfo $submitdir/crash.$jobid
+    chmod_cleanup_script
+    job_done
+    exit 1
 }
-	
+    
 finalize_job() {
-	# copy what is left back to submit dir
-	# cp -r $workdir/* $outdir
+    # copy what is left back to submit dir
+    # cp -r $workdir/* $outdir
 
-	cd /tmp
+    cd /tmp
 
-	case $global_workdisk in
-		1|yes|YES|Yes|true|TRUE|True)
-		rm -rf $workdir
-		;;
-		*) exenodes rm -rf $workdir 
-		;;
-	esac
+    case $global_workdisk in
+        1|yes|YES|Yes|true|TRUE|True)
+        rm -rf $workdir
+        ;;
+        *) exenodes rm -rf $workdir 
+        ;;
+    esac
 
-	[ -f $cleanup_script ] && rm $cleanup_script
+    [ -f $cleanup_script ] && rm $cleanup_script
 
-	##  finalize job
-	job_done
+    ##  finalize job
+    job_done
 
 #    [ -f $submitdir/$jobid.jobnodes ] && rm -f $submitdir/$jobid.jobnodes
-	[ -f $submitdir/$jobid ] && rm -f $submitdir/$jobid
-	mail_notify STOP
+    [ -f $submitdir/$jobid ] && rm -f $submitdir/$jobid
+    mail_notify STOP
 }
 verify_path () {
-	echo "$1" | grep -q '^\(~\|/\)'
-	if [ $? != 0 ]; then 
-		echo "Warning! Not absolute path '$1'"
-		return 0
-	fi
-	:
+    echo "$1" | grep -q '^\(~\|/\)'
+    if [ $? != 0 ]; then 
+        echo "Warning! Not absolute path '$1'"
+        return 0
+    fi
+    :
 }
 
 
 distribute () {
-	local distfiles=""
-	for i in $*; do
-		if test -e $i; then
-			distfiles="$distfiles $i"
-		else
-			echo "distribute(): no such file or directory '$i'"
-			panic
-		fi
-	done
+    local distfiles=""
+    for i in $*; do
+        if test -e $i; then
+            distfiles="$distfiles $i"
+        else
+            echo "distribute(): no such file or directory '$i'"
+            panic
+        fi
+    done
 
-	for i in $distfiles; do
-		case $i in
-			/*) exenodes cp -r $i $workdir ;;
-			*) exenodes cp -r $submitdir/$i $workdir ;;
-		esac
-	done
+    for i in $distfiles; do
+        case $i in
+            /*) exenodes cp -r $i $workdir ;;
+            *) exenodes cp -r $submitdir/$i $workdir ;;
+        esac
+    done
 }
 
 gather () {
-	setup_gather_script $*
-	exenodes $workdir/gather.sh 
+    setup_gather_script $*
+    exenodes $workdir/gather.sh 
 }
 
 remove () {
-	for i in $*; do
-		case $i in
-			/*) exenodes rm -rf $i ;;
-			*) exenodes rm -rf $workdir/$i ;;
-		esac
-	done
+    for i in $*; do
+        case $i in
+            /*) exenodes rm -rf $i ;;
+            *) exenodes rm -rf $workdir/$i ;;
+        esac
+    done
 }
 
 

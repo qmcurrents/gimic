@@ -8,7 +8,7 @@
 #  XCFUN_FOUND, If false, do not try to use XCfun.
 # also defined, but not for general use are
 # None of the above will be defined unles XCFun can be found.
-# 
+#
 
 #=============================================================================
 # Copyright 2010 Jonas Juselius <jonas.juselius@uit.no>
@@ -24,7 +24,7 @@
 #  License text for the above reference.)
 
 if (XCFUN_INCLUDE_DIRS AND XCFUN_LIBRARIES)
-	set(XCFUN_FIND_QUIETLY TRUE)
+    set(XCFUN_FIND_QUIETLY TRUE)
 endif ()
 
 find_path(XCFUN_INCLUDE_DIRS

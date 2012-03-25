@@ -26,65 +26,65 @@
 #  target_link_libraries (only_uses_c_interface ${NETCDF_LIBRARIES_C})
 
 if (NETCDF_INCLUDES AND NETCDF_LIBRARIES)
-	# Already in cache, be silent
-	set (NETCDF_FIND_QUIETLY TRUE)
+    # Already in cache, be silent
+    set (NETCDF_FIND_QUIETLY TRUE)
 endif ()
 
 find_path (NETCDF_INCLUDES netcdf.h
-	HINTS ${NETCDF_ROOT} ENV NETCDF_ROOT
-	PATH_SUFFIXES include
-	)
+    HINTS ${NETCDF_ROOT} ENV NETCDF_ROOT
+    PATH_SUFFIXES include
+    )
 
-find_library (NETCDF_LIBRARIES_C 
-	NAMES netcdf
-	HINTS ${NETCDF_ROOT} ENV NETCDF_ROOT
-	PATH_SUFFIXES lib
-	)
+find_library (NETCDF_LIBRARIES_C
+    NAMES netcdf
+    HINTS ${NETCDF_ROOT} ENV NETCDF_ROOT
+    PATH_SUFFIXES lib
+    )
 mark_as_advanced(NETCDF_LIBRARIES_C)
 
 # will be set to NO if we're missing any interfaces
-set (NetCDF_has_interfaces YES) 
+set (NetCDF_has_interfaces YES)
 set (NetCDF_libs ${NETCDF_LIBRARIES_C})
 
 get_filename_component (NetCDF_lib_dirs ${NETCDF_LIBRARIES_C} PATH)
 
 macro (NetCDF_check_interface lang header libs)
-	if (NETCDF_${lang})
-		find_path (NETCDF_INCLUDES_${lang} 
-			NAMES ${header}
-			HINTS ${NETCDF_INCLUDES} ${NETCDF_ROOT} ENV NETCDF_ROOT
-			NO_DEFAULT_PATH
-			)
-		find_library (NETCDF_LIBRARIES_${lang} 
-			NAMES ${libs}
-			HINTS ${NetCDF_lib_dirs} ${NETCDF_ROOT} ENV NETCDF_ROOT
-			NO_DEFAULT_PATH
-			)
-		mark_as_advanced (NETCDF_INCLUDES_${lang} NETCDF_LIBRARIES_${lang})
-		if (NETCDF_INCLUDES_${lang} AND NETCDF_LIBRARIES_${lang})
-			# prepend so that -lnetcdf is last
-			list (INSERT NetCDF_libs 0 ${NETCDF_LIBRARIES_${lang}}) 
-		else ()
-			set (NetCDF_has_interfaces "NO")
-			message (STATUS "Failed to find NetCDF interface for ${lang}")
-		endif ()
-	endif ()
+    if (NETCDF_${lang})
+        find_path (NETCDF_INCLUDES_${lang}
+            NAMES ${header}
+            HINTS ${NETCDF_INCLUDES} ${NETCDF_ROOT} ENV NETCDF_ROOT
+            NO_DEFAULT_PATH
+            )
+        find_library (NETCDF_LIBRARIES_${lang}
+            NAMES ${libs}
+            HINTS ${NetCDF_lib_dirs} ${NETCDF_ROOT} ENV NETCDF_ROOT
+            NO_DEFAULT_PATH
+            )
+        mark_as_advanced (NETCDF_INCLUDES_${lang} NETCDF_LIBRARIES_${lang})
+        if (NETCDF_INCLUDES_${lang} AND NETCDF_LIBRARIES_${lang})
+            # prepend so that -lnetcdf is last
+            list (INSERT NetCDF_libs 0 ${NETCDF_LIBRARIES_${lang}})
+        else ()
+            set (NetCDF_has_interfaces "NO")
+            message (STATUS "Failed to find NetCDF interface for ${lang}")
+        endif ()
+    endif ()
 endmacro ()
 
 NetCDF_check_interface (CXX netcdfcpp.h netcdf_c++)
 NetCDF_check_interface (F77 netcdf.inc  netcdff)
 NetCDF_check_interface (F90 netcdf.mod  netcdff)
 
-set (NETCDF_LIBRARIES ${NetCDF_libs} 
-	CACHE STRING "All NetCDF libraries required for interface level"
-	)
+set (NETCDF_LIBRARIES ${NetCDF_libs}
+    CACHE STRING "All NetCDF libraries required for interface level"
+    )
 
 # handle the QUIETLY and REQUIRED arguments and set NETCDF_FOUND to TRUE if
 # all listed variables are TRUE
 include (FindPackageHandleStandardArgs)
-find_package_handle_standard_args (NetCDF 
-	DEFAULT_MSG NETCDF_LIBRARIES NETCDF_INCLUDES NetCDF_has_interfaces
-	)
+find_package_handle_standard_args (NetCDF
+    DEFAULT_MSG NETCDF_LIBRARIES NETCDF_INCLUDES NetCDF_has_interfaces
+    )
 
 mark_as_advanced (NETCDF_LIBRARIES NETCDF_INCLUDES)
 

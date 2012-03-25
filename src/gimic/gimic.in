@@ -1,0 +1,294 @@
+#!@PYTHON_EXECUTABLE@
+# -*- coding: utf-8 -*-
+# vim:filetype=python:
+#
+# Written by Jonas Juselius <jonas.juselius@chem.uit.no> 
+# University of Tromsø, 2007
+#
+
+import sys,os
+sys.path.append("@INST_LIBDIR@")
+GIMIC_EXECUTABLE="@GIMIC_EXECUTABLE@"
+
+#from subprocess import Popen, PIPE
+import re
+from argparse import ArgumentParser
+import getkw
+
+version="@PROJECT_VERSION@"
+
+parser = ArgumentParser(description="GIMIC {0}".format(version))
+
+parser.add_argument('infile', metavar="file", action='store', nargs='?',
+        default='gimic.inp', help='input file [default: gimic.inp]')
+parser.add_argument('-t', '--title', action='store', dest='title',
+        help='title of job')
+parser.add_argument('-d','--debug', action='store', type=int, dest='debug',
+        help='debug level')
+parser.add_argument('-o','--output', action='store', dest='outfile',
+        help='base name for output file(s)')
+parser.add_argument('-D','--debug-file', action='store', dest='debug_file',
+        help='debug file name')
+parser.add_argument('-v','--verbose', action='store_true', dest='verbose',
+       help='be verbose')
+parser.add_argument('-q','--quiet', action='store_false', dest='verbose',
+       help='be quiet')
+parser.add_argument('-y','--dryrun', action='store_true', dest='dryrun',
+       help='dryrun without actually calculating anything')
+parser.add_argument('-k','--keep', action='store_true', dest='keep',
+       help='keep temp input file')
+
+args=parser.parse_args()
+
+def main():
+    top=getkw.Section('top', callback=check_top)
+    top.set_status(True)
+    top.add_kw('title', 'STR', ('',))
+    top.add_kw('debug_file', 'STR', ('DEBUG.out',))
+    top.add_kw('debug', 'INT', (0,))
+    top.add_kw('dryrun', 'BOOL', (False,))
+    top.add_kw("show_axis", 'BOOL', (True,))
+    top.add_kw('calc', 'STR', None)
+    top.add_kw('basis', 'STR', ('mol',))
+    top.add_kw('density', 'STR', ('',))
+    top.add_kw('mofile', 'STR', ('',))
+    top.add_kw('mos', 'INT_ARRAY', (0, 0))
+    top.add_kw('xdens', 'STR', ('XDENS',))
+    top.add_kw('magnet_axis', 'STR', ('',))
+    top.add_kw('magnet', 'DBL_ARRAY', (0.0, 0.0, 0.0))
+    top.add_kw('openshell', 'BOOL', (False,))
+    top.add_kw('scale_vectors', 'DBL', (1.0,))
+
+    adv=getkw.Section('Advanced')
+    adv.add_kw('screening', 'BOOL', (False,))
+    adv.add_kw('screening_thrs', 'DBL', (1.0e-8,))
+    adv.add_kw('spherical', 'BOOL', (True,))
+    adv.add_kw('GIAO', 'BOOL', (True,))
+    adv.add_kw('diamag', 'BOOL', (True,))
+    adv.add_kw('paramag', 'BOOL', (True,))
+    adv.add_kw('lip_order', 'INT', (3,))
+
+    grid=getkw.Section('Grid', callback=check_grid)
+    grid.set_arg('STR', ('std',))
+    grid.add_kw("type", 'STR', ('even',))
+    grid.add_kw("file", 'STR', 1)
+    grid.add_kw("origin", 'DBL_ARRAY', 3)
+    grid.add_kw("ivec", 'DBL_ARRAY', 3)
+    grid.add_kw("jvec", 'DBL_ARRAY', 3)
+    grid.add_kw("lengths", 'DBL_ARRAY', 3)
+    grid.add_kw("bond", 'INT_ARRAY', 2)
+    grid.add_kw("fixpoint", 'INT', 1)
+    grid.add_kw("coord1", 'DBL_ARRAY', 3)
+    grid.add_kw("coord2", 'DBL_ARRAY', 3)
+    grid.add_kw("fixcoord", 'DBL_ARRAY', 3)
+    grid.add_kw("distance", 'DBL', 1)
+    grid.add_kw("rotation", 'DBL_ARRAY', (0.0,0.0,0.0))
+    grid.add_kw("spacing", 'DBL_ARRAY', 3)
+    grid.add_kw("map", 'DBL_ARRAY', 2)
+    grid.add_kw("height", 'DBL_ARRAY', 2)
+    grid.add_kw("width", 'DBL_ARRAY', 2)
+    grid.add_kw("up", 'DBL', 1)
+    grid.add_kw("down", 'DBL', 1)
+    grid.add_kw("in", 'DBL', 1)
+    grid.add_kw("out", 'DBL', 1)
+    grid.add_kw("radius", 'DBL', (-1.0,))
+    grid.add_kw("gridplot", 'INT', 1)
+    grid.add_kw("grid_points", 'INT_ARRAY', 3)
+    grid.add_kw("gauss_order", 'INT', (7,))
+
+    top.add_sect(adv)
+    top.add_sect(grid)
+    
+    input=getkw.GetkwParser(top)
+    inkw=input.parseFile(args.infile)
+    inkw.sanitize(top)
+
+    if args.title:
+        inkw.setkw('title', args.title)
+    if args.debug:
+        inkw.setkw('debug', args.debug)
+    if args.dryrun:
+        inkw.setkw('dryrun', args.dryrun)
+    if args.outfile:
+        inkw.setkw('outfile', args.outfile)
+    if args.debug_file:
+        inkw.setkw('debug_file', args.debugf)
+
+    inkw.run_callbacks(top)
+
+    infile='GIMIC.in' + str(os.getpid())
+    fd=open(infile,'w')
+    print >>fd, inkw
+
+    fd.close()
+    os.system(GIMIC_EXECUTABLE + ' < ' + infile)
+    if not args.keep:
+        os.unlink(infile)
+
+# sanity check
+def check_opt(sect,key):
+    try:
+        k=sect[key][0]
+    except:
+        print 'You have a typo in the code for key', key
+        sys.exit(1)
+    if k is not None:
+        if k.is_set():
+            return True
+    return False
+
+def check_grid(grid):
+    warn="Warning: The '%s' option incompatible with '%s' type grids"
+    err="Error: Required option '%s' not set for grid(%s)!"
+    if not grid.is_set():
+        return
+    arg=grid.get_arg().arg[0]
+    if (arg == 'std' or arg == 'base'):
+        required=('origin', 'ivec', 'jvec', 'lengths')
+        ignore=('file', 'bond', 'coord1', 'coord2', 'width', 'height',
+                'in', 'out', 'up', 'down', 'radius')
+        for i in required:
+            if not check_opt(grid,i):
+                print err % (i,arg)
+                sys.exit(1)
+        for i in ignore:
+            if check_opt(grid,i):
+                print warn % (i,arg)
+        flag=0
+        if check_opt(grid, 'spacing'):
+            flag=1
+        if check_opt(grid, 'grid_points'):
+            flag=flag+2
+        if flag == 0:
+            print "Error: Either spacing or grid_points must be set"
+            sys.exit(1)
+        if flag == 3:
+            print "Error: Both spacing and grid_points set!"
+            sys.exit(1)
+    elif arg == 'file': 
+        required=('file',)
+        ignore=('ivec', 'jvec', 'bond', 'fixpoint', 'fixcoord', 'coord1', 
+                'coord2', 'origin', 'in', 'out', 'up', 'down', 'rotation', 
+                'radius', 'lengths','distance', 'spacing', 'map')
+        for i in required:
+            if not check_opt(grid,i):
+                print err % (i,arg)
+                sys.exit(1)
+        for i in ignore:
+            if check_opt(grid,i):
+                print warn % (i,arg)
+        return
+    elif arg == 'bond':
+#        required=('in', 'out', 'up', 'down', 'distance')
+        required=('distance',)
+        ignore=('file','ivec', 'jvec', 'lengths')
+        inoutupdown=0
+        wdthgt=0
+        for i in required:
+            if not check_opt(grid,i):
+                print err % (i,arg)
+                sys.exit(1)
+        if check_opt(grid, 'origin'):
+            print "Error: Keyword 'origin' incompatible with 'bond' grids"
+            sys.exit(1)
+        if not (check_opt(grid, 'fixpoint') or check_opt(grid, 'fixcoord')):
+            print "Error: Either fixpoint or fixcoord must be specified"
+            sys.exit(1)
+
+        if check_opt(grid, 'in'):
+            inoutupdown=inoutupdown+1
+        if check_opt(grid, 'out'):
+            inoutupdown=inoutupdown+1
+        if check_opt(grid, 'up'):
+            inoutupdown=inoutupdown+1
+        if check_opt(grid, 'down'):
+            inoutupdown=inoutupdown+1
+        if (inoutupdown != 0 and inoutupdown != 4):
+            print "Error: incomplete specification for in/out and up/down"
+            sys.exit(1)
+
+        if check_opt(grid,'width'):
+            wdthgt=wdthgt+1
+        if check_opt(grid,'height'):
+            wdthgt=wdthgt+1
+        if (wdthgt != 0 and wdthgt != 2):
+            print "Error: incomplete specification for width and height"
+            sys.exit(1)
+
+        if (wdthgt != 0 and inoutupdown != 0):
+            print "Error: both width/height and in/out/up/down specified"
+            sys.exit(1)
+
+        if (wdthgt == 0 and inoutupdown == 0):
+            print "Error: either width/height or in/out/up/down must be specified"
+            sys.exit(1)
+
+        if check_opt(grid,'bond'):
+            if check_opt(grid,'coord1') or check_opt(grid,'coord2'):
+                print "Error: Both bond and coord(s) have been specified"
+                sys.exit(1)
+        elif check_opt(grid,'coord1'):
+            if not check_opt(grid,'coord2'): 
+                print "Error: coord2 not specified"
+                sys.exit(1)
+            if check_opt(grid,'bond'):
+                print "Error: Both atom(s) and coord(s) have been specified"
+                sys.exit(1)
+        elif check_opt(grid,'coord2'):
+            if not check_opt(grid,'coord1'): 
+                print "Error: coord1 not specified"
+                sys.exit(1)
+            if check_opt(grid,'bond'):
+                print "Error: Both atom(s) and coord(s) have been specified"
+                sys.exit(1)
+        else:
+            print "Error: Invalid bond specification"
+            sys.exit(1)
+
+        for i in ignore:
+            if check_opt(grid,i):
+                print warn % (i,arg)
+    else:
+        print "Error: unknown grid type '%s'" % arg 
+        sys.exit(1)
+
+    if grid.getkw('type')[0] == 'even':
+        if check_opt(grid,'gauss_order'):
+            print "Error: 'gauss_order' incompatible with type=even grids" 
+            sys.exit(1)
+        if  check_opt(grid,'spacing') and check_opt(grid, 'grid_points'):
+            print "Error: both spacing and grid_points cannot be specified"
+            sys.exit(1)
+        if not check_opt(grid,'spacing') and not check_opt(grid, 'grid_points'):
+            print "Error: either spacing or grid_points must be specified"
+            sys.exit(1)
+
+#    if grid.getkw('type')[0] == 'gauss':
+#        if check_opt(grid,'spacing'):
+#            print "Error: 'spacing' incompatible with type=gauss grids" 
+#            sys.exit(1)
+#        if not (check_opt(grid,'gauss_order') and \
+#                check_opt(grid, 'grid_points')):
+#            print "Error: both 'grid_points' and 'gauss_order' must be \
+#specified"
+#            sys.exit(1)
+
+def check_top(top):
+    calc=top.getkw('calc')[0]	
+    allow={'cdens':1, 'integral':1, 'divj':1, 'edens':1}
+    if not allow.has_key(calc):
+        print 'Error: unknown option calc = ', calc
+        sys.exit(1)
+    omagn=top.getkw('magnet')[0]
+    pmagn=top.getkw('magnet_axis')[0]
+    if omagn == 'True' and pmagn == 'True':
+        print 'Error: Both magnet vector and axis set simultaneously!'
+        sys.exit(1)
+    if omagn == 'False' and pmagn == 'False':
+        print 'Error: Direction of magnetic field must be set!'
+        sys.exit(1)
+
+if __name__ == '__main__':
+    main()
+
+# vim:et:sw=4:

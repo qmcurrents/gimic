@@ -10,13 +10,13 @@ cp ../ZMAT ZMAT.sym
 sed 's/SYMMETRY=ON/SYMMETRY=OFF/' ZMAT.sym >ZMAT
 
 if [ -d ../GENBAS ]; then 
-	ln -s ../GENBAS .
+    ln -s ../GENBAS .
 else
 	cp $CFOUR/basis/GENBAS .
 fi
 
 if [ -d ../ECPDATA ]; then 
-	ln -s ../ECPDATA .
+    ln -s ../ECPDATA .
 else
 	cp $CFOUR/basis/ECPDATA .
 fi

@@ -1,160 +1,92 @@
 cmake_minimum_required(VERSION 2.8)
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/cmake)
+set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake ${CMAKE_MODULE_PATH})
 
 project(GIMIC)
 enable_language(Fortran)
+
+set (PROJECT_VERSION_MAJOR 2)
+set (PROJECT_VERSION_MINOR 0)
+set (PROJECT_VERSION_PATCH 0)
 
 option(ENABLE_PROFILING      "Enable profiling"              OFF)
 option(ENABLE_BOUNDS_CHECK   "Enable bounds check"           OFF)
 option(ENABLE_CODE_COVERAGE  "Enable code coverage"          OFF)
 option(ENABLE_MPI            "Enable MPI parallelization"    OFF)
-option(ENABLE_OMP            "Enable OpenMP parallelization" OFF)
+option(ENABLE_OPENMP          "Enable OpenMP parallelization" OFF)
 option(ENABLE_CFOUR          "Enable the CFOUR interface" OFF)
+option(ENABLE_TESTS          "Enable the test suite" ON)
+option(ENABLE_MRCPP          "Enable the MRCPP wavelet librbary" OFF)
 
+include(GNUInstallDirs)
 include(ConfigProjectVersion)
 include(ConfigSafeGuards)
-include(ConfigFortranCompilerFlags)
-include(ConfigCCompilerFlags)
+include(UseGlobalBuildTree)
+include(ConfigGitRevision)
+include(ConfigureScript)
+include(ConfigCompilerFlags)
+
+find_package(Python REQUIRED)
+set (PYTHON_INST_DIR 
+    lib/python${PYTHON_VERSION}/site-packages
+    )
+include(UseCython)
+
+include(FortranCInterface)
+if (FortranCInterface_GLOBAL_FOUND) 
+    FortranCInterface_HEADER(fcmangle.h
+        MACRO_NAMESPACE "FC_"
+        SYMBOL_NAMESPACE "FC_"
+        )
+else()
+    message(WARNING "Failed to detect Fortran name mangling scheme")
+endif()
 
 set(LIBS)
 if (BLAS_FOUND)
-	add_definitions(-DHAVE_BLAS)
+    add_definitions(-DHAVE_BLAS)
 endif()
 
 if(ENABLE_MPI)
     find_package(MPI)
     if(MPI_FOUND)
-		add_definitions(-DHAVE_MPI)
+        add_definitions(-DHAVE_MPI)
         include_directories(${MPI_INCLUDE_PATH})
     endif()
 endif()
 
-if(ENABLE_OMP)
+if(ENABLE_OPENMP)
     find_package(OpenMP)
-    if(OpenMP_FOUND)
-		add_definitions(-DHAVE_OMP)
-        set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} ${OpenMP_COMPILE_FLAGS}")
+    if(OPENMP_FOUND)
+        add_definitions(-DHAVE_OPENMP)
+        set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} ${OpenMP_C_FLAGS}")
         include_directories(${OpenMP_INCLUDE_PATH})
     endif()
 endif()
 
-find_package(PythonInterp REQUIRED)
-include_directories(
-	${PROJECT_BINARY_DIR}
-    ${PROJECT_BINARY_DIR}/modules
+configure_file (
+    ${PROJECT_SOURCE_DIR}/config.h.in
+    ${PROJECT_BINARY_DIR}/config.h
     )
 
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY
-    ${PROJECT_BINARY_DIR}/lib
-    )
-
-set(CMAKE_Fortran_MODULE_DIRECTORY
-    ${PROJECT_BINARY_DIR}/modules
-    )
+add_subdirectory(src)
+add_subdirectory(tools)
 
 if (ENABLE_TESTS)
-	set (PROJECT_REPOSITORY "git@repo.ctcc.no:gimic.git")
-	include(ConfigTesting)
-	add_subdirectory(tests)
+    set (PROJECT_REPOSITORY "git@repo.ctcc.no:gimic.git")
+    include(ConfigTesting)
+    add_subdirectory(test)
 endif()
 
-include(ConfigGitRevision)
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY
+    "GIMIC - Gauge-Including Magnetically Induced Currents program")
+set(CPACK_PACKAGE_VENDOR "University of Helsinki")
+set(CPACK_PACKAGE_CONTACT "Jonas Juselius <jonas.juselius@uit.no>")
+set(CPACK_PACKAGE_EXECUTABLES "gimic" "The GIMIC program")
+set(CPACK_PACKAGE_URL "http://repo.ctcc.no/projects/gimic")
+set(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/INSTALL")
+set(CPACK_RESOURCE_FILE_README "${CMAKE_CURRENT_SOURCE_DIR}/README")
+set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/COPYING")
+#set(CPACK_RESOURCE_FILE_WELCOME "${CMAKE_CURRENT_SOURCE_DIR}/INFO")
+set(CPACK_GENERATOR TGZ DEB RPM)
+include(ConfigPackaging) 
 
-if (EXISTS ${CMAKE_SOURCE_DIR}/cmake/ConfigPackaging.cmake)
-	include(ConfigPackaging) 
-endif()
-
-# This is the "developer" driver
-set (PYTHON_LIBDIR ${CMAKE_SOURCE_DIR})
-set (GIMIC_EXECUTABLE ${CMAKE_BINARY_DIR}/gimic.bin)
-configure_file(${CMAKE_SOURCE_DIR}/gimic.in
-	${CMAKE_BINARY_DIR}/gimic)
-execute_process(COMMAND
-	chmod 755 ${CMAKE_BINARY_DIR}/gimic OUTPUT_QUIET)
-
-# This is the "installed" driver
-set (PYTHON_LIBDIR ${CMAKE_INSTALL_PREFIX}/lib/gimic)
-configure_file(${CMAKE_SOURCE_DIR}/gimic.in
-	${CMAKE_BINARY_DIR}/bin/gimic)
-execute_process(COMMAND
-	chmod 755
-	${CMAKE_BINARY_DIR}/bin/gimic
-	OUTPUT_QUIET)
-
-configure_file (
-	${PROJECT_SOURCE_DIR}/config.h.in
-	${PROJECT_BINARY_DIR}/config.h
-	)
-
-add_executable(gimic.bin
-	basis.f90
-	bfeval.f90
-	cao2sao.f90
-	caos.f90
-	cubeplot.f90
-	d2fdrdb.f90
-	dbop.f90
-	dens.f90
-	dfdb.f90
-	dfdr.f90
-	divj.f90
-	edens.f90
-	factorial.f90
-	gaussint.f90
-	getkw.f90
-	gimic.f90
-	globals.f90
-	gopenmol.f90
-	grid.f90
-	gtodefs.f90
-	integral.f90
-	intgrl.f90
-	jfield.f90
-	jtensor.f90
-	kinds.f90
-	lip.f90
-	magnet.f90
-	parallel.f90
-	reorder.f90
-	teletype.f90
-	tensor.f90
-	timer.f90
-	)
-
-
-install(PROGRAMS ${CMAKE_BINARY_DIR}/bin/gimic 
-	DESTINATION bin
-	)
-
-install(TARGETS gimic.bin
-	DESTINATION bin
-	)
-
-install(FILES getkw.py pyparsing.py
-    DESTINATION lib/gimic
-    )
-
-if (NOT DEFINED CFOUR_ROOT)
-    if (EXISTS $ENV{CFOUR_ROOT})
-        set(CFOUR_ROOT $ENV{CFOUR_ROOT})
-    else()
-        set(CFOUR_ROOT /usr/local/cfour)
-    endif()
-endif()
-
-if (ENABLE_CFOUR)
-    find_package(CFour)
-    if (CFOUR_FOUND)
-        link_directories(${CFOUR_LIBRARY_DIR})
-        add_executable(xcpdens 
-            xcpdens.f90
-            )
-        target_link_libraries(xcpdens libr)
-
-        install(TARGETS xcpdens
-            DESTINATION bin
-            )
-    endif()
-endif()
-
-add_subdirectory(tools)

@@ -1,0 +1,104 @@
+#!@PYTHON_EXECUTABLE@
+# vim:ft=python:
+#
+# jonas juselius <jonas.juselius@uit.no>
+#
+# Script wrapper for running "non-trivial" tests
+#
+
+import os
+import sys
+import string
+import re
+from argparse import ArgumentParser
+import subprocess
+
+if sys.version < '2.4':
+    print('requires python version >= 2.4')
+    sys.exit(1)
+
+work_dir = '@CMAKE_CURRENT_BINARY_DIR@'
+ref_dir = '@CMAKE_CURRENT_SOURCE_DIR@'
+project_version = '@PROJECT_VERSION@'
+
+gimic = os.path.join('@CMAKE_CURRENT_BINARY_DIR@', 'gimic')
+if not os.path.exists(gimic):
+    print "Could not find program: ", work_dir
+
+parser = ArgumentParser(description="Run GIMIC tests",
+        epilog="Version @PROJECT_VERSION@")
+parser.add_argument('name',
+        action='store',
+        nargs=1,
+        help='test name')
+
+args = parser.parse_args()
+
+def run_gimic(name):
+    fout = open(name + '.out', 'w')
+    ferr = open(name + '.err', 'w')
+    p = subprocess.Popen([gimic, name + '.inp'],
+            stdout=fout,
+            stderr=ferr)
+    result = p.wait()
+    fout.close()
+    ferr.close()
+    if result != 0:
+        return False
+    return True
+
+def test_vectors():
+    comment = re.compile(r'^[ ]*#.*$')
+    empty = re.compile(r'^[ \t]*$')
+    if not run_gimic('vectors'):
+        return False
+    ref = os.path.join(ref_dir, 'jvec.txt')
+    ref = open(ref, 'r')
+    for j in open('jvec.txt'):
+        r = ref.readline()
+        if comment.match(j):
+            continue
+        if empty.match(j):
+            continue
+        j = map(float, j.split())
+        r = map(float, r.split())
+        v = zip(j, r)
+        for (a, b) in v:
+            if abs(a - b) > 1.e-6:
+                return False
+    ref.close()
+    return True
+
+def test_bond_integral():
+    if not run_gimic('bondint'):
+        return False
+    f = open('bondint.out', 'r')
+    intgrl = -1.e10
+    for line in f:
+        if 'Induced current (nA/T)  :' in line:
+            intgrl = float(line[30:])
+    f.close()
+    if abs(intgrl - 16.2535) > 1.e-6:
+        print "Invalid integral", intgrl
+        return False
+    return True
+
+def main():
+    if not os.path.exists(work_dir):
+        print "No such directory: ", work_dir
+    os.chdir(work_dir)
+    if args.name[0] == 'vectors':
+        result = test_vectors()
+    elif args.name[0] == 'bond_integral':
+        result = test_bond_integral()
+    else:
+        print "Invalid test: ", args.name[0]
+        return False
+    return result
+
+if __name__ == '__main__':
+    if main():
+        sys.exit(0)
+    sys.exit(1)
+
+# vim:et:ts=4:sw=4:
