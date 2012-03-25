@@ -23,19 +23,13 @@ module gimic_interface
     real(DP), dimension(3) :: magnet
     character(8) :: spin = 'total'
 contains
-    subroutine gimic_init(molfile, densfile, spherical)
+    subroutine gimic_init(molfile, densfile)
         character(*), intent(in) :: molfile
         character(*), intent(in) :: densfile
-        integer, optional :: spherical
 
         settings%basis=molfile
         settings%xdens=densfile
         settings%use_spherical=.false.
-        if (present(spherical)) then
-            if (spherical /= 0) then
-                settings%use_spherical=.true.
-            end if
-        end if
 
         settings%magnet=(/0.0, 0.0, 0.0/)
         settings%is_uhf=.false.
@@ -52,7 +46,6 @@ contains
         !    settings%magnet_axis="X"
 
         call set_debug_level(3)
-        call new_basis(mol, settings%basis, settings%screen_thrs)
 
         if (settings%use_screening) then
             call new_basis(mol, settings%basis, settings%screen_thrs)
