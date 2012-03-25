@@ -35,6 +35,14 @@ execute_process(
     OUTPUT_QUIET
     ) 
 
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/TestGimic.py.in
+    ${CMAKE_CURRENT_BINARY_DIR}/TestGimic.py @ONLY
+    )
+execute_process(
+    COMMAND chmod 755 ${CMAKE_CURRENT_BINARY_DIR}/TestGimic.py 
+    OUTPUT_QUIET
+    ) 
+
 # Add tests
 add_test(NAME Vectors
     #WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
@@ -54,4 +62,9 @@ add_test(NAME VectorsMPI
 add_test(NAME BondIntegralMPI
     #WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     COMMAND ${MPIRUN} ${CMAKE_CURRENT_BINARY_DIR}/test.py bond_integral
+    )
+
+add_test(NAME PyGimic
+    #WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    COMMAND ${CMAKE_CURRENT_BINARY_DIR}/TestGimic.py 
     )
