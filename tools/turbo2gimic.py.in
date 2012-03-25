@@ -6,8 +6,8 @@
 
 import sys, string, re
 sys.path.append('@CMAKE_INSTALL_PREFIX@/@PYTHON_INST_DIR@')
-import QCTools
-from Elements import PeriodicTable as PTab
+from QCTools import QCTools
+from QCTools.Elements import PeriodicTable as PTab
 
 l_map={'s':0, 'p':1, 'd':2, 'f':3, 'g':4, 'h':5, 'i':6} 
 

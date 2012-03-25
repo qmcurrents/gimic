@@ -32,10 +32,7 @@ install(PROGRAMS
     DESTINATION bin
     )
 
-install(FILES 
-    Atom.py
-    Const.py
-    Elements.py
-    QCTools.py
+install(DIRECTORY QCTools 
     DESTINATION ${PYTHON_INST_DIR}
+    FILES_MATCHING PATTERN *.py
     )
