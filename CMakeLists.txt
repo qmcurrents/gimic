@@ -4,8 +4,8 @@ set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake ${CMAKE_MODULE_PATH})
 project(GIMIC)
 enable_language(Fortran)
 
-set (PROJECT_VERSION_MAJOR 1)
-set (PROJECT_VERSION_MINOR 8)
+set (PROJECT_VERSION_MAJOR 2)
+set (PROJECT_VERSION_MINOR 0)
 set (PROJECT_VERSION_PATCH 0)
 
 option(ENABLE_PROFILING      "Enable profiling"              OFF)
