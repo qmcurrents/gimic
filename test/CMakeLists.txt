@@ -1,4 +1,4 @@
-#include(LocalBuildTree)
+include(UseLocalBuildTree)
 include_directories (${PROJECT_SOURCE_DIR}/src)
 
 if (MPI_FOUND)

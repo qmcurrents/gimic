@@ -5,8 +5,8 @@ project(GIMIC)
 enable_language(Fortran)
 
 set (PROJECT_VERSION_MAJOR 1)
-set (PROJECT_VERSION_MINOR 5)
-set (PROJECT_VERSION_PATCH 1)
+set (PROJECT_VERSION_MINOR 8)
+set (PROJECT_VERSION_PATCH 0)
 
 option(ENABLE_PROFILING      "Enable profiling"              OFF)
 option(ENABLE_BOUNDS_CHECK   "Enable bounds check"           OFF)
@@ -20,11 +20,16 @@ option(ENABLE_MRCPP          "Enable the MRCPP wavelet librbary" OFF)
 include(GNUInstallDirs)
 include(ConfigProjectVersion)
 include(ConfigSafeGuards)
+include(UseGlobalBuildTree)
+include(ConfigGitRevision)
+include(ConfigureScript)
 include(ConfigCompilerFlags)
 
-find_package(PythonInterp REQUIRED)
+find_package(Python REQUIRED)
+set (PYTHON_INST_DIR 
+    lib/python${PYTHON_VERSION}/site-packages
+    )
 include(UseCython)
-include(ConfigureScript)
 
 include(FortranCInterface)
 if (FortranCInterface_GLOBAL_FOUND) 
@@ -34,19 +39,6 @@ if (FortranCInterface_GLOBAL_FOUND)
         )
 else()
     message(WARNING "Failed to detect Fortran name mangling scheme")
-endif()
-
-if (PYTHONINTERP_FOUND) 
-    execute_process(
-        COMMAND ${PYTHON_EXECUTABLE} --version
-        ERROR_VARIABLE PYTHON_VERSION
-        )
-    string(REGEX REPLACE "Python *([0-9][.][0-9])[.].*" \\1
-        PYTHON_VERSION ${PYTHON_VERSION}
-        )
-    set (PYTHON_INST_DIR 
-        python${PYTHON_VERSION}/site-packages
-        )
 endif()
 
 set(LIBS)
@@ -70,11 +62,6 @@ if(ENABLE_OPENMP)
         include_directories(${OpenMP_INCLUDE_PATH})
     endif()
 endif()
-
-find_package(PythonInterp REQUIRED)
-
-include(CommonBuildTree)
-include(ConfigGitRevision)
 
 configure_file (
     ${PROJECT_SOURCE_DIR}/config.h.in

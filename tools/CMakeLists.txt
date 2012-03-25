@@ -31,3 +31,11 @@ install(PROGRAMS
     ${CMAKE_CURRENT_BINARY_DIR}/turbo2gimic.py
     DESTINATION bin
     )
+
+install(FILES 
+    Atom.py
+    Const.py
+    Elements.py
+    QCTools.py
+    DESTINATION ${PYTHON_INST_DIR}
+    )

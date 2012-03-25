@@ -57,9 +57,8 @@ target_link_libraries(gimic
     gimic2
     )
 install(TARGETS gimic 
-    ARCHIVE DESTINATION lib/${PYTHON_INST_DIR}
-    LIBRARY DESTINATION lib/${PYTHON_INST_DIR}
-    CONFIGURATIONS Release
+    ARCHIVE DESTINATION ${PYTHON_INST_DIR}
+    LIBRARY DESTINATION ${PYTHON_INST_DIR}
     )
 endif()
 
@@ -67,11 +66,9 @@ install(TARGETS gimic2
     RUNTIME DESTINATION bin
     ARCHIVE DESTINATION lib
     LIBRARY DESTINATION lib
-    CONFIGURATIONS Release
     )
 
 install(FILES GimicInterface.h gimic_cif.h
     DESTINATION include
-    CONFIGURATIONS Release
     )
 

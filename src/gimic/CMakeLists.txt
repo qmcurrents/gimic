@@ -21,7 +21,7 @@ execute_process(COMMAND
     chmod 755 ${PROJECT_BINARY_DIR}/gimic OUTPUT_QUIET)
 
 # This is the "installed" driver
-set (INST_LIBDIR ${CMAKE_INSTALL_PREFIX}/lib/${PYTHON_INST_DIR})
+set (INST_LIBDIR ${CMAKE_INSTALL_PREFIX}/${PYTHON_INST_DIR})
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/gimic.in
     ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/gimic)
 execute_process(COMMAND
@@ -30,18 +30,15 @@ execute_process(COMMAND
     OUTPUT_QUIET)
 
 install(PROGRAMS ${CMAKE_CURRENT_SOURCE_DIR}/getkw.py 
-    DESTINATION lib/${PYTHON_INST_DIR}
-    CONFIGURATIONS Release
+    DESTINATION ${PYTHON_INST_DIR}
     )
 
 install(PROGRAMS ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/gimic 
     DESTINATION bin
-    CONFIGURATIONS Release
     )
 
 install(TARGETS gimic.bin
     DESTINATION bin
-    CONFIGURATIONS Release
     )
 
 if (ENABLE_CFOUR)
