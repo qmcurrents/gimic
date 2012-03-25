@@ -28,11 +28,11 @@ set(sources
     timer.f90
     )
 
-if (FortranCInterface_GLOBAL_FOUND) 
+if (FortranCInterface_MODULE_FOUND) 
     set (sources 
         ${sources}
-        gimic_cif.f90
-        gimic_cif.h
+        gimic_interface.f90
+        gimic_interface.h
         GimicInterface.cpp
         GimicInterface.h
         )
@@ -68,7 +68,7 @@ install(TARGETS gimic2
     LIBRARY DESTINATION lib
     )
 
-install(FILES GimicInterface.h gimic_cif.h
+install(FILES GimicInterface.h gimic_interface.h gimic.pxd
     DESTINATION include
     )
 

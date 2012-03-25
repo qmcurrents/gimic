@@ -1,5 +1,5 @@
 #include "GimicInterface.h"
-#include "gimic_cif.h"
+#include "gimic_interface.h"
 
 GimicInterface::GimicInterface(const char *mol, const char *xdens) {
     gimic_init(mol, xdens);
