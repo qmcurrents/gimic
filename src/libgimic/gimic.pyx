@@ -5,99 +5,88 @@ cdef class Gimic:
     cdef gimic.GimicInterface *thisptr
 
     def __cinit__(self, mol, xdens):
-        if not isinstance(str, mol):
+        if not isinstance(mol, str):
             raise TypeError
-        if not isinstance(str, xdens):
+        if not isinstance(xdens, str):
             raise TypeError
         self.thisptr = new gimic.GimicInterface(mol, xdens)
 
     def set_uhf(self, onoff):
-        if not isinstance(int, onoff):
+        if not isinstance(onoff, int):
             raise TypeError
-        self.thisptr.setUhf(onoff)
+        self.thisptr.set_uhf(onoff)
 
     def set_magnet(self, b):
-        if not isinstance(list, b):
+        if not isinstance(b, list):
             raise TypeError
-        if not isinstance(float, b[0]):
+        if not isinstance(b[0], float):
             raise TypeError
         cdef double mag[3]
         for i in range(3):
             mag[i] = b[i]
-        self.thisptr.setMagnet(mag)
+        self.thisptr.set_magnet(mag)
 
     def set_spin(self, spin):
-        if not isinstance(str, spin):
+        if not isinstance(spin, str):
             raise TypeError
-        self.thisptr.setSpin(spin)
+        self.thisptr.set_spin(spin)
 
     def set_screening(self, thrs):
-        if not isinstance(float, thrs):
+        if not isinstance(thrs, float):
             raise TypeError
-        self.thisptr.setScreening(thrs)
+        self.thisptr.set_screening(thrs)
 
     def calc_jtensor(self, r):
-        if not isinstance(list, r):
+        if not isinstance(r, list):
             raise TypeError
-        if not isinstance(float, r[0]):
+        if not isinstance(r[0], float):
             raise TypeError
         cdef double cr[3]
         cdef double ct[9]
         for i in range(3):
             cr[i] = r[i]
-        self.thisptr.calcJTensor(cr, ct)
+        self.thisptr.calc_jtensor(cr, ct)
         tens=[]
         for i in range(9):
-            tens[i] = ct[i]
+            tens.append(ct[i])
         return tens
 
     def calc_jvector(self, r):
-        if not isinstance(list, r):
+        if not isinstance(r, list):
             raise TypeError
-        if not isinstance(float, r[0]):
+        if not isinstance(r[0], float):
             raise TypeError
         cdef double cr[3]
         cdef double cv[3]
         for i in range(3):
             cr[i] = r[i]
-        self.thisptr.calcJVector(cr, cv)
+        self.thisptr.calc_jvector(cr, cv)
         vec=[]
         for i in range(3):
-            vec[i] = cv[i]
+            vec.append(cv[i])
         return vec
 
     def calc_divj(self, r):
-        if not isinstance(list, r):
+        if not isinstance(r, list):
             raise TypeError
-        if not isinstance(float, r[0]):
+        if not isinstance(r[0], float):
             raise TypeError
         cdef double cr[3]
         cdef double cd
         for i in range(3):
             cr[i] = r[i]
-        self.thisptr.calcDivJ(cr, &cd)
+        self.thisptr.calc_divj(cr, &cd)
         return cd
 
-    def calc_modj(self, r):
-        if not isinstance(list, r):
+    def calc_edens(self, r):
+        if not isinstance(r, list):
             raise TypeError
-        if not isinstance(float, r[0]):
+        if not isinstance(r[0], float):
             raise TypeError
         cdef double cr[3]
         cdef double cd
         for i in range(3):
             cr[i] = r[i]
-        self.thisptr.calcModJ(cr, &cd)
+        self.thisptr.calc_edens(cr, &cd)
         return cd
 
-    def calc_anapole(self, r):
-        if not isinstance(list, r):
-            raise TypeError
-        if not isinstance(float, r[0]):
-            raise TypeError
-        cdef double cr[3]
-        cdef double cd
-        for i in range(3):
-            cr[i] = r[i]
-        self.thisptr.calcAnapole(cr, &cd)
-        return cd

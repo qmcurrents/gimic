@@ -1,6 +1,6 @@
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
-add_library(gimic2 SHARED
+set(sources
     globals.f90
     basis.f90
     bfeval.f90
@@ -25,10 +25,20 @@ add_library(gimic2 SHARED
     teletype.f90
     tensor.f90
     timer.f90
-    gimic_cif.f90
-    gimic_cif.h
-    GimicInterface.cpp
-    GimicInterface.h
+    )
+
+if (FortranCInterface_MODULE_FOUND) 
+    set (sources 
+        ${sources}
+        gimic_interface.f90
+        gimic_interface.h
+        GimicInterface.cpp
+        GimicInterface.h
+        )
+endif()
+
+add_library(gimic2 SHARED
+    ${sources}
     )
 
 if (CYTHON_FOUND)
@@ -46,9 +56,8 @@ target_link_libraries(gimic
     gimic2
     )
 install(TARGETS gimic 
-    ARCHIVE DESTINATION lib/${PYTHON_INST_DIR}
-    LIBRARY DESTINATION lib/${PYTHON_INST_DIR}
-    CONFIGURATIONS Release
+    ARCHIVE DESTINATION ${PYTHON_INST_DIR}
+    LIBRARY DESTINATION ${PYTHON_INST_DIR}
     )
 endif()
 
@@ -56,11 +65,9 @@ install(TARGETS gimic2
     RUNTIME DESTINATION bin
     ARCHIVE DESTINATION lib
     LIBRARY DESTINATION lib
-    CONFIGURATIONS Release
     )
 
-install(FILES GimicInterface.h gimic_cif.h
+install(FILES GimicInterface.h gimic_interface.h gimic.pxd
     DESTINATION include
-    CONFIGURATIONS Release
     )
 

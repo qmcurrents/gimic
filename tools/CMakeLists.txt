@@ -31,3 +31,8 @@ install(PROGRAMS
     ${CMAKE_CURRENT_BINARY_DIR}/turbo2gimic.py
     DESTINATION bin
     )
+
+install(DIRECTORY QCTools 
+    DESTINATION ${PYTHON_INST_DIR}
+    FILES_MATCHING PATTERN *.py
+    )

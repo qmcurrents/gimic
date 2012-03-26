@@ -14,8 +14,11 @@ else()
     message(WARNING "Unknown language: ${lang}")
 endif()
 
-if (NOT DEFINED DEFAULT_${_lang}_COMPILER_FLAGS_SET)
-    mark_as_advanced(DEFAULT_${_lang}_COMPILER_FLAGS_SET)
+if (NOT DEFINED DEFAULT_${_lang}_FLAGS_SET)
+    mark_as_advanced(DEFAULT_${_lang}_FLAGS_SET)
+    set (DEFAULT_${_lang}_FLAGS_SET ON
+        CACHE INTERNAL
+        "Flag that the default ${_lang} compiler flags have been set.")
 
     set(CMAKE_${_lang}_FLAGS "${CMAKE_${_lang}_FLAGS}"
         CACHE STRING
@@ -28,10 +31,6 @@ if (NOT DEFINED DEFAULT_${_lang}_COMPILER_FLAGS_SET)
     set(CMAKE_${_lang}_FLAGS_RELEASE "${CMAKE_${_lang}_FLAGS_RELEASE}"
         CACHE STRING
         "Flags used by the compiler during release builds." FORCE)
-
-    set (DEFAULT_${_lang}_COMPILER_FLAGS_SET ON
-        CACHE INTERNAL
-        "Flag that the default ${_lang} compiler flags have been set.")
 endif()
 endmacro()
 

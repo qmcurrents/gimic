@@ -14,6 +14,7 @@
 #  License text for the above reference.)
 
 include(FindPackageHandleStandardArgs)
+include(FindPackageMessage)
 
 if (NOT MATH_LANG)
     set(MATH_LANG C)
@@ -62,6 +63,11 @@ macro(find_math_libs _service)
 endmacro()
 
 macro(cache_math_result math_type _service)
+    if (DEFINED ${_SERVICE}_TYPE)
+        if (NOT ${_SERVICE}_TYPE EQUAL ${math_type})
+            return()
+        endif()
+    endif()
     string(TOUPPER ${_service} _SERVICE)
     if (${_service}_h)
         set(${_SERVICE}_H ${${_service}_h})
@@ -87,7 +93,10 @@ macro(cache_math_result math_type _service)
     endif()
 
     if (${_SERVICE}_FOUND)
-        message("-- ${math_type} ${_SERVICE} found")
+        set(${_SERVICE}_TYPE ${math_type} CACHE STRING 
+            "${_SERVICE} type")
+        mark_as_advanced(${_SERVICE}_TYPE)
+
         add_definitions(-DHAVE_${math_type}_${_SERVICE})
         set(HAVE_${_SERVICE} ON CACHE INTERNAL
             "Defined if ${_SERVICE} is available"

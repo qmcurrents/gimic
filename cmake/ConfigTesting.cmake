@@ -4,7 +4,7 @@ if (VALGRIND_EXECUTABLE)
     set(CTEST_MEMORYCHECK_COMMAND ${VALGRIND_EXECUTABLE})
     set(MEMORYCHECK_COMMAND_OPTIONS "--leak-check=full")
     set(MEMORYCHECK_SUPPRESSIONS_FILE
-        ${CMAKE_BINARY_DIR}/valgrind.supp)
+        ${CMAKE_BINARY_DIR}/valgrind-suppressions.txt)
 endif()
 mark_as_advanced(VALGRIND_EXECUTABLE)
 
@@ -27,6 +27,3 @@ set(BUILDNAME ${BUILDNAME}
     CACHE STRING "Name of build on the dashboard"
     )
 
-if (ENABLE_GTEST)
-    find_package(GTest)
-endif()

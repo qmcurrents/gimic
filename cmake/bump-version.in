@@ -1,11 +1,12 @@
 #!@PYTHON_EXECUTABLE@
-# vim:ft=python:
+# vim:ft=python
 # Simple script to bump the version number before a release
 #
 # jonas juselius <jonas.juselius@uit.no>
 #
 # TODO: Docstrings
 #
+# vim:ft=python:
 
 import os
 import sys
@@ -17,7 +18,7 @@ import subprocess
 project_version = "@PROJECT_VERSION@"
 current_version = map(int, string.split(project_version, '.'))
 
-version_filename = "@CMAKE_SOURCE_DIR@/cmake/ConfigProjectVersion.cmake"
+version_filename = "@CMAKE_SOURCE_DIR@/CMakeLists.txt"
 
 parser = ArgumentParser(description="Bump project version number",
         epilog="Current version is: @PROJECT_VERSION@")
