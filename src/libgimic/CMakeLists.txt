@@ -7,11 +7,7 @@ set(sources
     bfeval.f90
     cao2sao.f90
     caos.f90
-    d2fdrdb.f90
-    dbop.f90
     dens.f90
-    dfdb.f90
-    dfdr.f90
     divj.f90
     edens.f90
     factorial.f90
