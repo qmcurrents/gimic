@@ -43,7 +43,7 @@ contains
                     mag=(/D0, D0, D1/)*dir
                 case('X')
                     ortho=.true.
-                    call get_ortho(g,mag)
+                    call get_ortho(g, mag)
                     mag=mag*dir
                 case default
                     call msg_error('Invalid axis specifier: ' // axis)
@@ -58,12 +58,9 @@ contains
             stop
         end if
 
-        if (ortho) then
-!            call get_basvec(g, 2, v)
-            continue
-        else
+        if (.not.ortho) then
             call get_basvec(g, 3, v)
-            call check_field(v,mag)
+            call check_field(v, mag)
         end if
 
     end subroutine

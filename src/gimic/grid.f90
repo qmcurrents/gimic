@@ -129,6 +129,7 @@ contains
         end if
 
         this%basv(:,3)=cross_product(this%basv(:,1),this%basv(:,2)) 
+        this%ortho=norm(this%basv(:,3))
     end subroutine
 
     subroutine setup_bond_grid(this,mol)
