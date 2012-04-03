@@ -3,11 +3,11 @@
 !
 
 module bfeval_class
-    use globals_m
-    use settings_m
+    use globals_module
+    use settings_module
     use basis_class
-    use gtodefs_m
-    use caos_m
+    use gtodefs_module
+    use caos_module
     use cao2sao_class
     implicit none
 

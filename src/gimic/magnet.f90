@@ -1,7 +1,7 @@
-module magnet_m
-    use kinds_m
-    use globals_m
-    use settings_m
+module magnet_module
+    use kinds_module
+    use globals_module
+    use settings_module
     use grid_class
     implicit none
     

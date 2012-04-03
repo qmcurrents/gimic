@@ -1,9 +1,9 @@
 !
 ! Write VTK ImageData XML files
 !
-module vtkplot_m
-    use globals_m
-    use settings_m
+module vtkplot_module
+    use globals_module
+    use settings_module
     use grid_class
     implicit none
 

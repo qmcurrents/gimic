@@ -1,7 +1,7 @@
-module gaussint_m
-    use globals_m
-    use settings_m
-    use teletype_m
+module gaussint_module
+    use globals_module
+    use settings_module
+    use teletype_module
     implicit none
 
     type gdata_t

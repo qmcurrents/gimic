@@ -9,10 +9,10 @@
 !
 
 module cao2sao_class
-    use globals_m
-    use settings_m
-    use gtodefs_m
-    use factorial_m
+    use globals_module
+    use settings_module
+    use gtodefs_module
+    use factorial_module
     use basis_class
     implicit none
     

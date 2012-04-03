@@ -5,21 +5,21 @@
 #include "config.h"
 
 program gimic
-    use globals_m  
-    use settings_m
-    use teletype_m
+    use globals_module
+    use settings_module
+    use teletype_module
     use basis_class
-    use timer_m
-    use magnet_m
-    use parallel_m
+    use timer_module
+    use magnet_module
+    use parallel_module
     use cao2sao_class
     use grid_class
     use basis_class
     use dens_class
     use jtensor_class
     use jfield_class
-    use caos_m
-    use gaussint_m
+    use caos_module
+    use gaussint_module
     implicit none 
 
     type(molecule_t) :: mol

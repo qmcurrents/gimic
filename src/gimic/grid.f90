@@ -5,12 +5,12 @@
 ! 
 
 module grid_class
-    use globals_m
-    use settings_m
-    use tensor_m
-    use gaussint_m
+    use globals_module
+    use settings_module
+    use tensor_module
+    use gaussint_module
     use basis_class
-    use teletype_m
+    use teletype_module
     implicit none
 
     type grid_t

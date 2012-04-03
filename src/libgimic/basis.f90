@@ -8,10 +8,10 @@
 !
 
 module basis_class
-    use globals_m
-    use settings_m
-    use intgrl_m
-    use gtodefs_m
+    use globals_module
+    use settings_module
+    use intgrl_module
+    use gtodefs_module
     implicit none 
 
     public del_basis, new_basis, print_seg

@@ -4,11 +4,11 @@
 !  in contrast to the basis set convergence and gauge independence.
 !
 
-module divj_m
-    use globals_m
-    use settings_m
+module divj_module
+    use globals_module
+    use settings_module
     use jtensor_class
-    use teletype_m
+    use teletype_module
     implicit none
 
     public divj

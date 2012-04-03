@@ -7,15 +7,15 @@
 !
 
 module jfield_class
-    use globals_m
-    use settings_m
+    use globals_module
+    use settings_module
     use jtensor_class
     use dens_class
     use grid_class
     use basis_class
-    use teletype_m
-    use parallel_m
-    use tensor_m
+    use teletype_module
+    use parallel_module
+    use tensor_module
     implicit none
 
     type jfield_t
@@ -267,7 +267,7 @@ contains
     end subroutine
 
     subroutine jmod_vtkplot(this)
-        use vtkplot_m
+        use vtkplot_module
         type(jfield_t) :: this
 
         integer(I4) :: p1, p2, p3, fd1, fd2

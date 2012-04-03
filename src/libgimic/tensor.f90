@@ -1,6 +1,6 @@
 
-module tensor_m
-    use kinds_m
+module tensor_module
+    use kinds_module
     implicit none
     
     interface operator(.tp.)

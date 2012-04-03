@@ -3,9 +3,9 @@
 ! GTOMAP maps the set of {i,j,k} to the correspnding index in the GTx arrays.
 !
 
-module gtodefs_m
-    use globals_m
-    use settings_m
+module gtodefs_module
+    use globals_module
+    use settings_module
     implicit none
 
     type gto_jar

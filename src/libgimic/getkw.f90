@@ -20,8 +20,8 @@
 ! 
 
 module getkw_class
-    use kinds_m
-    use teletype_m
+    use kinds_module
+    use teletype_module
     implicit none
     
     public new_getkw, del_getkw, getkw, getkw_ptr, setkw, save_keys
