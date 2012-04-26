@@ -5,6 +5,7 @@
 #
 import numpy as np
 import math
+from copy import deepcopy
 
 class Grid:
     def __init__(self, l, 
@@ -13,6 +14,7 @@ class Grid:
             basis=None, 
             origin=(0.0, 0.0, 0.0), 
             distribution = 'even'):
+        self.cur = [0, 0, 0]
         self.points = []
         if basis:
             self.basis = basis
@@ -56,6 +58,24 @@ class Grid:
 
     def __str__(self):
         return str(self.basis)
+
+    def __iter__(self):
+        return self
+
+    def next(self):
+        current = deepcopy(self.cur)
+        self.cur[0] += 1
+        if self.cur[0] == self.npts[0]:
+            self.cur[0] = 0
+            self.cur[1] += 1
+            if self.cur[1] == self.npts[1]:
+                self.cur[0] = 0
+                self.cur[1] = 0
+                self.cur[2] += 1
+                if self.cur[2] == self.npts[2]:
+                    self.cur = [0, 0, 0]
+                    raise StopIteration()
+        return self.point(current)
 
     def _init_basis_vectors(self, orthogonal = True):
         self.basis[:, 2] = np.cross(self.basis[:, 0], self.basis[:, 1])
@@ -114,6 +134,12 @@ class Grid:
         raise RuntimeError('Not implemented yet')
 
     def point(self, i, j, k = 0):
+        return self.points[0][i] * self.basis[:, 0] + \
+            self.points[1][j] * self.basis[:, 1] + \
+            self.points[2][k] * self.basis[:, 2] 
+
+    def point(self, r):
+        i, j, k = r
         return self.points[0][i] * self.basis[:, 0] + \
             self.points[1][j] * self.basis[:, 1] + \
             self.points[2][k] * self.basis[:, 2] 
