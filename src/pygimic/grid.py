@@ -150,6 +150,9 @@ class Grid:
     def size(self):
         return self.npts
 
+    def get_steps(self):
+        return self.npts
+
     def lenght(self):
         return self.l
 
