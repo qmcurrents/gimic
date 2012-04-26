@@ -8,6 +8,12 @@ class Molecule:
         else:
             self.atoms = atoms
 
+    def __getitem__(self, i):
+        return self.atoms[i]
+
+    def get_atom(self, i):
+        return self.atoms[i]
+
     def read_xyz(self, file):
         "Read XYZ file, return list of Atoms"
         atoms=[]
@@ -26,3 +32,4 @@ class Molecule:
 
 if __name__ == '__main__':
     mol = Molecule('coord.xyz')
+    print mol[0]
