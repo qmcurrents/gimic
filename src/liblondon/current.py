@@ -95,9 +95,9 @@ class BasCenter:
                 bfval_comp[c].append(tmp)
             # d/dx (x-C)^m exp(-a(x-C)^2 - ikx) =
             #    m (x-C)^(m-1) exp(-a(x-C)^2 - ikx)
-            #   -(2a(x-C)-ik) (x-C)^m exp(-a(x-C)^2 - ikx)
-            fac = complex(2.0*self.expo*relpos, -k)
-            bfder_comp[c].append(fac * bfval_comp[c][0])
+            #   -(2a(x-C)+ik) (x-C)^m exp(-a(x-C)^2 - ikx)
+            fac = complex(2.0*self.expo*relpos, self.kvec[c])
+            bfder_comp[c].append(-fac * bfval_comp[c][0])
             for m in range(1,lmax+1):
                 tmp = m * bfval_comp[c][m-1] - fac * bfval_comp[c][m]
                 bfder_comp[c].append(tmp)
@@ -191,30 +191,27 @@ def vdens(r,bas,d):
 
     # contract with density matrix
     bf_d = []
-    for r in range(nbf):
+    for c in range(nbf):
         tmp = complex(0.0, 0.0)
-        for c in range(nbf):
+        for r in range(nbf):
             tmp += bf[r] * d[r][c]
         bf_d.append(tmp)
 
     # electron density (number density)
     rho = 0.0
-    for r in range(nbf):
-        rho += (bf_d[r] * bf[r].conjugate()).real
+    for c in range(nbf):
+        rho += (bf_d[c] * bf[c].conjugate()).real
 
     # current density (number current, not electrical current)
-    jpx = 0.0
-    jpy = 0.0
-    jpz = 0.0
-    for r in range(nbf):
-        jpx -= (bf_d[r] * bfder[r][0].conjugate()).imag
-        jpy -= (bf_d[r] * bfder[r][1].conjugate()).imag
-        jpz -= (bf_d[r] * bfder[r][2].conjugate()).imag
-    jpx /= 2.0
-    jpy /= 2.0
-    jpz /= 2.0
+    pcan = [complex(0.0), complex(0.0), complex(0.0)]
+    for c in range(nbf):
+        pcan[0] += bf_d[c] * bfder[c][0].conjugate()
+        pcan[1] += bf_d[c] * bfder[c][1].conjugate()
+        pcan[2] += bf_d[c] * bfder[c][2].conjugate()
+    grad_rho = (2.0 * pcan[0].real, 2.0 * pcan[1].real, 2.0 * pcan[2].real)
+    jp = (-pcan[0].imag, -pcan[1].imag, -pcan[2].imag)
 
-    return rho, (jpx,jpy,jpz)
+    return rho, grad_rho, jp
 
 
 basis, dmat = get_bas_dmat('density.txt')
@@ -226,7 +223,15 @@ for k in range(len(dmat)):
 
 
 r = (0.01, -0.2, 0.1)
-rho, jp = vdens(r,basis,dmat)
+rho, grad_rho, jp = vdens(r,basis,dmat)
 print 'r = ',r
 print 'rho(r) = ',rho
+print 'grad(rho(r)) = ',grad_rho
+print 'jp(r) = ',jp
+
+r = (0.0, 0.0, 0.0)
+rho, grad_rho, jp = vdens(r,basis,dmat)
+print '\nr = ',r
+print 'rho(r) = ',rho
+print 'grad(rho(r)) = ',grad_rho
 print 'jp(r) = ',jp
