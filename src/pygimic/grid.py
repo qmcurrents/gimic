@@ -153,6 +153,9 @@ class Grid:
     def get_steps(self):
         return self.step
 
+    def get_origin(self):
+        return self.origin
+
     def lenght(self):
         return self.l
 
