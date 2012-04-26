@@ -1,22 +1,24 @@
 import numpy as np
-#from grid import Grid
+from grid import Grid
 
 class Magnet:
-    def __init__(self, grid, b, ortho = False):
+    def __init__(self, b, grid = None, ortho = False):
         self.grid = grid
         self.ortho = ortho
         if isinstance(b, str):
+            if not self.grid:
+                raise ValueError('Grid object not defined.')
             self.mag = self._get_direction(b.lower())
         else:
             self.mag = np.array(b)
-        self.check_field_direction()
+        self._check_field_direction()
 
     def __str__(self):
         return " ".join([str(i) for i in self.mag])
 
     def set_orthogonal(self, p = True):
         self.ortho = p
-        self.check_field_direction()
+        self._check_field_direction()
     
     def is_orthogonal():
         return self.ortho
@@ -38,11 +40,11 @@ class Magnet:
             
         self.mag = np.zeros(3)
         if b == 'i':
-            print sign, 'i'
+            mag = self.grid.get_i()
         elif b == 'j':
-            print sign, 'j'
+            mag = self.grid.get_j()
         elif b == 'k':
-            print sign, 'k'
+            mag = self.grid.get_k()
         elif b == 'x':
             self.mag[0] = 1.0
         elif b == 'y':
@@ -56,11 +58,10 @@ class Magnet:
         self.mag *= sign
         return self.mag
 
-    def check_field_direction(self):
-        if self.ortho:
+    def _check_field_direction(self):
+        if self.ortho or not self.grid:
             return
-#        kvec = self.grid.get_k()
-        kvec = np.ones(3)
+        kvec = self.grid.get_k()
         x = np.dot(kvec, self.mag)
         if x > 0.0:
             self.mag *= -1.0
@@ -70,9 +71,9 @@ class Magnet:
 
 
 if __name__ == '__main__':
-    b = Magnet(None, [1.1, 2.2, 3.3])
+    g = Grid()
+    b = Magnet([1.1, 2.2, 3.3])
     print b
-    b = Magnet(None, 't')
-    print b
+    b = Magnet('i', g)
 
 # vim:et:sw=4:ts=4
