@@ -12,19 +12,19 @@ class NotAvailable(Exception):
             "%s:\n  %s" % (gimic_backend, repr(self.value))
 
 class GimicInterface:
-    def calc_jvector(r, jv):
+    def jvector(self, r):
         raise NotAvailable
 
-    def calc_jtensor(r, jt):
+    def jtensor(self, r):
         raise NotAvailable
 
-    def calc_divj(r, dj):
+    def divj(self, r):
         raise NotAvailable
 
-    def calc_edens(r, ed):
+    def edens(self, r):
         raise NotAvailable
 
-    def set_property(prop, val):
+    def set_property(self, prop, val):
         raise NotAvailable
 
 # vim:et:ts=4:
