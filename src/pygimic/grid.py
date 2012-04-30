@@ -14,7 +14,7 @@ class Grid:
             basis=None, 
             origin=(0.0, 0.0, 0.0), 
             distribution = 'even'):
-        self.cur = [0, 0, 0]
+        self.iteridx = [0, 0, 0]
         self.points = []
         if basis:
             self.basis = basis
@@ -52,7 +52,6 @@ class Grid:
         for i in np.arange(len(self.step)):
             self.step[i] = step[i]
 
-        print self.step
         self._init_basis_vectors(True)
         self._init_grid(self.distribution)
 
@@ -63,19 +62,21 @@ class Grid:
         return self
 
     def next(self):
-        current = deepcopy(self.cur)
-        self.cur[0] += 1
-        if self.cur[0] == self.npts[0]:
-            self.cur[0] = 0
-            self.cur[1] += 1
-            if self.cur[1] == self.npts[1]:
-                self.cur[0] = 0
-                self.cur[1] = 0
-                self.cur[2] += 1
-                if self.cur[2] == self.npts[2]:
-                    self.cur = [0, 0, 0]
-                    raise StopIteration()
-        return self.point(current)
+        if self.iteridx is None:
+            self.iteridx = [0, 0, 0]
+            raise StopIteration()
+        cur = deepcopy(self.iteridx)
+        self.iteridx[0] += 1
+        if self.iteridx[0] == self.npts[0]:
+            self.iteridx[0] = 0
+            self.iteridx[1] += 1
+            if self.iteridx[1] == self.npts[1]:
+                self.iteridx[0] = 0
+                self.iteridx[1] = 0
+                self.iteridx[2] += 1
+                if self.iteridx[2] == self.npts[2]:
+                    self.iteridx = None
+        return self.point(cur)
 
     def _init_basis_vectors(self, orthogonal = True):
         self.basis[:, 2] = np.cross(self.basis[:, 0], self.basis[:, 1])
