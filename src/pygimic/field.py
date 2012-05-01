@@ -19,6 +19,9 @@ class Field(GridIterator):
     def __getitem__(self, idx):
         return self.getitem(idx)
 
+    def get_grid(self):
+        return self.grid
+
 class ScalarField(Field):
     def __init__(self, grid, dtype=float):
         Field.__init__(self, grid)
@@ -35,7 +38,7 @@ class ScalarField(Field):
             self.field[i, j, k] = func(r)
 
     def get(self, k=None):
-        if k:
+        if k is not None:
             return self.field[:, :, k]
         else:
             return self.field
@@ -65,9 +68,9 @@ class VectorField(Field):
 
     def get(self, k=None):
         v = []
-        if k:
+        if k is not None:
             for i in range(self.dim):
-                v[i] = self.field[i][:, :, k]
+                v.append(self.field[i][:, :, k])
             return v
         else:
             return self.field

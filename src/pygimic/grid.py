@@ -163,6 +163,11 @@ class Grid(GridIterator):
         n = math.sqrt(np.dot(v, v.conj()))
         return v / n
 
+    def get_axis(self, n=None):
+        if n:
+            return self.points[n]
+        return self.points
+
     def get_basis(self):
         return self.basis
 
