@@ -4,13 +4,13 @@
 #
 
 class NotAvailable(Exception):
-    gimic_backend = 'GIMIC'
+    backend = 'GIMIC'
     def __init__(self, value):
         self.value = value
 
     def __str__(self):
-        return "Requested method is not availbale for chosen backend:"
-        "{}:\n   {}" % (gimic_backend, repr(self.value))
+        return "Requested method is not availbale for chosen backend: " \
+            "{0}.{1}".format(self.backend, str(self.value))
 
 
 class NotImplemented(Exception):
