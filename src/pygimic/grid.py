@@ -9,8 +9,11 @@ from copy import deepcopy
 from gexceptions import NotImplemented
 
 class GridIterator:
-    def __iter__(self):
+    def __init__(self):
         self.iteridx = [0, 0, 0]
+        self.npts = [0, 0, 0]
+
+    def __iter__(self):
         return self
 
     def next(self):
@@ -29,7 +32,7 @@ class GridIterator:
                 self.iteridx[2] += 1
                 if self.iteridx[2] == self.npts[2]:
                     self.iteridx = None
-        return self.datapoint(cur)
+        return self.itervalue(cur)
 
     def reverse(self, k=None):
         'Iterator to return  data points in reverse order'
@@ -42,7 +45,7 @@ class GridIterator:
         for i in a:
             for j in b:
                 for k in c:
-                    yield self.datapoint((i, j, k))
+                    yield self.itervalue((i, j, k))
 
     def range(self, k=None):
         'Iterator to return grid indeces in normal order'
@@ -77,6 +80,7 @@ class Grid(GridIterator):
             basis=None, 
             origin=(0.0, 0.0, 0.0), 
             distribution = 'even'):
+        GridIterator.__init__(self)
         self.points = []
         if basis:
             self.basis = basis
@@ -84,11 +88,10 @@ class Grid(GridIterator):
             self.basis = np.identity(3)
         self.l = np.array(l)
         self.origin = np.array(origin)
-        self.ortho = np.zeros(3)
         self.distribution = 'even'
         self.radius = None
         self.step = np.zeros(3)
-        self.npts = np.ones(3, dtype=np.int32)
+        self.ortho = np.zeros(3)
         if step and npts:
             raise ValueError('Both step and number of points specified!')
         if not step and not npts:
@@ -99,27 +102,31 @@ class Grid(GridIterator):
             if isinstance(npts, int):
                 npts = (npts, npts, npts)
             for i in range(3):
-                if npts[i] == 0:
-                    self.npts[i] = 1
-                else:
-                    self.npts[i] = npts[i]
-                if self.npts[i] == 1:
+                if npts[i] < 1:
+                    npts[i] = 1
+                if npts[i] == 1:
                     s = self.l[i]
                 else:
                     s = float(self.l[i])/float(npts[i]-1)
                 step.append(s)
+        else:
+            npts = (0, 0, 0)
+            if isinstance(step, float) or isinstance(step, int):
+                step = (step, step, step)
+            for i in range(3):
+                if step[i] == 0 or step[i] < 0.0:
+                    step[i] = 1.0
+                npts[i] = int(self.l[i]/step[i])
+                if npts[i] == 0:
+                    npts[i] == 1
 
-        if isinstance(step, float) or isinstance(step, int):
-            step = (step, step, step)
-        for i in range(len(self.step)):
-            self.step[i] = step[i]
-
+        self.npts = npts
+        self.step = step
         self._init_basis_vectors(True)
         self._init_grid(self.distribution)
 
     def __str__(self):
         return str(self.basis)
-
 
     def _init_basis_vectors(self, orthogonal = True):
         self.basis[:, 2] = np.cross(self.basis[:, 0], self.basis[:, 1])
@@ -184,7 +191,7 @@ class Grid(GridIterator):
             self.points[2][k] * self.basis[:, 2] 
 
     # Definition for the iterator base class
-    datapoint = gridpoint
+    itervalue = gridpoint
 
     def get_normal(self):
         return self.get_k()
