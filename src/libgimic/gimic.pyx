@@ -17,10 +17,6 @@ cdef class Gimic:
         self.thisptr.set_uhf(onoff)
 
     def set_magnet(self, b):
-        if not isinstance(b, list):
-            raise TypeError
-        if not isinstance(b[0], float):
-            raise TypeError
         cdef double mag[3]
         for i in range(3):
             mag[i] = b[i]
@@ -37,10 +33,6 @@ cdef class Gimic:
         self.thisptr.set_screening(thrs)
 
     def calc_jtensor(self, r):
-        if not isinstance(r, list):
-            raise TypeError
-        if not isinstance(r[0], float):
-            raise TypeError
         cdef double cr[3]
         cdef double ct[9]
         for i in range(3):
@@ -52,10 +44,6 @@ cdef class Gimic:
         return tens
 
     def calc_jvector(self, r):
-        if not isinstance(r, list):
-            raise TypeError
-        if not isinstance(r[0], float):
-            raise TypeError
         cdef double cr[3]
         cdef double cv[3]
         for i in range(3):
@@ -67,10 +55,6 @@ cdef class Gimic:
         return vec
 
     def calc_divj(self, r):
-        if not isinstance(r, list):
-            raise TypeError
-        if not isinstance(r[0], float):
-            raise TypeError
         cdef double cr[3]
         cdef double cd
         for i in range(3):
@@ -79,10 +63,6 @@ cdef class Gimic:
         return cd
 
     def calc_edens(self, r):
-        if not isinstance(r, list):
-            raise TypeError
-        if not isinstance(r[0], float):
-            raise TypeError
         cdef double cr[3]
         cdef double cd
         for i in range(3):

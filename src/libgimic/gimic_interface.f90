@@ -81,6 +81,7 @@ contains
     subroutine gimic_set_magnet(b)
         real(8), dimension(3), intent(in) :: b
         settings%magnet = b
+        magnet = b
     end subroutine
 
     subroutine gimic_set_spin(s)
@@ -128,16 +129,12 @@ contains
         real(8), dimension(3), intent(in) :: r
         real(8), dimension(3), intent(out) :: jv
 
-        real(DP), dimension(9) :: t
         type(jtensor_t) :: jtens
         integer :: i
 
         call new_jtensor(jtens, mol, xdens)
-        call ctensor(jtens, r, t, spin)
+        call jvector(jtens, r, magnet, jv, spin)
         call del_jtensor(jtens)
-        do i=1,3
-            !jt(i)=t%t(i,j)
-        end do
     end subroutine
 
     subroutine gimic_calc_divj(r, dj)

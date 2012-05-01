@@ -6,7 +6,7 @@ cdef extern from "GimicInterface.h":
         void set_spin(char *s)
         void set_screening(double thrs)
         void calc_jtensor(double *r, double *jt)
-        void calc_jvector(double *r, double *jt)
+        void calc_jvector(double *r, double *jv)
         void calc_divj(double *r, double *dj)
         void calc_edens(double *r, double *ed)
 

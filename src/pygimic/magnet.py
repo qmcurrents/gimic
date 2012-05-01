@@ -16,6 +16,9 @@ class Magnet:
     def __str__(self):
         return " ".join([str(i) for i in self.mag])
 
+    def get_magnet(self):
+        return self.mag
+
     def set_orthogonal(self, p = True):
         self.ortho = p
         self._check_field_direction()
