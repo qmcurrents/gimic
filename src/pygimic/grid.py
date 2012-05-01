@@ -6,7 +6,7 @@
 import numpy as np
 import math
 from copy import deepcopy
-from gexceptions import NotImplemented
+from gimic_exceptions import NotImplemented
 
 class GridIterator:
     def __init__(self):

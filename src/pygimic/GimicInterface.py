@@ -3,7 +3,7 @@
 # Jonas Juselius <jonas.juselius@uit.no> 2012
 #
 
-from gexceptions import NotAvailable
+from gimic_exceptions import NotAvailable
 
 class GimicInterface:
     def jvector(self, r):

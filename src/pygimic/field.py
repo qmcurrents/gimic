@@ -1,7 +1,11 @@
+#
+# Jonas Juselius <jonas.juselius@uit.no> 2012
+#
+
 import numpy as np
 from copy import deepcopy
 from grid import Grid, GridIterator
-from gexceptions import NotReached
+from gimic_exceptions import NotReached
 
 class Field(GridIterator):
     def __init__(self, grid):
