@@ -99,9 +99,9 @@ class MatPlot(BasePlot):
         y = self.grid.get_axis()[1]
         x, y = np.meshgrid(x, y)
         u, v, w = self.field.get(k)
-        q = plt.quiver(u, v)
-        qk = plt.quiverkey(q, 0.5, 0.92, 2, r'$2 \frac{m}{s}$', labelpos='W',
-                               fontproperties={'weight': 'bold'})
+        q = plt.quiver(v, u)
+#        qk = plt.quiverkey(q, 0.5, 0.92, 2, r'$2 \frac{m}{s}$', labelpos='W',
+#                               fontproperties={'weight': 'bold'})
         l,r,b,t = plt.axis()
         dx, dy = r-l, t-b
         plt.axis([l-0.05*dx, r+0.05*dx, b-0.05*dy, t+0.05*dy])
@@ -118,7 +118,7 @@ class MatPlot(BasePlot):
 #        x, y = np.meshgrid(x, y)
         u, v, w = self.field.get(k)
 #        streamplot(x, y, u, v, density=1, INTEGRATOR='RK4', color='b')
-        streamplot(x, y, u, v, density=1, INTEGRATOR='RK4', color=u)
+        streamplot(x, y, v, u, density=1, INTEGRATOR='RK4', color=u)
         plt.show()
 
 
