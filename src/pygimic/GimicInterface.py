@@ -3,28 +3,22 @@
 # Jonas Juselius <jonas.juselius@uit.no> 2012
 #
 
-class NotAvailable(Exception):
-    gimic_backend = 'GIMIC'
-    def __init__(self, value):
-        self.value = value
-     def __str__(self):
-         return "Requested method is not availbale for chosen backend:"
-            "%s:\n  %s" % (gimic_backend, repr(self.value))
+from gexceptions import NotAvailable
 
 class GimicInterface:
     def jvector(self, r):
-        raise NotAvailable
+        raise NotAvailable("jvector")
 
     def jtensor(self, r):
-        raise NotAvailable
+        raise NotAvailable("jtensor")
 
     def divj(self, r):
-        raise NotAvailable
+        raise NotAvailable("divj")
 
     def edens(self, r):
-        raise NotAvailable
+        raise NotAvailable("edens")
 
     def set_property(self, prop, val):
-        raise NotAvailable
+        raise NotAvailable("set_property")
 
 # vim:et:ts=4:
