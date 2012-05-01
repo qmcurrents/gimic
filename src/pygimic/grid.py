@@ -8,14 +8,75 @@ import math
 from copy import deepcopy
 from gexceptions import NotImplemented
 
-class Grid:
+class GridIterator:
+    def __iter__(self):
+        self.iteridx = [0, 0, 0]
+        return self
+
+    def next(self):
+        'Iterator to return data points in normal order'
+        if self.iteridx is None:
+            self.iteridx = [0, 0, 0]
+            raise StopIteration()
+        cur = deepcopy(self.iteridx)
+        self.iteridx[0] += 1
+        if self.iteridx[0] == self.npts[0]:
+            self.iteridx[0] = 0
+            self.iteridx[1] += 1
+            if self.iteridx[1] == self.npts[1]:
+                self.iteridx[0] = 0
+                self.iteridx[1] = 0
+                self.iteridx[2] += 1
+                if self.iteridx[2] == self.npts[2]:
+                    self.iteridx = None
+        return self.datapoint(cur)
+
+    def reverse(self, k=None):
+        'Iterator to return  data points in reverse order'
+        a = range(self.npts[0])
+        b = range(self.npts[1])
+        if k is None:
+            c = range(self.npts[2])
+        else:
+            c = (k,)
+        for i in a:
+            for j in b:
+                for k in c:
+                    yield self.datapoint((i, j, k))
+
+    def range(self, k=None):
+        'Iterator to return grid indeces in normal order'
+        a = range(self.npts[0])
+        b = range(self.npts[1])
+        if k is None:
+            c = range(self.npts[2])
+        else:
+            c = (k,)
+        for k in c:
+            for j in b:
+                for i in a:
+                    yield i, j, k
+
+    def rrange(self, k=None):
+        'Iterator to return grid indeces in reverse order'
+        a = range(self.npts[0])
+        b = range(self.npts[1])
+        if k is None:
+            c = range(self.npts[2])
+        else:
+            c = (k,)
+        for i in a:
+            for j in b:
+                for k in c:
+                    yield i, j, k
+
+class Grid(GridIterator):
     def __init__(self, l, 
             npts = None,
             step = None,
             basis=None, 
             origin=(0.0, 0.0, 0.0), 
             distribution = 'even'):
-        self.iteridx = [0, 0, 0]
         self.points = []
         if basis:
             self.basis = basis
@@ -59,65 +120,6 @@ class Grid:
     def __str__(self):
         return str(self.basis)
 
-    def __iter__(self):
-        return self
-
-    def next(self):
-        'Iterator to return gridpoints in normal order'
-        if self.iteridx is None:
-            self.iteridx = [0, 0, 0]
-            raise StopIteration()
-        cur = deepcopy(self.iteridx)
-        self.iteridx[0] += 1
-        if self.iteridx[0] == self.npts[0]:
-            self.iteridx[0] = 0
-            self.iteridx[1] += 1
-            if self.iteridx[1] == self.npts[1]:
-                self.iteridx[0] = 0
-                self.iteridx[1] = 0
-                self.iteridx[2] += 1
-                if self.iteridx[2] == self.npts[2]:
-                    self.iteridx = None
-        return self.point(cur)
-
-    def reverse(self, k=None):
-        'Iterator to return gridpoints in reverse order'
-        a = range(self.npts[0])
-        b = range(self.npts[1])
-        if k is None:
-            c = range(self.npts[2])
-        else:
-            c = (k,)
-        for i in a:
-            for j in b:
-                for k in c:
-                    yield self.point((i, j, k))
-
-    def range(self, k=None):
-        'Iterator to return grid indeces in normal order'
-        a = range(self.npts[0])
-        b = range(self.npts[1])
-        if k is None:
-            c = range(self.npts[2])
-        else:
-            c = (k,)
-        for k in c:
-            for j in b:
-                for i in a:
-                    yield i, j, k
-
-    def rrange(self, k=None):
-        'Iterator to return grid indeces in reverse order'
-        a = range(self.npts[0])
-        b = range(self.npts[1])
-        if k is None:
-            c = range(self.npts[2])
-        else:
-            c = (k,)
-        for i in a:
-            for j in b:
-                for k in c:
-                    yield i, j, k
 
     def _init_basis_vectors(self, orthogonal = True):
         self.basis[:, 2] = np.cross(self.basis[:, 0], self.basis[:, 1])
@@ -175,11 +177,14 @@ class Grid:
     def rotate(self, angle):
         raise RuntimeError('Not implemented yet')
 
-    def point(self, r):
+    def gridpoint(self, r):
         i, j, k = r
         return self.points[0][i] * self.basis[:, 0] + \
             self.points[1][j] * self.basis[:, 1] + \
             self.points[2][k] * self.basis[:, 2] 
+
+    # Definition for the iterator base class
+    datapoint = gridpoint
 
     def get_normal(self):
         return self.get_k()
@@ -197,8 +202,8 @@ class Grid:
         return self.l
 
     def get_center(self):
-        v1 = self.point(self.npts[0] - 1, 0, 0)
-        v2 = self.point(0, self.npts[1] - 1, 0)
+        v1 = self.gridpoint(self.npts[0] - 1, 0, 0)
+        v2 = self.gridpoint(0, self.npts[1] - 1, 0)
         return (v1 + v2) * 0.5
 
     def get_ortho(self):
@@ -208,7 +213,7 @@ class Grid:
         if self.npts[2] > 1:
             return True
         return False
-
+    
 
 class BondGrid(Grid):
     def __init__(self):
@@ -221,7 +226,6 @@ if __name__ == '__main__':
         print i, j, k
     for r in g.reverse():
         print r
-    print g.point(0, 0, 0)
-    print g.point(1, 1, 0)
+    print g.gridpoint((0, 0, 0))
 
 # vim:et:ts=4:sw=4
