@@ -4,9 +4,9 @@
 #
 
 from gimic_exceptions import NotAvailable
-from GimicInterface cimport GimicInterface
+from connector cimport GimicConnector
 
-cdef class GimicInterface:
+cdef class GimicConnector:
     def jvector(self, r):
         raise NotAvailable('jvector()')
 
@@ -23,7 +23,7 @@ cdef class GimicInterface:
         raise NotAvailable('set_property()')
 
 if __name__ == '__main__':
-    g = GimicInterface()
+    g = GimicConnector()
     g.jvector((0, 0, 0))
 
 # vim:et:ts=4:

@@ -3,7 +3,7 @@
 # Jonas Juselius <jonas.juselius@uit.no> 2012
 #
 
-cdef class GimicInterface:
+cdef class GimicConnector:
     def jvector(self, r)
     def jtensor(self, r)
     def divj(self, r)

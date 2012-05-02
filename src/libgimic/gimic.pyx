@@ -1,9 +1,9 @@
 from cython.operator cimport dereference as deref
-from GimicInterface cimport GimicInterface
+from connector cimport GimicConnector
 import numpy as np
 cimport gimic
 
-cdef class Gimic(GimicInterface):
+cdef class Gimic(GimicConnector):
     cdef gimic.GimicInterface *thisptr
 
     def __cinit__(self, mol, xdens):
