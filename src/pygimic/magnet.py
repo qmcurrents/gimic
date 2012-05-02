@@ -4,11 +4,11 @@ from grid import Grid
 class Magnet:
     def __init__(self, b, grid = None, ortho = False):
         self.grid = grid
-        self.ortho = ortho
+        self.isortho = ortho
         if isinstance(b, str):
             if not self.grid:
                 raise ValueError('Grid object not defined.')
-            self.mag = self._get_direction(b.lower())
+            self.mag = self._get_direction(b)
         else:
             self.mag = np.array(b)
         self._check_field_direction()
@@ -20,49 +20,48 @@ class Magnet:
         return self.mag
 
     def set_orthogonal(self, p = True):
-        self.ortho = p
+        self.isortho = p
         self._check_field_direction()
     
     def is_orthogonal():
-        return self.ortho
+        return self.isortho
 
     def _get_direction(self, b):
         b = b.strip()
-        if len(b) == 1:
+        if b[0] == '-':
+            b = b[1:]
+            sign = -1.0
+        elif b[0] == '+':
+            b = b[1:]
             sign = 1.0
-        elif len(b) == 2:
-            if b[0] == '-':
-                sign = -1.0
-            elif b[0] == '+':
-                sign = 1.0
-            else:
-                raise ValueError('Invalid axis specification')
-            b = b[1]
         else:
-            raise ValueError('Invalid axis specification')
-            
+            sign = 1.0
+
         self.mag = np.zeros(3)
+        if b == 'T':
+            b = 'ortho'
+        b = b.lower()
         if b == 'i':
-            mag = self.grid.get_i()
+            self.mag = np.array(self.grid.get_i())
         elif b == 'j':
-            mag = self.grid.get_j()
+            self.mag = np.array(self.grid.get_j())
         elif b == 'k':
-            mag = self.grid.get_k()
+            self.mag = np.array(self.grid.get_k())
         elif b == 'x':
             self.mag[0] = 1.0
         elif b == 'y':
             self.mag[1] = 1.0
         elif b == 'z':
             self.mag[2] = 1.0
-        elif b == 't':
-            self.mag = np.ones(3)
+        elif b == 'ortho':
+            self.mag = self.grid.get_ortho()
         else:
             raise ValueError('Invalid axis specification')
         self.mag *= sign
         return self.mag
 
     def _check_field_direction(self):
-        if self.ortho or not self.grid:
+        if self.isortho or not self.grid:
             return
         kvec = self.grid.get_k()
         x = np.dot(kvec, self.mag)

@@ -91,7 +91,7 @@ class Grid(GridIterator):
         self.distribution = 'even'
         self.radius = None
         self.step = np.zeros(3)
-        self.ortho = np.zeros(3)
+        self.bond_ortho = np.zeros(3) # Needed for bond grids
         if step and npts:
             raise ValueError('Both step and number of points specified!')
         if not step and not npts:
@@ -132,7 +132,7 @@ class Grid(GridIterator):
         self.basis[:, 2] = np.cross(self.basis[:, 0], self.basis[:, 1])
         for i in np.arange(3):
             self.basis[:, i] = self._norm(self.basis[:, i])
-        self.ortho = self.basis[:, 2]
+        self.bond_ortho = self.basis[:, 2]
         if orthogonal:
             self.orthogonalize_basis()
     
@@ -219,7 +219,7 @@ class Grid(GridIterator):
         return (v1 + v2) * 0.5
 
     def get_ortho(self):
-        return self.ortho
+        return self.bond_ortho
 
     def is3d(self):
         if self.npts[2] > 1:
