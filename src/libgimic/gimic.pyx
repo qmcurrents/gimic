@@ -52,7 +52,7 @@ cdef class Gimic(GimicConnector):
         return cd
 
     cpdef set_property(self, prop, val):
-        eval('self.set_{0}({1})'.format(prop, val))
+        eval('self.set_{0}({1})'.format(prop, repr(val)))
 
     def set_uhf(self, onoff):
         if not isinstance(onoff, int):
