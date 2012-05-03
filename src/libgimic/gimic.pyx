@@ -7,10 +7,6 @@ cdef class Gimic(GimicConnector):
     cdef gimic.GimicInterface *thisptr
 
     def __cinit__(self, mol, xdens):
-        if not isinstance(mol, str):
-            raise TypeError
-        if not isinstance(xdens, str):
-            raise TypeError
         self.thisptr = new gimic.GimicInterface(mol, xdens)
 
     cpdef jtensor(self, r):
@@ -43,7 +39,7 @@ cdef class Gimic(GimicConnector):
         self.thisptr.calc_divj(cr, &cd)
         return cd
 
-    cpdef edens(self, r):
+    cpdef rho(self, r):
         cdef double cr[3]
         cdef double cd
         for i in range(3):

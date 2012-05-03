@@ -25,6 +25,7 @@ contains
         real(DP), dimension(3), intent(in) :: rr, magnet
         real(DP) :: div
          
+        stop 'Out of order: divj() is broken.'
         div = divergence(rr, magnet)
     end function
 

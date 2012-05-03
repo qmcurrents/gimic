@@ -13,6 +13,8 @@ module gimic_interface
     use basis_class
     use dens_class
     use jtensor_class
+    use edens_class
+    use divj_module   ! must be turned into class
     use caos_module
     use gaussint_module
     implicit none
@@ -137,16 +139,21 @@ contains
         call del_jtensor(jtens)
     end subroutine
 
-    subroutine gimic_calc_divj(r, dj)
+    subroutine gimic_calc_divj(r, d)
         real(8), dimension(3), intent(in) :: r
-        real(8), intent(out) :: dj
-        stop 'Not implemented yet'
+        real(8), intent(out) :: d
+        d = divj(r, settings%magnet)
     end subroutine
 
-    subroutine gimic_calc_edens(r, ed)
+    subroutine gimic_calc_edens(r, d)
         real(8), dimension(3), intent(in) :: r
-        real(8), intent(out) :: ed
-        stop 'Not implemented yet'
+        real(8), intent(out) :: d
+        
+        type(edens_t) :: rho
+
+        call new_edens(rho, mol, xdens)
+        d = edens(rho, r)
+        call del_edens(rho)
     end subroutine
 end module
 
