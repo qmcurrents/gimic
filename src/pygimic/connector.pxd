@@ -4,10 +4,10 @@
 #
 
 cdef class GimicConnector:
-    def jvector(self, r)
-    def jtensor(self, r)
-    def divj(self, r)
-    def edens(self, r)
-    def set_property(self, prop, val)
+    cpdef jvector(self, r)
+    cpdef jtensor(self, r)
+    cpdef divj(self, r)
+    cpdef edens(self, r)
+    cpdef set_property(self, prop, val)
 
 # vim:et:ts=4:

@@ -13,7 +13,7 @@ cdef class Gimic(GimicConnector):
             raise TypeError
         self.thisptr = new gimic.GimicInterface(mol, xdens)
 
-    def jtensor(self, r):
+    cpdef jtensor(self, r):
         cdef double cr[3]
         cdef double ct[9]
         for i in range(3):
@@ -24,7 +24,7 @@ cdef class Gimic(GimicConnector):
             a[i] = ct[i]
         return a
 
-    def jvector(self, r):
+    cpdef jvector(self, r):
         cdef double cr[3]
         cdef double cv[3]
         for i in range(3):
@@ -35,7 +35,7 @@ cdef class Gimic(GimicConnector):
             vec.append(cv[i])
         return vec
 
-    def divj(self, r):
+    cpdef divj(self, r):
         cdef double cr[3]
         cdef double cd
         for i in range(3):
@@ -43,7 +43,7 @@ cdef class Gimic(GimicConnector):
         self.thisptr.calc_divj(cr, &cd)
         return cd
 
-    def edens(self, r):
+    cpdef edens(self, r):
         cdef double cr[3]
         cdef double cd
         for i in range(3):
@@ -51,7 +51,7 @@ cdef class Gimic(GimicConnector):
         self.thisptr.calc_edens(cr, &cd)
         return cd
 
-    def set_property(self, prop, val):
+    cpdef set_property(self, prop, val):
         eval('self.set_{0}({1})'.format(prop, val))
 
     def set_uhf(self, onoff):

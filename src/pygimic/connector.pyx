@@ -7,19 +7,19 @@ from gimic_exceptions import NotAvailable
 from connector cimport GimicConnector
 
 cdef class GimicConnector:
-    def jvector(self, r):
+    cpdef jvector(self, r):
         raise NotAvailable('jvector()')
 
-    def jtensor(self, r):
+    cpdef jtensor(self, r):
         raise NotAvailable('jtensor()')
 
-    def divj(self, r):
+    cpdef divj(self, r):
         raise NotAvailable('divj()')
 
-    def edens(self, r):
+    cpdef edens(self, r):
         raise NotAvailable('edens()')
 
-    def set_property(self, prop, val):
+    cpdef set_property(self, prop, val):
         raise NotAvailable('set_property()')
 
 if __name__ == '__main__':
