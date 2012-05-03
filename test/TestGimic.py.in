@@ -5,11 +5,28 @@
 #
 import sys
 sys.path.append('@PROJECT_BINARY_DIR@/lib')
+sys.path.append('@PROJECT_SOURCE_DIR@/src/pygimic')
 
-from gimic import Gimic
 import numpy as np
+from gimic import Gimic
+from grid import Grid
+from field import ScalarField, VectorField
+from magnet import Magnet
+from plot import MatPlot
 
 gimic = Gimic("@CMAKE_CURRENT_SOURCE_DIR@/mol", \
         "@CMAKE_CURRENT_SOURCE_DIR@/xdens")
-gimic.set_magnet([0.0, 0.0, 1.0])
-j = gimic.calc_jvector([1.0, 0.0, 0.0])
+
+grid = Grid(l=(6.0, 6.0, 0.0), origin=(-3.0, -3.0, 0.0), npts=30)
+mag = Magnet('z', grid)
+
+m = tuple(mag.get_magnet())
+gimic.set_property('magnet', m)
+
+f = VectorField(grid)
+f.calc(gimic.jvector)
+
+p = MatPlot(f)
+p.vector_plot()
+p.stream_plot()
+

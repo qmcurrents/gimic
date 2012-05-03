@@ -1,4 +1,5 @@
 add_subdirectory(libgimic)
+add_subdirectory(pygimic)
 add_subdirectory(gimic)
 
 if (ENABLE_MRCPP)
