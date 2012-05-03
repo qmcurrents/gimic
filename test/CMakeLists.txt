@@ -34,11 +34,11 @@ execute_process(
     OUTPUT_QUIET
     ) 
 
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/TestGimic.py.in
-    ${CMAKE_CURRENT_BINARY_DIR}/TestGimic.py @ONLY
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/PyGimicTest.py.in
+    ${CMAKE_CURRENT_BINARY_DIR}/PyGimicTest.py @ONLY
     )
 execute_process(
-    COMMAND chmod 755 ${CMAKE_CURRENT_BINARY_DIR}/TestGimic.py 
+    COMMAND chmod 755 ${CMAKE_CURRENT_BINARY_DIR}/PyGimicTest.py 
     OUTPUT_QUIET
     ) 
 
@@ -59,6 +59,15 @@ add_test(NAME BondIntegralMPI
     COMMAND ${MPIRUN} ${CMAKE_CURRENT_BINARY_DIR}/test.py bond_integral
     )
 
-add_test(NAME PyGimic
-    COMMAND ${CMAKE_CURRENT_BINARY_DIR}/TestGimic.py 
+add_test(NAME PyGimicDens
+    COMMAND ${CMAKE_CURRENT_BINARY_DIR}/PyGimicTest.py --dens
+    )
+add_test(NAME PyGimicCurrent
+    COMMAND ${CMAKE_CURRENT_BINARY_DIR}/PyGimicTest.py
+    )
+add_test(NAME PyLondonDens
+    COMMAND ${CMAKE_CURRENT_BINARY_DIR}/PyGimicTest.py --london --dens
+    )
+add_test(NAME PyLondonCurrent
+    COMMAND ${CMAKE_CURRENT_BINARY_DIR}/PyGimicTest.py --londo
     )
