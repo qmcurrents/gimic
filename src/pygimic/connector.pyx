@@ -16,11 +16,11 @@ cdef class GimicConnector:
     cpdef divj(self, r):
         raise NotAvailable('divj()')
 
-    cpdef edens(self, r):
-        raise NotAvailable('edens()')
+    cpdef rho(self, r):
+        raise NotAvailable('rho()')
 
     cpdef set_property(self, prop, val):
-        raise NotAvailable('set_property()')
+        pass
 
 if __name__ == '__main__':
     g = GimicConnector()

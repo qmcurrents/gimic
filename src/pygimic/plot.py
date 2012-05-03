@@ -61,7 +61,7 @@ class MatPlot(BasePlot):
         Y = self.grid.get_axis()[1]
         X, Y = np.meshgrid(X, Y)
         Z = self.field.get(k)
-        levels = np.arange(-1000, 0, 50.0)
+        levels = np.arange(0, 100, 5.0)
         cset = plt.contourf(X, Y, Z, levels, cmap=cm.jet)
 
 #        ax.zaxis.set_major_locator(LinearLocator(10))
