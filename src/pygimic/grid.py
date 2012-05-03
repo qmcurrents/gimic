@@ -6,6 +6,8 @@
 import numpy as np
 import math
 from copy import deepcopy
+#from magnet import Magnet
+from atom import Atom
 from gimic_exceptions import NotImplemented
 
 class GridIterator:
@@ -75,8 +77,8 @@ class GridIterator:
 
 class Grid(GridIterator):
     def __init__(self, l, 
-            npts = None,
-            step = None,
+            npts=None,
+            step=None,
             basis=None, 
             origin=(0.0, 0.0, 0.0), 
             distribution = 'even'):
@@ -98,35 +100,49 @@ class Grid(GridIterator):
             raise ValueError(
                     'Either step or number of points must be specified!')
         if npts:
-            step = []
             if isinstance(npts, int):
                 npts = (npts, npts, npts)
-            for i in range(3):
-                if npts[i] < 1:
-                    npts[i] = 1
-                if npts[i] == 1:
-                    s = self.l[i]
-                else:
-                    s = float(self.l[i])/float(npts[i]-1)
-                step.append(s)
+            step = self._calc_step(npts)
         else:
-            npts = (0, 0, 0)
             if isinstance(step, float) or isinstance(step, int):
                 step = (step, step, step)
-            for i in range(3):
-                if step[i] == 0 or step[i] < 0.0:
-                    step[i] = 1.0
-                npts[i] = int(self.l[i]/step[i])
-                if npts[i] == 0:
-                    npts[i] == 1
+            npts = self._calc_npts(step)
 
         self.npts = npts
         self.step = step
         self._init_basis_vectors(True)
         self._init_grid(self.distribution)
 
+    def _calc_step(self, npts):
+        step = np.zeros(3)
+        for i in range(3):
+            if npts[i] < 1:
+                npts[i] = 1
+            if npts[i] == 1:
+                s = self.l[i]
+            else:
+                s = float(self.l[i])/float(npts[i]-1)
+            step[i] = s
+        return step
+
+    def _calc_npts(self, step):
+        npts = (0, 0, 0)
+        for i in range(3):
+            if step[i] == 0 or step[i] < 0.0:
+                step[i] = 1.0
+            npts[i] = int(self.l[i]/step[i])
+            if npts[i] == 0:
+                npts[i] == 1
+        return npts
+
     def __str__(self):
-        return str(self.basis)
+        s = 'origin  = {}\n'.format(str(self.origin))
+        s += 'i       = {}\n'.format(str(self.basis[:, 0]))
+        s += 'j       = {}\n'.format(str(self.basis[:, 1]))
+        s += 'k       = {}\n'.format(str(self.basis[:, 2]))
+        s += 'lenghts = {}\n'.format(str(self.l))
+        s += 'ortho   = {}\n'.format(str(self.bond_ortho))
+        return s
 
     def _init_basis_vectors(self, orthogonal = True):
         self.basis[:, 2] = np.cross(self.basis[:, 0], self.basis[:, 1])
@@ -160,7 +176,7 @@ class Grid(GridIterator):
         return True
 
     def _norm(self, v):
-        n = math.sqrt(np.dot(v, v.conj()))
+        n = np.linalg.norm(v)
         return v / n
 
     def get_axis(self, n=None):
@@ -228,16 +244,83 @@ class Grid(GridIterator):
     
 
 class BondGrid(Grid):
-    def __init__(self):
-        raise NotImplemented(BondGrid)
-    
+    def __init__(self, 
+            bond, 
+            height, 
+            width, 
+            npts,
+            fixpoint=None,
+            distance=None, 
+            radius=None):
+        self.l = np.zeros(3)
+        self.basis = np.ndarray((3,3))
+        self.distribution = 'even'
+        self.radius = radius
+        if len(bond) != 2:
+            raise ValueError('Number of atoms in bond != 2')
+        if fixpoint is None:
+            fixpoint = np.zeros(3)
+        self.l[0] = sum(height)
+        self.l[1] = sum(width)
+        self.l[2] = 0.0
+
+        if distance is None:
+            distance = bond[0].bond_distance(bond[1])*0.5
+
+        # figure out the "orthogonal" axis wrt. the magnetic field
+        v1 = bond[0].get_coord() - fixpoint
+        v2 = bond[1].get_coord() - fixpoint
+        self.bond_ortho = np.cross(v1, v2)
+        if np.linalg.norm(self.bond_ortho) < 10.0e-6:
+            raise RuntimeError('Basis vectors are linearly dependent!')
+        self.bond_ortho = self._norm(self.bond_ortho)
+
+        v3 = self._norm(v2-v1)
+        v1 = -1.0 * self.bond_ortho 
+        v2 = self._norm(np.cross(v3, v1))
+        oo = bond[0].get_coord() + distance * v3
+        self.origin = oo - width[1] * v2 - height[1] * v1
+        self.center = oo
+
+        self.basis[:, 0] = v1
+        self.basis[:, 1] = v2
+        self.basis[:, 2] = v3
+
+        step = 0.5
+        if npts:
+            if isinstance(npts, int):
+                npts = (npts, npts, npts)
+            step = self._calc_step(npts)
+        else:
+            if isinstance(step, float) or isinstance(step, int):
+                step = (step, step, step)
+            npts = self._calc_npts(step)
+
+        self.npts = npts
+        self.step = step
+        self._init_basis_vectors(True)
+        self._init_grid(self.distribution)
+
+    def __str__(self):
+        s = Grid.__str__(self)
+        s += 'center  = {}'.format(str(self.center))
+        return s
 
 if __name__ == '__main__':
     g = Grid(l=(4, 5, 6), npts=(2,3,2))
-    for i, j, k in g.range(0):
-        print i, j, k
-    for r in g.reverse():
-        print r
-    print g.gridpoint((0, 0, 0))
+    print g
+    a1 = Atom((-1.0, 0.0, 0.0))
+    a2 = Atom((1.0, 0.0, 0.0))
+    bg = BondGrid((a1, a2), height=(5,5), width=(2,2), npts=(2,3,2),
+            fixpoint=(0,0,1))
+    print bg
+
+#    for i, j, k in g.range(0):
+#        print i, j, k
+#    print
+#    for r in g.reverse():
+#        print r
+#    print
+#    print g.gridpoint((0, 0, 0))
 
 # vim:et:ts=4:sw=4
