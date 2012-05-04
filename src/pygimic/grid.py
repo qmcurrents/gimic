@@ -6,10 +6,9 @@
 import numpy as np
 import math
 from copy import deepcopy
-#from magnet import Magnet
 from atom import Atom
 from gimic_exceptions import NotImplemented
-
+import gengauss 
 
 class GridAxis:
     def __init__(self):
@@ -25,7 +24,7 @@ class GridAxis:
         return self.points.size
 
     def __getitem__(self, i):
-        return (self.points[i], self.weights[i])
+        return self.points[i]
 
     def get_point(self, i):
         return self.points[i]
@@ -58,8 +57,9 @@ class GaussLegendreAxis(GridAxis):
         GridAxis.__init__(self)
         if npts % order != 0:
             npts = order + npts - npts % order
-        self.points = np.zeros(npts)
-        self.weights = np.ones(npts)
+        self.points = np.zeros(npts, dtype=np.double)
+        self.weights = np.ones(npts, dtype=np.double)
+        gengauss.gausspoints(origin, end, self.points, self.weights)
 
 
 class GridIterator:
@@ -332,18 +332,8 @@ class BondGrid(Grid):
         self.basis[:, 1] = v2
         self.basis[:, 2] = v3
 
-#        step = 0.5
-#        if npts:
-#            if isinstance(npts, int):
-#                npts = (npts, npts, npts)
-#        else:
-#            if isinstance(step, float) or isinstance(step, int):
-#                step = (step, step, step)
-#            npts = self._calc_npts(step)
-
         self._init_basis_vectors(True)
         self._init_axes(distribution, npts)
-#        self.npts = npts
 
     def __str__(self):
         s = Grid.__str__(self)
