@@ -10,6 +10,58 @@ from copy import deepcopy
 from atom import Atom
 from gimic_exceptions import NotImplemented
 
+
+class GridAxis:
+    def __init__(self):
+        self.points = None
+        self.weigths = None
+
+    def __str__(self):
+        s = 'points: ' + str(self.points) + '\n'
+        s += 'weight: ' + str(self.weigths)
+        return s
+
+    def size(self):
+        return self.points.size
+
+    def __getitem__(self, i):
+        return (self.points[i], self.weights[i])
+
+    def get_point(self, i):
+        return self.points[i]
+
+    def get_weight(self, i):
+        return self.weights[i]
+
+    def get_points(self):
+        return self.points
+
+    def get_weights(self):
+        return self.weights
+
+    def set_radius(self, r):
+        raise NotImplemented('radius')
+        self.weights = np.zeros(self.npts)
+
+
+class EvenAxis(GridAxis):
+    def __init__(self, origin, end, npts):
+        GridAxis.__init__(self)
+        self.points = np.arange(origin, end, (end-origin)/npts)
+        self.weights = np.ones(self.points.size)
+        if self.points.size != npts:
+            raise ValueError('Number of points mismatch. Probably a bug.')
+
+
+class GaussLegendreAxis(GridAxis):
+    def __init__(self, origin, end, npts, order=7):
+        GridAxis.__init__(self)
+        if npts % order != 0:
+            npts = order + npts - npts % order
+        self.points = np.zeros(npts)
+        self.weights = np.ones(npts)
+
+
 class GridIterator:
     def __init__(self):
         self.iteridx = [0, 0, 0]
@@ -75,6 +127,7 @@ class GridIterator:
                 for k in c:
                     yield i, j, k
 
+
 class Grid(GridIterator):
     def __init__(self, l, 
             npts=None,
@@ -83,17 +136,19 @@ class Grid(GridIterator):
             origin=(0.0, 0.0, 0.0), 
             distribution = 'even'):
         GridIterator.__init__(self)
-        self.points = []
         if basis:
             self.basis = basis
         else:
             self.basis = np.identity(3)
         self.l = np.array(l)
         self.origin = np.array(origin)
-        self.distribution = 'even'
         self.radius = None
-        self.step = np.zeros(3)
         self.bond_ortho = np.zeros(3) # Needed for bond grids
+        self._init_basis_vectors(ortho=True)
+        self._init_axes(distribution, npts, step)
+
+    def _init_axes(self, distribution, npts = None, step = None):
+        self.axes = []
         if step and npts:
             raise ValueError('Both step and number of points specified!')
         if not step and not npts:
@@ -102,16 +157,20 @@ class Grid(GridIterator):
         if npts:
             if isinstance(npts, int):
                 npts = (npts, npts, npts)
-            step = self._calc_step(npts)
         else:
-            if isinstance(step, float) or isinstance(step, int):
-                step = (step, step, step)
             npts = self._calc_npts(step)
 
-        self.npts = npts
-        self.step = step
-        self._init_basis_vectors(True)
-        self._init_grid(self.distribution)
+        step = self._calc_step(npts)
+        for i in range(3):
+            end = (self.origin[i] + step[i] * npts[i])
+            if distribution == 'even':
+                self.axes.append(EvenAxis(self.origin[i], end, npts[i]))
+            elif distribution == 'gauss':
+                self.axes.append(GaussLegendreAxis(self.origin[i], 
+                    end, npts[i]))
+            else:
+                raise ValueError('Invalid grid distribution')
+            self.npts[i] = self.axes[i].size()
 
     def _calc_step(self, npts):
         step = np.zeros(3)
@@ -126,6 +185,8 @@ class Grid(GridIterator):
         return step
 
     def _calc_npts(self, step):
+        if isinstance(step, float) or isinstance(step, int):
+            step = (step, step, step)
         npts = (0, 0, 0)
         for i in range(3):
             if step[i] == 0 or step[i] < 0.0:
@@ -144,27 +205,14 @@ class Grid(GridIterator):
         s += 'ortho   = {}\n'.format(str(self.bond_ortho))
         return s
 
-    def _init_basis_vectors(self, orthogonal = True):
+    def _init_basis_vectors(self, ortho = True):
         self.basis[:, 2] = np.cross(self.basis[:, 0], self.basis[:, 1])
         for i in np.arange(3):
             self.basis[:, i] = self._norm(self.basis[:, i])
         self.bond_ortho = self.basis[:, 2]
-        if orthogonal:
+        if ortho:
             self.orthogonalize_basis()
     
-    def _init_grid(self, distr = 'even'):
-        self.points = []
-        for i in range(3):
-            self.points.append(np.zeros(self.npts[i]))
-        o = self.origin
-        if distr.lower() == 'even':
-            for n in range(3):
-                self.points.append(np.zeros(self.npts[n]))
-                for i in np.arange(self.npts[n]):
-                    self.points[n][i] = o[n] + float(i) * self.step[n]
-        else:
-            raise RuntimeError('Not implemented yet!')
-
     def orthogonalize_basis(self):
         '''Orthogonalize basis vecotrs. Returns True if the basis was
         orthogonal, and false otherwise.'''
@@ -180,9 +228,9 @@ class Grid(GridIterator):
         return v / n
 
     def get_axis(self, n=None):
-        if n:
-            return self.points[n]
-        return self.points
+        if n is not None:
+            return self.axes[n]
+        return self.axes
 
     def get_basis(self):
         return self.basis
@@ -207,9 +255,9 @@ class Grid(GridIterator):
 
     def gridpoint(self, r):
         i, j, k = r
-        return self.points[0][i] * self.basis[:, 0] + \
-            self.points[1][j] * self.basis[:, 1] + \
-            self.points[2][k] * self.basis[:, 2] 
+        return self.axes[0][i] * self.basis[:, 0] + \
+            self.axes[1][j] * self.basis[:, 1] + \
+            self.axes[2][k] * self.basis[:, 2] 
 
     # Definition for the iterator base class
     itervalue = gridpoint
@@ -219,9 +267,6 @@ class Grid(GridIterator):
 
     def size(self):
         return self.npts
-
-    def get_steps(self):
-        return self.step
 
     def get_origin(self):
         return self.origin
@@ -251,10 +296,11 @@ class BondGrid(Grid):
             npts,
             fixpoint=None,
             distance=None, 
+            distribution='gauss',
             radius=None):
+        GridIterator.__init__(self)
         self.l = np.zeros(3)
         self.basis = np.ndarray((3,3))
-        self.distribution = 'even'
         self.radius = radius
         if len(bond) != 2:
             raise ValueError('Number of atoms in bond != 2')
@@ -286,20 +332,18 @@ class BondGrid(Grid):
         self.basis[:, 1] = v2
         self.basis[:, 2] = v3
 
-        step = 0.5
-        if npts:
-            if isinstance(npts, int):
-                npts = (npts, npts, npts)
-            step = self._calc_step(npts)
-        else:
-            if isinstance(step, float) or isinstance(step, int):
-                step = (step, step, step)
-            npts = self._calc_npts(step)
+#        step = 0.5
+#        if npts:
+#            if isinstance(npts, int):
+#                npts = (npts, npts, npts)
+#        else:
+#            if isinstance(step, float) or isinstance(step, int):
+#                step = (step, step, step)
+#            npts = self._calc_npts(step)
 
-        self.npts = npts
-        self.step = step
         self._init_basis_vectors(True)
-        self._init_grid(self.distribution)
+        self._init_axes(distribution, npts)
+#        self.npts = npts
 
     def __str__(self):
         s = Grid.__str__(self)
@@ -314,6 +358,9 @@ if __name__ == '__main__':
     bg = BondGrid((a1, a2), height=(5,5), width=(2,2), npts=(2,3,2),
             fixpoint=(0,0,1))
     print bg
+    print bg.get_axis(0).get_points()
+    print bg.get_axis(1).get_points()
+    print bg.get_axis(2).get_points()
 
 #    for i, j, k in g.range(0):
 #        print i, j, k
