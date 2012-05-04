@@ -23,6 +23,9 @@ set(sources
     teletype.f90
     tensor.f90
     timer.f90
+    gausspoints.f90
+    gausspoints.c
+    gausspoints.h
     )
 
 if (FortranCInterface_MODULE_FOUND) 
@@ -40,23 +43,31 @@ add_library(gimic2 SHARED
     )
 
 if (CYTHON_FOUND)
-set_source_files_properties(
-    ${CMAKE_CURRENT_SOURCE_DIR}/gimic.pxd
-    ${CMAKE_CURRENT_SOURCE_DIR}/gimic.pyx
-    PROPERTIES CYTHON_IS_CXX TRUE 
-    )
+    set_source_files_properties(
+        ${CMAKE_CURRENT_SOURCE_DIR}/gimic.pxd
+        ${CMAKE_CURRENT_SOURCE_DIR}/gimic.pyx
+        PROPERTIES CYTHON_IS_CXX TRUE 
+        )
 
-cython_add_module(gimic 
-    gimic.pxd 
-    gimic.pyx 
-    )
-target_link_libraries(gimic 
-    gimic2
-    )
-install(TARGETS gimic 
-    ARCHIVE DESTINATION ${PYTHON_INST_DIR}
-    LIBRARY DESTINATION ${PYTHON_INST_DIR}
-    )
+    cython_add_module(gimic 
+        gimic.pxd 
+        gimic.pyx 
+        )
+    target_link_libraries(gimic 
+        gimic2
+        )
+    cython_add_module(gengauss
+        gengauss.pxd 
+        gengauss.pyx 
+        )
+    target_link_libraries(gengauss
+        gimic2
+        )
+
+    install(TARGETS gimic gengauss
+        ARCHIVE DESTINATION ${PYTHON_INST_DIR}
+        LIBRARY DESTINATION ${PYTHON_INST_DIR}
+        )
 endif()
 
 install(TARGETS gimic2 
