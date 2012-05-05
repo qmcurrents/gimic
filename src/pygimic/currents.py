@@ -10,8 +10,7 @@ from field import VectorField, ScalarField
 class CurrentField(VectorField):
     def __init__(self, grid, gimic):
         VectorField.__init__(self, grid)
-        self.calc(gimic)
-#        self.calc(gimic.jvector)
+        self.calc(gimic.jvector)
 
     def get_normal_flow(self, comp='total'):
         nf = ScalarField(self.grid)
@@ -53,10 +52,12 @@ class CurrentField(VectorField):
         return nf
 
 if __name__ == '__main__':
-    def foo(r):
-        return np.array(r)
+    class FakeGimic:
+        def jvector(self, r):
+            return np.array(r)
 
     grid = Grid((2.0, 2.0, 2.0), npts=4)
+    foo = FakeGimic()
     f = CurrentField(grid, foo)
     nf = f.get_normal_flow('+')
     for i in nf:
