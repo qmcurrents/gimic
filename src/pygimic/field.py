@@ -62,9 +62,13 @@ class VectorField(Field):
     def calc(self, func):
         for i, j, k in self.grid.range():
             r = self.grid.gridpoint((i, j, k))
-            v = func(r)
+            w = self.grid.gridweight((i, j, k))
+            if w == 0.0:
+                v = np.zeros(self.dim)
+            else:
+                v = func(r) 
             for n in range(self.dim):
-                self.field[n][i, j, k] = v[n]
+                self.field[n][i, j, k] = v[n] * w
 
     def get(self, k=None):
         v = []

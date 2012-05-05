@@ -95,8 +95,8 @@ class MatPlot(BasePlot):
         if not isinstance(self.field, VectorField):
             raise TypeError('Not a vector field')
         fig = plt.figure()
-        x = self.grid.get_axis()[0]
-        y = self.grid.get_axis()[1]
+        x = self.grid.get_axis(0).get_points()
+        y = self.grid.get_axis(1).get_points()
         x, y = np.meshgrid(x, y)
         u, v, w = self.field.get(k)
         q = plt.quiver(v, u)
@@ -113,8 +113,8 @@ class MatPlot(BasePlot):
         if not isinstance(self.field, VectorField):
             raise TypeError('Not a vector field')
         fig = plt.figure()
-        x = self.grid.get_axis()[0]
-        y = self.grid.get_axis()[1]
+        x = self.grid.get_axis(0).get_points()
+        y = self.grid.get_axis(1).get_points()
 #        x, y = np.meshgrid(x, y)
         u, v, w = self.field.get(k)
 #        streamplot(x, y, u, v, density=1, INTEGRATOR='RK4', color='b')

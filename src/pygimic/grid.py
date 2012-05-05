@@ -29,38 +29,66 @@ class GridAxis:
     def get_point(self, i):
         return self.points[i]
 
-    def get_weight(self, i):
+    def get_weigth(self, i):
         return self.weights[i]
 
     def get_points(self):
         return self.points
 
-    def get_weights(self):
+    def get_weigths(self):
         return self.weights
 
-    def set_radius(self, r):
-        raise NotImplemented('radius')
-        self.weights = np.zeros(self.npts)
+    def reset_axis(self):
+        origin = self.points[0]
+        end = self.points[-1]
+        npts = self.points.size
+        stp = (end-origin)/float(npts)
+        self._calc_pointweights(origin, end, stp)
 
+    def set_radius(self, r):
+        # we reset the axis so that scans can work correctly
+        self.reset_axis()
+        if r < 0.0:
+            return
+        for i in range(self.points.size):
+            if abs(self.points[i]) > r:
+                self.weights[i] = 0.0
+
+    def _calc_pointweights(self, origin, end, stp):
+        if abs(stp) < 1.0e-10:
+            self.points = np.array((origin,))
+            self.weights = np.ones(1)
+        else:
+            self.points = np.arange(origin, end, stp)
+            self.weights = np.ones(self.points.size)
 
 class EvenAxis(GridAxis):
     def __init__(self, origin, end, npts):
         GridAxis.__init__(self)
-        self.points = np.arange(origin, end, (end-origin)/npts)
-        self.weights = np.ones(self.points.size)
-        if self.points.size != npts:
-            raise ValueError('Number of points mismatch. Probably a bug.')
+        if npts == 0:
+            npts = 1
+        stp = (end-origin)/float(npts)
+        self._calc_pointweights(origin, end, stp)
 
 
 class GaussLegendreAxis(GridAxis):
     def __init__(self, origin, end, npts, order=7):
         GridAxis.__init__(self)
+        if npts == 0:
+            npts = 1
+        stp = (end-origin)/float(npts)
         if npts % order != 0:
             npts = order + npts - npts % order
         self.points = np.zeros(npts, dtype=np.double)
         self.weights = np.ones(npts, dtype=np.double)
-        gengauss.gausspoints(origin, end, self.points, self.weights)
+        self._calc_pointweights(origin, end, stp)
 
+    def _calc_pointweights(self, origin, end, stp):
+        if abs(stp) < 1.0e-10:
+            self.points = np.array((origin,))
+            self.weights = np.ones(1)
+        else:
+            gengauss.gausspoints(origin, end, self.points, self.weights)
 
 class GridIterator:
     def __init__(self):
@@ -249,16 +277,25 @@ class Grid(GridIterator):
             self.radius = None
         else:
             self.radius = r
+        for i in range(3):
+            self.axes[i].set_radius(r[i])
 
     def rotate(self, angle):
         raise RuntimeError('Not implemented yet')
 
     def gridpoint(self, r):
         i, j, k = r
-        return self.axes[0][i] * self.basis[:, 0] + \
-            self.axes[1][j] * self.basis[:, 1] + \
-            self.axes[2][k] * self.basis[:, 2] 
+        return np.array((self.axes[0][i], self.axes[1][j], self.axes[2][k]))
+#        return self.axes[0][i] * self.basis[:, 0] + \
+#            self.axes[1][j] * self.basis[:, 1] + \
+#            self.axes[2][k] * self.basis[:, 2] 
 
+    def gridweight(self, r):
+        i, j, k = r
+        return self.axes[0].get_weigth(i) * \
+                self.axes[1].get_weigth(j) * self.axes[2].get_weigth(k)
+#        return np.array((self.axes[0].get_weigth(i),
+#                self.axes[1].get_weigth(j), self.axes[2].get_weigth(k)))
     # Definition for the iterator base class
     itervalue = gridpoint
 
