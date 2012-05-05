@@ -19,6 +19,9 @@ class Field(GridIterator):
     def __getitem__(self, idx):
         return self.getitem(idx)
 
+    def __setitem__(self, idx, val):
+        self.setitem(idx, val)
+
     def get_grid(self):
         return self.grid
 
@@ -34,6 +37,9 @@ class ScalarField(Field):
         return self.field[idx[0], idx[1], idx[2]]
 
     itervalue = getitem
+
+    def setitem(self, idx, val):
+        self.field[idx[0], idx[1], idx[2]] = val
 
     def calc(self, func):
         for i, j, k in self.grid.range():
@@ -67,6 +73,12 @@ class VectorField(Field):
 
     itervalue = getitem
 
+    def setitem(self, idx, val):
+        i, j, k = idx
+        self.field[0][i, j, k] = val[0]
+        self.field[1][i, j, k] = val[1]
+        self.field[2][i, j, k] = val[2]
+
     def calc(self, func):
         for i, j, k in self.grid.range():
             r = self.grid.gridpoint((i, j, k))
@@ -75,6 +87,9 @@ class VectorField(Field):
                 v = func(r) 
             else:
                 v = np.zeros(self.dim)
+            self.field[0][i, j, k] = v[0]
+            self.field[1][i, j, k] = v[1]
+            self.field[2][i, j, k] = v[2]
 
     def get_field(self, k=None):
         v = []
@@ -89,6 +104,9 @@ class TensorField(VectorField):
     dim = 9
     def __init__(self, grid, dtype=float):
         VectorField.__init__(self, grid, dtype)
+
+    def setitem(self, idx, val):
+        raise NotImplemented()
 
 if __name__ == '__main__':
     s=-1.0
