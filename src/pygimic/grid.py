@@ -286,18 +286,19 @@ class Grid(GridIterator):
     def gridpoint(self, r):
         i, j, k = r
         return np.array((self.axes[0][i], self.axes[1][j], self.axes[2][k]))
-#        return self.axes[0][i] * self.basis[:, 0] + \
-#            self.axes[1][j] * self.basis[:, 1] + \
-#            self.axes[2][k] * self.basis[:, 2] 
+
+    # Definition for the iterator base class
+    itervalue = gridpoint
 
     def gridweight(self, r):
         i, j, k = r
         return self.axes[0].get_weigth(i) * \
                 self.axes[1].get_weigth(j) * self.axes[2].get_weigth(k)
-#        return np.array((self.axes[0].get_weigth(i),
-#                self.axes[1].get_weigth(j), self.axes[2].get_weigth(k)))
-    # Definition for the iterator base class
-    itervalue = gridpoint
+
+    def gridweights(self, r):
+        i, j, k = r
+        return np.array((self.axes[0].get_weigth(i),
+                self.axes[1].get_weigth(j), self.axes[2].get_weigth(k)))
 
     def get_normal(self):
         return self.get_k()

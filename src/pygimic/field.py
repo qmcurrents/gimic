@@ -35,7 +35,12 @@ class ScalarField(Field):
     def calc(self, func):
         for i, j, k in self.grid.range():
             r = self.grid.gridpoint((i, j, k))
-            self.field[i, j, k] = func(r)
+            w = self.grid.gridweight((i, j, k))
+            if abs(w) > 0.0:
+                self.field[i, j, k] = func(r)
+            else:
+                self.field[i, j, k] = 0.0
+
 
     def get(self, k=None):
         if k is not None:
@@ -63,12 +68,10 @@ class VectorField(Field):
         for i, j, k in self.grid.range():
             r = self.grid.gridpoint((i, j, k))
             w = self.grid.gridweight((i, j, k))
-            if w == 0.0:
-                v = np.zeros(self.dim)
-            else:
+            if abs(w) > 0.0:
                 v = func(r) 
-            for n in range(self.dim):
-                self.field[n][i, j, k] = v[n] * w
+            else:
+                v = np.zeros(self.dim)
 
     def get(self, k=None):
         v = []
