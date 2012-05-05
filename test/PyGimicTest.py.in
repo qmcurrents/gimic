@@ -4,9 +4,9 @@
 # jonas juselius <jonas.juselius@uit.no>
 #
 import sys
-sys.path.append('@PROJECT_BINARY_DIR@/lib')
-sys.path.append('@PROJECT_SOURCE_DIR@/src/pygimic')
-sys.path.append('@PROJECT_SOURCE_DIR@/src/liblondon')
+sys.path.insert(0, '@PROJECT_BINARY_DIR@/lib')
+sys.path.insert(0, '@PROJECT_SOURCE_DIR@/src/pygimic')
+sys.path.insert(0, '@PROJECT_SOURCE_DIR@/src/liblondon')
 
 import numpy as np
 from grid import Grid
@@ -35,6 +35,7 @@ else:
             "@CMAKE_CURRENT_SOURCE_DIR@/xdens")
 
 grid = Grid(l=(6.0, 6.0, 0.0), origin=(-3.0, -3.0, 0.0), npts=30)
+#grid.set_radius((1.0, 1.0, 0.0))
 mag = Magnet('z', grid)
 
 m = tuple(mag.get_magnet())
