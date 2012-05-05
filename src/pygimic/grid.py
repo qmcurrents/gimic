@@ -54,41 +54,48 @@ class GridAxis:
             if abs(self.points[i]) > r:
                 self.weights[i] = 0.0
 
-    def _calc_pointweights(self, origin, end, stp):
-        if abs(stp) < 1.0e-10:
+    def _calc_pointweights(self, origin, end, npts):
+        if npts < 2:
             self.points = np.array((origin,))
             self.weights = np.ones(1)
         else:
-            self.points = np.arange(origin, end, stp)
+            stp = (end - origin) / float(npts - 1)
+            self.points = np.zeros(npts)
+            for i in range(npts):
+                self.points[i] = origin + i * stp
             self.weights = np.ones(self.points.size)
 
 class EvenAxis(GridAxis):
     def __init__(self, origin, end, npts):
         GridAxis.__init__(self)
-        if npts == 0:
+        if npts < 2:
             npts = 1
-        stp = (end-origin)/float(npts)
-        self._calc_pointweights(origin, end, stp)
+            stp = 0.0
+        self._calc_pointweights(origin, end, npts)
 
 
 class GaussLegendreAxis(GridAxis):
     def __init__(self, origin, end, npts, order=7):
         GridAxis.__init__(self)
-        if npts == 0:
+        if npts < 2:
             npts = 1
-        stp = (end-origin)/float(npts)
         if npts % order != 0:
             npts = order + npts - npts % order
-        self.points = np.zeros(npts, dtype=np.double)
-        self.weights = np.ones(npts, dtype=np.double)
-        self._calc_pointweights(origin, end, stp)
-
-    def _calc_pointweights(self, origin, end, stp):
-        if abs(stp) < 1.0e-10:
+        if (end - origin) / float(npts - 1) < 1.0e-10:
             self.points = np.array((origin,))
             self.weights = np.ones(1)
         else:
-            gengauss.gausspoints(origin, end, self.points, self.weights)
+            self.points = np.zeros(npts, dtype=np.double)
+            self.weights = np.ones(npts, dtype=np.double)
+            self._calc_pointweights(origin, end, order)
+
+    def _calc_pointweights(self, origin, end, order):
+        if self.points.size == 1:
+            self.points = np.array((origin,))
+            self.weights = np.ones(1)
+        else:
+            gengauss.gausspoints(origin, end, order, self.points, self.weights)
+            self.points = self.points + origin
 
 class GridIterator:
     def __init__(self):
@@ -208,7 +215,7 @@ class Grid(GridIterator):
             if npts[i] == 1:
                 s = self.l[i]
             else:
-                s = float(self.l[i])/float(npts[i]-1)
+                s = float(self.l[i])/float(npts[i])
             step[i] = s
         return step
 
@@ -259,6 +266,12 @@ class Grid(GridIterator):
         if n is not None:
             return self.axes[n]
         return self.axes
+
+    def get_points(self, n):
+        return self.axes[n].get_points()
+
+    def get_weigths(self, n):
+        return self.axes[n].get_weigths()
 
     def get_basis(self):
         return self.basis
@@ -379,7 +392,7 @@ class BondGrid(Grid):
         return s
 
 if __name__ == '__main__':
-    g = Grid(l=(4, 5, 6), npts=(2,3,2))
+    g = Grid(l=(4, 5, 6), npts=(7,3,2))
     print g
     a1 = Atom((-1.0, 0.0, 0.0))
     a2 = Atom((1.0, 0.0, 0.0))

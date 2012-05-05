@@ -10,7 +10,8 @@
         GAUSSPOINTS,\
         GIMIC_GET_GAUSS_POINTS)
 
-void gimic_get_gauss_points(double *, double *, int *, double *, double *);
-void mkgausspoints(double *, double *, int *, double *, double *);
+void gimic_get_gauss_points(double *, double *, int *, int *, 
+        double *, double *);
+void mkgausspoints(double *, double *, int *, int *, double *, double *);
 
 #endif

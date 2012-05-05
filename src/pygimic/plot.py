@@ -60,7 +60,7 @@ class MatPlot(BasePlot):
         X = self.grid.get_axis()[0]
         Y = self.grid.get_axis()[1]
         X, Y = np.meshgrid(X, Y)
-        Z = self.field.get(k)
+        Z = self.field.get_field(k)
         levels = np.arange(0, 100, 5.0)
         cset = plt.contourf(X, Y, Z, levels, cmap=cm.jet)
 
@@ -79,7 +79,7 @@ class MatPlot(BasePlot):
         X = self.grid.get_axis()[0]
         Y = self.grid.get_axis()[1]
         X, Y = np.meshgrid(X, Y)
-        Z = self.field.get(k)
+        Z = self.field.get_field(k)
         surf = ax.plot_surface(X, Y, Z, rstride=1, cstride=1, cmap=cm.jet,
                         linewidth=0, antialiased=False)
         #ax.set_zlim(-1.01, 1.01)
@@ -98,7 +98,7 @@ class MatPlot(BasePlot):
         x = self.grid.get_axis(0).get_points()
         y = self.grid.get_axis(1).get_points()
         x, y = np.meshgrid(x, y)
-        u, v, w = self.field.get(k)
+        u, v, w = self.field.get_field(k)
         q = plt.quiver(v, u)
 #        qk = plt.quiverkey(q, 0.5, 0.92, 2, r'$2 \frac{m}{s}$', labelpos='W',
 #                               fontproperties={'weight': 'bold'})
@@ -116,7 +116,7 @@ class MatPlot(BasePlot):
         x = self.grid.get_axis(0).get_points()
         y = self.grid.get_axis(1).get_points()
 #        x, y = np.meshgrid(x, y)
-        u, v, w = self.field.get(k)
+        u, v, w = self.field.get_field(k)
 #        streamplot(x, y, u, v, density=1, INTEGRATOR='RK4', color='b')
         streamplot(x, y, v, u, density=1, INTEGRATOR='RK4', color=u)
         plt.show()

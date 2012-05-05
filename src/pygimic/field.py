@@ -22,6 +22,9 @@ class Field(GridIterator):
     def get_grid(self):
         return self.grid
 
+    def size(self):
+        return self.grid.size()
+
 class ScalarField(Field):
     def __init__(self, grid, dtype=float):
         Field.__init__(self, grid)
@@ -42,7 +45,7 @@ class ScalarField(Field):
                 self.field[i, j, k] = 0.0
 
 
-    def get(self, k=None):
+    def get_field(self, k=None):
         if k is not None:
             return self.field[:, :, k]
         else:
@@ -73,7 +76,7 @@ class VectorField(Field):
             else:
                 v = np.zeros(self.dim)
 
-    def get(self, k=None):
+    def get_field(self, k=None):
         v = []
         if k is not None:
             for i in range(self.dim):
@@ -112,12 +115,12 @@ if __name__ == '__main__':
     f.calc(stest)
     for i in f:
         print i
-    print f.get()
+    print f.get_field()
 
 #    f = VectorField(grid)
 #    f.calc(vtest)
 #    for i in f:
 #        print i
-#    print f.get()
+#    print f.get_field()
 
 # vim:et:ts=4:sw=4
