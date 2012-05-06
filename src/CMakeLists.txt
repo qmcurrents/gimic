@@ -3,7 +3,7 @@ add_subdirectory(pygimic)
 add_subdirectory(fgimic)
 
 # This is the "developer" driver
-set (INST_LIBDIR ${CMAKE_CURRENT_SOURCE_DIR})
+set (INST_LIBDIR ${CMAKE_BINARY_DIR}/lib)
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/gimic.in
     ${PROJECT_BINARY_DIR}/gimic)

@@ -1,3 +1,5 @@
+
+set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 add_executable(gimic.bin 
     gimic.f90
     integral.f90  
@@ -11,6 +13,7 @@ add_executable(gimic.bin
     edens_field.f90
     )
 target_link_libraries(gimic.bin gimic2)
+set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 # This is the "developer" driver
 #set (INST_LIBDIR ${CMAKE_CURRENT_SOURCE_DIR})

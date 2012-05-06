@@ -6,14 +6,17 @@
 # University of Tromsø, 2007, 2012
 #
 
-import sys,os
+import sys
 sys.path.insert(0, "@INST_LIBDIR@")
 sys.path.insert(0, '@PROJECT_BINARY_DIR@/lib')
+sys.path.insert(0, '@PROJECT_SOURCE_DIR@/src')
 
+import os
 import re
 from argparse import ArgumentParser
 from fgimic import getkw
 
+os.environ['PATH'] += ':@INST_LIBDIR@'
 version="@PROJECT_VERSION@"
 
 def main():
