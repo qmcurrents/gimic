@@ -24,16 +24,18 @@ class GimicDriver:
         self.grid = None
         self.magnet = None
         title = self.kw.getkw('title')
-        print 'TITLE:', title
+        if len(title) > 0:
+            print 'TITLE:', title[0]
 
+        xdens = self.kw.getkw('xdens')[0]
         if self.kw.getkw('backend') == 'london':
-            self.gimic = london.London(self.kw.getkw('xdens')[0])
+            self.gimic = london.London(xdens)
         else:
-            self.gimic = gimic.Gimic(self.kw.getkw('basis')[0],
-                self.kw.getkw('xdens')[0])
+            mol = self.kw.getkw('basis')[0]
+            self.gimic = gimic.Gimic(mol, xdens)
             self.init_gimic_options()
 
-        grid_type = self.kw.getsect('Grid').arg.arg[0]
+        grid_type = self.kw.getsect('Grid').arg.arg[0] # ugly
         if grid_type == 'bond':
             self.init_bondgrid()
         elif grid_type == 'file':
@@ -45,7 +47,7 @@ class GimicDriver:
         print self.grid
         
         self.init_magnet()
-        b = tuple(self.magnet.get_magnet())
+        b = tuple(self.magnet.get_magnet()) 
         self.gimic.set_property('magnet', b)
 
     def run(self):
@@ -71,9 +73,10 @@ class GimicDriver:
             jn = j.get_normal_flow('-')
             Ip = q.integrate(jp)
             In = q.integrate(jn)
+            c = self.au2nAt()
             print 'Current in a.u.: {0} (+{1} / {2})'.format(Ip + In, Ip, In)
             print 'Current in nA/T: {0} (+{1} / {2})'.format(
-                    self.au2si(Ip + In), self.au2si(Ip), self.au2si(In))
+                    (Ip + In) * c, Ip * c, In * c)
         else:
             raise NotImplemented
 
@@ -89,14 +92,7 @@ class GimicDriver:
         fixpoint = map(float, sect.getkw('fixpoint'))
         radius = map(float, sect.getkw('radius'))
         
-        if sect.findkw('coord1').is_set():
-            raise VauleErorr('Grid.coord1 is obsloete.')
-        if sect.findkw('coord2').is_set():
-            raise VauleErorr('Grid.coord2 is obsloete.')
-        if sect.findkw('spacing').is_set():
-            raise VauleErorr('Grid.spacing is obsloete.')
-        
-        mol = Molecule('mol.xyz')
+        mol = Molecule('mol.xyz') # dirty
         atom1 = mol[bond[0]]
         atom2 = mol[bond[1]]
         
@@ -113,8 +109,6 @@ class GimicDriver:
         jvec = sect.getkw('jvec')
         l = sect.getkw('lengths')
         npts = sect.getkw('grid_points')
-        if sect.findkw('spacing').is_set():
-            raise VauleErorr('Grid.spacing is obsloete.')
 
         npts = map(int, npts)
         l = np.array(map(float, l))
@@ -152,7 +146,8 @@ class GimicDriver:
         if screening:
             thrs = float(adv.getkw('screening_thrs')[0])
             self.gimic.set_property('screening', thrs)
-        
+
+## Future stuff
 #        spherical = adv.getkw('spherical')[0]
 #        giao = adv.getkw('GIAO')[0]
 #        diamag = adv.getkw('diamag')[0]
@@ -165,7 +160,8 @@ class GimicDriver:
     def init_london_options(self):
         pass
 
-    def au2si(self, au):
+    def au2nAT(self, au=1.0):
+        'Derivation of a.u. to nA/t'
         aulength=0.52917726e-10
         auspeedoflight=137.03599e0
         speedoflight=299792458.e0
@@ -177,7 +173,6 @@ class GimicDriver:
         audjdb=aucharge/autime/autesla
 
         return au*audjdb*1.e+09 # nA/T
-
 
 
 # vim:et:ts=4:sw=4
