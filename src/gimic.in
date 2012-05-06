@@ -23,7 +23,7 @@ def main():
     args = parse_cmdline()
     inkeys = parse_keywords(args)
     
-    if inkeys.getkw('backend') == 'fgimic':
+    if inkeys.getkw('backend')[0] == 'fgimic':
         from fgimic.gimic import GimicDriver
     else:
         from pygimic.pygimic import GimicDriver
