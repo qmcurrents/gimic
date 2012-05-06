@@ -22,7 +22,6 @@ module gimic_interface
     type(molecule_t), save :: mol
     type(dens_t), save :: xdens
     type(cao2sao_t) :: c2s
-    real(DP), dimension(3) :: magnet
     character(8) :: spin = 'total'
 contains
     subroutine gimic_init(molfile, densfile)
@@ -83,7 +82,6 @@ contains
     subroutine gimic_set_magnet(b)
         real(8), dimension(3), intent(in) :: b
         settings%magnet = b
-        magnet = b
     end subroutine
 
     subroutine gimic_set_spin(s)
@@ -135,7 +133,7 @@ contains
         integer :: i
 
         call new_jtensor(jtens, mol, xdens)
-        call jvector(jtens, r, magnet, jv, spin)
+        call jvector(jtens, r, settings%magnet, jv, spin)
         call del_jtensor(jtens)
     end subroutine
 

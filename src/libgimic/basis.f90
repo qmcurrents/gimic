@@ -81,6 +81,7 @@ contains
             end do
         end if
 
+        call write_xyz(this, 'mol.xyz')
 77		format(a,i4)
     end subroutine
 !
@@ -483,6 +484,31 @@ contains
 !		print *, 's type integral:', qq
 !		
 !	end subroutine 
+    subroutine write_xyz(mol, fname)
+        type(molecule_t) :: mol
+        character(*), intent(in) :: fname
+
+        integer(I4) :: natoms, i
+        real(DP), dimension(3) :: r, coord
+        character(2) :: symbol
+        type(atom_t), pointer :: atom
+
+        natoms=mol%natoms
+
+        open(77,file=trim(fname))
+
+        write(77,*) natoms
+        write(77,*)
+
+        do i=1,natoms
+            call get_atom(mol, i, atom)
+            call get_symbol(atom, symbol)
+            call get_coord(atom, coord)
+            write(77,'(a, 3f16.10)') symbol, coord*au2a
+        end do
+
+        close(77)
+    end subroutine
 end module
 
 ! vim:et:sw=4:ts=4
