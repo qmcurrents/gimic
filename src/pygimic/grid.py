@@ -171,7 +171,7 @@ class Grid(GridIterator):
             origin=(0.0, 0.0, 0.0), 
             distribution = 'even'):
         GridIterator.__init__(self)
-        if basis:
+        if basis is not None:
             self.basis = basis
         else:
             self.basis = np.identity(3)
@@ -342,7 +342,7 @@ class Grid(GridIterator):
 class BondGrid(Grid):
     def __init__(self, 
             bond, 
-            height, 
+            heigth, 
             width, 
             npts,
             fixpoint=None,
@@ -357,7 +357,7 @@ class BondGrid(Grid):
             raise ValueError('Number of atoms in bond != 2')
         if fixpoint is None:
             fixpoint = np.zeros(3)
-        self.l[0] = sum(height)
+        self.l[0] = sum(heigth)
         self.l[1] = sum(width)
         self.l[2] = 0.0
 
@@ -376,7 +376,7 @@ class BondGrid(Grid):
         v1 = -1.0 * self.bond_ortho 
         v2 = self._norm(np.cross(v3, v1))
         oo = bond[0].get_coord() + distance * v3
-        self.origin = oo - width[1] * v2 - height[1] * v1
+        self.origin = oo - width[1] * v2 - heigth[1] * v1
         self.center = oo
 
         self.basis[:, 0] = v1
@@ -396,7 +396,7 @@ if __name__ == '__main__':
     print g
     a1 = Atom((-1.0, 0.0, 0.0))
     a2 = Atom((1.0, 0.0, 0.0))
-    bg = BondGrid((a1, a2), height=(5,5), width=(2,2), npts=(2,3,2),
+    bg = BondGrid((a1, a2), heigth=(5,5), width=(2,2), npts=(2,3,2),
             fixpoint=(0,0,1))
     print bg
     print bg.get_axis(0).get_points()

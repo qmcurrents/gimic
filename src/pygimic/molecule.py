@@ -1,3 +1,8 @@
+#
+# Jonas Juselius <jonas.juselius@uit.no> 2004, 2012
+#
+# TODO: Read atom data from MOL files
+#
 from atom import Atom
 from elements import Element
 
