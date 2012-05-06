@@ -13,22 +13,22 @@ add_executable(gimic.bin
 target_link_libraries(gimic.bin gimic2)
 
 # This is the "developer" driver
-set (INST_LIBDIR ${CMAKE_CURRENT_SOURCE_DIR})
-set (GIMIC_EXECUTABLE ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/gimic.bin)
+#set (INST_LIBDIR ${CMAKE_CURRENT_SOURCE_DIR})
+#set (GIMIC_EXECUTABLE ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/gimic.bin)
 
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/gimic.in
-    ${PROJECT_BINARY_DIR}/gimic)
-execute_process(COMMAND
-    chmod 755 ${PROJECT_BINARY_DIR}/gimic OUTPUT_QUIET)
+#configure_file(${CMAKE_CURRENT_SOURCE_DIR}/gimic.in
+#    ${PROJECT_BINARY_DIR}/gimic)
+#execute_process(COMMAND
+#    chmod 755 ${PROJECT_BINARY_DIR}/gimic OUTPUT_QUIET)
 
 # This is the "installed" driver
-set (INST_LIBDIR ${CMAKE_INSTALL_PREFIX}/${PYTHON_INST_DIR})
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/gimic.in
-    ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/gimic)
-execute_process(COMMAND
-    chmod 755
-    ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/gimic
-    OUTPUT_QUIET)
+#set (INST_LIBDIR ${CMAKE_INSTALL_PREFIX}/${PYTHON_INST_DIR})
+#configure_file(${CMAKE_CURRENT_SOURCE_DIR}/gimic.in
+#    ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/gimic)
+#execute_process(COMMAND
+#    chmod 755
+#    ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/gimic
+#    OUTPUT_QUIET)
 
 install(PROGRAMS ${CMAKE_CURRENT_SOURCE_DIR}/getkw.py 
     DESTINATION ${PYTHON_INST_DIR}

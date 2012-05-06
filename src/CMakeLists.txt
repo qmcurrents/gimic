@@ -1,6 +1,15 @@
 add_subdirectory(libgimic)
 add_subdirectory(pygimic)
-add_subdirectory(gimic)
+add_subdirectory(fgimic)
+
+# This is the "developer" driver
+set (INST_LIBDIR ${CMAKE_CURRENT_SOURCE_DIR})
+
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/gimic.in
+    ${PROJECT_BINARY_DIR}/gimic)
+execute_process(COMMAND
+    chmod 755 ${PROJECT_BINARY_DIR}/gimic OUTPUT_QUIET)
+
 
 if (ENABLE_MRCPP)
     find_package(Git)

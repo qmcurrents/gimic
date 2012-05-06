@@ -9,9 +9,9 @@ endif()
 
 # Configure driver
 set (GIMIC_EXECUTABLE ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/gimic.bin)
-set (INST_LIBDIR ${PROJECT_SOURCE_DIR}/src/gimic)
+set (INST_LIBDIR ${PROJECT_SOURCE_DIR}/src/fgimic)
 
-configure_file(${CMAKE_SOURCE_DIR}/src/gimic/gimic.in
+configure_file(${CMAKE_SOURCE_DIR}/src/fgimic/gimic.in
     ${CMAKE_CURRENT_BINARY_DIR}/gimic @ONLY
     )
 execute_process(COMMAND 

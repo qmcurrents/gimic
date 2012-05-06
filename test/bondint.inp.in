@@ -1,16 +1,13 @@
 # NEW INPUT
 
 calc=integral          # cdens, integral, edens, divj
-dryrun=off        # don't actually calculate (good for tuning grids, etc.)
 title=""
 basis="@CMAKE_CURRENT_SOURCE_DIR@/mol"
 xdens="@CMAKE_CURRENT_SOURCE_DIR@/xdens"
 debug=1           # debug print level
 openshell=false 
-show_axis=true   # mark "up" axis in .xyz files
 magnet_axis=X #[-] i,j,k || x,y,z -> align magnet along axis
 #magnet=[0.0, -1.0, 0.0]   # magnet vector
-scale_vectors=1.0
 
 ## For edens only currently
 #density="dens"
@@ -40,7 +37,6 @@ Grid(bond) {                    # define grid orthogonal to a bond
 }
 
 Advanced {
-    lip_order=5      # order of Lagrange Interpolating Polynominals to use
     spherical=off     # don't touch, unless you REALLY know what you are doing
     diamag=on           # turn on/off diamagnetic contributions
     paramag=on          # turn on/off paramagnetic contributions
