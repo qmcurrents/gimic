@@ -23,10 +23,10 @@ def main():
     args = parse_cmdline()
     inkeys = parse_keywords(args)
     
-    if inkeys['gimic'][0].arg[0] == 'gimic':
+    if inkeys['backend'][0].arg[0] == 'fgimic':
         from fgimic.gimic import GimicDriver
     else:
-        from pygimic.gimic import GimicDriver
+        from pygimic.pygimic import GimicDriver
     gimic = GimicDriver(args, inkeys)
     gimic.run()
 
@@ -37,6 +37,12 @@ def parse_cmdline():
             default='gimic.inp', help='input file [default: gimic.inp]')
     parser.add_argument('-t', '--title', action='store', dest='title',
             help='title of job')
+    parser.add_argument('-b','--backend', 
+            action='store', 
+            dest='backend',
+            choices=('pygimic','fgimic', 'london'),
+            default='pygimic',
+            help='backend library [default: %(default)s]')
     parser.add_argument('-d','--debug', action='store', type=int, dest='debug',
             help='debug level')
     parser.add_argument('-o','--output', action='store', dest='outfile',
@@ -61,7 +67,6 @@ def parse_keywords(args):
     top.add_kw('debug', 'INT', (0,))
     top.add_kw('calc', 'STR', None)
     top.add_kw('backend', 'STR', 'gimic')
-    top.add_kw('gimic', 'STR', 'pygimic')
     top.add_kw('basis', 'STR', ('mol',))
     top.add_kw('density', 'STR', ('',))
     top.add_kw('mofile', 'STR', ('',))
@@ -119,6 +124,8 @@ def parse_keywords(args):
         inkw.setkw('outfile', args.outfile)
     if args.debug_file:
         inkw.setkw('debug_file', args.debugf)
+    if args.backend:
+        inkw.setkw('backend', args.backend)
 
     inkw.run_callbacks(top)
     return inkw

@@ -3,7 +3,7 @@
 # Jonas Juselius <jonas.juselius@uit.no> 2012
 #
 
-from gimic_exceptions import NotAvailable
+from pygimic.gimic_exceptions import NotAvailable
 from connector cimport GimicConnector
 
 cdef class GimicConnector:

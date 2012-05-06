@@ -15,11 +15,10 @@ class GimicDriver:
 
         infile='GIMIC.in' + str(os.getpid())
         fd=open(infile,'w')
-        print >>fd, inkw
+        print >>fd, self.kw
 
         fd.close()
         os.system(GIMIC_EXECUTABLE + ' < ' + infile)
-        if not args.keep:
-            os.unlink(infile)
+        os.unlink(infile)
 
 # vim:et:ts=4:sw=4
