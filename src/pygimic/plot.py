@@ -69,7 +69,10 @@ class MatPlot(BasePlot):
 
         fig.colorbar(cset, shrink=0.5, aspect=5)
 
-        plt.show()
+        if fname is not None:
+            plt.savefig(fname)
+        else:
+            plt.show()
 
     def scalar_plot3d(self, fname=None, k=0):
         if not isinstance(self.field, ScalarField):
@@ -89,7 +92,10 @@ class MatPlot(BasePlot):
 
         fig.colorbar(surf, shrink=0.5, aspect=5)
 
-        plt.show()
+        if fname is not None:
+            plt.savefig(fname)
+        else:
+            plt.show()
 
     def vector_plot(self, fname=None, k=0):
         if not isinstance(self.field, VectorField):
@@ -107,7 +113,11 @@ class MatPlot(BasePlot):
         plt.axis([l-0.05*dx, r+0.05*dx, b-0.05*dy, t+0.05*dy])
 
         plt.title('Minimal vector plot')
-        plt.show()
+
+        if fname is not None:
+            plt.savefig(fname)
+        else:
+            plt.show()
 
     def stream_plot(self, fname=None, k=0):
         if not isinstance(self.field, VectorField):
@@ -119,7 +129,10 @@ class MatPlot(BasePlot):
         u, v, w = self.field.get_field(k)
 #        streamplot(x, y, u, v, density=1, INTEGRATOR='RK4', color='b')
         streamplot(x, y, v, u, density=1, INTEGRATOR='RK4', color=u)
-        plt.show()
+        if fname is not None:
+            plt.savefig(fname)
+        else:
+            plt.show()
 
 
 class NglPlot(BasePlot):

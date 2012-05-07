@@ -61,14 +61,16 @@ class GimicDriver:
         if calc == 'cdens':
             j = CurrentField(self.grid, self.gimic)
             p = MatPlot(j)
-            p.vector_plot()
-            p.stream_plot()
+            print "Writing vector plot in 'vectors.pdf'" 
+            p.vector_plot('vectors.pdf')
+            print "Writing stream plot in 'stream.pdf'" 
+            p.stream_plot('stream.pdf')
         elif calc == 'rho':
             f = ScalarField(self.grid)
             f.calc(gimic.rho)
             p = MatPlot(f)
-            p.scalar_plot()
-            p.scalar_plot3d()
+            p.scalar_plot('rho.pdf')
+            p.scalar_plot3d('rho3d.pdf')
         elif calc == 'integral':
             j = CurrentField(self.grid, self.gimic)
             q = FieldQuadrature()
