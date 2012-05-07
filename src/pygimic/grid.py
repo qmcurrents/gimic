@@ -62,7 +62,7 @@ class GridAxis:
             stp = (end - origin) / float(npts - 1)
             self.points = np.zeros(npts)
             for i in range(npts):
-                self.points[i] = origin + i * stp
+                self.points[i] = i * stp
             self.weights = np.ones(self.points.size)
 
 class EvenAxis(GridAxis):
@@ -95,7 +95,7 @@ class GaussLegendreAxis(GridAxis):
             self.weights = np.ones(1)
         else:
             gengauss.gausspoints(origin, end, order, self.points, self.weights)
-            self.points = self.points + origin
+            self.points = self.points 
 
 class GridIterator:
     def __init__(self):
@@ -298,7 +298,9 @@ class Grid(GridIterator):
 
     def gridpoint(self, r):
         i, j, k = r
-        return np.array((self.axes[0][i], self.axes[1][j], self.axes[2][k]))
+        return self.origin + self.axes[0][i] * self.basis[:, 0] + \
+                self.axes[1][j]* self.basis[:, 1] + \
+                self.axes[2][k]* self.basis[:, 2]
 
     # Definition for the iterator base class
     itervalue = gridpoint
@@ -357,6 +359,8 @@ class BondGrid(Grid):
             raise ValueError('Number of atoms in bond != 2')
         if fixpoint is None:
             fixpoint = np.zeros(3)
+        else:
+            fixpoint = fixpoint.get_coord() 
         self.l[0] = sum(height)
         self.l[1] = sum(width)
         self.l[2] = 0.0
@@ -365,25 +369,27 @@ class BondGrid(Grid):
             distance = bond[0].bond_distance(bond[1])*0.5
 
         # figure out the "orthogonal" axis wrt. the magnetic field
-        v1 = bond[0].get_coord() - fixpoint
-        v2 = bond[1].get_coord() - fixpoint
+        c1 = np.array(bond[0].get_coord())
+        c2 = np.array(bond[1].get_coord())
+
+        v1 = np.array(c1 - fixpoint)
+        v2 = np.array(c2 - fixpoint)
         self.bond_ortho = np.cross(v1, v2)
         if np.linalg.norm(self.bond_ortho) < 10.0e-6:
             raise RuntimeError('Basis vectors are linearly dependent!')
         self.bond_ortho = self._norm(self.bond_ortho)
-
-        v3 = self._norm(v2-v1)
-        v1 = -1.0 * self.bond_ortho 
+        
+        v3 = self._norm(v2 - v1)
+        v1 = deepcopy(-self.bond_ortho)
         v2 = self._norm(np.cross(v3, v1))
-        oo = bond[0].get_coord() + distance * v3
-        self.origin = oo - width[1] * v2 - height[1] * v1
+        oo = c1 + distance * v3
+        self.origin = oo - width[1] * v2 - height[1] * v1 
         self.center = oo
 
         self.basis[:, 0] = v1
         self.basis[:, 1] = v2
         self.basis[:, 2] = v3
 
-        self._init_basis_vectors(True)
         self._init_axes(distribution, npts)
 
     def __str__(self):

@@ -94,11 +94,12 @@ class GimicDriver:
         npts = map(int, sect.getkw('grid_points'))
         height = map(float, sect.getkw('height'))
         width = map(float, sect.getkw('width'))
-        fixpoint = map(float, sect.getkw('fixpoint'))
+        fixpoint = int(sect.getkw('fixpoint')[0])
         radius = map(float, sect.getkw('radius'))
         
-        atom1 = self.mol[bond[0]]
-        atom2 = self.mol[bond[1]]
+        atom1 = self.mol[bond[0] - 1]
+        atom2 = self.mol[bond[1] - 1]
+        fixpoint = self.mol[fixpoint - 1]
         
         self.grid = BondGrid(bond=(atom1, atom2), fixpoint=fixpoint, 
             npts=npts, distance=distance,

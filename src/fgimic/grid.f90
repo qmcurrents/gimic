@@ -177,8 +177,8 @@ contains
         if (keyword_is_set(input, 'Grid.height')) then
             call getkw(input, 'Grid.height', hgt)
             call getkw(input, 'Grid.width', wdt)
-            hgt(1)=-hgt(1)
-            wdt(1)=-wdt(1)
+            hgt(1)=hgt(1)
+            wdt(1)=wdt(1)
         else
             call getkw(input, 'Grid.in', wdt(1))
             call getkw(input, 'Grid.out', wdt(2))

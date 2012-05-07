@@ -13,8 +13,8 @@ class Atom:
     conv=_cfact['None']
 
     def __init__(self, coord=(0,0,0), sym='None', cf='None'):
-        self.coord=np.array(coord)
         self.conv=self._cfact[cf]
+        self.coord=np.array(coord) * self.conv
         self._setelement(sym)
 
     def __add__(self, other):
@@ -48,7 +48,7 @@ class Atom:
             print "Invalid element:", x;
 
     def setconv(self, conv='None'):
-        self.conv=_cfact[conv]
+        self.conv=self._cfact[conv]
 
 if __name__ == '__main__':
     a1 = Atom((10,10,10))

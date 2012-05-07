@@ -41,7 +41,7 @@ class Molecule:
                 data = i.split()
                 sym = data[0]
                 coord = map(float, data[1:])
-                atoms.append(Atom(coord, sym))
+                atoms.append(Atom(coord, sym, cf='a2au'))
         if len(atoms) != natoms:
             raise RuntimeError('Atom number mismatch in XYZ file.')
         return atoms
