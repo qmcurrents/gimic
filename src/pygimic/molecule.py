@@ -2,6 +2,7 @@
 # Jonas Juselius <jonas.juselius@uit.no> 2004, 2012
 #
 # TODO: Read atom data from MOL files
+#       Add classes for XYZMolecule, MOLMolecule, etc...
 #
 from atom import Atom
 from elements import Element
@@ -11,10 +12,21 @@ class Molecule:
         if isinstance(atoms, str):
             self.atoms = self.read_xyz(atoms)
         else:
-            self.atoms = atoms
+            self.atoms = []
+            for i in atoms:
+                self.atoms.append(atoms[i])
 
     def __getitem__(self, i):
         return self.atoms[i]
+
+    def __str__(self):
+        s = ''
+        for i in self.atoms:
+            s += str(i) + '\n'
+        return s
+
+    def append(self, a):
+        self.atoms.append(a)
 
     def get_atom(self, i):
         return self.atoms[i]
@@ -30,10 +42,18 @@ class Molecule:
                 sym = data[0]
                 coord = map(float, data[1:])
                 atoms.append(Atom(coord, sym))
-
         if len(atoms) != natoms:
             raise RuntimeError('Atom number mismatch in XYZ file.')
         return atoms
+
+    def write_xyz(self, file):
+        "Write a XYZ file of atoms indexes"
+        with open(file, 'w') as f:
+            print >> f, len(self.atoms)
+            print >> f
+            for i in self.atoms:
+                print >> f, i
+
 
 if __name__ == '__main__':
     mol = Molecule('coord.xyz')

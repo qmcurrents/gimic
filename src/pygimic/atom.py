@@ -23,6 +23,12 @@ class Atom:
     def __sub__(self, other):
         return Atom(self.coord - other.coord)
 
+    def __str__(self):
+        s = self.element.symbol 
+        for i in range(3):
+            s += ' ' + str(self.coord[i])
+        return s
+
     def __repr__(self):
         s='{Atom: ' + self.element.name + ' at ' + str(self.coord) + '}'
         return s

@@ -2,6 +2,7 @@
 # Jonas Juselius <jonas.juselius@uit.no> 2012
 #
 import numpy as np
+from copy import deepcopy
 from gimic_exceptions import NotImplemented
 from grid import Grid, BondGrid
 from magnet import Magnet
@@ -27,12 +28,13 @@ class GimicDriver:
         if len(title) > 0:
             print 'TITLE:', title[0]
 
+        self.mol = Molecule('mol.xyz') # dirty
         xdens = self.kw.getkw('xdens')[0]
         if self.kw.getkw('backend') == 'london':
             self.gimic = london.London(xdens)
         else:
-            mol = self.kw.getkw('basis')[0]
-            self.gimic = gimic.Gimic(mol, xdens)
+            molfile = self.kw.getkw('basis')[0]
+            self.gimic = gimic.Gimic(molfile, xdens)
             self.init_gimic_options()
 
         grid_type = self.kw.getsect('Grid').arg.arg[0] # ugly
@@ -45,6 +47,7 @@ class GimicDriver:
         print "Grid info:"
         print "=========="
         print self.grid
+        self.write_grid_xyz()
         
         self.init_magnet()
         b = tuple(self.magnet.get_magnet()) 
@@ -73,7 +76,7 @@ class GimicDriver:
             jn = j.get_normal_flow('-')
             Ip = q.integrate(jp)
             In = q.integrate(jn)
-            c = self.au2nAt()
+            c = self.au2nat()
             print 'Current in a.u.: {0} (+{1} / {2})'.format(Ip + In, Ip, In)
             print 'Current in nA/T: {0} (+{1} / {2})'.format(
                     (Ip + In) * c, Ip * c, In * c)
@@ -92,9 +95,8 @@ class GimicDriver:
         fixpoint = map(float, sect.getkw('fixpoint'))
         radius = map(float, sect.getkw('radius'))
         
-        mol = Molecule('mol.xyz') # dirty
-        atom1 = mol[bond[0]]
-        atom2 = mol[bond[1]]
+        atom1 = self.mol[bond[0]]
+        atom2 = self.mol[bond[1]]
         
         self.grid = BondGrid(bond=(atom1, atom2), fixpoint=fixpoint, 
             npts=npts, distance=distance,
@@ -160,7 +162,7 @@ class GimicDriver:
     def init_london_options(self):
         pass
 
-    def au2nAT(self, au=1.0):
+    def au2nat(self, au=1.0):
         'Derivation of a.u. to nA/t'
         aulength=0.52917726e-10
         auspeedoflight=137.03599e0
@@ -173,6 +175,26 @@ class GimicDriver:
         audjdb=aucharge/autime/autesla
 
         return au*audjdb*1.e+09 # nA/T
+
+    def write_grid_xyz(self):
+        m = deepcopy(self.mol)
+        g = self.grid
+        n = np.array(g.size())
+        n = n - 1
+
+        m.append(Atom(g.gridpoint((0, 0, 0)), 'X'))
+        m.append(Atom(g.gridpoint((n[0], 0, 0)), 'X'))
+        m.append(Atom(g.gridpoint((0, n[1], 0)), 'X'))
+        m.append(Atom(g.gridpoint((n[0], n[1], 0)), 'X'))
+
+        if n[2] > 0:
+            m.append(Atom(g.gridpoint((0, 0, n[2])), 'X'))
+            m.append(Atom(g.gridpoint((n[0], 0, n[2])), 'X'))
+            m.append(Atom(g.gridpoint((0, n[1], n[2])), 'X'))
+            m.append(Atom(g.gridpoint((n[0], n[1], n[2])), 'X'))
+
+        m.write_xyz('grid.xyz')
+
 
 
 # vim:et:ts=4:sw=4
