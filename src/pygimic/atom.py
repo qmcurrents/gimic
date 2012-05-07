@@ -12,9 +12,8 @@ class Atom:
     coord=(0,0,0)
     conv=_cfact['None']
 
-    def __init__(self, coord=(0,0,0), sym='None', cf='None'):
-        self.conv=self._cfact[cf]
-        self.coord=np.array(coord) * self.conv
+    def __init__(self, coord=(0,0,0), sym='None'):
+        self.coord=np.array(coord) 
         self._setelement(sym)
 
     def __add__(self, other):
@@ -47,8 +46,8 @@ class Atom:
         except KeyError, x:
             print "Invalid element:", x;
 
-    def setconv(self, conv='None'):
-        self.conv=self._cfact[conv]
+    def change_units(self, conv):
+        self.coord *= self._cfact[conv]
 
 if __name__ == '__main__':
     a1 = Atom((10,10,10))

@@ -383,7 +383,7 @@ class BondGrid(Grid):
         v1 = deepcopy(-self.bond_ortho)
         v2 = self._norm(np.cross(v3, v1))
         oo = c1 + distance * v3
-        self.origin = oo - width[1] * v2 - height[1] * v1 
+        self.origin = oo - width[1] * v2 - height[1] * v1
         self.center = oo
 
         self.basis[:, 0] = v1

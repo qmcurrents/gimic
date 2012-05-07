@@ -10,7 +10,7 @@ from elements import Element
 class Molecule:
     def __init__(self, atoms):
         if isinstance(atoms, str):
-            self.atoms = self.read_xyz(atoms)
+            self.read_xyz(atoms)
         else:
             self.atoms = []
             for i in atoms:
@@ -41,19 +41,25 @@ class Molecule:
                 data = i.split()
                 sym = data[0]
                 coord = map(float, data[1:])
-                atoms.append(Atom(coord, sym, cf='a2au'))
+                atoms.append(Atom(coord, sym))
         if len(atoms) != natoms:
             raise RuntimeError('Atom number mismatch in XYZ file.')
-        return atoms
+        self.atoms = atoms
+        self.change_units('a2au')
 
     def write_xyz(self, file):
         "Write a XYZ file of atoms indexes"
+        self.change_units('au2a')
         with open(file, 'w') as f:
             print >> f, len(self.atoms)
             print >> f
             for i in self.atoms:
                 print >> f, i
+        self.change_units('a2au')
 
+    def change_units(self, conv):
+        for i in self.atoms:
+            i.change_units(conv)
 
 if __name__ == '__main__':
     mol = Molecule('coord.xyz')
