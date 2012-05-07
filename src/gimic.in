@@ -100,7 +100,7 @@ def parse_keywords(args):
     grid.add_kw("distance", 'DBL', 1)
     grid.add_kw("rotation", 'DBL_ARRAY', (0.0,0.0,0.0))
     grid.add_kw("spacing", 'DBL_ARRAY', 3)
-    grid.add_kw("heigth", 'DBL_ARRAY', 2)
+    grid.add_kw("height", 'DBL_ARRAY', 2)
     grid.add_kw("width", 'DBL_ARRAY', 2)
     grid.add_kw("radius", 'DBL', (-1.0,))
     grid.add_kw("gridplot", 'INT', 1)
@@ -150,7 +150,7 @@ def check_grid(grid):
     arg=grid.get_arg().arg[0]
     if (arg == 'std' or arg == 'base'):
         required=('origin', 'ivec', 'jvec', 'lengths')
-        ignore=('file', 'bond', 'width', 'heigth',
+        ignore=('file', 'bond', 'width', 'height',
                 'radius')
         for i in required:
             if not check_opt(grid,i):
@@ -214,18 +214,18 @@ def check_grid(grid):
 
         if check_opt(grid,'width'):
             wdthgt=wdthgt+1
-        if check_opt(grid,'heigth'):
+        if check_opt(grid,'height'):
             wdthgt=wdthgt+1
         if (wdthgt != 0 and wdthgt != 2):
-            print "Error: incomplete specification for width and heigth"
+            print "Error: incomplete specification for width and height"
             sys.exit(1)
 
         if (wdthgt != 0 and inoutupdown != 0):
-            print "Error: both width/heigth and in/out/up/down specified"
+            print "Error: both width/height and in/out/up/down specified"
             sys.exit(1)
 
         if (wdthgt == 0 and inoutupdown == 0):
-            print "Error: either width/heigth or in/out/up/down must be specified"
+            print "Error: either width/height or in/out/up/down must be specified"
             sys.exit(1)
 
         if check_opt(grid,'bond'):

@@ -194,7 +194,7 @@ contains
             call msg_critical('Grid width < 0!')
         end if
         if ( sum(hgt) < 0.d0 ) then
-            call msg_critical('Grid heigth < 0!')
+            call msg_critical('Grid height < 0!')
         end if
 
         ! figure out "orthogonal" axis for magnetic field
