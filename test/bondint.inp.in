@@ -19,12 +19,12 @@ Grid(bond) {                    # define grid orthogonal to a bond
     type=gauss                  # gauss distribution of grid points
     bond=[1,2]
     fixpoint=5
-    distance=1.5                # place grid 'distance' between atoms
-    gauss_order=9               # order for gauss quadrature
+    distance=1.4                # place grid 'distance' between atoms
+    gauss_order=7               # order for gauss quadrature
     grid_points=[30, 30, 0]
     rotation=[0.0,0.0,0.0]      # Rotation of (i,j,k) -> (i',j',k') degrees
     height=[5.0, 5.0]           # Above and below the center
-    width=[5.0, 2.5]            # Left and right of the center
+    width=[2.5, 5.0]            # Left and right of the center
 # ##    radius=1.0                  # round grid: cut off at radius
 }
 
