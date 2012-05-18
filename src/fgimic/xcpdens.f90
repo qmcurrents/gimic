@@ -1,5 +1,4 @@
 module aces2_module
-    use kinds_module
     integer, parameter :: ABEL=8
 
     public
@@ -26,8 +25,8 @@ contains
 !
     subroutine matexp(irrep,num,a,b,ianti)
         implicit double precision (a-h,o-z)
-        real(DP), dimension(:) :: a, b
-        real(DP), dimension(ABEL) :: num
+        real(8), dimension(:) :: a, b
+        real(8), dimension(ABEL) :: num
         dimension ipold(ABEL),ipnew(ABEL)
         common /syminf/nstart,nirrep,irrepa(255),irrepb(255), dirprd(ABEL,ABEL)
 
@@ -486,7 +485,7 @@ contains
     subroutine wrtltdm(dmat)
         real(8), dimension(:,:), intent(out) :: dmat
 
-        integer(4) :: i, j, nbas
+        integer :: i, j, nbas
         
         nbas=size(dmat(:,1))
         
