@@ -28,7 +28,6 @@ class GimicDriver:
         if len(title) > 0:
             print 'TITLE:', title[0]
 
-        self.mol = Molecule('mol.xyz') # dirty
         xdens = self.kw.getkw('xdens')[0]
         if self.kw.getkw('backend') == 'london':
             self.gimic = london.London(xdens)
@@ -37,6 +36,7 @@ class GimicDriver:
             self.gimic = gimic.Gimic(molfile, xdens)
             self.init_gimic_options()
 
+        self.mol = Molecule('mol.xyz') # dirty
         grid_type = self.kw.getsect('Grid').arg.arg[0] # ugly
         if grid_type == 'bond':
             self.init_bondgrid()

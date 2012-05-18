@@ -56,7 +56,7 @@ class GridAxis:
 
     def _calc_pointweights(self, origin, end, npts):
         if npts < 2:
-            self.points = np.array((origin,))
+            self.points = np.zeros(1)
             self.weights = np.ones(1)
         else:
             stp = (end - origin) / float(npts - 1)
@@ -82,7 +82,7 @@ class GaussLegendreAxis(GridAxis):
         if npts % order != 0:
             npts = order + npts - npts % order
         if (end - origin) / float(npts - 1) < 1.0e-10:
-            self.points = np.array((origin,))
+            self.points = np.zeros(1)
             self.weights = np.ones(1)
         else:
             self.points = np.zeros(npts, dtype=np.double)
@@ -366,14 +366,15 @@ class BondGrid(Grid):
         self.l[2] = 0.0
 
         if distance is None:
-            distance = bond[0].bond_distance(bond[1])*0.5
+            distance = 0.0
+#            distance = bond[0].bond_distance(bond[1])*0.5
 
         # figure out the "orthogonal" axis wrt. the magnetic field
-        c1 = np.array(bond[0].get_coord())
-        c2 = np.array(bond[1].get_coord())
+        c1 = bond[0].get_coord()
+        c2 = bond[1].get_coord()
 
-        v1 = np.array(c1 - fixpoint)
-        v2 = np.array(c2 - fixpoint)
+        v1 = c1 - fixpoint
+        v2 = c2 - fixpoint
         self.bond_ortho = np.cross(v1, v2)
         if np.linalg.norm(self.bond_ortho) < 10.0e-6:
             raise RuntimeError('Basis vectors are linearly dependent!')
@@ -382,7 +383,7 @@ class BondGrid(Grid):
         v3 = self._norm(v2 - v1)
         v1 = deepcopy(-self.bond_ortho)
         v2 = self._norm(np.cross(v3, v1))
-        oo = c1 + distance * v3
+        oo = c1 + distance * v3 
         self.origin = oo - width[1] * v2 - height[1] * v1
         self.center = oo
 
