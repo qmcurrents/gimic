@@ -11,6 +11,8 @@ import sys
 import string
 import re
 import subprocess
+
+sys.path.append('cmake')
 from argparse import ArgumentParser
 
 if sys.version < '2.4':
