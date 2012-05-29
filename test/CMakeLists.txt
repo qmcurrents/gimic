@@ -43,21 +43,21 @@ execute_process(
     ) 
 
 # Add tests
-add_test(NAME Vectors
-    COMMAND ${CMAKE_CURRENT_BINARY_DIR}/test.py vectors
-    )
+#add_test(NAME Vectors
+#    COMMAND ${CMAKE_CURRENT_BINARY_DIR}/test.py vectors
+#    )
 
-add_test(NAME BondIntegral
-    COMMAND ${CMAKE_CURRENT_BINARY_DIR}/test.py bond_integral
-    )
+#add_test(NAME BondIntegral
+#    COMMAND ${CMAKE_CURRENT_BINARY_DIR}/test.py bond_integral
+#    )
 
-add_test(NAME VectorsMPI
-    COMMAND ${MPIRUN} ${CMAKE_CURRENT_BINARY_DIR}/test.py vectors
-    )
+#add_test(NAME VectorsMPI
+#    COMMAND ${MPIRUN} ${CMAKE_CURRENT_BINARY_DIR}/test.py vectors
+#    )
 
-add_test(NAME BondIntegralMPI
-    COMMAND ${MPIRUN} ${CMAKE_CURRENT_BINARY_DIR}/test.py bond_integral
-    )
+#add_test(NAME BondIntegralMPI
+#    COMMAND ${MPIRUN} ${CMAKE_CURRENT_BINARY_DIR}/test.py bond_integral
+#    )
 
 add_test(NAME PyGimicDens
     COMMAND ${CMAKE_CURRENT_BINARY_DIR}/PyGimicTest.py --dens
