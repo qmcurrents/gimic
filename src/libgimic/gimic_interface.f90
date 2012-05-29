@@ -26,8 +26,8 @@ module gimic_interface
     character(8) :: spin = 'total'
 contains
     subroutine gimic_init(molfile, densfile) bind(c)
-        character(1), intent(in) :: molfile
-        character(1), intent(in) :: densfile
+        character(C_CHAR), intent(in) :: molfile
+        character(C_CHAR), intent(in) :: densfile
         integer :: i
         
         do i=1,128
@@ -93,7 +93,7 @@ contains
     end subroutine
 
     subroutine gimic_set_spin(s) bind(c)
-        character(1), intent(in) :: s
+        character(C_CHAR), intent(in) :: s
         integer :: i
 
         character(8) :: spincase

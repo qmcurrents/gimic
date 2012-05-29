@@ -4,14 +4,15 @@
 ! The routinese are to be used from C/C++ to access GIMIC functionality
 !
 module gausspoints
+    use iso_c_binding
     use gaussint_module
     implicit none
 
 contains
-    subroutine gimic_get_gauss_points(a, b, npts, order, pts, wgts)
-        real(8), intent(in) :: a, b
-        integer, intent(in) :: npts, order
-        real(8), dimension(1), intent(out) :: pts, wgts
+    subroutine gimic_get_gauss_points(a, b, npts, order, pts, wgts) bind(c)
+        real(C_DOUBLE), intent(in) :: a, b
+        integer(C_INT), intent(in) :: npts, order
+        real(C_DOUBLE), dimension(1), intent(out) :: pts, wgts
 
         integer :: i
         type(gdata_t) :: g
