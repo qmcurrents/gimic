@@ -12,7 +12,7 @@ from field import VectorField, ScalarField
 from currents import CurrentField
 from plot import MatPlot
 from quadrature import FieldQuadrature
-from liblondon import london
+from london import london
 import gimic
 
 class GimicDriver:

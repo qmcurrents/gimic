@@ -5,17 +5,16 @@
 #
 import sys
 sys.path.insert(0, '@PROJECT_BINARY_DIR@/lib')
-sys.path.insert(0, '@PROJECT_SOURCE_DIR@/src/pygimic')
-sys.path.insert(0, '@PROJECT_SOURCE_DIR@/src/liblondon')
+sys.path.insert(0, '@PROJECT_SOURCE_DIR@/src')
 
 import numpy as np
-from grid import Grid
-from field import ScalarField, VectorField
-from magnet import Magnet
-from plot import MatPlot
+from pygimic.grid import Grid
+from pygimic.field import ScalarField, VectorField
+from pygimic.magnet import Magnet
+from pygimic.plot import MatPlot
 from argparse import ArgumentParser
 import gimic
-import london
+import london.london
 
 parser = ArgumentParser(description="GIMIC tester")
 parser.add_argument('--london', '-l', 
