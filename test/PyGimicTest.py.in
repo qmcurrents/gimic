@@ -14,7 +14,7 @@ from pygimic.magnet import Magnet
 from pygimic.plot import MatPlot
 from argparse import ArgumentParser
 import gimic
-import london.london
+from london import london
 
 parser = ArgumentParser(description="GIMIC tester")
 parser.add_argument('--london', '-l', 
