@@ -57,8 +57,8 @@ class MatPlot(BasePlot):
             raise TypeError('Not a scalar field')
         fig = plt.figure()
 #        ax = fig.gca(projection='2d')
-        X = self.grid.get_axis()[0]
-        Y = self.grid.get_axis()[1]
+        X = self.grid.get_axis()[0].get_points()
+        Y = self.grid.get_axis()[1].get_points() 
         X, Y = np.meshgrid(X, Y)
         Z = self.field.get_field(k)
         levels = np.arange(0, 100, 5.0)
@@ -79,8 +79,8 @@ class MatPlot(BasePlot):
             raise TypeError('Not a scalar field')
         fig = plt.figure()
         ax = fig.gca(projection='3d')
-        X = self.grid.get_axis()[0]
-        Y = self.grid.get_axis()[1]
+        X = self.grid.get_axis()[0].get_points()
+        Y = self.grid.get_axis()[1].get_points() 
         X, Y = np.meshgrid(X, Y)
         Z = self.field.get_field(k)
         surf = ax.plot_surface(X, Y, Z, rstride=1, cstride=1, cmap=cm.jet,
