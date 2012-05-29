@@ -26,17 +26,12 @@ set(sources
     gausspoints.f90
     gausspoints.c
     gausspoints.h
+    gimic_interface.f90
+    gimic_interface.h
+    GimicInterface.cpp
+    GimicInterface.h
     )
 
-if (FortranCInterface_MODULE_FOUND) 
-    set (sources 
-        ${sources}
-        gimic_interface.f90
-        gimic_interface.h
-        GimicInterface.cpp
-        GimicInterface.h
-        )
-endif()
 
 add_library(gimic2 SHARED
     ${sources}

@@ -4,6 +4,7 @@
 ! The routinese are to be used from C/C++ to access GIMIC functionality
 !
 module gimic_interface
+    use iso_c_binding
     use globals_module
     use settings_module
     use teletype_module
@@ -24,12 +25,19 @@ module gimic_interface
     type(cao2sao_t) :: c2s
     character(8) :: spin = 'total'
 contains
-    subroutine gimic_init(molfile, densfile)
-        character(*), intent(in) :: molfile
-        character(*), intent(in) :: densfile
-
-        settings%basis=molfile
-        settings%xdens=densfile
+    subroutine gimic_init(molfile, densfile) bind(c)
+        character(1), intent(in) :: molfile
+        character(1), intent(in) :: densfile
+        integer :: i
+        
+        do i=1,128
+            if (molfile(i:i) == C_NULL_CHAR) exit
+        end do
+        settings%basis = molfile(1:i)
+        do i=1,128
+            if (densfile(i:i) == C_NULL_CHAR) exit
+        end do
+        settings%xdens = densfile(1:i)
         settings%use_spherical=.false.
 
         settings%magnet=(/0.0, 0.0, 0.0/)
@@ -63,7 +71,7 @@ contains
         call read_dens(xdens, settings%xdens)
     end subroutine
 
-    subroutine gimic_finalize()
+    subroutine gimic_finalize() bind(c)
         if (settings%use_spherical) then
             call del_c2sop(c2s)
         end if
@@ -71,22 +79,29 @@ contains
         call del_basis(mol)
     end subroutine
 
-    subroutine gimic_set_uhf(uhf)
-        integer, intent(in) :: uhf
+    subroutine gimic_set_uhf(uhf) bind(c)
+        integer(C_INT), intent(in) :: uhf
         settings%is_uhf = .false.
         if (uhf /= 0) then
             settings%is_uhf = .true.
         end if
     end subroutine
 
-    subroutine gimic_set_magnet(b)
-        real(8), dimension(3), intent(in) :: b
+    subroutine gimic_set_magnet(b) bind(c)
+        real(C_DOUBLE), dimension(3), intent(in) :: b
         settings%magnet = b
     end subroutine
 
-    subroutine gimic_set_spin(s)
-        character(*), intent(in) :: s
-        select case (s)
+    subroutine gimic_set_spin(s) bind(c)
+        character(1), intent(in) :: s
+        integer :: i
+
+        character(8) :: spincase
+        do i=1,8
+            if (s(i:i) == C_NULL_CHAR) exit
+        end do
+        spincase = s(1:i)
+        select case (spincase)
             case ('alpha')
                 spin = s
             case ('beta')
@@ -100,14 +115,14 @@ contains
         end select
     end subroutine
 
-    subroutine gimic_set_screening(thrs)
-        real(8), intent(in) :: thrs
+    subroutine gimic_set_screening(thrs) bind(c)
+        real(C_DOUBLE), intent(in) :: thrs
         settings%screen_thrs = thrs
     end subroutine
 
-    subroutine gimic_calc_jtensor(r, jt)
-        real(8), dimension(3), intent(in) :: r
-        real(8), dimension(9), intent(out) :: jt
+    subroutine gimic_calc_jtensor(r, jt) bind(c)
+        real(C_DOUBLE), dimension(3), intent(in) :: r
+        real(C_DOUBLE), dimension(9), intent(out) :: jt
 
         real(DP), dimension(9) :: t
         type(jtensor_t) :: jtens
@@ -125,9 +140,9 @@ contains
         end do
     end subroutine
 
-    subroutine gimic_calc_jvector(r, jv)
-        real(8), dimension(3), intent(in) :: r
-        real(8), dimension(3), intent(out) :: jv
+    subroutine gimic_calc_jvector(r, jv) bind(c)
+        real(C_DOUBLE), dimension(3), intent(in) :: r
+        real(C_DOUBLE), dimension(3), intent(out) :: jv
 
         type(jtensor_t) :: jtens
         integer :: i
@@ -137,15 +152,15 @@ contains
         call del_jtensor(jtens)
     end subroutine
 
-    subroutine gimic_calc_divj(r, d)
-        real(8), dimension(3), intent(in) :: r
-        real(8), intent(out) :: d
+    subroutine gimic_calc_divj(r, d) bind(c)
+        real(C_DOUBLE), dimension(3), intent(in) :: r
+        real(C_DOUBLE), intent(out) :: d
         d = divj(r, settings%magnet)
     end subroutine
 
-    subroutine gimic_calc_edens(r, d)
-        real(8), dimension(3), intent(in) :: r
-        real(8), intent(out) :: d
+    subroutine gimic_calc_edens(r, d) bind(c)
+        real(C_DOUBLE), dimension(3), intent(in) :: r
+        real(C_DOUBLE), intent(out) :: d
         
         type(edens_t) :: rho
 

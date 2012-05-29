@@ -31,16 +31,6 @@ set (PYTHON_INST_DIR
     )
 include(UseCython)
 
-include(FortranCInterface)
-if (FortranCInterface_GLOBAL_FOUND) 
-    FortranCInterface_HEADER(fcmangle.h
-        MACRO_NAMESPACE "FC_"
-        SYMBOL_NAMESPACE "FC_"
-        )
-else()
-    message(WARNING "Failed to detect Fortran name mangling scheme")
-endif()
-
 set(LIBS)
 if (BLAS_FOUND)
     add_definitions(-DHAVE_BLAS)
