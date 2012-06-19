@@ -5,7 +5,7 @@ project(GIMIC)
 enable_language(Fortran)
 
 set (PROJECT_VERSION_MAJOR 2)
-set (PROJECT_VERSION_MINOR 0)
+set (PROJECT_VERSION_MINOR 1)
 set (PROJECT_VERSION_PATCH 0)
 
 option(ENABLE_PROFILING      "Enable profiling"              OFF)
@@ -26,8 +26,8 @@ include(ConfigureScript)
 include(ConfigCompilerFlags)
 
 find_package(Python REQUIRED)
-set (PYTHON_INST_DIR 
-    lib/python${PYTHON_VERSION}/site-packages
+set (PYTHON_INSTDIR 
+    ${CMAKE_INSTALL_FULL_LIBDIR}/python${PYTHON_VERSION}/site-packages
     )
 include(UseCython)
 

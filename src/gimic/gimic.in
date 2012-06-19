@@ -6,16 +6,21 @@
 # University of Tromsø, 2007
 #
 
-import sys,os
-sys.path.append("@INST_LIBDIR@")
-GIMIC_EXECUTABLE="@GIMIC_EXECUTABLE@"
+import sys
+import os
+sys.path.append('@PYTHON_INSTDIR@')
 
-#from subprocess import Popen, PIPE
+if 'LD_LIBRARY_PATH' in os.environ:
+    os.environ['LD_LIBRARY_PATH'] += ':@LIBDIR@:'
+else:
+    os.environ['LD_LIBRARY_PATH'] = '@LIBDIR@:'
+
 import re
 from argparse import ArgumentParser
 import getkw
 
 version="@PROJECT_VERSION@"
+GIMIC_EXECUTABLE="@GIMIC_EXECUTABLE@"
 
 parser = ArgumentParser(description="GIMIC {0}".format(version))
 
