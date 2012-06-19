@@ -4,17 +4,17 @@
 ! The routinese are to be used from C/C++ to access GIMIC functionality
 !
 module gimic_interface
-    use globals_m  
-    use settings_m  
-    use teletype_m
+    use globals_module
+    use settings_module
+    use teletype_module
     use basis_class
-    use timer_m
+    use timer_module
     use cao2sao_class
     use basis_class
     use dens_class
     use jtensor_class
-    use caos_m
-    use gaussint_m
+    use caos_module
+    use gaussint_module
     implicit none
 
     type(molecule_t), save :: mol

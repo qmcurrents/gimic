@@ -1,10 +1,10 @@
 !
 ! Global parameters, types and routines
 !
-module globals_m
-    use kinds_m
-    use settings_m
-    use teletype_m
+module globals_module
+    use kinds_module
+    use settings_module
+    use teletype_module
     use getkw_class
     implicit none 
 

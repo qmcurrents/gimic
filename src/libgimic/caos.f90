@@ -2,10 +2,10 @@
 ! Basis function evaluator
 !
 
-module caos_m
-    use globals_m
-    use settings_m
-    use gtodefs_m
+module caos_module
+    use globals_module
+    use settings_module
+    use gtodefs_module
     use basis_class
     use cao2sao_class
     implicit none

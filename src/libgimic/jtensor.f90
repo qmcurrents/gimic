@@ -4,29 +4,21 @@
 ! very small, since no exponentials have to be calculated.
 ! 
 module jtensor_class
-    use globals_m
-    use settings_m
+    use globals_module
+    use settings_module
     use basis_class
     use bfeval_class
     use dens_class
-    use dfdb_class
-    use dfdr_class
-    use d2fdrdb_class
-    use dbop_class
-    !use grid_class
-    use teletype_m
+    use teletype_module
     implicit none
 
 !    intrinsic dtime
     
     type jtensor_t
+        private
         type(molecule_t), pointer :: mol
         type(dens_t), pointer :: xdens
-        type(dbop_t) :: dop
-        type(dfdb_t) :: dbt
-        type(d2fdrdb_t) :: 	d2f
-        type(dfdr_t) :: dfr
-        type(bfeval_t) :: bfv
+        type(bfeval_t) :: basv
         real(DP), dimension(:), pointer :: pdbf, denbf, dendb
         real(DP), dimension(3) :: rho
         ! scratch mem
@@ -37,7 +29,7 @@ module jtensor_class
 
     public new_jtensor, del_jtensor, jtensor, jtensor2, get_jvector
     public ctensor, ctensor2, jvector
-    public jtensor_t, jdebug
+    public jtensor_t
     
     private
     integer(I4), parameter :: NOTIFICATION=1000
@@ -55,11 +47,7 @@ contains
 !        call new_dens(ddens)
         this%mol=>mol
         this%xdens=>xdens
-        call new_bfeval(this%bfv, this%mol)
-        call new_dbop(this%dop, this%mol)
-        call new_dfdb(this%dbt, this%mol)
-        call new_dfdr(this%dfr, this%mol)
-        call new_d2fdrdb(this%d2f, this%mol)
+        call new_bfeval(this%basv, this%mol)
 
         ! intermediates
         allocate(this%denbf(ncgto))
@@ -70,11 +58,7 @@ contains
     subroutine del_jtensor(this)
         type(jtensor_t) :: this
 
-        call del_dbop(this%dop)
-        call del_dfdb(this%dbt)
-        call del_bfeval(this%bfv)
-        call del_dfdr(this%dfr)
-        call del_d2fdrdb(this%d2f)
+        call del_bfeval(this%basv)
         deallocate(this%denbf)
         deallocate(this%pdbf)
         deallocate(this%dendb)
@@ -170,12 +154,11 @@ contains
         integer(I4), save :: notify=1
 
         this%rho=DP50*r ! needed for diamag. contr.
-        call bfeval(this%bfv, r, this%bfvec)
-        call mkdbop(this%dop, r, this%dbop)
-        call dfdr(this%dfr, r, this%drvec)
         if (settings%use_giao) then
-            call dfdb(this%dbt, r, this%bfvec, this%dbop, this%dbvec)
-            call d2fdrdb(this%d2f, r, this%bfvec, this%drvec, this%dbop, this%d2fvec)
+            call calc_basis(this%basv, r, this%bfvec, this%drvec, &
+            this%dbvec, this%d2fvec)
+        else
+            call calc_basis(this%basv, r, this%bfvec, this%drvec)
         end if
 
         call contract(this, j, spin)
@@ -192,12 +175,11 @@ contains
         integer(I4), save :: notify=1
 
         this%rho=DP50*r ! needed for diamag. contr.
-        call bfeval(this%bfv, r, this%bfvec)
-        call dfdr(this%dfr, r, this%drvec)
-        call mkdbop(this%dop, r, this%dbop)
         if (settings%use_giao) then
-            call dfdb(this%dbt, r, this%bfvec, this%dbop, this%dbvec)
-            call d2fdrdb(this%d2f, r, this%bfvec, this%drvec, this%dbop, this%d2fvec)
+            call calc_basis(this%basv, r, this%bfvec, this%drvec, &
+            this%dbvec, this%d2fvec)
+        else
+            call calc_basis(this%basv, r, this%bfvec, this%drvec)
         end if
 
         call contract2(this, pj, dj, spin)
@@ -331,70 +313,70 @@ contains
 
     end subroutine
 
-    subroutine jdebug(this, r)
-        type(jtensor_t) :: this
-        real(DP), dimension(3), intent(in) :: r
+!    subroutine jdebug(this, r)
+!        type(jtensor_t) :: this
+!        real(DP), dimension(3), intent(in) :: r
 
-        integer(I4) :: i, b
-        integer(I4), save :: notify=1
+!        integer(I4) :: i, b
+!        integer(I4), save :: notify=1
 
-        call bfeval(this%bfv, r, this%bfvec)
-        call dfdr(this%dfr, r, this%drvec)
-        call mkdbop(this%dop, r, this%dbop)
-        call dfdb(this%dbt, r, this%bfvec, this%dbop, this%dbvec)
-        call d2fdrdb(this%d2f, r, this%bfvec, this%drvec, this%dbop, this%d2fvec)
-        
-        print *, 'bfvec'
-        print *, repeat('-', 70)
-        print *, this%bfvec
-        print *
+!        call bfeval(this%bfv, r, this%bfvec)
+!        call dfdr(this%dfr, r, this%drvec)
+!        call mkdbop(this%dop, r, this%dbop)
+!        call dfdb(this%dbt, r, this%bfvec, this%dbop, this%dbvec)
+!        call d2fdrdb(this%d2f, r, this%bfvec, this%drvec, this%dbop, this%d2fvec)
+!        
+!        print *, 'bfvec'
+!        print *, repeat('-', 70)
+!        print *, this%bfvec
+!        print *
 
-        print *, 'drvec'
-        print *, repeat('-', 70)
-        print 45
-        print 41, this%drvec(1,:)
-        print 42, this%drvec(2,:)
-        print 43, this%drvec(3,:)
-        print 44, this%drvec(4,:)
-        print *
+!        print *, 'drvec'
+!        print *, repeat('-', 70)
+!        print 45
+!        print 41, this%drvec(1,:)
+!        print 42, this%drvec(2,:)
+!        print 43, this%drvec(3,:)
+!        print 44, this%drvec(4,:)
+!        print *
 
-        print *, 'dbvec'
-        print *, repeat('-', 70)
-        print 45
-        print 41, this%dbvec(1,:)
-        print 42, this%dbvec(2,:)
-        print 43, this%dbvec(3,:)
-        print 44, this%dbvec(4,:)
-        print *
+!        print *, 'dbvec'
+!        print *, repeat('-', 70)
+!        print 45
+!        print 41, this%dbvec(1,:)
+!        print 42, this%dbvec(2,:)
+!        print 43, this%dbvec(3,:)
+!        print 44, this%dbvec(4,:)
+!        print *
 
-        print *, 'd2fvec'
-        print *, repeat('-', 70)
-        print *, 'X'
-        print 45
-        print 41, this%d2fvec(1,1:3)
-        print 42, this%d2fvec(2,1:3)
-        print 43, this%d2fvec(3,1:3)
-        print 44, this%d2fvec(4,1:3)
-        print *
-        print *, 'Y'
-        print 45
-        print 41, this%d2fvec(1,4:6)
-        print 42, this%d2fvec(2,4:6)
-        print 43, this%d2fvec(3,4:6)
-        print 44, this%d2fvec(4,4:6)
-        print *
-        print *, 'Z'
-        print 45
-        print 41, this%d2fvec(1,7:9)
-        print 42, this%d2fvec(2,7:9)
-        print 43, this%d2fvec(3,7:9)
-        print 44, this%d2fvec(4,7:9)
-41 format('s ',3f15.10)
-42 format('px',3f15.10)
-43 format('py',3f15.10)
-44 format('pz',3f15.10)
-45 format('===        x             y               z')
-    end subroutine
+!        print *, 'd2fvec'
+!        print *, repeat('-', 70)
+!        print *, 'X'
+!        print 45
+!        print 41, this%d2fvec(1,1:3)
+!        print 42, this%d2fvec(2,1:3)
+!        print 43, this%d2fvec(3,1:3)
+!        print 44, this%d2fvec(4,1:3)
+!        print *
+!        print *, 'Y'
+!        print 45
+!        print 41, this%d2fvec(1,4:6)
+!        print 42, this%d2fvec(2,4:6)
+!        print 43, this%d2fvec(3,4:6)
+!        print 44, this%d2fvec(4,4:6)
+!        print *
+!        print *, 'Z'
+!        print 45
+!        print 41, this%d2fvec(1,7:9)
+!        print 42, this%d2fvec(2,7:9)
+!        print 43, this%d2fvec(3,7:9)
+!        print 44, this%d2fvec(4,7:9)
+!41 format('s ',3f15.10)
+!42 format('px',3f15.10)
+!43 format('py',3f15.10)
+!44 format('pz',3f15.10)
+!45 format('===        x             y               z')
+!    end subroutine
     
 end module
 

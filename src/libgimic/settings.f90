@@ -1,8 +1,8 @@
 !
 !  Tunable parameters
 !
-module settings_m
-    use kinds_m
+module settings_module
+    use kinds_module
     implicit none 
     
     integer(I4) :: debug_level=0

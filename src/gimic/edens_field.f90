@@ -4,16 +4,16 @@
 ! 
 
 module edens_field_class
-    use globals_m
-    use settings_m
+    use globals_module
+    use settings_module
     use basis_class
     use bfeval_class
     use dens_class
     use grid_class
     use edens_class
-    use teletype_m
-    use parallel_m
-    use cubeplot_m
+    use teletype_module
+    use parallel_module
+    use cubeplot_module
     implicit none
     
     public new_edens_field, del_edens_field, edens_field_t

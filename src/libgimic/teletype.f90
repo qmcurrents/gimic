@@ -1,5 +1,5 @@
-module teletype_m
-    use kinds_m
+module teletype_module
+    use kinds_module
     implicit none
 
     integer(I4), parameter :: STDOUT=6

@@ -5,17 +5,17 @@
 !
 
 module integral_class
-    use globals_m
-    use settings_m
+    use globals_module
+    use settings_module
     use grid_class
     use jfield_class
     use dens_class
     use jtensor_class
-    use gaussint_m
-    use lip_m
-    use teletype_m
-    use parallel_m
-    use magnet_m
+    use gaussint_module
+    use lip_module
+    use teletype_module
+    use parallel_module
+    use magnet_module
     implicit none
 
     type integral_t
