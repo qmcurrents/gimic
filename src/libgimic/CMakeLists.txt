@@ -44,34 +44,34 @@ if (CYTHON_FOUND)
         PROPERTIES CYTHON_IS_CXX TRUE 
         )
 
-    cython_add_module(gimic 
-        gimic.pxd 
-        gimic.pyx 
-        )
-    target_link_libraries(gimic 
-        gimic2
-        )
-    cython_add_module(gengauss
-        gengauss.pxd 
-        gengauss.pyx 
-        )
-    target_link_libraries(gengauss
-        gimic2
-        )
+cython_add_module(gimic 
+    gimic.pxd 
+    gimic.pyx 
+    )
+target_link_libraries(gimic 
+    gimic2
+    )
 
-    install(TARGETS gimic gengauss
-        ARCHIVE DESTINATION ${PYTHON_INST_DIR}
-        LIBRARY DESTINATION ${PYTHON_INST_DIR}
-        )
+cython_add_module(gengauss
+    gengauss.pxd 
+    gengauss.pyx 
+    )
+target_link_libraries(gengauss
+    gimic2
+    )
+install(TARGETS gimic gengauss
+    ARCHIVE DESTINATION ${PYTHON_INSTDIR}
+    LIBRARY DESTINATION ${PYTHON_INSTDIR}
+    )
 endif()
 
 install(TARGETS gimic2 
-    RUNTIME DESTINATION bin
-    ARCHIVE DESTINATION lib
-    LIBRARY DESTINATION lib
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     )
 
 install(FILES GimicInterface.h gimic_interface.h gimic.pxd
-    DESTINATION include
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
     )
 

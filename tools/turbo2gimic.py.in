@@ -5,7 +5,7 @@
 #
 
 import sys, string, re
-sys.path.append('@CMAKE_INSTALL_PREFIX@/@PYTHON_INST_DIR@')
+sys.path.append('@PYTHON_INSTDIR@')
 from QCTools import QCTools
 from QCTools.Elements import PeriodicTable as PTab
 

@@ -6,9 +6,9 @@ if (CYTHON_FOUND)
         connector.pyx 
     )
 install(TARGETS connector 
-    RUNTIME DESTINATION bin
-    ARCHIVE DESTINATION lib
-    LIBRARY DESTINATION lib
+    RUNTIME DESTINATION ${CMAKE_INSTALL_FULL_BINDIR}
+    LIBRARY DESTINATION ${PYTHON_INSTDIR}
     )
 
 endif()
+

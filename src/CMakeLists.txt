@@ -3,13 +3,21 @@ add_subdirectory(pygimic)
 add_subdirectory(fgimic)
 
 # This is the "developer" driver
-set (INST_LIBDIR ${CMAKE_BINARY_DIR}/lib)
-
+set (LIBDIR ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
+set (_PYTHON_INSTDIR ${PYTHON_INSTDIR})
+set (PYTHON_INSTDIR ${CMAKE_CURRENT_SOURCE_DIR})
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/gimic.in
     ${PROJECT_BINARY_DIR}/gimic)
 execute_process(COMMAND
     chmod 755 ${PROJECT_BINARY_DIR}/gimic OUTPUT_QUIET)
 
+# This is the "installed" driver
+set (PYTHON_INSTDIR ${_PYTHON_INSTDIR})
+set (LIBDIR ${CMAKE_INSTALL_FULL_LIBDIR})
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/gimic.in
+    ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/gimic)
+execute_process(COMMAND
+    chmod 755 ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/gimic OUTPUT_QUIET)
 
 if (ENABLE_MRCPP)
     find_package(Git)
@@ -35,3 +43,17 @@ if (ENABLE_MRCPP)
         WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
         )
 endif()
+
+install(PROGRAMS ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/gimic
+    DESTINATION ${CMAKE_INSTALL_FULL_BINDIR}
+    )
+
+install(DIRECTORY pygimic
+    DESTINATION ${PYTHON_INSTDIR}
+    FILES_MATCHING PATTERN "*.py"
+    )
+
+install(DIRECTORY london
+    DESTINATION ${PYTHON_INSTDIR}
+    FILES_MATCHING PATTERN "*.py"
+    )

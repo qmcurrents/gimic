@@ -2,21 +2,25 @@
 # -*- coding: utf-8 -*-
 # vim:filetype=python:
 #
-# Written by Jonas Juselius <jonas.juselius@chem.uit.no> 
+# Written by Jonas Juselius <jonas.juselius@uit.no> 
 # University of Tromsø, 2007, 2012
 #
 
-import sys
-sys.path.insert(0, "@INST_LIBDIR@")
-sys.path.insert(0, '@PROJECT_BINARY_DIR@/lib')
-sys.path.insert(0, '@PROJECT_SOURCE_DIR@/src')
-
+from __future__ import division
 import os
+import sys
+sys.path.insert(0, "@PYTHON_INSTDIR@")
+sys.path.insert(0, "@LIBDIR@")
+
+if 'LD_LIBRARY_PATH' in os.environ:
+    os.environ['LD_LIBRARY_PATH'] += ':@LIBDIR@:'
+else:
+    os.environ['LD_LIBRARY_PATH'] = '@LIBDIR@:'
+
 import re
 from argparse import ArgumentParser
 from fgimic import getkw
 
-os.environ['PATH'] += ':@INST_LIBDIR@'
 version="@PROJECT_VERSION@"
 
 def main():
