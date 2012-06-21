@@ -35,7 +35,7 @@ else:
 
 grid = Grid(l=(6.0, 6.0, 0.0), origin=(-3.0, -3.0, 0.0), npts=30)
 #grid.set_radius((1.0, 1.0, 0.0))
-mag = Magnet('z', grid)
+mag = Magnet('-z', grid)
 
 m = tuple(mag.get_magnet())
 gimic.set_property('magnet', m)
