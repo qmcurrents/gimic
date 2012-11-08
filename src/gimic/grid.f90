@@ -206,7 +206,11 @@ contains
             &direction undefined!')
             stop
         end if
-        this%ortho=norm(this%ortho)
+        if (keyword_is_set(input, 'magnet')) then
+            call getkw(input, 'magnet', this%ortho)
+        else
+            this%ortho=norm(this%ortho)
+        endif
     
         v3=norm(v2-v1)
         v1=-this%ortho
