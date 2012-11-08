@@ -82,7 +82,7 @@ def slices(woh,step,job,fake):
 def distances(leng,step,job,fake):
 	distance=0.0
 	print ""
-	print "DISTANCES   Total: ", distance, "Total steps:", nsteps, "Step lenght:", step
+	print "DISTANCES   Total: ", distance, "Step lenght:", step
 	print""	
 	cont=0
 	while(distance<=leng):
@@ -435,7 +435,7 @@ def scan_field(step, command, a1, a2, a3, fake):
 #############################################################################################################
 #############################################################################################################
 
-usage="Orient B-field: "+sys.argv[0]+" -o atom1 atom2 atom3\n Other uses: "+sys.argv[0]+" [options]" 
+usage="Orient B-field: "+sys.argv[0]+" -O atom1 atom2 atom3\n Other uses: "+sys.argv[0]+" [options]" 
 
 parser = OptionParser(usage=usage)
 
@@ -485,7 +485,7 @@ parser.add_option("-l", "--bond-lenght", action="store", type="float",
 
 #parser.add_option("-n", "--number-of-steps", action="store", type="int",
 #				dest="nsteps", default=30,
-#				help="Number of steps in the bond scan if using -D or -F. Default 20")                 
+#				help="Number of steps in the bond scan if using -D or -F. Default 30")                 
 
 parser.add_option("-s", "--step-lengh", action="store", type="float",
 				dest="steplen", default=0.1,
@@ -551,15 +551,15 @@ elif options.fieldscan:
 	
 elif options.orient_field:
 	status=orient_magnetic_field(int(args[0]),int(args[1]),int(args[2]), options.angle)
-	if status:
+	if status.any():
 		print "The magnetic field has been set so it is perpendicular to the bond in study",
 		print "(first two parameters) but paralell to the plane of the molecule as defined ",
 		print "by the three atoms given. "
 
 
 
-#This option doesnt work very well, especially, it doesn't work with 
-#sbatch job system.
+#This option doesnt work in general!!!, I will be especially hard, of possible
+#to make it work with  sbatch job system.
 elif options.lazy:
 	os.system("rm -R a_*") #delete previous results
 	os.system("rm -R d_*")
@@ -574,7 +574,7 @@ elif options.lazy:
 	scan_field((np.pi/(2*options.nsteps)),command,int(args[0]),int(args[1]),int(args[2]),options.fake)
 	analyze_all_pretty(options.module,options.threshold,("a_"),(int(args[0]),int(args[1]),int(args[2])))
 	print "The bond distance, plane size and field angle have been optimized. For extra safety", 
-	print "run gibosa with option --lazy again."
+	print "run Giba with option --lazy again."
 
 elif options.analyze:
 	if len(args)<3:
