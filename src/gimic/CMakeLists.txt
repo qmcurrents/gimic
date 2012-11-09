@@ -23,8 +23,8 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/gimic.in
 execute_process(COMMAND
     chmod 755 ${PROJECT_BINARY_DIR}/gimic OUTPUT_QUIET)
 
-set (GIMIC_EXECUTABLE ${CMAKE_INSTALL_FULL_BINDIR}/gimic.bin)
-set (LIBDIR ${CMAKE_INSTALL_FULL_LIBDIR})
+set (GIMIC_EXECUTABLE ${CMAKE_INSTALL_BINDIR}/gimic.bin)
+set (LIBDIR ${CMAKE_INSTALL_LIBDIR})
 set (PYTHON_INSTDIR ${_PYTHON_INSTDIR})
 # This is the "installed" driver
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/gimic.in
