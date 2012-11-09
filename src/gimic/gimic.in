@@ -8,7 +8,7 @@
 
 import sys
 import os
-sys.path.append('@PYTHON_INSTDIR@')
+sys.path.append('@PYTHON_FULL_INSTDIR@')
 
 if 'LD_LIBRARY_PATH' in os.environ:
     os.environ['LD_LIBRARY_PATH'] += ':@LIBDIR@:'

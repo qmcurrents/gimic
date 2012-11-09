@@ -29,6 +29,9 @@ find_package(Python REQUIRED)
 set (PYTHON_INSTDIR 
     ${CMAKE_INSTALL_LIBDIR}/python${PYTHON_VERSION}/site-packages
     )
+set (PYTHON_FULL_INSTDIR 
+    ${CMAKE_INSTALL_FULL_LIBDIR}/python${PYTHON_VERSION}/site-packages
+    )
 include(UseCython)
 
 include(FortranCInterface)
