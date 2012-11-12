@@ -12,10 +12,9 @@ add_executable(gimic.bin
     )
 target_link_libraries(gimic.bin gimic2)
 
-set (_PYTHON_INSTDIR ${PYTHON_INSTDIR})
 set (LIBDIR ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
 # This is the "developer" driver
-set (PYTHON_INSTDIR ${CMAKE_CURRENT_SOURCE_DIR})
+set (PYTHON_SITE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 set (GIMIC_EXECUTABLE ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/gimic.bin)
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/gimic.in
@@ -25,7 +24,7 @@ execute_process(COMMAND
 
 set (GIMIC_EXECUTABLE ${CMAKE_INSTALL_FULL_BINDIR}/gimic.bin)
 set (LIBDIR ${CMAKE_INSTALL_FULL_LIBDIR})
-set (PYTHON_INSTDIR ${_PYTHON_INSTDIR})
+set (PYTHON_SITE_DIR ${PYTHON_FULL_INSTDIR})
 # This is the "installed" driver
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/gimic.in
     ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/gimic)
