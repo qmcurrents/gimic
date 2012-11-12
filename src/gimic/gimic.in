@@ -281,6 +281,7 @@ def check_grid(grid):
 def check_top(top):
     calc=top.getkw('calc')[0]	
     allow={'cdens':1, 'integral':1, 'divj':1, 'edens':1}
+    ortho = ['X', 'T', 'perp', 'perpendicular', 'ortho', 'orthogonal']
     if not allow.has_key(calc):
         print 'Error: unknown option calc = ', calc
         sys.exit(1)
@@ -292,6 +293,10 @@ def check_top(top):
     if omagn == False and pmagn == False:
         print 'Error: Direction of magnetic field must be set!'
         sys.exit(1)
+    b = top.getkw('magnet_axis')[0]
+    print b
+    if b in ortho:
+        top['magnet_axis'][0].setkw('X')
 
 if __name__ == '__main__':
     main()
