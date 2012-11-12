@@ -625,11 +625,11 @@ contains
         if (show_axis) then
             select case (trim(this%mode))
                 case ('std','base')
-                    write(77,'(a,3f16.10)') 'X ', &
-                        (this%origin+this%basv(:,3))*au2a
+                    write(77,'(a,3f16.10)') 'Be ', &
+                        (this%origin+this%basv(:,3)*2.0)*au2a
                 case ('bond')
-                    write(77,'(a,3f16.10)') 'X ', &
-                        (this%origin+this%ortho)*au2a
+                    write(77,'(a,3f16.10)') 'Be ', &
+                        (this%origin+this%ortho*2.0)*au2a
             end select
         end if
         
