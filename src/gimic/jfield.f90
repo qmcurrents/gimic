@@ -340,9 +340,7 @@ contains
             fd2=opencube('jmod_quasi.cube', qmin, step, npts)
         end if
 
-
         mag = this%b
-
         buf => this%vec
         maxi=0.d0
         mini=0.d0
@@ -374,7 +372,9 @@ contains
                 end do
             end do
         end do
-        print *, 'maximini:', maxi, mini
+        print *, 'maxi, mini:', maxi, mini
+        call closefd(fd1)
+        call closefd(fd2)
     end subroutine
 
     function opencube(fname, origin, step, npts) result(fd)
