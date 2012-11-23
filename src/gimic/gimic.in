@@ -293,10 +293,10 @@ def check_top(top):
     if omagn == False and pmagn == False:
         print 'Error: Direction of magnetic field must be set!'
         sys.exit(1)
-    b = top.getkw('magnet_axis')[0]
-    print b
-    if b in ortho:
-        top['magnet_axis'][0].setkw('X')
+    if pmagn:
+        b = top.getkw('magnet_axis')[0]
+        if b in ortho:
+            top['magnet_axis'][0].setkw('X')
 
 if __name__ == '__main__':
     main()
