@@ -6,7 +6,7 @@ enable_language(Fortran)
 
 set (PROJECT_VERSION_MAJOR 2)
 set (PROJECT_VERSION_MINOR 1)
-set (PROJECT_VERSION_PATCH 0)
+set (PROJECT_VERSION_PATCH 4)
 
 option(ENABLE_PROFILING      "Enable profiling"              OFF)
 option(ENABLE_BOUNDS_CHECK   "Enable bounds check"           OFF)
