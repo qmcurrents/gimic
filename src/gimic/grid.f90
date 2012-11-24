@@ -206,11 +206,7 @@ contains
             &direction undefined!')
             stop
         end if
-        if (keyword_is_set(input, 'magnet')) then
-            call getkw(input, 'magnet', this%ortho)
-        else
-            this%ortho=norm(this%ortho)
-        endif
+        this%ortho=norm(this%ortho)
     
         v3=norm(v2-v1)
         v1=-this%ortho
@@ -221,6 +217,11 @@ contains
         this%basv(:,1)=v1
         this%basv(:,2)=v2
         this%basv(:,3)=v3
+
+        if (keyword_is_set(input, 'magnet')) then
+            call getkw(input, 'magnet', this%ortho)
+            this%ortho=norm(this%ortho)
+        endif
 
         call nl
         call msg_out('Integration grid data')
