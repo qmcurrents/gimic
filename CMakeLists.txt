@@ -17,6 +17,7 @@ option(ENABLE_CFOUR          "Enable the CFOUR interface" OFF)
 option(ENABLE_TESTS          "Enable the test suite" ON)
 option(ENABLE_MRCPP          "Enable the MRCPP wavelet librbary" OFF)
 
+unset (CMAKE_LIBRARY_ARCHITECTURE)
 include(GNUInstallDirs)
 include(ConfigProjectVersion)
 include(ConfigSafeGuards)

@@ -5,7 +5,7 @@
 #
 
 import sys, string, re
-sys.path.append('@PYTHON_INSTDIR@')
+sys.path.append('@PYTHON_FULL_INSTDIR@')
 from QCTools import QCTools
 from QCTools.Elements import PeriodicTable as PTab
 
