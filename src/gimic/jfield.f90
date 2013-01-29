@@ -73,7 +73,7 @@ contains
         real(DP), dimension(:), allocatable :: dT2
 
         character(8) :: spincase
-        integer(I4) :: lo, hi, npts, first, last
+        integer(I4) :: lo, hi, npts, first, last, fd2
         type(jtensor_t) :: jt
 
         call get_grid_size(this%grid, p1, p2, p3)
@@ -118,6 +118,9 @@ contains
         !$OMP DO SCHEDULE(STATIC) 
         ! ACID stuff !
         allocate (dT2(npts)) 
+        fd2 = open_plot('acid.txt')
+        print *, 'ACID debug print' 
+        print *, 'lo, hi=', lo, hi 
         do n=lo,hi
             call get_grid_index(this%grid, n, i, j, k)
             rr = gridpoint(this%grid, i, j, k)
@@ -127,11 +130,14 @@ contains
             ! hi -lo +1 = number of points
             ! tens(9,number of points)
             call get_acid(rr, tens(:,n-lo+1), dT2(n-lo+1)) 
+            call write_acid(rr, dT2(n-lo+1), fd2)
         end do
         !$OMP END DO
-        call del_jtensor(jt)
         ! clean up
+        call del_jtensor(jt)
         deallocate(dT2)
+        call closefd(fd2)
+
         !$OMP END PARALLEL
         if (mpi_world_size > 1) then
             call gather_data(tens(:,first:last), this%tens(:,first:))
