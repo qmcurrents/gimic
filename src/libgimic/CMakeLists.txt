@@ -22,6 +22,7 @@ set(sources
     teletype.f90
     tensor.f90
     timer.f90
+    acid.f90
     )
 
 if (FortranCInterface_MODULE_FOUND) 

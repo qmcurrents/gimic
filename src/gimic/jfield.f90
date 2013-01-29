@@ -16,6 +16,8 @@ module jfield_class
     use teletype_module
     use parallel_module
     use tensor_module
+    ! ACID stuff
+    use acid_module
     implicit none
 
     type jfield_t
@@ -67,6 +69,9 @@ contains
         integer :: n, m
         real(DP), dimension(3) :: rr
         real(DP), dimension(:,:), pointer :: tens
+        ! for ACID delta T squared
+        real(DP), dimension(:), allocatable :: dT2
+
         character(8) :: spincase
         integer(I4) :: lo, hi, npts, first, last
         type(jtensor_t) :: jt
@@ -111,13 +116,22 @@ contains
         !$OMP SHARED(mol,xdens,spincase,tens,lo,hi)
         call new_jtensor(jt, mol, xdens)
         !$OMP DO SCHEDULE(STATIC) 
+        ! ACID stuff !
+        allocate (dT2(npts)) 
         do n=lo,hi
             call get_grid_index(this%grid, n, i, j, k)
             rr = gridpoint(this%grid, i, j, k)
+            ! here the ACID T tensor is calculated and put on tens
             call ctensor(jt, rr, tens(:,n-lo+1), spincase)
+            ! do now the ACID summation to get Delta_T^2 ! 
+            ! hi -lo +1 = number of points
+            ! tens(9,number of points)
+            call get_acid(rr, tens(:,n-lo+1), dT2(n-lo+1)) 
         end do
         !$OMP END DO
         call del_jtensor(jt)
+        ! clean up
+        deallocate(dT2)
         !$OMP END PARALLEL
         if (mpi_world_size > 1) then
             call gather_data(tens(:,first:last), this%tens(:,first:))
@@ -148,7 +162,9 @@ contains
         else
             call calc_jtensors(this, mol, xdens, spincase)
         end if
+        ! until this point our J tensor should be the ACID T tensor !!
         if (mpi_rank == 0) then
+            ! here the final contraction with B-field is done!!
             call compute_jvectors(this)
         end if
     end subroutine
