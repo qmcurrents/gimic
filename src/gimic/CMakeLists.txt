@@ -9,6 +9,7 @@ add_executable(gimic.bin
     divj_field.f90
     parallel.f90
     edens_field.f90
+    acid_plot.f90
     )
 target_link_libraries(gimic.bin gimic2)
 

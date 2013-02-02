@@ -18,6 +18,7 @@ module jfield_class
     use tensor_module
     ! ACID stuff
     use acid_module
+    use acidplot_module
     implicit none
 
     type jfield_t
@@ -70,7 +71,7 @@ contains
         real(DP), dimension(3) :: rr
         real(DP), dimension(:,:), pointer :: tens
         ! for ACID delta T squared
-        real(DP), dimension(:), allocatable :: dT2
+        real(DP) :: dT2
 
         character(8) :: spincase
         integer(I4) :: lo, hi, npts, first, last, fd2
@@ -117,10 +118,9 @@ contains
         call new_jtensor(jt, mol, xdens)
         !$OMP DO SCHEDULE(STATIC) 
         ! ACID stuff !
-        allocate (dT2(npts)) 
         fd2 = open_plot('acid.txt')
         print *, 'ACID debug print' 
-        print *, 'lo, hi=', lo, hi 
+        print *, 'lo, hi, npts=', lo, hi, hi-lo+1 
         do n=lo,hi
             call get_grid_index(this%grid, n, i, j, k)
             rr = gridpoint(this%grid, i, j, k)
@@ -129,13 +129,16 @@ contains
             ! do now the ACID summation to get Delta_T^2 ! 
             ! hi -lo +1 = number of points
             ! tens(9,number of points)
-            call get_acid(rr, tens(:,n-lo+1), dT2(n-lo+1)) 
-            call write_acid(rr, dT2(n-lo+1), fd2)
+            ! function get_acid(rr, tens(:,n-lo+1), dT2)) 
+            !  call write_acid(rr, dT2, fd2)
         end do
         !$OMP END DO
+        ! create ACID cube file before tens is deleted !
+        if (grid_is_3d(this%grid)) then 
+          call acid_cube_plot(this%grid, tens)
+        end if
         ! clean up
         call del_jtensor(jt)
-        deallocate(dT2)
         call closefd(fd2)
 
         !$OMP END PARALLEL
@@ -280,6 +283,7 @@ contains
         call closefd(fd1)
         call closefd(fd2)
         if (grid_is_3d(this%grid)) then 
+            ! add here ACID plot stuff ??
             if (present(tag)) then
                 call jmod_cubeplot(this, tag)
             else
