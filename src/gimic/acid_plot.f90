@@ -3,24 +3,29 @@ module acidplot_module
      use teletype_module
      use settings_module
      use acid_module
-     use grid_class
-     !use jfield_class <-- this usage causes trouble
+     use jfield_class ! <-- this usage causes trouble
+     ! use grid_class
+
     implicit none
 
     contains
-    subroutine acid_cube_plot(grid, tens)
-    type(grid_t) :: grid
+    subroutine acid_cube_plot(this)
+    !type(grid_t) :: grid
+    type(jfield_t) :: this
     integer(I4), dimension(3) :: npts
-    integer(I4) :: fd1, i, j, k, l, m
-    real(DP), dimension(:,:) :: tens
+    integer(I4) :: fd1, i, j, k, l, m, idx
+    real(DP), dimension(:,:), pointer :: jtens
     real(DP), dimension(3) :: qmin, qmax, step, r 
     real(DP) :: val, maxi, mini
 
     ! collect grid information
-    call get_grid_size(grid, npts(1), npts(2), npts(3))
-    qmin = gridpoint(grid, 1, 1, 1)
-    qmax = gridpoint(grid, npts(1), npts(2), npts(3))
+    call get_grid_size(this%grid, npts(1), npts(2), npts(3))
+    qmin = gridpoint(this%grid, 1, 1, 1)
+    qmax = gridpoint(this%grid, npts(1), npts(2), npts(3))
     step = (qmax - qmin)/(npts - 1)
+    ! get T tensor assume that this information is kept
+    ! not sure because tens gets deallocated at one point...
+    jtens => this%tens
     !                           origin step number of points
     ! no access to original opencube function
     ! fd1 = opencube('acid.cube', qmin, step, npts)
@@ -46,9 +51,11 @@ module acidplot_module
         do j = 1, npts(2)
             do k = 1, npts(3)
                 m = m + 1
-                r = gridpoint(grid, i, j, k)
+                r = gridpoint(this%grid, i, j, k)
                 ! maybe better to call ctens here ?? check code !
-                val = get_acid(r, tens(:,m))  
+                ! which index for jtens? --> copy from cube plot file 
+                idx = i+(j-1)*npts(1) + (k-1)*npts(1)*npts(2) 
+                val = get_acid(r, jtens(:,idx))  
                 if (val > maxi) maxi = val 
                 if (val > mini) mini = val 
                 if (fd1 /= 0) then

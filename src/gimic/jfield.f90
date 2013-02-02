@@ -71,7 +71,7 @@ contains
         real(DP), dimension(3) :: rr
         real(DP), dimension(:,:), pointer :: tens
         ! for ACID delta T squared
-        real(DP) :: dT2
+        ! real(DP) :: dT2
 
         character(8) :: spincase
         integer(I4) :: lo, hi, npts, first, last, fd2
@@ -134,12 +134,12 @@ contains
         end do
         !$OMP END DO
         ! create ACID cube file before tens is deleted !
-        if (grid_is_3d(this%grid)) then 
-          call acid_cube_plot(this%grid, tens)
-        end if
+        !if (grid_is_3d(this%grid)) then 
+        !  call acid_cube_plot(this%grid, tens)
+        !end if
         ! clean up
         call del_jtensor(jt)
-        call closefd(fd2)
+        !call closefd(fd2)
 
         !$OMP END PARALLEL
         if (mpi_world_size > 1) then
@@ -284,6 +284,7 @@ contains
         call closefd(fd2)
         if (grid_is_3d(this%grid)) then 
             ! add here ACID plot stuff ??
+            call acid_cube_plot(this)
             if (present(tag)) then
                 call jmod_cubeplot(this, tag)
             else
