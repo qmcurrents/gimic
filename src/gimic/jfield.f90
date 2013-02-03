@@ -18,7 +18,6 @@ module jfield_class
     use tensor_module
     ! ACID stuff
     use acid_module
-    use acidplot_module
     implicit none
 
     type jfield_t
@@ -70,9 +69,6 @@ contains
         integer :: n, m
         real(DP), dimension(3) :: rr
         real(DP), dimension(:,:), pointer :: tens
-        ! for ACID delta T squared
-        ! real(DP) :: dT2
-
         character(8) :: spincase
         integer(I4) :: lo, hi, npts, first, last, fd2
         type(jtensor_t) :: jt
@@ -118,7 +114,7 @@ contains
         call new_jtensor(jt, mol, xdens)
         !$OMP DO SCHEDULE(STATIC) 
         ! ACID stuff !
-        fd2 = open_plot('acid.txt')
+        ! fd2 = open_plot('acid.txt')
         print *, 'ACID debug print' 
         print *, 'lo, hi, npts=', lo, hi, hi-lo+1 
         do n=lo,hi
@@ -492,6 +488,52 @@ contains
         print '(3e19.12)', (jt(l,:), l=1,3)
         print *
         print '(a,e19.12)', ' Trace:', jt(1,1)+jt(2,2)+jt(3,3)
+    end subroutine
+
+    subroutine acid_cube_plot(this)
+        type(jfield_t), intent(inout) :: this
+        integer(I4), dimension(3) :: npts
+        integer(I4) :: fd1, i, j, k, l, m, idx
+        real(DP), dimension(:,:), pointer :: jtens
+        real(DP), dimension(3) :: qmin, qmax, step, r 
+        real(DP) :: val, maxi, mini
+        ! collect grid information
+        call get_grid_size(this%grid, npts(1), npts(2), npts(3))
+        qmin = gridpoint(this%grid, 1, 1, 1)
+        qmax = gridpoint(this%grid, npts(1), npts(2), npts(3))
+        step = (qmax - qmin)/(npts - 1)
+        ! get T tensor assume that this information is kept
+        ! not sure because tens gets deallocated at one point...
+        jtens => this%tens
+        ! open cube file
+        fd1 = opencube('acid.cube', qmin, step, npts)
+        maxi = 0.0d0
+        mini = 0.0d0
+        l = 0
+        m = 0
+        idx = 0 
+        do i = 1, npts(1)
+           do j = 1, npts(2)
+               do k = 1, npts(3)
+                   m = m + 1
+                   r = gridpoint(this%grid, i, j, k)
+                   ! maybe better to call ctens here ?? check code !
+                   ! which index for jtens? --> copy from cube plot file 
+                   idx = i+(j-1)*npts(1) + (k-1)*npts(1)*npts(2) 
+                   val = get_acid(r, jtens(:,idx))  
+                   if (val > maxi) maxi = val 
+                   if (val > mini) mini = val 
+                   if (fd1 /= 0) then
+                       write(fd1,'(f12.6)',advance='no') val
+                       if (mod(l,6) == 5) write(fd1,*)
+                   end if
+                   l = l + 1
+               end do
+           end do
+        end do
+        print *, 'ACID: maxi, mini', maxi, mini
+
+        call closefd(fd1)
     end subroutine
 end module
 
