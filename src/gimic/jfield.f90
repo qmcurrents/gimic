@@ -265,8 +265,10 @@ contains
         call closefd(fd1)
         call closefd(fd2)
         if (grid_is_3d(this%grid)) then 
-            ! add here ACID plot stuff ??
-            call acid_cube_plot(this)
+            if (settings%acid) then
+              ! add here ACID plot stuff ! 
+              call acid_cube_plot(this)
+            end if
             if (present(tag)) then
                 call jmod_cubeplot(this, tag)
             else

@@ -86,6 +86,7 @@ contains
         call getkw(input, 'Advanced.screening', settings%use_screening)
         call getkw(input, 'Advanced.screening_thrs', settings%screen_thrs)
         call getkw(input, 'Advanced.lip_order', settings%lip_order)
+        call getkw(input, 'Advanced.acid', settings%acid)
 
         ierr=hostnm(sys)
         if (mpi_rank == 0) then
