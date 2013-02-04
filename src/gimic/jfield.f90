@@ -113,29 +113,14 @@ contains
         !$OMP SHARED(mol,xdens,spincase,tens,lo,hi)
         call new_jtensor(jt, mol, xdens)
         !$OMP DO SCHEDULE(STATIC) 
-        ! ACID stuff !
-        ! fd2 = open_plot('acid.txt')
-        print *, 'ACID debug print' 
-        print *, 'lo, hi, npts=', lo, hi, hi-lo+1 
         do n=lo,hi
             call get_grid_index(this%grid, n, i, j, k)
             rr = gridpoint(this%grid, i, j, k)
             ! here the ACID T tensor is calculated and put on tens
             call ctensor(jt, rr, tens(:,n-lo+1), spincase)
-            ! do now the ACID summation to get Delta_T^2 ! 
-            ! hi -lo +1 = number of points
-            ! tens(9,number of points)
-            ! function get_acid(rr, tens(:,n-lo+1), dT2)) 
-            !  call write_acid(rr, dT2, fd2)
         end do
         !$OMP END DO
-        ! create ACID cube file before tens is deleted !
-        !if (grid_is_3d(this%grid)) then 
-        !  call acid_cube_plot(this%grid, tens)
-        !end if
-        ! clean up
         call del_jtensor(jt)
-        !call closefd(fd2)
 
         !$OMP END PARALLEL
         if (mpi_world_size > 1) then
