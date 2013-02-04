@@ -18,6 +18,7 @@ module jfield_class
     use tensor_module
     ! ACID stuff
     use acid_module
+    !
     implicit none
 
     type jfield_t

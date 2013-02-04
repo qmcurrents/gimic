@@ -353,30 +353,31 @@ contains
         end do
     end function
 
-    function au2si(au) result(si)
-        real(DP), intent(in) :: au
-        real(DP) :: si
-        
-        real(DP) :: aulength, auspeedoflight, speedoflight, aucharge, hbar
-        real(DP) :: autime, autesla, audjdb
+    ! moved this function into globals.f90
+!   function au2si(au) result(si)
+!       real(DP), intent(in) :: au
+!       real(DP) :: si
+!       
+!       real(DP) :: aulength, auspeedoflight, speedoflight, aucharge, hbar
+!       real(DP) :: autime, autesla, audjdb
 
-        aulength=0.52917726D-10
-        auspeedoflight=137.03599D0
-        speedoflight=299792458.D0
-        aucharge=1.60217733D-19
-        hbar=1.05457267D-34
+!       aulength=0.52917726D-10
+!       auspeedoflight=137.03599D0
+!       speedoflight=299792458.D0
+!       aucharge=1.60217733D-19
+!       hbar=1.05457267D-34
 
-        autime=aulength*auspeedoflight/speedoflight
-        autesla=hbar/aucharge/aulength/aulength
-        audjdb=aucharge/autime/autesla
+!       autime=aulength*auspeedoflight/speedoflight
+!       autesla=hbar/aucharge/aulength/aulength
+!       audjdb=aucharge/autime/autesla
 
-        si=au*audjdb*1.d+09 ! nA/T
+!       si=au*audjdb*1.d+09 ! nA/T
 
 !        write(6,*) 'The obtained conversion factors'
 !        write(6,*) autime,' au time in seconds'
 !        write(6,*) autesla,' au magnetic field in tesla'
 !        write(6,*) audjdb*1.D+09,' au induced current in nanoampere/tesla'
-    end function 
+!   end function 
 
     subroutine print_tensor_int(xsum)
         real(DP), dimension(3,3) :: xsum
