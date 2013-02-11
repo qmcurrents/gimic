@@ -481,6 +481,7 @@ contains
                     rr=gridpoint(this%grid, i, j, k)
                     r=sqrt(sum((rr-center)**2))
                     call ctensor(jt, rr, tt, spin)
+                    ! attention: output of get_acid is in nA/T !
                     val = get_acid(rr,tt)
                     if ( r > bound ) then
                         w=0.d0
@@ -504,13 +505,9 @@ contains
 
         call nl
         call msg_out(repeat('*', 60))
-        write(str_g, '(a,f13.6)') '   ACID (au)    :', xsum3
+        write(str_g, '(a,f13.6)') '   ACID (nA/T)    :', xsum3
         call msg_out(str_g)
         call nl
-        write(str_g, '(a,f13.6)') '   ACID (nA/T)  :', au2si(xsum3)
-        call msg_out(str_g)
-        write(str_g, '(a,f13.6)') '      (conversion factor)  :', au2si(1.d0)
-        call msg_out(str_g)
         call msg_out(repeat('*', 60))
         call nl
     end subroutine

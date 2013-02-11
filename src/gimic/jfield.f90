@@ -235,8 +235,11 @@ contains
 
         integer(I4) :: i, j, k, p1, p2, p3
         integer(I4) :: fd1, fd2, fd3, fd4
+        integer(I4) :: idx
         real(DP), dimension(3) :: v, rr
         real(DP), dimension(:,:), pointer :: jv
+        real(DP), dimension(:,:), pointer :: jtens
+        real(DP) :: val
 
         if (mpi_rank > 0) return
 
@@ -246,6 +249,10 @@ contains
         else
             fd1 = open_plot('jvec.txt')
             fd2 = open_plot('jmod.txt')
+        end if
+        if (settings%acid) then
+            fd3 = open_plot('acid.txt')
+            jtens=>this%tens
         end if
 
         call get_grid_size(this%grid, p1, p2, p3)
@@ -257,13 +264,25 @@ contains
                     v=jv(:,i+(j-1)*p1+(k-1)*p1*p2)*AU2A
                     call wrt_jvec(rr,v,fd1)
                     call wrt_jmod(rr,v,fd2)
+                    if (settings%acid) then
+                      idx = i+(j-1)*p1+(k-1)*p1*p2
+                      val = get_acid(rr,jtens(:,idx))
+                      call wrt_acid(rr,val,fd3)
+                    end if
                 end do
                 if (fd1 /= 0) write(fd1, *)
                 if (fd2 /= 0) write(fd2, *)
+                if (settings%acid) then
+                  if (fd3 /= 0) write(fd3, *)
+                end if
             end do
         end do
         call closefd(fd1)
         call closefd(fd2)
+        if (settings%acid) then
+          call closefd(fd3)
+        end if
+
         if (grid_is_3d(this%grid)) then 
             if (settings%acid) then
               ! add here ACID plot stuff ! 
@@ -463,6 +482,16 @@ contains
 
         jmod=sqrt(sum(v**2))
         write(fd, '(6f11.7)')  rr, jmod
+    end subroutine	
+
+    subroutine wrt_acid(rr,dT2,fd)
+        real(DP), dimension(:), intent(in) :: rr 
+        real(DP), intent(in) :: dT2
+        integer(I4), intent(in) :: fd
+
+        if (fd == 0) return
+
+        write(fd, '(6f11.7)')  rr, dT2
     end subroutine	
 
     subroutine print_jt(rr, jt)
