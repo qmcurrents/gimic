@@ -16,6 +16,8 @@ module integral_class
     use teletype_module
     use parallel_module
     use magnet_module
+    ! ACID stuff
+    use acid_module
     implicit none
 
     type integral_t
@@ -25,6 +27,7 @@ module integral_class
     public new_integral, del_integral, integral_t
     public integrate_tensor_field, integrate_current
     public integrate_modulus
+    public integrate_acid
     
     private 
     
@@ -122,10 +125,13 @@ contains
                         w=get_weight(this%grid, i, 1) 
                         jp=dot_product(normal,jvec)*w
                     end if
+                    ! total
                     xsum=xsum+jp
                     if (jp > 0.d0) then
+                        ! get positive contribution
                         psum=psum+jp
                     else
+                        ! get negative contribution
                         nsum=nsum+jp
                     end if
                 end do
@@ -409,6 +415,103 @@ contains
         write(str_g, '(a,f13.6)') '        Conversion Factor   :', au2si(1.d0)
         call msg_out(str_g)
         call msg_out(repeat('*', 70))
+        call nl
+    end subroutine
+
+    ! do here ACID integration here !
+    subroutine integrate_acid(this, mol, xdens)
+    use acid_module
+    ! this subroutine is based on integrate_current ! 
+        type(integral_t), intent(inout) :: this
+        type(molecule_t) :: mol
+        type(dens_t) :: xdens
+
+        integer(I4) :: i, j, k, p1, p2, p3, lo, hi
+        real(DP), dimension(3) :: rr, center
+        real(DP) :: w, r, bound
+        real(DP) :: xsum, xsum2, xsum3
+        real(DP) :: val
+        real(DP), dimension(9) :: tt
+        type(jtensor_t) :: jt
+
+        if (settings%is_uhf) then
+            select case(spin)
+                case('total')
+                    call msg_note("Integrating total density")
+                case('alpha')
+                    call msg_note("Integrating alpha density")
+                case('beta')
+                    call msg_note("Integrating beta density")
+                case('spindens')
+                    call msg_note("Integrating spin density")
+                case default
+                    call msg_error("Invalid spin: " // spin)
+                    stop
+            end select
+        end if
+        
+        call get_grid_size(this%grid, p1, p2, p3)
+
+        bound=1.d+10
+        bound=this%grid%radius
+        if (bound < 1.d+10) then
+            write(str_g, *) 'Integration bound set to radius ', bound
+            call msg_out(str_g)
+        end if
+        
+        call grid_center(this%grid,center)
+        call schedule(p2, lo, hi)
+        if (mpi_rank == 0) then
+            lo = 1
+        end if
+
+        xsum3=0.d0
+!$OMP PARALLEL PRIVATE(i,j,k,r,rr,xsum,psum,nsum) &
+!$OMP PRIVATE(jt,w,jp,tt,jvec) &
+!$OMP SHARED(xsum2,psum2,nsum2) &
+!$OMP SHARED(p1,p2,p3,this,center,spin,bb,normal,mol,xdens,lo,hi) &
+!$OMP REDUCTION(+:xsum3,psum3,nsum3) 
+        call new_jtensor(jt, mol, xdens)
+        do k=1,p3
+            xsum2=0.d0
+            !$OMP DO SCHEDULE(STATIC) REDUCTION(+:xsum2,psum2,nsum2)
+            do j=lo,hi
+                xsum=0.d0
+                do i=1,p1
+                    rr=gridpoint(this%grid, i, j, k)
+                    r=sqrt(sum((rr-center)**2))
+                    call ctensor(jt, rr, tt, spin)
+                    val = get_acid(rr,tt)
+                    if ( r > bound ) then
+                        w=0.d0
+                    else
+                        w=get_weight(this%grid, i, 1) 
+                    end if
+                    xsum=xsum+val
+                end do
+                w=get_weight(this%grid,j,2)
+                xsum2=xsum2+xsum*w
+            end do
+            !$OMP END DO
+            !$OMP MASTER 
+            call collect_sum(xsum2, xsum)
+            w=get_weight(this%grid,k,3)
+            xsum3=xsum3+xsum*w
+            !$OMP END MASTER 
+        end do
+        call del_jtensor(jt)
+!$OMP END PARALLEL
+
+        call nl
+        call msg_out(repeat('*', 60))
+        write(str_g, '(a,f13.6)') '   ACID (au)    :', xsum3
+        call msg_out(str_g)
+        call nl
+        write(str_g, '(a,f13.6)') '   ACID (nA/T)  :', au2si(xsum3)
+        call msg_out(str_g)
+        write(str_g, '(a,f13.6)') '      (conversion factor)  :', au2si(1.d0)
+        call msg_out(str_g)
+        call msg_out(repeat('*', 60))
         call nl
     end subroutine
 end module

@@ -226,6 +226,12 @@ contains
         call msg_note('Integrating current')
         call integrate_current(it, mol, xdens)
         call nl
+        if (settings%acid) then
+        ! add here ACID integration !
+           call msg_note('Integrating ACID density')
+           call integrate_acid(it, mol, xdens)
+           call nl
+        end if
         
 !        call msg_note('Integrating current tensor')
 !        call int_t_direct(it)  ! tensor integral
