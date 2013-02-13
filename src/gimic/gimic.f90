@@ -259,7 +259,14 @@ contains
         type(dens_t) :: modens
         call msg_out('Calculating charge density')
         call msg_out('*****************************************')
+        ! do some allocation stuff !
         call new_dens(modens, mol, .true.)
+        ! read all information in ! 
+        ! print *, "morange default", settings%morange
+        ! this is 0 0 
+        print *, 'DEBUG'
+        print *, 'morange', settings%morange
+        !                             edens             mos   0,0
         call read_modens(modens, settings%density, settings%mofile, &
             settings%morange)
         call new_edens_field(ed, mol, modens, grid, 'edens.bin')

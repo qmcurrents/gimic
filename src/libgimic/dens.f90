@@ -303,12 +303,21 @@ contains
         n=get_ncgto(this%mol)
         allocate(mos(n,n))
         
+        print *, 'DEBUG in read routine' 
+        print *, 'ncgto --> n', n
+        ! read every second line from mos file !
+        ! assume closed shell case and double occupation 
+        ! for each MO ??? 
         do i=1,n
             read(XDFD, *)
-            read(XDFD, '(4f20.2)') mos(:,i)
+            !read(XDFD, '(4f20.2)') mos(:,i)
+            read(XDFD, '(4d20.14)') mos(1:4,i)
+            print *, i
+            print *, mos(1:4,i)
         end do
         close(XDFD)
 
+        ! attention the default morange is 0 0
         if (present(morange)) then
             call moco(this, mos, morange)
         else
