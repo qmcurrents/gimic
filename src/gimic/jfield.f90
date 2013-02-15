@@ -234,9 +234,9 @@ contains
         character(*), optional :: tag
 
         integer(I4) :: i, j, k, p1, p2, p3
-        integer(I4) :: fd1, fd2, fd3, fd4
+        integer(I4) :: fd1, fd2, fd3, fd4, fd5
         integer(I4) :: idx
-        real(DP), dimension(3) :: v, rr
+        real(DP), dimension(3) :: v, rr, jav
         real(DP), dimension(:,:), pointer :: jv
         real(DP), dimension(:,:), pointer :: jtens
         real(DP) :: val
@@ -254,6 +254,11 @@ contains
             fd3 = open_plot('acid.txt')
             jtens=>this%tens
         end if
+        if (settings%jav) then
+            fd4 = open_plot('jav_vec.txt')
+            fd5 = open_plot('jav_mod.txt')
+            jtens=>this%tens
+        end if
 
         call get_grid_size(this%grid, p1, p2, p3)
         jv=>this%vec
@@ -264,16 +269,28 @@ contains
                     v=jv(:,i+(j-1)*p1+(k-1)*p1*p2)*AU2A
                     call wrt_jvec(rr,v,fd1)
                     call wrt_jmod(rr,v,fd2)
+                    ! case ACID
                     if (settings%acid) then
                       idx = i+(j-1)*p1+(k-1)*p1*p2
                       val = get_acid(rr,jtens(:,idx))
                       call wrt_acid(rr,val,fd3)
+                    end if
+                    ! case GIMAC J average
+                    if (settings%jav) then
+                      idx = i+(j-1)*p1+(k-1)*p1*p2
+                      jav = get_jav(jtens(:,idx))
+                      call wrt_jvec(rr,jav,fd4)
+                      call wrt_jmod(rr,v,fd5)
                     end if
                 end do
                 if (fd1 /= 0) write(fd1, *)
                 if (fd2 /= 0) write(fd2, *)
                 if (settings%acid) then
                   if (fd3 /= 0) write(fd3, *)
+                end if
+                if (settings%jav) then
+                  if (fd4 /= 0) write(fd4, *)
+                  if (fd5 /= 0) write(fd5, *)
                 end if
             end do
         end do
@@ -282,12 +299,17 @@ contains
         if (settings%acid) then
           call closefd(fd3)
         end if
+        if (settings%jav) then
+          call closefd(fd4)
+          call closefd(fd5)
+        end if
 
         if (grid_is_3d(this%grid)) then 
             if (settings%acid) then
               ! add here ACID plot stuff ! 
               call acid_cube_plot(this)
-            else if (settings%jav) then
+            end if
+            if (settings%jav) then
               ! GIMAC ! plot averaged current  
               ! plotting function for Javerage
               ! later this can be fused into the J we have
@@ -587,16 +609,13 @@ contains
 
         if (present(tag)) then
             fd1=opencube('jav_'// tag // '.cube', qmin, step, npts)
-            fd2=opencube('jav_quasi'// tag // '.cube', qmin, step, npts)
+        !    fd2=opencube('jav_quasi'// tag // '.cube', qmin, step, npts)
         else
             fd1=opencube('jav.cube', qmin, step, npts)
-            fd2=opencube('jav_quasi.cube', qmin, step, npts)
+        !    fd2=opencube('jav_quasi.cube', qmin, step, npts)
         end if
 
-        ! mag = this%b
-        ! assume B average is one 
-        mag = 1.0d0 
-        ! buf => this%vec
+        ! if Jav is independent of B then the plot must also be 
         jtens => this%tens
         maxi=0.d0
         mini=0.d0
@@ -610,30 +629,30 @@ contains
                     ! get now jav for one grid point !
                     v = get_jav(jtens(:,idx))
                     val=(sqrt(sum(v**2)))
-                    rr=rr-dot_product(mag,rr)*mag
-                    norm=cross_product(mag,rr)
-                    sgn=dot_product(norm,v)
+                    ! rr=rr-dot_product(mag,rr)*mag
+                    ! norm=cross_product(mag,rr)
+                    ! sgn=dot_product(norm,v)
                     if (val > maxi) maxi=val
                     if (val < mini) mini=val
                     if (fd1 /= 0) then 
-                        write(fd1,'(f12.6)',advance='no') val
+                        write(fd1,'(f12.6)',advance='no') au2si(val)
                         if (mod(l,6) == 5) write(fd1,*)
                     end if
-                    if (fd2 /= 0) then 
-                        if (sgn >= 0.d0 ) then
-                            write(fd2,'(f12.6)',advance='no') val
-                        else
-                            write(fd2,'(f12.6)',advance='no') -1.d0*val
-                        end if
-                        if (mod(l,6) == 5) write(fd2,*)
-                    end if
+                    ! if (fd2 /= 0) then 
+                    !     if (sgn >= 0.d0 ) then
+                    !         write(fd2,'(f12.6)',advance='no') au2si(val)
+                    !     else
+                    !         write(fd2,'(f12.6)',advance='no') -1.d0*au2si(val)
+                    !     end if
+                    !     if (mod(l,6) == 5) write(fd2,*)
+                    ! end if
                     l=l+1
                 end do
             end do
         end do
         print *, 'in JAV: maxi, mini:', maxi, mini
         call closefd(fd1)
-        call closefd(fd2)
+        !call closefd(fd2)
     end subroutine
 end module
 

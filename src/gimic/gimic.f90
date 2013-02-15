@@ -226,6 +226,12 @@ contains
         call msg_note('Integrating current')
         call integrate_current(it, mol, xdens)
         call nl
+        if (settings%jav) then
+        ! add here GIMAC integration !
+           call msg_note('Integrating B field averaged current density')
+           call integrate_jav_current(it, mol, xdens)
+           call nl
+        end if
         if (settings%acid) then
         ! add here ACID integration !
            call msg_note('Integrating ACID density')
