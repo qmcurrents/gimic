@@ -287,6 +287,12 @@ contains
             if (settings%acid) then
               ! add here ACID plot stuff ! 
               call acid_cube_plot(this)
+            else if (settings%jav) then
+              ! GIMAC ! plot averaged current  
+              ! plotting function for Javerage
+              ! later this can be fused into the J we have
+              ! at the moment
+              call jav_cubeplot(this)
             end if
             if (present(tag)) then
                 call jmod_cubeplot(this, tag)
@@ -508,6 +514,7 @@ contains
     end subroutine
 
     subroutine acid_cube_plot(this)
+    ! this routine is based on jmod_cube_plot() 
         type(jfield_t), intent(inout) :: this
         integer(I4), dimension(3) :: npts
         integer(I4) :: fd1, i, j, k, l, m, idx
@@ -551,6 +558,82 @@ contains
         print *, 'ACID: maxi, mini', maxi, mini
 
         call closefd(fd1)
+    end subroutine
+
+    subroutine jav_cubeplot(this, tag)
+    ! this routine is based on jmod_cube_plot() 
+        type(jfield_t) :: this
+        character(*), optional :: tag
+
+        integer(I4) :: p1, p2, p3, fd1, fd2
+        integer(I4) :: i, j, k, l, idx
+        real(DP), dimension(:,:), pointer :: jtens
+        real(DP), dimension(3) :: qmin, qmax
+        real(DP), dimension(3) :: norm, step, mag, v, rr
+        real(DP) :: maxi, mini, val, sgn 
+        integer(I4), dimension(3) :: npts
+        ! real(DP), dimension(:,:), pointer :: buf
+
+        if (mpi_rank > 0) return
+
+        ! call jmod_vtkplot(this) ! buggy
+        call get_grid_size(this%grid, p1, p2, p3)
+        npts=(/p1,p2,p3/)
+        norm=get_grid_normal(this%grid)
+        qmin=gridpoint(this%grid,1,1,1)
+        qmax=gridpoint(this%grid,p1,p2,p3)
+
+        step=(qmax-qmin)/(npts-1)
+
+        if (present(tag)) then
+            fd1=opencube('jav_'// tag // '.cube', qmin, step, npts)
+            fd2=opencube('jav_quasi'// tag // '.cube', qmin, step, npts)
+        else
+            fd1=opencube('jav.cube', qmin, step, npts)
+            fd2=opencube('jav_quasi.cube', qmin, step, npts)
+        end if
+
+        ! mag = this%b
+        ! assume B average is one 
+        mag = 1.0d0 
+        ! buf => this%vec
+        jtens => this%tens
+        maxi=0.d0
+        mini=0.d0
+        l=0
+        do i=1,p1
+            do j=1,p2
+                do k=1,p3
+                   idx = i+(j-1)*npts(1) + (k-1)*npts(1)*npts(2) 
+                   ! v=buf(:,i+(j-1)*p1+(k-1)*p1*p2)
+                    rr=gridpoint(this%grid,i,j,k)
+                    ! get now jav for one grid point !
+                    v = get_jav(jtens(:,idx))
+                    val=(sqrt(sum(v**2)))
+                    rr=rr-dot_product(mag,rr)*mag
+                    norm=cross_product(mag,rr)
+                    sgn=dot_product(norm,v)
+                    if (val > maxi) maxi=val
+                    if (val < mini) mini=val
+                    if (fd1 /= 0) then 
+                        write(fd1,'(f12.6)',advance='no') val
+                        if (mod(l,6) == 5) write(fd1,*)
+                    end if
+                    if (fd2 /= 0) then 
+                        if (sgn >= 0.d0 ) then
+                            write(fd2,'(f12.6)',advance='no') val
+                        else
+                            write(fd2,'(f12.6)',advance='no') -1.d0*val
+                        end if
+                        if (mod(l,6) == 5) write(fd2,*)
+                    end if
+                    l=l+1
+                end do
+            end do
+        end do
+        print *, 'in JAV: maxi, mini:', maxi, mini
+        call closefd(fd1)
+        call closefd(fd2)
     end subroutine
 end module
 

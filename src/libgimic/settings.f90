@@ -26,6 +26,7 @@ module settings_module
         logical :: use_diamag=.true.
         logical :: use_paramag=.true.
         logical :: acid=.true.
+        logical :: jav=.true.
         real(DP) :: screen_thrs
         logical :: use_screening
         integer(I4), dimension(2) :: morange

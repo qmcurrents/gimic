@@ -73,6 +73,7 @@ def main():
     adv.add_kw('paramag', 'BOOL', (True,))
     adv.add_kw('lip_order', 'INT', (3,))
     adv.add_kw('acid', 'BOOL', (False,))
+    adv.add_kw('jav', 'BOOL', (False,))
 
     grid=getkw.Section('Grid', callback=check_grid)
     grid.set_arg('STR', ('std',))
