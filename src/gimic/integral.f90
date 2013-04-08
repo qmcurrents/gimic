@@ -505,7 +505,7 @@ contains
 
         call nl
         call msg_out(repeat('*', 60))
-        write(str_g, '(a,f13.6)') '   ACID (nA/T)    :', xsum3
+        write(str_g, '(a,f13.6)') '   ACID (nA/T) sqrt(delta J^2) :', sqrt(xsum3)
         call msg_out(str_g)
         call nl
         call msg_out(repeat('*', 60))
