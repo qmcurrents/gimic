@@ -430,7 +430,7 @@ contains
         real(DP), dimension(3) :: rr, center
         real(DP) :: w, r, bound
         real(DP) :: xsum, xsum2, xsum3
-        real(DP) :: val
+        real(DP) :: val, acid_val
         real(DP), dimension(9) :: tt
         type(jtensor_t) :: jt
 
@@ -481,14 +481,14 @@ contains
                     rr=gridpoint(this%grid, i, j, k)
                     r=sqrt(sum((rr-center)**2))
                     call ctensor(jt, rr, tt, spin)
-                    ! attention: output of get_acid is in nA/T !
+                    ! attention: output of get_acid is in au !
                     val = get_acid(rr,tt)
                     if ( r > bound ) then
                         w=0.d0
                     else
                         w=get_weight(this%grid, i, 1) 
                     end if
-                    xsum=xsum+val
+                    xsum=xsum+val*w
                 end do
                 w=get_weight(this%grid,j,2)
                 xsum2=xsum2+xsum*w
@@ -501,11 +501,14 @@ contains
             !$OMP END MASTER 
         end do
         call del_jtensor(jt)
+        acid_val = dsqrt(xsum3)
 !$OMP END PARALLEL
 
         call nl
         call msg_out(repeat('*', 60))
-        write(str_g, '(a,f13.6)') '   ACID (nA/T) sqrt(delta J^2) :', sqrt(xsum3)
+        write(str_g, '(a,f13.6)') '   ACID (au) sqrt(delta J^2):', acid_val
+        call msg_out(str_g)
+        write(str_g, '(a,f13.6)') '   ACID (nA/T)              :', au2si(acid_val)
         call msg_out(str_g)
         call nl
         call msg_out(repeat('*', 60))

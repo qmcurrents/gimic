@@ -519,7 +519,7 @@ contains
 
         if (fd == 0) return
 
-        write(fd, '(6f11.7)')  rr, dT2
+        write(fd, '(6f11.7)')  rr, au2si(dT2)
     end subroutine	
 
     subroutine print_jt(rr, jt)
