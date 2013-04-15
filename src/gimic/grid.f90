@@ -146,6 +146,7 @@ contains
         real(DP) :: l3
 
         if (keyword_is_set(input, 'Grid.bond')) then
+            ! get bond information
             call getkw(input, 'Grid.bond', atoms(1:2))
             call get_atom(mol, atoms(1), atom)
             call get_coord(atom, this%basv(:,1))
@@ -157,6 +158,7 @@ contains
         end if
 
         if (keyword_is_set(input,'Grid.fixpoint')) then
+            ! get fixpoint info
             call getkw(input, 'Grid.fixpoint', atoms(3))
             call get_atom(mol, atoms(3), atom)
             call get_coord(atom, this%origin)

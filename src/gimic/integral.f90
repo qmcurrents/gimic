@@ -526,7 +526,7 @@ contains
         real(DP) :: psum, nsum, w, jp, r, bound
         real(DP) :: psum2, nsum2
         real(DP) :: psum3, nsum3
-        real(DP) :: xsum, xsum2, xsum3
+        real(DP) :: xsum, xsum2, xsum3, fac
         real(DP), dimension(3) :: jvec
         real(DP), dimension(9) :: tt
         type(jtensor_t) :: jt
@@ -548,8 +548,13 @@ contains
         end if
         
         call get_grid_size(this%grid, p1, p2, p3)
-        ! call get_magnet(this%grid, bb)
+        call get_magnet(this%grid, bb)
         ! call jfield_eta(this%jf)
+        if (bb(3).lt.0.0d0) then
+            fac = -1.0d0
+        else
+            fac = 1.0d0
+        end if
 
         normal=get_grid_normal(this%grid)
 
@@ -590,7 +595,9 @@ contains
                     call ctensor(jt, rr, tt, spin)
                     ! jvec=matmul(reshape(tt,(/3,3/)),bb)
                     ! GIMAC 
-                    jvec = get_jav(tt) 
+                    ! fac takes care of the sign eg. which half sphere
+                    ! has to be taken into account
+                    jvec = fac*(get_jav(tt)) 
                     ! rest can remain as it is...  
                     if ( r > bound ) then
                         w=0.d0
