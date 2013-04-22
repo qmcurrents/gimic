@@ -18,6 +18,7 @@ module integral_class
     use magnet_module
     ! ACID stuff
     use acid_module
+    use tensor_module
     implicit none
 
     type integral_t
@@ -548,9 +549,13 @@ contains
         end if
         
         call get_grid_size(this%grid, p1, p2, p3)
+        ! this call below should be avoided....
         call get_magnet(this%grid, bb)
         ! call jfield_eta(this%jf)
-        if (bb(3).lt.0.0d0) then
+        ! call get_factor(this%grid, fac)
+        ! print *, "midpoint", this%grid%midp
+        ! take care of sign for J_av
+        if ((bb(1).lt.0.0d0).or.(bb(2).lt.0.0d0).or.(bb(3).lt.0.0d0)) then
             fac = -1.0d0
         else
             fac = 1.0d0
