@@ -518,11 +518,14 @@ contains
 
     subroutine integrate_jav_current(this, mol, xdens)
     ! based on integrate_current
+    ! ptf =1 21x2 point integration formula
+    ! ptf =2 33x2 point integration formula
         type(integral_t), intent(inout) :: this
         type(molecule_t) :: mol
         type(dens_t) :: xdens
 
         integer(I4) :: i, j, k, p1, p2, p3, lo, hi
+        integer(I4) :: ptf
         real(DP), dimension(3) :: normal, rr, center, bb
         real(DP) :: psum, nsum, w, jp, r, bound
         real(DP) :: psum2, nsum2
@@ -547,7 +550,10 @@ contains
                     stop
             end select
         end if
-        
+        ! decide what type of integration is done for Jav 
+        ! better put this into a flag to decide in the input
+        ! what should be done
+        ptf = 1
         call get_grid_size(this%grid, p1, p2, p3)
         ! this call below should be avoided....
         call get_magnet(this%grid, bb)
@@ -560,8 +566,11 @@ contains
         else
             fac = 1.0d0
         end if
+        print *, "fac=", fac
+        print *, "b field",bb 
 
         normal=get_grid_normal(this%grid)
+        print*, "normal", normal
 
         bound=1.d+10
         bound=this%grid%radius
@@ -602,14 +611,17 @@ contains
                     ! GIMAC 
                     ! fac takes care of the sign eg. which half sphere
                     ! has to be taken into account
-                    jvec = fac*(get_jav(tt)) 
+                    jvec = fac*(get_jav(tt,ptf)) 
                     ! rest can remain as it is...  
                     if ( r > bound ) then
                         w=0.d0
                         jp=0.d0
                     else
                         w=get_weight(this%grid, i, 1) 
+                        !print*, "jvec", jvec
+                        !print*, "w",w 
                         jp=dot_product(normal,jvec)*w
+                        ! jp=jvec*w
                     end if
                     ! total
                     xsum=xsum+jp
