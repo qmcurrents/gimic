@@ -526,6 +526,8 @@ contains
 
         integer(I4) :: i, j, k, p1, p2, p3, lo, hi
         integer(I4) :: ptf
+        integer(I4) :: dummy
+        real(DP) :: tmp
         real(DP), dimension(3) :: normal, rr, center, bb
         real(DP) :: psum, nsum, w, jp, r, bound
         real(DP) :: psum2, nsum2
@@ -554,6 +556,7 @@ contains
         ! better put this into a flag to decide in the input
         ! what should be done
         ptf = 1
+        ! ptf = 2
         call get_grid_size(this%grid, p1, p2, p3)
         ! this call below should be avoided....
         call get_magnet(this%grid, bb)
@@ -612,6 +615,15 @@ contains
                     ! fac takes care of the sign eg. which half sphere
                     ! has to be taken into account
                     jvec = fac*(get_jav(tt,ptf)) 
+                    !do dummy = 1,3
+                    !  tmp = jvec(dummy)**2
+                    !  if (tmp.gt.thresh) then
+                    !      print *, "dummy, tmp, k, j, i"
+                    !      print *, dummy, tmp, k, j, i
+                    !      print *, jvec
+                    !      print *, tt
+                    !  end if 
+                    !end do
                     ! rest can remain as it is...  
                     if ( r > bound ) then
                         w=0.d0
@@ -625,6 +637,7 @@ contains
                     end if
                     ! total
                     xsum=xsum+jp
+                    ! print *, "xsum, jp", xsum, jp, k,j,i
                     if (jp > 0.d0) then
                         ! get positive contribution
                         psum=psum+jp
@@ -633,11 +646,14 @@ contains
                         nsum=nsum+jp
                     end if
                 end do
+                ! print *, "xsum after loop", xsum, k, j, i
+
                 w=get_weight(this%grid,j,2)
                 xsum2=xsum2+xsum*w
                 psum2=psum2+psum*w
                 nsum2=nsum2+nsum*w
             end do
+            ! print *, "xsum2", xsum2, k, j, i
             !$OMP END DO
             !$OMP MASTER 
             call collect_sum(xsum2, xsum)
@@ -649,6 +665,7 @@ contains
             nsum3=nsum3+nsum*w
             !$OMP END MASTER 
         end do
+        ! print *, "xsum3", xsum3, k, j, i
         call del_jtensor(jt)
 !$OMP END PARALLEL
 
