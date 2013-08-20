@@ -200,7 +200,7 @@ contains
         end if
 
         ! figure out "orthogonal" axis for magnetic field
-        v1=this%basv(:,1)-this%origin
+        v1=this%basv(:,1)-this%origin  ! coord atom1 - orig
         v2=this%basv(:,2)-this%origin
         this%ortho=cross_product(v1,v2)
         if (vcmp(this%ortho, NILL_VECTOR)) then

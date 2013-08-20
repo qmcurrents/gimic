@@ -597,6 +597,7 @@ contains
 !$OMP SHARED(p1,p2,p3,this,center,spin,bb,normal,mol,xdens,lo,hi) &
 !$OMP REDUCTION(+:xsum3,psum3,nsum3) 
         call new_jtensor(jt, mol, xdens)
+        jvec =0.0d0
         do k=1,p3
             xsum2=0.d0
             psum2=0.d0
@@ -614,16 +615,8 @@ contains
                     ! GIMAC 
                     ! fac takes care of the sign eg. which half sphere
                     ! has to be taken into account
-                    jvec = fac*(get_jav(tt,ptf)) 
-                    !do dummy = 1,3
-                    !  tmp = jvec(dummy)**2
-                    !  if (tmp.gt.thresh) then
-                    !      print *, "dummy, tmp, k, j, i"
-                    !      print *, dummy, tmp, k, j, i
-                    !      print *, jvec
-                    !      print *, tt
-                    !  end if 
-                    !end do
+                     jvec = fac*(get_jav(tt,ptf)) 
+                    ! jvec = (get_jav(tt,ptf)) 
                     ! rest can remain as it is...  
                     if ( r > bound ) then
                         w=0.d0
@@ -633,7 +626,6 @@ contains
                         !print*, "jvec", jvec
                         !print*, "w",w 
                         jp=dot_product(normal,jvec)*w
-                        ! jp=jvec*w
                     end if
                     ! total
                     xsum=xsum+jp
