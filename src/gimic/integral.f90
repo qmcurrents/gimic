@@ -526,9 +526,8 @@ contains
 
         integer(I4) :: i, j, k, p1, p2, p3, lo, hi
         integer(I4) :: ptf
-        integer(I4) :: dummy
-        real(DP) :: tmp
         real(DP), dimension(3) :: normal, rr, center, bb
+        real(DP), dimension(3) :: com
         real(DP) :: psum, nsum, w, jp, r, bound
         real(DP) :: psum2, nsum2
         real(DP) :: psum3, nsum3
@@ -558,19 +557,7 @@ contains
         ptf = 1
         ! ptf = 2
         call get_grid_size(this%grid, p1, p2, p3)
-        ! this call below should be avoided....
-        call get_magnet(this%grid, bb)
-        ! call jfield_eta(this%jf)
-        ! call get_factor(this%grid, fac)
-        ! print *, "midpoint", this%grid%midp
-        ! take care of sign for J_av
-        if ((bb(1).lt.0.0d0).or.(bb(2).lt.0.0d0).or.(bb(3).lt.0.0d0)) then
-            fac = -1.0d0
-        else
-            fac = 1.0d0
-        end if
-        print *, "fac=", fac
-        print *, "b field",bb 
+        com = get_center_of_mass(mol)
 
         normal=get_grid_normal(this%grid)
         print*, "normal", normal
@@ -611,25 +598,17 @@ contains
                     rr=gridpoint(this%grid, i, j, k)
                     r=sqrt(sum((rr-center)**2))
                     call ctensor(jt, rr, tt, spin)
-                    ! jvec=matmul(reshape(tt,(/3,3/)),bb)
-                    ! GIMAC 
-                    ! fac takes care of the sign eg. which half sphere
-                    ! has to be taken into account
-                     jvec = fac*(get_jav(tt,ptf)) 
-                    ! jvec = (get_jav(tt,ptf)) 
+                    jvec = (get_jav(tt,ptf,com,rr)) 
                     ! rest can remain as it is...  
                     if ( r > bound ) then
                         w=0.d0
                         jp=0.d0
                     else
                         w=get_weight(this%grid, i, 1) 
-                        !print*, "jvec", jvec
-                        !print*, "w",w 
                         jp=dot_product(normal,jvec)*w
                     end if
                     ! total
                     xsum=xsum+jp
-                    ! print *, "xsum, jp", xsum, jp, k,j,i
                     if (jp > 0.d0) then
                         ! get positive contribution
                         psum=psum+jp
@@ -638,14 +617,12 @@ contains
                         nsum=nsum+jp
                     end if
                 end do
-                ! print *, "xsum after loop", xsum, k, j, i
 
                 w=get_weight(this%grid,j,2)
                 xsum2=xsum2+xsum*w
                 psum2=psum2+psum*w
                 nsum2=nsum2+nsum*w
             end do
-            ! print *, "xsum2", xsum2, k, j, i
             !$OMP END DO
             !$OMP MASTER 
             call collect_sum(xsum2, xsum)
@@ -657,7 +634,6 @@ contains
             nsum3=nsum3+nsum*w
             !$OMP END MASTER 
         end do
-        ! print *, "xsum3", xsum3, k, j, i
         call del_jtensor(jt)
 !$OMP END PARALLEL
 
