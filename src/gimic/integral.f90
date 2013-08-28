@@ -559,7 +559,7 @@ contains
         call get_grid_size(this%grid, p1, p2, p3)
         com = get_center_of_mass(mol)
         ! pick second point / end point of integration plane
-        r_input = gridpoint(this%grid,p1,1,1)
+        ! r_input = gridpoint(this%grid,p1,1,1)
         !print *, "r_input", r_input*au2a
 
         normal=get_grid_normal(this%grid)
@@ -601,7 +601,8 @@ contains
                     rr=gridpoint(this%grid, i, j, k)
                     r=sqrt(sum((rr-center)**2))
                     call ctensor(jt, rr, tt, spin)
-                    jvec = (get_jav(tt,ptf,com,r_input)) 
+                    ! jvec = (get_jav(tt,ptf,com,r_input)) 
+                    jvec = (get_jav(tt,ptf,com,rr)) 
                     ! rest can remain as it is...  
                     if ( r > bound ) then
                         w=0.d0
