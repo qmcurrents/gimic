@@ -237,7 +237,7 @@ contains
         integer(I4) :: i, j, k, p1, p2, p3
         integer(I4) :: fd1, fd2, fd3, fd4, fd5
         integer(I4) :: idx, ptf
-        real(DP), dimension(3) :: v, rr, jav, com
+        real(DP), dimension(3) :: v, rr, jav, com, rr_2
         real(DP), dimension(:,:), pointer :: jv
         real(DP), dimension(:,:), pointer :: jtens
         real(DP) :: val
@@ -281,7 +281,7 @@ contains
                     ! case GIMAC J average
                     if (settings%jav) then
                       idx = i+(j-1)*p1+(k-1)*p1*p2
-                      jav = get_jav(jtens(:,idx),ptf,com,rr)
+                      jav = get_jav(jtens(:,idx),ptf,com,rr,rr_2)
                       call wrt_jvec(rr,jav,fd4)
                       call wrt_jmod(rr,v,fd5)
                     end if
@@ -595,7 +595,7 @@ contains
         integer(I4) :: i, j, k, l, idx
         real(DP), dimension(:,:), pointer :: jtens
         real(DP), dimension(3) :: qmin, qmax, com
-        real(DP), dimension(3) :: norm, step, mag, v, rr
+        real(DP), dimension(3) :: norm, step, mag, v, rr, rr_2
         real(DP) :: maxi, mini, val, sgn
         integer(I4), dimension(3) :: npts
         integer :: ptf
@@ -634,7 +634,7 @@ contains
                    ! v=buf(:,i+(j-1)*p1+(k-1)*p1*p2)
                     rr=gridpoint(this%grid,i,j,k)
                     ! get now jav for one grid point !
-                    v = get_jav(jtens(:,idx),ptf,com,rr)
+                    v = get_jav(jtens(:,idx),ptf,com,rr,rr_2)
                     val=(sqrt(sum(v**2)))
                     ! rr=rr-dot_product(mag,rr)*mag
                     ! norm=cross_product(mag,rr)
