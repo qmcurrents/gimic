@@ -152,9 +152,23 @@ contains
             call get_coord(atom, this%basv(:,1))
             call get_atom(mol, atoms(2), atom)
             call get_coord(atom, this%basv(:,2))
+            ! keep information about bond coordinates
+            ! use this later on for the sphere integration
+            ! in acid.f90 
+            open(unit=137, file="bond_coord")
+            write(137, "(3F20.10)") this%basv(:,1)
+            write(137, "(3F20.10)") this%basv(:,2)
+            close(137)
         else
             call getkw(input, 'Grid.coord1', this%basv(:,1))
             call getkw(input, 'Grid.coord2', this%basv(:,2))
+            ! keep information about bond coordinates
+            ! use this later on for the sphere integration
+            ! in acid.f90 
+            open(unit=137, file="bond_coord")
+            write(137, "(3F20.10)") this%basv(:,1)
+            write(137, "(3F20.10)") this%basv(:,2)
+            close(137)
         end if
 
         if (keyword_is_set(input,'Grid.fixpoint')) then
