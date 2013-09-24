@@ -281,7 +281,7 @@ contains
                     ! case GIMAC J average
                     if (settings%jav) then
                       idx = i+(j-1)*p1+(k-1)*p1*p2
-                      jav = get_jav(jtens(:,idx),ptf,com,rr,rr_2)
+                      jav = get_jav(jtens(:,idx),ptf,rr_2)
                       call wrt_jvec(rr,jav,fd4)
                       call wrt_jmod(rr,v,fd5)
                     end if
@@ -634,7 +634,7 @@ contains
                    ! v=buf(:,i+(j-1)*p1+(k-1)*p1*p2)
                     rr=gridpoint(this%grid,i,j,k)
                     ! get now jav for one grid point !
-                    v = get_jav(jtens(:,idx),ptf,com,rr,rr_2)
+                    v = get_jav(jtens(:,idx),ptf,rr_2)
                     val=(sqrt(sum(v**2)))
                     ! rr=rr-dot_product(mag,rr)*mag
                     ! norm=cross_product(mag,rr)
