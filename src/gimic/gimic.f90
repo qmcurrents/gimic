@@ -169,7 +169,7 @@ contains
         end if
 
         if (settings%calc(1:5) == 'cdens') then 
-            call run_cdens(jf, xdens)
+            call run_cdens(jf,mol,xdens)
         else if (settings%calc(1:8) == 'integral') then 
             call run_integral()
         else if (settings%calc(1:4) == 'divj') then 
@@ -187,9 +187,10 @@ contains
         call del_grid(grid)
     end subroutine
 
-    subroutine run_cdens(jf, xdens)
+    subroutine run_cdens(jf,mol,xdens)
         type(jfield_t) :: jf
         type(dens_t) :: xdens
+        type(molecule_t) :: mol 
         call msg_out('Calculating current density')
         call msg_out('*****************************************')
         call new_jfield(jf, grid, magnet)
@@ -197,17 +198,17 @@ contains
         if (settings%dryrun) return
         
         call calc_jvectors(jf, mol, xdens)
-        call jvector_plots(jf)
-        
+        call jvector_plots(jf,mol)
+
         if (settings%is_uhf) then
             call calc_jvectors(jf, mol, xdens, 'alpha')
-            call jvector_plots(jf, 'alpha')
+            call jvector_plots(jf,mol, 'alpha')
 
             call calc_jvectors(jf, mol, xdens, 'beta')
-            call jvector_plots(jf, 'beta')
+            call jvector_plots(jf,mol, 'beta')
             
             call calc_jvectors(jf, mol, xdens, 'spindens')
-            call jvector_plots(jf, 'spindens')
+            call jvector_plots(jf,mol, 'spindens')
         endif
         call del_jfield(jf)
     end subroutine

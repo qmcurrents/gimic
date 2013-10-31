@@ -229,7 +229,7 @@ contains
         return 
     end function
 
-    subroutine jvector_plots(this, tag)
+    subroutine jvector_plots(this,mol,tag)
         type(jfield_t), intent(inout) :: this
         type(molecule_t) :: mol
         character(*), optional :: tag
@@ -237,7 +237,7 @@ contains
         integer(I4) :: i, j, k, p1, p2, p3
         integer(I4) :: fd1, fd2, fd3, fd4, fd5
         integer(I4) :: idx, ptf
-        real(DP), dimension(3) :: v, rr, jav, com, rr_2
+        real(DP), dimension(3) :: v, rr, jav, com, dummy
         real(DP), dimension(:,:), pointer :: jv
         real(DP), dimension(:,:), pointer :: jtens
         real(DP) :: val
@@ -252,6 +252,7 @@ contains
             fd1 = open_plot('jvec.txt')
             fd2 = open_plot('jmod.txt')
         end if
+
         if (settings%acid) then
             fd3 = open_plot('acid.txt')
             jtens=>this%tens
@@ -262,7 +263,9 @@ contains
             jtens=>this%tens
         end if
 
-        com = get_center_of_mass(mol)
+        if (settings%jav) then
+          com = get_center_of_mass(mol)
+        end if
         call get_grid_size(this%grid, p1, p2, p3)
         jv=>this%vec
         do k=1,p3
@@ -281,7 +284,7 @@ contains
                     ! case GIMAC J average
                     if (settings%jav) then
                       idx = i+(j-1)*p1+(k-1)*p1*p2
-                      jav = get_jav(jtens(:,idx),ptf,rr_2)
+                      jav = get_jav(jtens(:,idx),ptf,rr,com,dummy)
                       call wrt_jvec(rr,jav,fd4)
                       call wrt_jmod(rr,v,fd5)
                     end if
@@ -594,7 +597,7 @@ contains
         integer(I4) :: p1, p2, p3, fd1, fd2
         integer(I4) :: i, j, k, l, idx
         real(DP), dimension(:,:), pointer :: jtens
-        real(DP), dimension(3) :: qmin, qmax, com
+        real(DP), dimension(3) :: qmin, qmax, com, dummy
         real(DP), dimension(3) :: norm, step, mag, v, rr, rr_2
         real(DP) :: maxi, mini, val, sgn
         integer(I4), dimension(3) :: npts
@@ -634,7 +637,7 @@ contains
                    ! v=buf(:,i+(j-1)*p1+(k-1)*p1*p2)
                     rr=gridpoint(this%grid,i,j,k)
                     ! get now jav for one grid point !
-                    v = get_jav(jtens(:,idx),ptf,rr_2)
+                    v = get_jav(jtens(:,idx),ptf,rr,com,dummy)
                     val=(sqrt(sum(v**2)))
                     ! rr=rr-dot_product(mag,rr)*mag
                     ! norm=cross_product(mag,rr)
