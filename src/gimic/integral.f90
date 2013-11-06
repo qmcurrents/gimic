@@ -563,12 +563,12 @@ contains
         ! r_input_1 = gridpoint(this%grid,1,1,1)
         r_input_2 = gridpoint(this%grid,p1,1,1)
         !print *, "r_input_2", r_input_2*au2a
-        print *, "r_input_2", r_input_2
+        !print *, "r_input_2", r_input_2
         ! get basvec 3 
         call get_basvec(this%grid,3,basvec3)
 
         normal=get_grid_normal(this%grid)
-        print*, "normal", normal
+        !print*, "normal", normal
 
         bound=1.d+10
         bound=this%grid%radius
