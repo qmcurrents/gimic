@@ -88,6 +88,8 @@ contains
         call getkw(input, 'Advanced.lip_order', settings%lip_order)
         call getkw(input, 'Advanced.acid', settings%acid)
         call getkw(input, 'Advanced.jav', settings%jav)
+        call getkw(input, 'Advanced.intp21', settings%intp21)
+        call getkw(input, 'Advanced.intp33', settings%intp33)
 
         ierr=hostnm(sys)
         if (mpi_rank == 0) then

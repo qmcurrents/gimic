@@ -243,8 +243,17 @@ contains
         real(DP) :: val
 
         if (mpi_rank > 0) return
-        ! take 21 point integration formula
-        ptf = 1
+
+        if (settings%intp21) then
+          ! take 21 point integration formula
+          ptf = 1
+        else if (settings%intp33) then
+          ! take 33 point integration formula
+          ptf = 2
+        else
+            print *, "Attention, no integration formula define for Jav!"
+        end if
+
         if (present(tag)) then
             fd1 = open_plot('jvec_' // tag // '.txt')
             fd2 = open_plot('jmod_' // tag // '.txt')
@@ -605,8 +614,15 @@ contains
         ! real(DP), dimension(:,:), pointer :: buf
 
         if (mpi_rank > 0) return
-        ! take 21 point formula
-        ptf = 1
+        if (settings%intp21) then
+          ! take 21 point integration formula
+          ptf = 1
+        else if (settings%intp33) then
+          ! take 33 point integration formula
+          ptf = 2
+        else
+            print *, "Attention, no integration formula define for Jav!"
+        end if
         com = get_center_of_mass(mol)
         ! call jmod_vtkplot(this) ! buggy
         call get_grid_size(this%grid, p1, p2, p3)

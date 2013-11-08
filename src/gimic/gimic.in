@@ -74,6 +74,8 @@ def main():
     adv.add_kw('lip_order', 'INT', (3,))
     adv.add_kw('acid', 'BOOL', (False,))
     adv.add_kw('jav', 'BOOL', (False,))
+    adv.add_kw('intp21', 'BOOL', (False,))
+    adv.add_kw('intp33', 'BOOL', (False,))
 
     grid=getkw.Section('Grid', callback=check_grid)
     grid.set_arg('STR', ('std',))
