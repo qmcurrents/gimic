@@ -33,7 +33,7 @@ def main():
         print "%2s%2i%20.12f%20.12f%20.12f" % \
             (sym, 1, a.coord[0], a.coord[1], a.coord[2])
         for l in range(len(b.ctr_list)):
-            for c in b[l]:
+            for c in b.ctr_list[l]:
                 print c,
 
     try:
