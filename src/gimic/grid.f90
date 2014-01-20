@@ -11,6 +11,8 @@ module grid_class
     use gaussint_module
     use basis_class
     use teletype_module
+    ! ACID and Jav stuff
+    use acid_module
     implicit none
 
     type grid_t
@@ -44,10 +46,11 @@ module grid_class
     type(getkw_t), pointer :: input
 contains
 
-    subroutine new_grid(this, inp, mol)
+    subroutine new_grid(this, inp, mol, aref)
         type(grid_t) :: this
         type(getkw_t), target :: inp
         type(molecule_t) :: mol
+        type(acid_t) :: aref
 
         real(DP) :: ll 
         real(DP), dimension(3) :: angle
@@ -71,7 +74,11 @@ contains
             case ('std','base')
                 call setup_std_grid(this)
             case ('bond')
-                call setup_bond_grid(this,mol)
+                ! chf
+                write(*,*) "aref before setup_bond_grid", aref%refpt(1,:)
+                call setup_bond_grid(this,mol,aref)
+                ! chf
+                write(*,*) "aref after setup_bond_grid", aref%refpt(1,:)
             case default
                 call msg_error('Unknown grid type: ' // trim(this%mode))
                 stop
@@ -132,7 +139,7 @@ contains
         this%ortho=norm(this%basv(:,3))
     end subroutine
 
-    subroutine setup_bond_grid(this,mol)
+    subroutine setup_bond_grid(this,mol,aref)
         type(grid_t) :: this
         type(molecule_t) :: mol
 
@@ -144,6 +151,8 @@ contains
         real(DP), dimension(3) :: v1, v2, v3, oo
         real(DP), dimension(2) :: hgt, wdt
         real(DP) :: l3
+        ! jav stuff
+        type(acid_t) :: aref
 
         if (keyword_is_set(input, 'Grid.bond')) then
             ! get bond information
@@ -155,20 +164,33 @@ contains
             ! keep information about bond coordinates
             ! use this later on for the sphere integration
             ! in acid.f90 
-            open(unit=137, file="bond_coord")
-            write(137, "(3F20.10)") this%basv(:,1)
-            write(137, "(3F20.10)") this%basv(:,2)
-            close(137)
+            ! open(unit=137, file="bond_coord")
+            ! write(137, "(3F20.10)") this%basv(:,1)
+            ! write(137, "(3F20.10)") this%basv(:,2)
+            ! close(137)
+             if (settings%jav) then
+                 aref%refpt(1,:) = this%basv(:,1)
+                 aref%refpt(2,:) = this%basv(:,2)
+                 ! assume the center of mass is inside the ring
+                 aref%refpt(3,:) = get_center_of_mass(mol)
+                 write(*,*), "aref", aref%refpt(1,:)
+             end if
         else
             call getkw(input, 'Grid.coord1', this%basv(:,1))
             call getkw(input, 'Grid.coord2', this%basv(:,2))
             ! keep information about bond coordinates
             ! use this later on for the sphere integration
             ! in acid.f90 
-            open(unit=137, file="bond_coord")
-            write(137, "(3F20.10)") this%basv(:,1)
-            write(137, "(3F20.10)") this%basv(:,2)
-            close(137)
+            !open(unit=137, file="bond_coord")
+            !write(137, "(3F20.10)") this%basv(:,1)
+            !write(137, "(3F20.10)") this%basv(:,2)
+            !close(137)
+             if (settings%jav) then
+                 aref%refpt(1,:) = this%basv(:,1)
+                 aref%refpt(2,:) = this%basv(:,2)
+                 ! assume the center of mass is inside the ring
+                 aref%refpt(3,:) = get_center_of_mass(mol)
+             end if
         end if
 
         if (keyword_is_set(input,'Grid.fixpoint')) then

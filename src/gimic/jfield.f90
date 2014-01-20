@@ -229,7 +229,7 @@ contains
         return 
     end function
 
-    subroutine jvector_plots(this,mol,tag)
+    subroutine jvector_plots(this,mol,tag,aref)
         type(jfield_t), intent(inout) :: this
         type(molecule_t) :: mol
         character(*), optional :: tag
@@ -237,10 +237,11 @@ contains
         integer(I4) :: i, j, k, p1, p2, p3
         integer(I4) :: fd1, fd2, fd3, fd4, fd5
         integer(I4) :: idx, ptf
-        real(DP), dimension(3) :: v, rr, jav, com, dummy
+        real(DP), dimension(3) :: v, rr, jav
         real(DP), dimension(:,:), pointer :: jv
         real(DP), dimension(:,:), pointer :: jtens
         real(DP) :: val
+        type(acid_t) :: aref
 
         if (mpi_rank > 0) return
 
@@ -255,8 +256,10 @@ contains
         end if
 
         if (present(tag)) then
-            fd1 = open_plot('jvec_' // tag // '.txt')
-            fd2 = open_plot('jmod_' // tag // '.txt')
+            !fd1 = open_plot('jvec_' // tag // '.txt')
+            !fd2 = open_plot('jmod_' // tag // '.txt')
+            fd1 = open_plot('jvec' // tag // '.txt')
+            fd2 = open_plot('jmod' // tag // '.txt')
         else
             fd1 = open_plot('jvec.txt')
             fd2 = open_plot('jmod.txt')
@@ -272,9 +275,6 @@ contains
             jtens=>this%tens
         end if
 
-        if (settings%jav) then
-          com = get_center_of_mass(mol)
-        end if
         call get_grid_size(this%grid, p1, p2, p3)
         jv=>this%vec
         do k=1,p3
@@ -293,7 +293,7 @@ contains
                     ! case GIMAC J average
                     if (settings%jav) then
                       idx = i+(j-1)*p1+(k-1)*p1*p2
-                      jav = get_jav(jtens(:,idx),ptf,rr,com,dummy)
+                      jav = get_jav(jtens(:,idx),ptf,aref)
                       call wrt_jvec(rr,jav,fd4)
                       call wrt_jmod(rr,v,fd5)
                     end if
@@ -329,7 +329,7 @@ contains
               ! plotting function for Javerage
               ! later this can be fused into the J we have
               ! at the moment
-              call jav_cubeplot(this)
+              call jav_cubeplot(this,tag,aref)
             end if
             if (present(tag)) then
                 call jmod_cubeplot(this, tag)
@@ -597,16 +597,17 @@ contains
         call closefd(fd1)
     end subroutine
 
-    subroutine jav_cubeplot(this, tag)
+    subroutine jav_cubeplot(this, tag, aref)
     ! this routine is based on jmod_cube_plot() 
         type(jfield_t) :: this
         type(molecule_t) :: mol
+        type(acid_t) :: aref
         character(*), optional :: tag
 
         integer(I4) :: p1, p2, p3, fd1, fd2
         integer(I4) :: i, j, k, l, idx
         real(DP), dimension(:,:), pointer :: jtens
-        real(DP), dimension(3) :: qmin, qmax, com, dummy
+        real(DP), dimension(3) :: qmin, qmax
         real(DP), dimension(3) :: norm, step, mag, v, rr, rr_2
         real(DP) :: maxi, mini, val, sgn
         integer(I4), dimension(3) :: npts
@@ -623,7 +624,6 @@ contains
         else
             print *, "Attention, no integration formula define for Jav!"
         end if
-        com = get_center_of_mass(mol)
         ! call jmod_vtkplot(this) ! buggy
         call get_grid_size(this%grid, p1, p2, p3)
         npts=(/p1,p2,p3/)
@@ -653,7 +653,7 @@ contains
                    ! v=buf(:,i+(j-1)*p1+(k-1)*p1*p2)
                     rr=gridpoint(this%grid,i,j,k)
                     ! get now jav for one grid point !
-                    v = get_jav(jtens(:,idx),ptf,rr,com,dummy)
+                    v = get_jav(jtens(:,idx),ptf,aref)
                     val=(sqrt(sum(v**2)))
                     ! rr=rr-dot_product(mag,rr)*mag
                     ! norm=cross_product(mag,rr)

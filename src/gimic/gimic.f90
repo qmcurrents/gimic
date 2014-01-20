@@ -20,6 +20,8 @@ program gimic
     use jfield_class
     use caos_module
     use gaussint_module
+    ! acid and jav stuff
+    use acid_module
     implicit none 
 
     type(molecule_t) :: mol
@@ -29,6 +31,7 @@ program gimic
     type(jtensor_t) :: jt
     type(dens_t) :: xdens
     real(DP), dimension(3) :: magnet
+    type(acid_t) :: aref
 
     character(BUFLEN) :: buf
     
@@ -136,6 +139,7 @@ contains
 
     subroutine driver
         type(cao2sao_t) :: c2s
+        type(acid_t) :: aref
 
         if (settings%use_screening) then
             call new_basis(mol, settings%basis, settings%screen_thrs)
@@ -150,8 +154,8 @@ contains
 
         call new_dens(xdens, mol)
         call read_dens(xdens, settings%xdens)
-
-        call new_grid(grid, input, mol)
+        
+        call new_grid(grid, input, mol, aref)
         if (mpi_rank == 0) then
             call plot_grid_xyz(grid, 'grid.xyz',  mol)
         end if
@@ -173,7 +177,7 @@ contains
         if (settings%calc(1:5) == 'cdens') then 
             call run_cdens(jf,mol,xdens)
         else if (settings%calc(1:8) == 'integral') then 
-            call run_integral()
+            call run_integral(aref)
         else if (settings%calc(1:4) == 'divj') then 
             call run_divj()
         else if (settings%calc(1:5) == 'edens') then 
@@ -200,24 +204,26 @@ contains
         if (settings%dryrun) return
         
         call calc_jvectors(jf, mol, xdens)
-        call jvector_plots(jf,mol)
+        call jvector_plots(jf,mol,'',aref)
 
         if (settings%is_uhf) then
             call calc_jvectors(jf, mol, xdens, 'alpha')
-            call jvector_plots(jf,mol, 'alpha')
+            call jvector_plots(jf,mol, 'alpha',aref)
 
             call calc_jvectors(jf, mol, xdens, 'beta')
-            call jvector_plots(jf,mol, 'beta')
+            call jvector_plots(jf,mol, 'beta',aref)
             
             call calc_jvectors(jf, mol, xdens, 'spindens')
-            call jvector_plots(jf,mol, 'spindens')
+            call jvector_plots(jf,mol, 'spindens',aref)
         endif
         call del_jfield(jf)
     end subroutine
 
-    subroutine run_integral()
+    subroutine run_integral(aref)
         use integral_class
         type(integral_t) :: it
+        type(acid_t) :: aref
+
         call msg_out('Integrating current density')
         call msg_out('*****************************************')
         call new_integral(it, grid)
@@ -233,7 +239,7 @@ contains
         if (settings%jav) then
         ! add here GIMAC integration !
            call msg_note('Integrating B field averaged current density')
-           call integrate_jav_current(it, mol, xdens)
+           call integrate_jav_current(it, mol, xdens, aref)
            call nl
         end if
         if (settings%acid) then
