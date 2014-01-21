@@ -72,10 +72,17 @@ def main():
     adv.add_kw('diamag', 'BOOL', (True,))
     adv.add_kw('paramag', 'BOOL', (True,))
     adv.add_kw('lip_order', 'INT', (3,))
-    adv.add_kw('acid', 'BOOL', (False,))
-    adv.add_kw('jav', 'BOOL', (False,))
-    adv.add_kw('intp21', 'BOOL', (False,))
-    adv.add_kw('intp33', 'BOOL', (False,))
+#   adv.add_kw('acid', 'BOOL', (False,))
+#   adv.add_kw('jav', 'BOOL', (False,))
+#   adv.add_kw('intp21', 'BOOL', (False,))
+#   adv.add_kw('intp33', 'BOOL', (False,))
+
+    ess=getkw.Section('Essential')
+    ess.add_kw('acid', 'BOOL', (False,))
+    ess.add_kw('jav', 'BOOL', (False,))
+    ess.add_kw('intp21', 'BOOL', (False,))
+    ess.add_kw('intp33', 'BOOL', (False,))
+    ess.add_kw('pabo', 'BOOL', (False,))
 
     grid=getkw.Section('Grid', callback=check_grid)
     grid.set_arg('STR', ('std',))
@@ -106,6 +113,7 @@ def main():
     grid.add_kw("gauss_order", 'INT', (7,))
 
     top.add_sect(adv)
+    top.add_sect(ess)
     top.add_sect(grid)
     
     input=getkw.GetkwParser(top)
