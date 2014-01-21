@@ -82,7 +82,7 @@ def main():
     ess.add_kw('jav', 'BOOL', (False,))
     ess.add_kw('intp21', 'BOOL', (False,))
     ess.add_kw('intp33', 'BOOL', (False,))
-    ess.add_kw('pabo', 'BOOL', (False,))
+    ess.add_kw('pabove', 'BOOL', (False,))
 
     grid=getkw.Section('Grid', callback=check_grid)
     grid.set_arg('STR', ('std',))
