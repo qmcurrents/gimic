@@ -405,13 +405,15 @@ contains
 
         step=(qmax-qmin)/(npts-1)
 
-        if (present(tag)) then
-            fd1=opencube('jmod_'// tag // '.cube', qmin, step, npts)
-            fd2=opencube('jmod_quasi'// tag // '.cube', qmin, step, npts)
-        else
-            fd1=opencube('jmod.cube', qmin, step, npts)
-            fd2=opencube('jmod_quasi.cube', qmin, step, npts)
-        end if
+        !if (present(tag)) then
+        !    fd1=opencube('jmod_'// tag // '.cube', qmin, step, npts)
+        !    fd2=opencube('jmod_quasi'// tag // '.cube', qmin, step, npts)
+        !else
+        !    fd1=opencube('jmod.cube', qmin, step, npts)
+        !    fd2=opencube('jmod_quasi.cube', qmin, step, npts)
+        !end if
+        fd1=opencube('jmod.cube', qmin, step, npts)
+        fd2=opencube('jmod_quasi.cube', qmin, step, npts)
 
         mag = this%b
         buf => this%vec
@@ -633,13 +635,15 @@ contains
 
         step=(qmax-qmin)/(npts-1)
 
-        if (present(tag)) then
-            fd1=opencube('jav_'// tag // '.cube', qmin, step, npts)
+        !if (present(tag)) then
+        !   fd1=opencube('jav_'// tag // '.cube', qmin, step, npts)
         !    fd2=opencube('jav_quasi'// tag // '.cube', qmin, step, npts)
-        else
-            fd1=opencube('jav.cube', qmin, step, npts)
+        !else
+        !    fd1=opencube('jav.cube', qmin, step, npts)
         !    fd2=opencube('jav_quasi.cube', qmin, step, npts)
-        end if
+        !end if
+        fd1=opencube('jav.cube', qmin, step, npts)
+        fd2=opencube('jav_quasi.cube', qmin, step, npts)
 
         ! if Jav is independent of B then the plot must also be 
         jtens => this%tens
@@ -678,7 +682,7 @@ contains
         end do
         print *, 'in JAV: maxi, mini:', maxi, mini
         call closefd(fd1)
-        !call closefd(fd2)
+        call closefd(fd2)
     end subroutine
 end module
 
