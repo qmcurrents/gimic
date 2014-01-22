@@ -83,6 +83,7 @@ def main():
     ess.add_kw('intp21', 'BOOL', (False,))
     ess.add_kw('intp33', 'BOOL', (False,))
     ess.add_kw('pabove', 'BOOL', (False,))
+    ess.add_kw("ref_bond", 'INT_ARRAY', 2)
 
     grid=getkw.Section('Grid', callback=check_grid)
     grid.set_arg('STR', ('std',))

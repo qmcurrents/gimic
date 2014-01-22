@@ -74,11 +74,7 @@ contains
             case ('std','base')
                 call setup_std_grid(this)
             case ('bond')
-                ! chf
-                write(*,*) "aref before setup_bond_grid", aref%refpt(1,:)
                 call setup_bond_grid(this,mol,aref)
-                ! chf
-                write(*,*) "aref after setup_bond_grid", aref%refpt(1,:)
             case default
                 call msg_error('Unknown grid type: ' // trim(this%mode))
                 stop
@@ -149,6 +145,7 @@ contains
         real(DP), dimension(3) :: normv
         integer(I4), dimension(3) :: atoms
         real(DP), dimension(3) :: v1, v2, v3, oo
+        real(DP), dimension(2,3) :: refbond
         real(DP), dimension(2) :: hgt, wdt
         real(DP) :: l3
         ! jav stuff
@@ -161,6 +158,7 @@ contains
             call get_coord(atom, this%basv(:,1))
             call get_atom(mol, atoms(2), atom)
             call get_coord(atom, this%basv(:,2))
+            !chf
             ! keep information about bond coordinates
             ! use this later on for the sphere integration
             ! in acid.f90 
@@ -173,7 +171,6 @@ contains
                  aref%refpt(2,:) = this%basv(:,2)
                  ! assume the center of mass is inside the ring
                  aref%refpt(3,:) = get_center_of_mass(mol)
-                 write(*,*), "aref", aref%refpt(1,:)
              end if
         else
             call getkw(input, 'Grid.coord1', this%basv(:,1))
@@ -191,6 +188,21 @@ contains
                  ! assume the center of mass is inside the ring
                  aref%refpt(3,:) = get_center_of_mass(mol)
              end if
+        end if
+
+        if (keyword_is_set(input, 'Essential.pabove')) then
+          ! other reference is needed when the integration 
+          ! plane is above the molecular plane 
+              print *, "in first if block"
+            call getkw(input, 'Essential.ref_bond', atoms(1:2))
+            call get_atom(mol, atoms(1), atom)
+            call get_coord(atom, refbond(1,:))
+            call get_atom(mol, atoms(2), atom)
+            call get_coord(atom, refbond(2,:))
+            aref%refpt(1,:) = refbond(1,:)
+            aref%refpt(2,:) = refbond(2,:)
+            print *, "heike aref", aref%refpt(1,:)
+            print *, "heike aref", aref%refpt(2,:)
         end if
 
         if (keyword_is_set(input,'Grid.fixpoint')) then

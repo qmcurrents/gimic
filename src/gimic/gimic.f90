@@ -177,7 +177,7 @@ contains
         end if
 
         if (settings%calc(1:5) == 'cdens') then 
-            call run_cdens(jf,mol,xdens)
+            call run_cdens(jf,mol,xdens,aref)
         else if (settings%calc(1:8) == 'integral') then 
             call run_integral(aref)
         else if (settings%calc(1:4) == 'divj') then 
@@ -195,10 +195,11 @@ contains
         call del_grid(grid)
     end subroutine
 
-    subroutine run_cdens(jf,mol,xdens)
+    subroutine run_cdens(jf,mol,xdens,aref)
         type(jfield_t) :: jf
         type(dens_t) :: xdens
         type(molecule_t) :: mol 
+        type(acid_t) :: aref 
         call msg_out('Calculating current density')
         call msg_out('*****************************************')
         call new_jfield(jf, grid, magnet)
