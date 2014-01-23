@@ -661,21 +661,22 @@ contains
                     val=(sqrt(sum(v**2)))
                     ! rr=rr-dot_product(mag,rr)*mag
                     ! norm=cross_product(mag,rr)
-                    ! sgn=dot_product(norm,v)
+                    norm=cross_product(aref%norm,rr)
+                    sgn=dot_product(norm,v)
                     if (val > maxi) maxi=val
                     if (val < mini) mini=val
                     if (fd1 /= 0) then 
                         write(fd1,'(f12.6)',advance='no') au2si(val)
                         if (mod(l,6) == 5) write(fd1,*)
                     end if
-                    ! if (fd2 /= 0) then 
-                    !     if (sgn >= 0.d0 ) then
-                    !         write(fd2,'(f12.6)',advance='no') au2si(val)
-                    !     else
-                    !         write(fd2,'(f12.6)',advance='no') -1.d0*au2si(val)
-                    !     end if
-                    !     if (mod(l,6) == 5) write(fd2,*)
-                    ! end if
+                    if (fd2 /= 0) then 
+                      if (sgn >= 0.d0 ) then
+                        write(fd2,'(f12.6)',advance='no') au2si(val)
+                      else
+                        write(fd2,'(f12.6)',advance='no') -1.d0*au2si(val)
+                      end if
+                      if (mod(l,6) == 5) write(fd2,*)
+                    end if
                     l=l+1
                 end do
             end do

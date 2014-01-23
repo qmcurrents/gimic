@@ -72,7 +72,7 @@ contains
                 call extgrid(this)
                 return
             case ('std','base')
-                call setup_std_grid(this,aref)
+                call setup_std_grid(this,mol,aref)
             case ('bond')
                 call setup_bond_grid(this,mol,aref)
             case default
@@ -113,11 +113,14 @@ contains
         call nl
     end subroutine
 
-    subroutine setup_std_grid(this,aref)
+    subroutine setup_std_grid(this,mol,aref)
         type(grid_t) :: this
         type(acid_t) :: aref
+        type(molecule_t) :: mol
+        type(atom_t), pointer :: atom
 
         integer(I4) :: i
+        integer(I4), dimension(3) :: atoms
         real(DP), dimension(3) :: normv
         real(DP), dimension(2,3) :: refbond
 
@@ -135,6 +138,7 @@ contains
 
         this%basv(:,3)=cross_product(this%basv(:,1),this%basv(:,2)) 
         this%ortho=norm(this%basv(:,3))
+
         ! here comes Jav relevant stuff for arrow plots
         if (keyword_is_set(input, 'Essential.pabove')) then
           call getkw(input, 'Essential.ref_bond', atoms(1:2))
