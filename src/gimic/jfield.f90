@@ -319,6 +319,7 @@ contains
           call closefd(fd5)
         end if
 
+        ! case 3D Grid
         if (grid_is_3d(this%grid)) then 
             if (settings%acid) then
               ! add here ACID plot stuff ! 
@@ -382,6 +383,55 @@ contains
         deallocate(val)
     end subroutine
 
+    subroutine jmod2_vtkplot(this)
+        use vtkplot_module
+        type(jfield_t) :: this
+
+        integer(I4) :: p1, p2, p3, fd1, fd2
+        integer(I4) :: i, j, k, l
+        real(DP), dimension(3) :: qmin, qmax
+        real(DP), dimension(3) :: norm, step, mag, v, rr
+        real(DP) :: maxi, mini, sgn 
+        integer(I4), dimension(3) :: npts
+        real(DP), dimension(:,:), pointer :: buf
+        real(DP), dimension(:,:,:), allocatable :: val
+
+        if (mpi_rank > 0) return
+
+        call get_grid_size(this%grid, p1, p2, p3)
+        allocate(val(p1,p2,p3))
+        npts=(/p1,p2,p3/)
+        norm=get_grid_normal(this%grid)
+        qmin=gridpoint(this%grid,1,1,1)
+        qmax=gridpoint(this%grid,p1,p2,p3)
+
+        step=(qmax-qmin)/(npts-1)
+
+        mag = this%b
+
+        buf => this%vec
+        maxi=0.d0
+        mini=0.d0
+        l=0
+        do i=1,p1
+            do j=1,p2
+                do k=1,p3
+                    v=buf(:,i+(j-1)*p1+(k-1)*p1*p2)
+                    rr=gridpoint(this%grid,i,j,k)
+                    val(i,j,k)=(sqrt(sum(v**2)))
+                    rr=rr-dot_product(mag,rr)*mag
+                    norm=cross_product(mag,rr)
+                    sgn=dot_product(norm,v)
+                    if (sgn.lt.0.0d0) then
+                        val(i,j,k) = -1.0d0*val(i,j,k)
+                    end if
+                end do
+            end do
+        end do
+        call write_vtk_imagedata('jmod.vti', this%grid, val)
+        deallocate(val)
+    end subroutine
+
     subroutine jmod_cubeplot(this, tag)
         type(jfield_t) :: this
         character(*), optional :: tag
@@ -396,7 +446,10 @@ contains
 
         if (mpi_rank > 0) return
 
-        call jmod_vtkplot(this)
+        !call jmod_vtkplot(this)
+        ! chf
+        ! adapted jmod_vtkplot from jonas - or tried to do so
+        call jmod2_vtkplot(this)
         call get_grid_size(this%grid, p1, p2, p3)
         npts=(/p1,p2,p3/)
         norm=get_grid_normal(this%grid)
