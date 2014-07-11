@@ -384,6 +384,8 @@ contains
     end subroutine
 
     subroutine jmod2_vtkplot(this)
+    ! based on jmod_vtkplot 
+    ! purpose: write all information on one file
         use vtkplot_module
         type(jfield_t) :: this
 
@@ -613,6 +615,9 @@ contains
         real(DP), dimension(:,:), pointer :: jtens
         real(DP), dimension(3) :: qmin, qmax, step, r 
         real(DP) :: val, maxi, mini
+        ! create vti file
+        call acid_vtkplot(this)
+
         ! collect grid information
         call get_grid_size(this%grid, npts(1), npts(2), npts(3))
         qmin = gridpoint(this%grid, 1, 1, 1)
@@ -679,7 +684,7 @@ contains
         else
             print *, "Attention, no integration formula define for Jav!"
         end if
-        ! call jmod_vtkplot(this) ! buggy
+        ! call jmod_vtkplot(this) 
         call get_grid_size(this%grid, p1, p2, p3)
         npts=(/p1,p2,p3/)
         norm=get_grid_normal(this%grid)
@@ -737,6 +742,54 @@ contains
         print *, 'in JAV: maxi, mini:', maxi, mini
         call closefd(fd1)
         call closefd(fd2)
+    end subroutine
+
+    subroutine acid_vtkplot(this)
+    ! based on jmod_vtkplot and acid_cube_plot subroutines
+        use vtkplot_module
+        type(jfield_t) :: this
+
+        integer(I4) :: p1, p2, p3, fd1, fd2, idx
+        integer(I4) :: i, j, k, l
+        real(DP), dimension(:,:), pointer :: jtens
+        real(DP), dimension(3) :: qmin, qmax
+        real(DP), dimension(3) :: norm, step, mag, v, rr
+        real(DP) :: maxi, mini, sgn 
+        integer(I4), dimension(3) :: npts
+        !real(DP), dimension(:,:), pointer :: buf
+        real(DP), dimension(:,:,:), allocatable :: val
+
+        if (mpi_rank > 0) return
+
+        call get_grid_size(this%grid, p1, p2, p3)
+        allocate(val(p1,p2,p3))
+        npts=(/p1,p2,p3/)
+        norm=get_grid_normal(this%grid)
+        qmin=gridpoint(this%grid,1,1,1)
+        qmax=gridpoint(this%grid,p1,p2,p3)
+
+        step=(qmax-qmin)/(npts-1)
+
+        jtens => this%tens
+        mag = this%b
+
+        !buf => this%vec
+        maxi=0.d0
+        mini=0.d0
+        l=0
+        idx = 0 
+        do i=1,p1
+            do j=1,p2
+                do k=1,p3
+                    !v=buf(:,i+(j-1)*p1+(k-1)*p1*p2)
+                    rr=gridpoint(this%grid,i,j,k)
+                    idx = i+(j-1)*p1 + (k-1)*p1*p2 
+                    val(i,j,k)= get_acid(rr, jtens(:,idx))  
+                end do
+            end do
+        end do
+        call write_vtk_imagedata('acid.vti', this%grid, val)
+        deallocate(val)
     end subroutine
 end module
 
