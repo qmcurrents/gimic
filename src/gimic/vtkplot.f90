@@ -80,6 +80,7 @@ contains
         integer(I4), dimension(3) :: npts
         real(DP), dimension(2) :: qrange
         real(DP), dimension(3) :: qmin, qmax, step
+        real(DP) :: norm 
 
         call getfd(fd)
         open(fd, file=trim(fname), form='formatted', status='unknown')
@@ -143,8 +144,20 @@ contains
         write(fd, *) '   </DataArray>'
         write(fd, *) '   </PointData>'
 
-!        write(fd, *) '   <CellData Scalaras="foo">'
-!        write(fd, *) '   </CellData>'
+        write(fd, *) '   <CellData Scalaras="foo">'
+
+        do k=1,npts(3)
+            do j=1,npts(2)
+                do i=1,npts(1)
+                    norm = sqrt(pdata(i,j,k,1)**2       & 
+                    + pdata(i,j,k,2)**2                 &
+                    + pdata(i,j,k,3)**2)
+                    write(fd,'(e14.6)') norm 
+                end do
+            end do
+        end do
+
+        write(fd, *) '   </CellData>'
 
         write(fd, *) '   </Piece>'
         write(fd, *) '   </ImageData>'
