@@ -230,6 +230,8 @@ contains
     end function
 
     subroutine jvector_plots(this,mol,tag,aref)
+        use vtkplot_module
+
         type(jfield_t), intent(inout) :: this
         type(molecule_t) :: mol
         character(*), optional :: tag
@@ -240,6 +242,7 @@ contains
         real(DP), dimension(3) :: v, rr, jav
         real(DP), dimension(:,:), pointer :: jv
         real(DP), dimension(:,:), pointer :: jtens
+        real(DP), dimension(:,:,:,:), allocatable :: jval
         real(DP) :: val
         type(acid_t) :: aref
 
@@ -276,12 +279,15 @@ contains
         end if
 
         call get_grid_size(this%grid, p1, p2, p3)
+        allocate(jval(p1,p2,p3,3))
         jv=>this%vec
         do k=1,p3
             do j=1,p2
                 do i=1,p1
                     rr=gridpoint(this%grid, i,j,k)*AU2A
                     v=jv(:,i+(j-1)*p1+(k-1)*p1*p2)*AU2A
+                    ! collect jv vec information to put it on vti file
+                    jval(i,j,k,1:3) = v
                     call wrt_jvec(rr,v,fd1)
                     call wrt_jmod(rr,v,fd2)
                     ! case ACID
@@ -318,6 +324,9 @@ contains
           call closefd(fd4)
           call closefd(fd5)
         end if
+        ! put jvec information on vti file
+        call write_vtk_vector_imagedata("jvec.vti", this%grid, jval) 
+        deallocate(jval)
 
         ! case 3D Grid
         if (grid_is_3d(this%grid)) then 
