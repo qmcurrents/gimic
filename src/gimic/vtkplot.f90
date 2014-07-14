@@ -119,9 +119,13 @@ contains
             'NumberOfComponents="3" Format="ascii">'
 
         l=0
-        do i=1,npts(1)
+        ! note there is another loop structure for jvec!!!!
+        !do i=1,npts(1)
+        !    do j=1,npts(2)
+        !        do k=1,npts(3)
+        do k=1,npts(3)
             do j=1,npts(2)
-                do k=1,npts(3)
+                do i=1,npts(1)
                     !write(fd,'(e14.6)',advance='no') pdata(i,j,k,1:3)
                     !do idx = 1, 3
                       !write(fd,'(e14.6)', advance='no') pdata(i,j,k,idx)
