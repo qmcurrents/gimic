@@ -235,6 +235,7 @@ contains
         type(jfield_t), intent(inout) :: this
         type(molecule_t) :: mol
         character(*), optional :: tag
+        logical :: circle_log
 
         integer(I4) :: i, j, k, p1, p2, p3
         integer(I4) :: fd1, fd2, fd3, fd4, fd5
@@ -283,9 +284,12 @@ contains
         call get_grid_size(this%grid, p1, p2, p3)
         ! this is for cdens visualization when radius option is used
         call grid_center(this%grid,center)
-        print *, "center in angstroem", center*AU2A
         bound=1.d+10
         bound=this%grid%radius
+        circle_log = .false.
+        if (this%grid%radius.gt.0.0d0) then
+            circle_log = .true.
+        end if
 
         allocate(jval(p1,p2,p3,3))
         jv=>this%vec
@@ -293,13 +297,17 @@ contains
             do j=1,p2
                 do i=1,p1
                     rr=gridpoint(this%grid, i,j,k)*AU2A
-                    ! for radius option
-                    r = sqrt(sum((rr-center)**2)) 
                     ! v=jv(:,i+(j-1)*p1+(k-1)*p1*p2)*AU2A
-                    if (r > bound) then
-                        v = 0.0d0
+                    if (circle_log) then
+                       ! for radius option
+                       r = sqrt(sum((rr-center)**2)) 
+                       if (r > bound) then
+                           v = 0.0d0
+                       else
+                           v=jv(:,i+(j-1)*p1+(k-1)*p1*p2)*AU2A
+                       end if
                     else
-                        v=jv(:,i+(j-1)*p1+(k-1)*p1*p2)*AU2A
+                       v=jv(:,i+(j-1)*p1+(k-1)*p1*p2)*AU2A
                     end if
                     ! collect jv vec information to put it on vti file
                     jval(i,j,k,1:3) = v
