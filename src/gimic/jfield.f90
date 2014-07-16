@@ -240,10 +240,12 @@ contains
         integer(I4) :: fd1, fd2, fd3, fd4, fd5
         integer(I4) :: idx, ptf
         real(DP), dimension(3) :: v, rr, jav
+        real(DP), dimension(3) :: center
         real(DP), dimension(:,:), pointer :: jv
         real(DP), dimension(:,:), pointer :: jtens
         real(DP), dimension(:,:,:,:), allocatable :: jval
         real(DP) :: val
+        real(DP) :: bound, r 
         type(acid_t) :: aref
 
         if (mpi_rank > 0) return
@@ -279,13 +281,26 @@ contains
         end if
 
         call get_grid_size(this%grid, p1, p2, p3)
+        ! this is for cdens visualization when radius option is used
+        call grid_center(this%grid,center)
+        print *, "center in angstroem", center*AU2A
+        bound=1.d+10
+        bound=this%grid%radius
+
         allocate(jval(p1,p2,p3,3))
         jv=>this%vec
         do k=1,p3
             do j=1,p2
                 do i=1,p1
                     rr=gridpoint(this%grid, i,j,k)*AU2A
-                    v=jv(:,i+(j-1)*p1+(k-1)*p1*p2)*AU2A
+                    ! for radius option
+                    r = sqrt(sum((rr-center)**2)) 
+                    ! v=jv(:,i+(j-1)*p1+(k-1)*p1*p2)*AU2A
+                    if (r > bound) then
+                        v = 0.0d0
+                    else
+                        v=jv(:,i+(j-1)*p1+(k-1)*p1*p2)*AU2A
+                    end if
                     ! collect jv vec information to put it on vti file
                     jval(i,j,k,1:3) = v
                     call wrt_jvec(rr,v,fd1)
