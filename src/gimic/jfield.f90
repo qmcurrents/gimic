@@ -389,6 +389,7 @@ contains
 
         call get_grid_size(this%grid, p1, p2, p3)
         allocate(val(p1,p2,p3))
+
         npts=(/p1,p2,p3/)
         norm=get_grid_normal(this%grid)
         qmin=gridpoint(this%grid,1,1,1)
@@ -405,6 +406,9 @@ contains
         do i=1,p1
             do j=1,p2
                 do k=1,p3
+        !do i=1,p3
+        !    do j=1,p2
+        !        do k=1,p1
                     v=buf(:,i+(j-1)*p1+(k-1)*p1*p2)
                     rr=gridpoint(this%grid,i,j,k)
                     val(i,j,k)=(sqrt(sum(v**2)))
@@ -434,6 +438,8 @@ contains
 
         call get_grid_size(this%grid, p1, p2, p3)
         allocate(val(p1,p2,p3))
+        !allocate(val(p3,p2,p1))
+
         npts=(/p1,p2,p3/)
         norm=get_grid_normal(this%grid)
         qmin=gridpoint(this%grid,1,1,1)
@@ -447,9 +453,13 @@ contains
         maxi=0.d0
         mini=0.d0
         l=0
-        do i=1,p1
+        !do i=1,p1
+        !    do j=1,p2
+        !        do k=1,p3
+        do k=1,p3
             do j=1,p2
-                do k=1,p3
+                do i=1,p1
+                    ! v=jv(:,i+(j-1)*p1+(k-1)*p1*p2)*AU2A
                     v=buf(:,i+(j-1)*p1+(k-1)*p1*p2)
                     rr=gridpoint(this%grid,i,j,k)
                     val(i,j,k)=(sqrt(sum(v**2)))
@@ -480,7 +490,7 @@ contains
 
         if (mpi_rank > 0) return
 
-        !call jmod_vtkplot(this)
+        ! call jmod_vtkplot(this)
         ! chf
         ! adapted jmod_vtkplot from jonas - or tried to do so
         call jmod2_vtkplot(this)
@@ -795,6 +805,7 @@ contains
 
         call get_grid_size(this%grid, p1, p2, p3)
         allocate(val(p1,p2,p3))
+
         npts=(/p1,p2,p3/)
         norm=get_grid_normal(this%grid)
         qmin=gridpoint(this%grid,1,1,1)
@@ -810,9 +821,12 @@ contains
         mini=0.d0
         l=0
         idx = 0 
-        do i=1,p1
+        !do i=1,p1
+        !    do j=1,p2
+        !        do k=1,p3
+        do k=1,p3
             do j=1,p2
-                do k=1,p3
+                do i=1,p1
                     !v=buf(:,i+(j-1)*p1+(k-1)*p1*p2)
                     rr=gridpoint(this%grid,i,j,k)
                     idx = i+(j-1)*p1 + (k-1)*p1*p2 
