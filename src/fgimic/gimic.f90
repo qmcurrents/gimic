@@ -20,7 +20,7 @@ program gimic
     use jfield_class
     use caos_module
     use gaussint_module
-    implicit none 
+    implicit none
 
     type(molecule_t) :: mol
     type(getkw_t) :: input
@@ -31,7 +31,7 @@ program gimic
     real(DP), dimension(3) :: magnet
 
     character(BUFLEN) :: buf
-    
+
     call new_getkw(input)
     call set_debug_level(3)
 
@@ -45,7 +45,7 @@ program gimic
     call stockas_klocka()
     call msg_out('Hello World! (tm)')
     call program_footer()
-    
+
     if (bert_is_evil) then
         call msg_error('Bert is evil, and your results are wicked.')
         call nl
@@ -98,10 +98,10 @@ contains
         end if
 
         call msg_out(fdate())
-        
+
         call msg_out(' TITLE: '// trim(settings%title))
         call nl
-        
+
         if (.not.settings%use_giao) then
             call msg_info('GIAOs not used!')
             call nl
@@ -166,13 +166,13 @@ contains
             call nl
         end if
 
-        if (settings%calc(1:5) == 'cdens') then 
+        if (settings%calc(1:5) == 'cdens') then
             call run_cdens(jf, xdens)
-        else if (settings%calc(1:8) == 'integral') then 
+        else if (settings%calc(1:8) == 'integral') then
             call run_integral()
-        else if (settings%calc(1:4) == 'divj') then 
+        else if (settings%calc(1:4) == 'divj') then
             call run_divj()
-        else if (settings%calc(1:5) == 'edens') then 
+        else if (settings%calc(1:5) == 'edens') then
             call run_edens()
         else
             call msg_error('gimic(): Unknown operation!')
@@ -191,19 +191,19 @@ contains
         call msg_out('Calculating current density')
         call msg_out('*****************************************')
         call new_jfield(jf, grid, magnet)
-        
+
         if (settings%dryrun) return
-        
+
         call calc_jvectors(jf, mol, xdens)
         call jvector_plots(jf)
-        
+
         if (settings%is_uhf) then
             call calc_jvectors(jf, mol, xdens, 'alpha')
             call jvector_plots(jf, 'alpha')
 
             call calc_jvectors(jf, mol, xdens, 'beta')
             call jvector_plots(jf, 'beta')
-            
+
             call calc_jvectors(jf, mol, xdens, 'spindens')
             call jvector_plots(jf, 'spindens')
         endif
@@ -216,16 +216,26 @@ contains
         call msg_out('Integrating current density')
         call msg_out('*****************************************')
         call new_integral(it, grid)
-        
+
         if (settings%dryrun) return
 
         call msg_note('Integrating |J|')
         call integrate_modulus(it, mol, xdens)
-        
+        if (settings%is_uhf) then
+            call integrate_modulus(it, mol, xdens, 'alpha')
+            call integrate_modulus(it, mol, xdens, 'beta')
+            call integrate_modulus(it, mol, xdens, 'spindens')
+        end if
+        call nl
+
         call msg_note('Integrating current')
         call integrate_current(it, mol, xdens)
+        if (settings%is_uhf) then
+            call integrate_current(it, mol, xdens, 'alpha')
+            call integrate_current(it, mol, xdens, 'beta')
+            call integrate_current(it, mol, xdens, 'spindens')
+        end if
         call nl
-        
 !        call msg_note('Integrating current tensor')
 !        call int_t_direct(it)  ! tensor integral
 !        call write_integral(it)
@@ -240,12 +250,12 @@ contains
         call new_divj_field(dj, grid, magnet)
         if (settings%dryrun) return
         call divj_field(dj)
-        if (mpi_rank == 0) then 
+        if (mpi_rank == 0) then
             call divj_plot(dj, 'divj')
         end if
         call del_divj_field(dj)
     end subroutine
-    
+
     subroutine run_edens
         use edens_field_class
         type(edens_field_t) :: ed
@@ -258,13 +268,13 @@ contains
         call new_edens_field(ed, mol, modens, grid, 'edens.bin')
         if (settings%dryrun) return
         call edens_field(ed)
-        if (mpi_rank == 0) then 
+        if (mpi_rank == 0) then
             call edens_plot(ed, "edens")
         end if
         call del_edens_field(ed)
         call del_dens(modens)
     end subroutine
-    
+
     subroutine program_header
         integer(I4) :: i,j,sz
         integer(I4), dimension(3) :: iti
@@ -315,6 +325,6 @@ call nl
         call nl
     end subroutine
 
-end program 
+end program
 
 ! vim:et:sw=4:ts=4
