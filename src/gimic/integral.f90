@@ -531,7 +531,7 @@ contains
         real(DP) :: psum2, nsum2
         real(DP) :: psum3, nsum3
         real(DP) :: xsum, xsum2, xsum3, fac
-        real(DP), dimension(3) :: jvec
+        real(DP), dimension(3) :: jvec, norm_bond, zvec
         real(DP), dimension(9) :: tt
         type(jtensor_t) :: jt
         type(acid_t) :: aref
@@ -561,7 +561,11 @@ contains
         call get_basvec(this%grid,3,basvec3)
 
         normal=get_grid_normal(this%grid)
-        !print*, "normal", normal
+        print*, "grid normal", normal(1), normal(2), normal(3)
+        norm_bond = get_norm_bond(aref)
+        zvec(1) = 0.0d0
+        zvec(2) = 0.0d0
+        zvec(3) = 1.0d0
 
         bound=1.d+10
         bound=this%grid%radius
@@ -599,14 +603,21 @@ contains
                     rr=gridpoint(this%grid, i, j, k)
                     r=sqrt(sum((rr-center)**2))
                     call ctensor(jt, rr, tt, spin)
-                    jvec = (get_jav(tt,ptf,aref)) 
+                    ! jvec = (get_jav(tt,ptf,aref)) 
+                    jvec = get_jess(tt)
                     ! rest can remain as it is...  
                     if ( r > bound ) then
                         w=0.d0
                         jp=0.d0
                     else
                         w=get_weight(this%grid, i, 1) 
-                        jp=dot_product(normal,jvec)*w
+                        fac = dot_product(norm_bond,zvec)
+                        if (fac.ge.0.0d0) then
+                          jp=dot_product(normal,jvec)*w
+                        else
+                          jp=-1.0d0*dot_product(normal,jvec)*w
+                        end if
+                        !jp=dot_product(normal,jvec)*w
                     end if
                     ! total
                     xsum=xsum+jp

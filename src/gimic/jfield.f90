@@ -238,10 +238,10 @@ contains
         logical :: circle_log
 
         integer(I4) :: i, j, k, p1, p2, p3
-        integer(I4) :: fd1, fd2, fd3, fd4, fd5
+        integer(I4) :: fd1, fd2, fd3, fd4, fd5, fd6
         integer(I4) :: idx, ptf
-        real(DP), dimension(3) :: v, rr, jav
-        real(DP), dimension(3) :: center
+        real(DP), dimension(3) :: v, rr, jav, j2d
+        real(DP), dimension(3) :: center, normal
         real(DP), dimension(:,:), pointer :: jv
         real(DP), dimension(:,:), pointer :: jtens
         real(DP), dimension(:,:,:,:), allocatable :: jval
@@ -266,9 +266,11 @@ contains
             !fd2 = open_plot('jmod_' // tag // '.txt')
             fd1 = open_plot('jvec' // tag // '.txt')
             fd2 = open_plot('jmod' // tag // '.txt')
+            fd6 = open_plot('j2d' // tag // '.txt')
         else
             fd1 = open_plot('jvec.txt')
             fd2 = open_plot('jmod.txt')
+            fd6 = open_plot('j2d.txt')
         end if
 
         if (settings%acid) then
@@ -282,6 +284,8 @@ contains
         end if
 
         call get_grid_size(this%grid, p1, p2, p3)
+        ! put grid information on file for later on 2D plotting
+        write(fd6,'(3I5)') p1, p2, p3
         ! this is for cdens visualization when radius option is used
         call grid_center(this%grid,center)
         bound=1.d+10
@@ -290,8 +294,11 @@ contains
         if (this%grid%radius.gt.0.0d0) then
             circle_log = .true.
         end if
+        ! get grid normal vector n
+        normal=get_grid_normal(this%grid)
 
         allocate(jval(p1,p2,p3,3))
+
         jv=>this%vec
         do k=1,p3
             do j=1,p2
@@ -311,8 +318,10 @@ contains
                     end if
                     ! collect jv vec information to put it on vti file
                     jval(i,j,k,1:3) = v
+                    j2d = v - normal*dot_product(v,normal)
                     call wrt_jvec(rr,v,fd1)
                     call wrt_jmod(rr,v,fd2)
+                    call wrt_j2d(rr,j2d,fd6)
                     ! case ACID
                     if (settings%acid) then
                       idx = i+(j-1)*p1+(k-1)*p1*p2
@@ -340,6 +349,7 @@ contains
         end do
         call closefd(fd1)
         call closefd(fd2)
+        call closefd(fd6)
         if (settings%acid) then
           call closefd(fd3)
         end if
@@ -581,6 +591,15 @@ contains
         if (fd == 0) return
 
         write(fd, '(6f11.7)')  rr, v
+    end subroutine	
+
+    subroutine wrt_j2d(rr,v,fd)
+        real(DP), dimension(:), intent(in) :: rr, v
+        integer(I4), intent(in) :: fd
+
+        if (fd == 0) return
+        write(fd, '(4f11.7)')  rr(1), rr(2), v(1), v(2)
+        ! write(fd, '(6f11.7)')  rr, v
     end subroutine	
 
     subroutine wrt_njvec(rr,v,fd)
