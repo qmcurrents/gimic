@@ -238,13 +238,14 @@ contains
         logical :: circle_log
 
         integer(I4) :: i, j, k, p1, p2, p3
-        integer(I4) :: fd1, fd2, fd3, fd4, fd5, fd6
+        integer(I4) :: fd1, fd2, fd3, fd4, fd5
         integer(I4) :: idx, ptf
-        real(DP), dimension(3) :: v, rr, jav, j2d
+        real(DP), dimension(3) :: v, rr, jav
         real(DP), dimension(3) :: center, normal
         real(DP), dimension(:,:), pointer :: jv
         real(DP), dimension(:,:), pointer :: jtens
         real(DP), dimension(:,:,:,:), allocatable :: jval
+        real(DP), dimension(:,:,:,:), allocatable :: j2d 
         real(DP) :: val
         real(DP) :: bound, r 
         type(acid_t) :: aref
@@ -266,11 +267,9 @@ contains
             !fd2 = open_plot('jmod_' // tag // '.txt')
             fd1 = open_plot('jvec' // tag // '.txt')
             fd2 = open_plot('jmod' // tag // '.txt')
-            fd6 = open_plot('j2d' // tag // '.txt')
         else
             fd1 = open_plot('jvec.txt')
             fd2 = open_plot('jmod.txt')
-            fd6 = open_plot('j2d.txt')
         end if
 
         if (settings%acid) then
@@ -284,8 +283,6 @@ contains
         end if
 
         call get_grid_size(this%grid, p1, p2, p3)
-        ! put grid information on file for later on 2D plotting
-        write(fd6,'(3I5)') p1, p2, p3
         ! this is for cdens visualization when radius option is used
         call grid_center(this%grid,center)
         bound=1.d+10
@@ -296,8 +293,10 @@ contains
         end if
         ! get grid normal vector n
         normal=get_grid_normal(this%grid)
+        normal = normal*AU2A
 
         allocate(jval(p1,p2,p3,3))
+        allocate(j2d(p1,p2,p3,3))
 
         jv=>this%vec
         do k=1,p3
@@ -318,10 +317,9 @@ contains
                     end if
                     ! collect jv vec information to put it on vti file
                     jval(i,j,k,1:3) = v
-                    j2d = v - normal*dot_product(v,normal)
+                    j2d(i,j,k,1:3) = v - normal*dot_product(v,normal)
                     call wrt_jvec(rr,v,fd1)
                     call wrt_jmod(rr,v,fd2)
-                    call wrt_j2d(rr,j2d,fd6)
                     ! case ACID
                     if (settings%acid) then
                       idx = i+(j-1)*p1+(k-1)*p1*p2
@@ -349,7 +347,6 @@ contains
         end do
         call closefd(fd1)
         call closefd(fd2)
-        call closefd(fd6)
         if (settings%acid) then
           call closefd(fd3)
         end if
@@ -359,7 +356,8 @@ contains
         end if
         ! put jvec information on vti file
         call write_vtk_vector_imagedata("jvec.vti", this%grid, jval) 
-        deallocate(jval)
+        call write_j2d_imagedata("j2d.txt", this%grid, j2d)
+        deallocate(jval, j2d)
 
         ! case 3D Grid
         if (grid_is_3d(this%grid)) then 
@@ -591,15 +589,6 @@ contains
         if (fd == 0) return
 
         write(fd, '(6f11.7)')  rr, v
-    end subroutine	
-
-    subroutine wrt_j2d(rr,v,fd)
-        real(DP), dimension(:), intent(in) :: rr, v
-        integer(I4), intent(in) :: fd
-
-        if (fd == 0) return
-        write(fd, '(4f11.7)')  rr(1), rr(2), v(1), v(2)
-        ! write(fd, '(6f11.7)')  rr, v
     end subroutine	
 
     subroutine wrt_njvec(rr,v,fd)
