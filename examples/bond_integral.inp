@@ -1,7 +1,6 @@
 # NEW INPUT
 
 calc=integral          # cdens, integral, edens, divj
-dryrun=off        # don't actually calculate (good for tuning grids, etc.)
 title=""
 basis="mol"
 xdens="xdens"
