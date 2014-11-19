@@ -531,7 +531,7 @@ contains
         real(DP) :: psum2, nsum2
         real(DP) :: psum3, nsum3
         real(DP) :: xsum, xsum2, xsum3, fac
-        real(DP), dimension(3) :: jvec, norm_bond, zvec
+        real(DP), dimension(3) :: jvec, norm_bond, y_int
         real(DP), dimension(9) :: tt
         type(jtensor_t) :: jt
         type(acid_t) :: aref
@@ -562,10 +562,9 @@ contains
 
         normal=get_grid_normal(this%grid)
         print*, "grid normal", normal(1), normal(2), normal(3)
-        norm_bond = get_norm_bond(aref)
-        zvec(1) = 0.0d0
-        zvec(2) = 0.0d0
-        zvec(3) = 1.0d0
+        !norm_bond = get_norm_bond(aref)
+        y_int = get_y_internal(aref)
+        print*, "y internal", y_int(1), y_int(2), y_int(3)
 
         bound=1.d+10
         bound=this%grid%radius
@@ -604,20 +603,22 @@ contains
                     r=sqrt(sum((rr-center)**2))
                     call ctensor(jt, rr, tt, spin)
                     ! jvec = (get_jav(tt,ptf,aref)) 
-                    jvec = get_jess(tt)
+                    jvec = get_jess(tt,aref)
                     ! rest can remain as it is...  
                     if ( r > bound ) then
                         w=0.d0
                         jp=0.d0
                     else
                         w=get_weight(this%grid, i, 1) 
-                        fac = dot_product(norm_bond,zvec)
-                        if (fac.ge.0.0d0) then
-                          jp=dot_product(normal,jvec)*w
-                        else
-                          jp=-1.0d0*dot_product(normal,jvec)*w
-                        end if
-                        !jp=dot_product(normal,jvec)*w
+                        ! fac = dot_product(norm_bond,normal)
+                        ! fac = dot_product(normal,jvec)
+                        ! if (fac.ge.0.0d0) then
+                        !   jp=dot_product(normal,jvec)*w
+                        ! else
+                        !   jp=-1.0d0*dot_product(normal,jvec)*w
+                        ! end if
+                        ! jp=dot_product(normal,jvec)*w
+                        jp=dot_product(y_int,jvec)*w
                     end if
                     ! total
                     xsum=xsum+jp
@@ -651,7 +652,7 @@ contains
 
         call nl
         call msg_out(repeat('*', 60))
-        write(str_g, '(a,f13.6)') '   Induced averaged current (au)    :', xsum3
+        write(str_g, '(a,f13.6)') '   Induced essential current (au)    :', xsum3
         call msg_out(str_g)
         write(str_g, '(a,f13.6,a,f11.6,a)') &
             '      Positive contribution:', psum3, '  (',au2si(psum3),' )'
@@ -660,7 +661,7 @@ contains
             '      Negative contribution:', nsum3, '  (',au2si(nsum3),' )'
         call msg_out(str_g)
         call nl
-        write(str_g, '(a,f13.6)') '   Induced averaged current (nA/T)  :', au2si(xsum3)
+        write(str_g, '(a,f13.6)') '   Induced essential current (nA/T)  :', au2si(xsum3)
         call msg_out(str_g)
         write(str_g, '(a,f13.6)') '      (conversion factor)  :', au2si(1.d0)
         call msg_out(str_g)

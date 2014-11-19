@@ -329,7 +329,8 @@ contains
                     ! case GIMAC J average
                     if (settings%jav) then
                       idx = i+(j-1)*p1+(k-1)*p1*p2
-                      jav = get_jav(jtens(:,idx),ptf,aref)
+                      ! jav = get_jav(jtens(:,idx),ptf,aref)
+                      jav = get_jess(jtens(:,idx),aref)
                       call wrt_jvec(rr,jav,fd4)
                       call wrt_jmod(rr,v,fd5)
                     end if
