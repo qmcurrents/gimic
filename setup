@@ -11,26 +11,23 @@ import sys
 import string
 import re
 import subprocess
-
-sys.path.append('cmake')
-from argparse import ArgumentParser
+import shutil
+import argparse
 
 if sys.version < '2.4':
     print('requires python version >= 2.4')
     sys.exit(1)
 
 root_directory = os.path.realpath(__file__)[:-5]
-default_path = root_directory + 'build/'
 
 # initialize parser
 
-parser = ArgumentParser(description="Setup build configurations.")
+parser = argparse.ArgumentParser(description="Setup build configurations.")
 
 # define options
 
 parser.add_argument('builddir', nargs='?',
         action='store',
-        default=default_path,
         help='build directory [default: %(default)s]',
         metavar='build path')
 
@@ -61,7 +58,7 @@ group.add_argument('--openmp',
         nargs='?',
         action='store',
         choices=('on','off'),
-        default='on',
+        default='off',
         const='on',
         help='enable OpenMP [default: %(default)s]')
 group.add_argument('--blas',
@@ -99,13 +96,17 @@ group.add_argument('--force',
         action='store_true',
         default=False,
         help='run setup even if build directory exists [default: %(default)s]')
+group.add_argument('--clean',
+        action='store_true',
+        default=False,
+        help='remove the build directory exists [default: %(default)s]')
 group.add_argument('--debug',
         action='store_true',
         default=False,
-        help='build in debug mode (no optimization) [default: %(default)s]')
+        help='build in debug mode [default: %(default)s]')
 group.add_argument('--release',
-        action='store_false',
-        dest='debug',
+        action='store_true',
+        default=False,
         help='build in release mode (full optimization) [default: %(default)s]')
 group.add_argument('--tests',
         nargs='?',
@@ -162,10 +163,16 @@ group.add_argument('--netcdf-dir',
 # process input
 
 args = parser.parse_args()
-def abspath(path):
-    path = os.path.expandvars(path)
-    path = os.path.expanduser(path)
-    return os.path.abspath(path)
+
+if not args.builddir:
+    if args.debug and args.release:
+        args.builddir = root_directory + 'relwithdeb/'
+    elif args.release:
+        args.builddir = root_directory + 'release/'
+    else:
+        args.builddir = root_directory + 'build/'
+elif args.builddir[0] not in '/~':
+    args.builddir = root_directory + args.builddir
 
 def check_cmake_exists():
     p = subprocess.Popen('cmake --version',
@@ -208,12 +215,12 @@ def gen_cmake_command():
 
     command += ' -DENABLE_MPI=%s'    % args.mpi.upper()
     command += ' -DENABLE_OPENMP=%s' % args.openmp.upper()
-    command += ' -DENABLE_BLAS=%s'   % args.blas.upper()
+    #command += ' -DENABLE_BLAS=%s'   % args.blas.upper()
 #    command += ' -DENABLE_LAPACK=%s' % args.lapack.upper()
     command += ' -DENABLE_TESTS=%s'  % args.tests.upper()
 
     if args.blas_dir:
-        command += ' -DBLAS_ROOT={0}'.format(abspath(args.blas_dir))
+        command += ' -DBLAS_ROOT={0}'.format(args.blas_dir)
 
 #    if args.lapack_dir:
 #        command += ' -DLAPACK_ROOT={0}'.format(abspath(args.lapack_dir))
@@ -235,15 +242,16 @@ def gen_cmake_command():
 
     if args.prefix:
         command += ' -DCMAKE_INSTALL_PREFIX=' + args.prefix
-
-    if args.debug:
-        command += ' -DCMAKE_BUILD_TYPE=Debug'
     else:
-        command += ' -DCMAKE_BUILD_TYPE=Release'
+        command += ' -DCMAKE_INSTALL_PREFIX=' + args.builddir
 
-    if args.define:
-        for definition in args.define:
-            command += ' -D%s' % definition
+    if args.debug and args.release:
+        command += ' -DCMAKE_BUILD_TYPE=Relwithdebinfo'
+    elif args.release:
+        command += ' -DCMAKE_BUILD_TYPE=Release'
+    else:
+        command += ' -DCMAKE_BUILD_TYPE=Debug'
+
 
     if args.cfour_dir:
         command += ' -DCFOUR_ROOT=' + args.cfour_dir
@@ -253,6 +261,10 @@ def gen_cmake_command():
             print("Specified NETCDF directory does not exist!")
             sys.exit(1)
         command += ' -DNETCDF_ROOT="%s"' % args.netcdf_dir
+
+    if args.define:
+        for definition in args.define:
+            command += ' -D%s' % definition
 
     command += ' %s' % root_directory
 
@@ -285,7 +297,10 @@ def setup_build_path(build_path, only_show_command):
         return
     if os.path.isdir(build_path):
         if not only_show_command:
-            if args.force:
+            if args.clean:
+                shutil.rmtree(build_path)
+                os.makedirs(build_path, 0755)
+            elif args.force:
                 fname = os.path.join(build_path, 'CMakeCache.txt')
                 if os.path.exists(fname):
                     os.unlink(fname)
@@ -348,15 +363,20 @@ def configure_host():
 
 def configure_default_compilers():
     if not args.cc:
-        args.cc = 'gcc'
+        if args.mpi == 'on':
+            args.cc = 'mpicc'
+        else:
+            args.cc = 'gcc'
     if not args.cxx:
-        args.cxx = 'g++'
+        if args.mpi == 'on':
+            args.cxx = 'mpicxx'
+        else:
+            args.cxx = 'g++'
     if not args.fc:
-        args.fc = 'gfortran'
-    if args.mpi == 'on':
-        args.fc = 'mpif90'
-        args.cc = 'mpicc'
-        args.cxx = 'mpicxx'
+        if args.mpi == 'on':
+            args.fc = 'mpif90'
+        else:
+            args.fc = 'gfortran'
 
 configure_ubuntu = configure_default_compilers
 configure_fedora = configure_default_compilers
