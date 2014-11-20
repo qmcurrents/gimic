@@ -6,6 +6,7 @@
 
 program gimic
     use globals_module
+    use getkw_class
     use settings_module
     use teletype_module
     use basis_class

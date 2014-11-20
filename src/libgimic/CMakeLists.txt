@@ -3,7 +3,6 @@ include_directories(${CMAKE_SOURCE_DIR}/src/pygimic)
 
 set(sources
     globals.f90
-    getkw.f90
     basis.f90
     bfeval.f90
     cao2sao.f90

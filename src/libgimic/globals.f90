@@ -5,7 +5,6 @@ module globals_module
     use kinds_module
     use settings_module
     use teletype_module
-    use getkw_class
     implicit none
 
     ! file descriptors
