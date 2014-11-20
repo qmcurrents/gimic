@@ -1,4 +1,4 @@
-module kinds_m
+module kinds_module
     implicit none
     integer, parameter :: MP = kind(0)
     integer, parameter :: SP = kind(0.0e0)

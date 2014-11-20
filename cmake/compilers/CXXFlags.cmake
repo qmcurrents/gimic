@@ -4,7 +4,7 @@ if (NOT DEFINED DEFAULT_CXX_FLAGS_SET)
 if (CMAKE_COMPILER_IS_GNUCXX)
     set (CMAKE_CXX_FLAGS "-Wall -Wno-unknown-pragmas -Wno-sign-compare -Woverloaded-virtual -Wwrite-strings -Wno-unused")
     set (CMAKE_CXX_FLAGS_DEBUG "-O0 -g3 -DDEBUG")
-    set (CMAKE_CXX_FLAGS_RELEASE "-Ofast -march=native -DNDEBUG -Wno-unused")
+    set (CMAKE_CXX_FLAGS_RELEASE "-O3 -march=native -DNDEBUG -Wno-unused")
     if (ENABLE_CODE_COVERAGE)
         set (CMAKE_CXX_FLAGS
             "${CMAKE_CXX_FLAGS} -fprofile-arcs -ftest-coverage")

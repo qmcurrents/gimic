@@ -2,16 +2,15 @@
 ! Written by Barnabas Plomlund.
 !
 ! This module is bit of a mess...
-! 
+!
 
 module grid_class
-    use globals_m
-    use getkw_class
-    use settings_m
-    use tensor_m
-    use gaussint_m
+    use globals_module
+    use settings_module
+    use tensor_module
+    use gaussint_module
     use basis_class
-    use teletype_m
+    use teletype_module
     implicit none
 
     type grid_t
@@ -50,13 +49,13 @@ contains
         type(getkw_t), target :: inp
         type(molecule_t) :: mol
 
-        real(DP) :: ll 
+        real(DP) :: ll
         real(DP), dimension(3) :: angle
         integer(I4), dimension(3) :: ngp
         integer(I4) :: i, j
 
         input=>inp
-        
+
         this%step=1.d0
         this%gtype='even'
         this%basv=0.0
@@ -82,7 +81,7 @@ contains
 
         call normalise(this%basv)
         call ortho_coordsys(this)
-        
+
         ! rotate basis vectors if needed
         if (keyword_is_set(input, 'Grid.rotation')) then
             call getkw(input, 'Grid.rotation', angle)
@@ -129,7 +128,8 @@ contains
             this%step=this%l/(this%npts-1)
         end if
 
-        this%basv(:,3)=cross_product(this%basv(:,1),this%basv(:,2)) 
+        this%basv(:,3)=cross_product(this%basv(:,1),this%basv(:,2))
+        this%ortho=norm(this%basv(:,3))
     end subroutine
 
     subroutine setup_bond_grid(this,mol)
@@ -177,8 +177,8 @@ contains
         if (keyword_is_set(input, 'Grid.height')) then
             call getkw(input, 'Grid.height', hgt)
             call getkw(input, 'Grid.width', wdt)
-            hgt(1)=-hgt(1)
-            wdt(1)=-wdt(1)
+            hgt(1)=hgt(1)
+            wdt(1)=wdt(1)
         else
             call getkw(input, 'Grid.in', wdt(1))
             call getkw(input, 'Grid.out', wdt(2))
@@ -194,7 +194,7 @@ contains
             call msg_critical('Grid width < 0!')
         end if
         if ( sum(hgt) < 0.d0 ) then
-            call msg_critical('Grid heigth < 0!')
+            call msg_critical('Grid height < 0!')
         end if
 
         ! figure out "orthogonal" axis for magnetic field
@@ -207,7 +207,7 @@ contains
             stop
         end if
         this%ortho=norm(this%ortho)
-    
+
         v3=norm(v2-v1)
         v1=-this%ortho
         v2=norm(cross_product(v3, v1))
@@ -237,7 +237,7 @@ contains
         call msg_out(str_g)
         call nl
     end subroutine
-    
+
     subroutine normalise(v)
         real(DP), dimension(:,:), intent(inout) :: v
 
@@ -276,7 +276,7 @@ contains
                 end if
             end do
         end if
-        
+
         do i=1,3
             if (.not.this%npts(i) > 1) then
                 this%npts(i)=0
@@ -287,7 +287,7 @@ contains
                 flag=.true.
             end if
         end do
-        
+
         if (flag) then
             write(str_g, '(a,3i5)'), &
             'Adjusted number of grid points for quadrature: ', this%npts
@@ -369,7 +369,7 @@ contains
         integer(I4) :: i
         real(DP), dimension(3) :: tvec
         real(DP) :: dpr
-        
+
         dpr=dot_product(this%basv(:,1), this%basv(:,2))
         if (abs(dpr) > DPTOL ) then
             tvec=cross_product(this%basv(:,1), this%basv(:,3))
@@ -392,7 +392,7 @@ contains
         end if
 99		format(a,3f12.8,a)
     end subroutine
-        
+
     subroutine get_grid_size(this, i, j, k)
         type(grid_t), intent(in) :: this
         integer(I4), intent(out) :: i
@@ -414,7 +414,7 @@ contains
             call del_gdata(this%gdata(3))
         end if
         call msg_note('Deallocated grid data')
-    end subroutine 
+    end subroutine
 
     function get_weight(this, i, d) result(w)
         integer(I4), intent(in) :: i, d
@@ -427,14 +427,14 @@ contains
     function is_gauss_grid(this) result(r)
         type(grid_t), intent(in) :: this
         logical :: r
-        
+
         r=this%gauss
     end function
 
     function get_grid_length(this) result(l)
         type(grid_t), intent(in) :: this
         real(DP), dimension(3) :: l
-        
+
         l=this%l
     end function
 
@@ -448,10 +448,10 @@ contains
         n = idx - 1
         call get_grid_size(this, p1, p2, p3)
 
-        k=int(n/(p1*p2)) 
+        k=int(n/(p1*p2))
         j=int((n-k*p1*p2)/p1)
-        i=n-k*p1*p2-j*p1 
-        
+        i=n-k*p1*p2-j*p1
+
         i = i + 1
         j = j + 1
         k = k + 1
@@ -461,7 +461,7 @@ contains
         type(grid_t), intent(in) :: this
         integer(I4), intent(in) :: i, j, k
         real(DP), dimension(3) :: r
-        
+
         if (this%gtype == 'file') then
             r=this%xdata(:,i)
         else
@@ -470,7 +470,7 @@ contains
               this%gdata(2)%pts(j)*this%basv(:,2)+&
               this%gdata(3)%pts(k)*this%basv(:,3)
         end if
-    end function 
+    end function
 
     function realpoint(this, i, j) result(r)
         integer(I4), intent(in) :: i, j
@@ -479,12 +479,12 @@ contains
 
         r=this%origin+real(i)*this%step(1)*this%basv(:,1)+&
             real(j)*this%step(2)*this%basv(:,2)
-    end function 
+    end function
 
     function get_grid_normal(this) result(n)
         type(grid_t), intent(in) :: this
         real(DP), dimension(3) :: n
-        
+
         n=this%basv(:,3)
     end function
 
@@ -493,7 +493,7 @@ contains
         real(DP), dimension(3), intent(out) :: center
 
         real(DP), dimension(3) :: v1, v2
-        
+
         v1=gridpoint(this, this%npts(1), 1, 1)
         v2=gridpoint(this, 1, this%npts(2), 1)
         center=(v1+v2)*0.5d0
@@ -540,7 +540,7 @@ contains
     function norm(v) result(n)
         real(DP), dimension(:), intent(in) :: v
         real(DP), dimension(3) :: n
-        
+
         real(DP) :: l
 
         l=sqrt(sum(v**2))
@@ -557,13 +557,12 @@ contains
         real(DP), dimension(3) :: r, coord
         character(2) :: symbol
         type(atom_t), pointer :: atom
-        logical :: show_axis
-
+        logical :: show_axis = .false.
 
         natoms=get_natoms(mol)
-        
+
         call get_grid_size(this,p1,p2,p3)
-        call getkw(input, 'show_axis', show_axis)
+!        call getkw(input, 'show_axis', show_axis)
         i=0
         if (show_axis) i=1
 
@@ -578,7 +577,7 @@ contains
         else if (p3 == 1) then
             write(77,*) natoms+4+i
             write(77,*)
-        else 
+        else
             write(77,*) natoms
             write(77,*)
         end if
@@ -628,7 +627,7 @@ contains
                         (this%origin+this%ortho)*au2a
             end select
         end if
-        
+
         close(77)
     end subroutine
 
@@ -694,7 +693,7 @@ contains
         euler(3,3)=cos(x)
         !jj euler(1,3)=-sin(x)
         !jj euler(3,1)=sin(x)
-    
+
         !ol begin
         euler(1,3)=sin(x)
         euler(3,1)=-sin(x)
@@ -746,7 +745,7 @@ contains
         real(DP), dimension(3), intent(out) :: v
         v=this%ortho
     end subroutine
-    
+
     subroutine quadrant()
         integer(I4) :: i, j, k
         real(DP), dimension(3) :: v1, v2, v3
@@ -799,7 +798,7 @@ contains
             r = .true.
         else
             r = .false.
-        end if 
+        end if
     end function
 end module
 

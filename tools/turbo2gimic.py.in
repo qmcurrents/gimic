@@ -5,11 +5,11 @@
 #
 
 import sys, string, re
-sys.path.append('@CMAKE_INSTALL_PREFIX@/@PYTHON_INST_DIR@')
+sys.path.append('@PYTHON_INSTDIR@')
 from QCTools import QCTools
 from QCTools.Elements import PeriodicTable as PTab
 
-l_map={'s':0, 'p':1, 'd':2, 'f':3, 'g':4, 'h':5, 'i':6} 
+l_map={'s':0, 'p':1, 'd':2, 'f':3, 'g':4, 'h':5, 'i':6}
 
 header="""INTGRL        1    0    1    0    0    0    0    0    0
 TURBOMOLE
@@ -29,12 +29,13 @@ def main():
         a=atoms[i]
         sym=string.upper(a.element.symbol)
         b=basis[sym]
-        print float(a.element.number),'  ', 1, b 
+        print float(a.element.number),'  ', 1, b
         print "%2s%2i%20.12f%20.12f%20.12f" % \
             (sym, 1, a.coord[0], a.coord[1], a.coord[2])
-        for c in b.ctr_list:
-            print c,
-    
+        for l in range(len(b.ctr_list)):
+            for c in b.ctr_list[l]:
+                print c,
+
     try:
         fcao=open('CAODENS', 'r')
         fxcao=open('XCAODENS', 'r')
@@ -55,15 +56,17 @@ class AOBasis(object):
         self.symbol=symbol
         self.lmax=1
         self.nshells=[0]
-        self.ctr_list=[]
-    
+        self.ctr_list={}
+
     def add(self, ctr):
         l=ctr.l
         if self.lmax < l+1:
             self.lmax=l+1
             self.nshells.append(0)
+        if not l in self.ctr_list:
+            self.ctr_list[l] = []
         self.nshells[l]+=1
-        self.ctr_list.append(ctr)
+        self.ctr_list[l].append(ctr)
 
     def __str__(self):
         s=str(self.lmax)+'  '
@@ -79,7 +82,7 @@ class Contraction(object):
         self.cc=cc
 
     def __str__(self):
-        s='%6i'+'  1\n' 
+        s='%6i'+'  1\n'
         for i in range(len(self.xp)):
             tmp='%18.10f %15.10f' % (self.xp[i], self.cc[i])
             s+=tmp+'\n'
@@ -91,17 +94,17 @@ def readbasis(file):
     f.close()
     elmt_def=re.compile('([a-zA-Z]{1,2}) .*')
     seg_def=re.compile('([1-9]*) *(s|p|d|f|g|h|i)$')
-    
+
     # some sanity, thank you...
     ll=map(string.strip,ll)
     ll=filter(len,ll)
-    
+
     clist=[]
     i=0
     atm=-1
     while i < len(ll):
         mob=elmt_def.match(ll[i])
-        if mob: 
+        if mob:
             e=mob.group(1)
             clist.append(AOBasis(string.upper(e)))
             atm+=1

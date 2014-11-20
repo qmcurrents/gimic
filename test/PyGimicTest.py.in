@@ -1,0 +1,60 @@
+#!@PYTHON_EXECUTABLE@
+# vim:ft=python:
+#
+# jonas juselius <jonas.juselius@uit.no>
+#
+import sys
+sys.path.insert(0, '@PROJECT_BINARY_DIR@/lib')
+sys.path.insert(0, '@PROJECT_SOURCE_DIR@/src')
+
+import numpy as np
+from pygimic.grid import Grid
+from pygimic.field import ScalarField, VectorField
+from pygimic.magnet import Magnet
+from pygimic.plot import MatPlot
+from argparse import ArgumentParser
+import gimic
+from london import london
+
+parser = ArgumentParser(description="GIMIC tester")
+parser.add_argument('--london', '-l', 
+        action='store_true',
+        default=False,
+        help='use London backend [default: %(default)s]')
+parser.add_argument('--dens', '-d', 
+        action='store_true',
+        default=False,
+        help='compute electron density [default: %(default)s]')
+args = parser.parse_args()
+
+if args.london:
+    gimic = london.London("@CMAKE_SOURCE_DIR@/test/ldensity.dat")
+else:
+    gimic = gimic.Gimic("@CMAKE_CURRENT_SOURCE_DIR@/mol",\
+            "@CMAKE_CURRENT_SOURCE_DIR@/xdens")
+
+grid = Grid(l=(6.0, 6.0, 0.0), origin=(-3.0, -3.0, 0.0), npts=30)
+#grid.set_radius((1.0, 1.0, 0.0))
+mag = Magnet('-z', grid)
+
+m = tuple(mag.get_magnet())
+gimic.set_property('magnet', m)
+
+if args.dens:
+    f = ScalarField(grid)
+    f.calc(gimic.rho)
+    p = MatPlot(f)
+    p.scalar_plot()
+    p.scalar_plot3d()
+else:
+    f = VectorField(grid)
+    f.calc(gimic.jvector)
+
+    p = MatPlot(f)
+    p.vector_plot()
+    p.stream_plot()
+
+    if isinstance(gimic, london.London):
+        f.calc(gimic.grad_rho)
+        p.vector_plot()
+        p.stream_plot()

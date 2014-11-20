@@ -1,9 +1,9 @@
 !
 ! Write Gaussian type cube files
 !
-module cubeplot_m
-    use globals_m
-    use settings_m
+module cubeplot_module
+    use globals_module
+    use settings_module
     use grid_class
     implicit none
 

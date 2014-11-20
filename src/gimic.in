@@ -2,102 +2,115 @@
 # -*- coding: utf-8 -*-
 # vim:filetype=python:
 #
-# Written by Jonas Juselius <jonas.juselius@chem.uit.no> 
-# University of Tromsø, 2007
+# Written by Jonas Juselius <jonas.juselius@uit.no> 
+# University of Tromsø, 2007, 2012
 #
 
-import sys,os
-sys.path.append("@PYTHON_INST_LIBDIR@")
-GIMIC_EXECUTABLE="@GIMIC_EXECUTABLE@"
-GIMLET_EXECUTABLE="@GIMLET_EXECUTABLE@"
+from __future__ import division
+import os
+import sys
+sys.path.insert(0, "@PYTHON_INSTDIR@")
+sys.path.insert(0, "@LIBDIR@")
 
-#from subprocess import Popen, PIPE
+if 'LD_LIBRARY_PATH' in os.environ:
+    os.environ['LD_LIBRARY_PATH'] += ':@LIBDIR@:'
+else:
+    os.environ['LD_LIBRARY_PATH'] = '@LIBDIR@:'
+
 import re
 from argparse import ArgumentParser
-import getkw
+from fgimic import getkw
 
 version="@PROJECT_VERSION@"
 
-parser = ArgumentParser(description="GIMIC {0}".format(version))
-
-parser.add_argument('infile', metavar="file", action='store', nargs='?',
-        default='gimic.inp', help='input file [default: gimic.inp]')
-parser.add_argument('-t', '--title', action='store', dest='title',
-        help='title of job')
-parser.add_argument('-d','--debug', action='store', type=int, dest='debug',
-        help='debug level')
-parser.add_argument('-o','--output', action='store', dest='outfile',
-        help='base name for output file(s)')
-parser.add_argument('-D','--debug-file', action='store', dest='debug_file',
-        help='debug file name')
-parser.add_argument('-v','--verbose', action='store_true', dest='verbose',
-       help='be verbose')
-parser.add_argument('-q','--quiet', action='store_false', dest='verbose',
-       help='be quiet')
-parser.add_argument('-y','--dryrun', action='store_true', dest='dryrun',
-       help='dryrun without actually calculating anything')
-parser.add_argument('-k','--keep', action='store_true', dest='keep',
-       help='keep temp input file')
-
-args=parser.parse_args()
-
 def main():
+    args = parse_cmdline()
+    inkeys = parse_keywords(args)
+    
+    if inkeys.getkw('backend')[0] == 'fgimic':
+        from fgimic.gimic import GimicDriver
+    else:
+        from pygimic.pygimic import GimicDriver
+    gimic = GimicDriver(args, inkeys)
+    gimic.run()
+
+def parse_cmdline():
+    parser = ArgumentParser(description="GIMIC {0}".format(version))
+
+    parser.add_argument('infile', metavar="file", action='store', nargs='?',
+            default='gimic.inp', help='input file [default: gimic.inp]')
+    parser.add_argument('-t', '--title', action='store', dest='title',
+            help='title of job')
+    parser.add_argument('-b','--backend', 
+            action='store', 
+            dest='backend',
+            choices=('pygimic','fgimic', 'london'),
+            default='pygimic',
+            help='backend library [default: %(default)s]')
+    parser.add_argument('-d','--debug', action='store', type=int, dest='debug',
+            help='debug level')
+    parser.add_argument('-o','--output', action='store', dest='outfile',
+            help='base name for output file(s)')
+    parser.add_argument('-D','--debug-file', action='store', dest='debug_file',
+            help='debug file name')
+    parser.add_argument('-v','--verbose', action='store_true', dest='verbose',
+           help='be verbose')
+    parser.add_argument('-q','--quiet', action='store_false', dest='verbose',
+           help='be quiet')
+    parser.add_argument('-y','--dryrun', action='store_true', dest='dryrun',
+           help='dryrun without actually calculating anything')
+
+    args=parser.parse_args()
+    return args
+
+def parse_keywords(args):
     top=getkw.Section('top', callback=check_top)
     top.set_status(True)
-    top.add_kw('title', 'STR', '')
-    top.add_kw('debug_file', 'STR', 'DEBUG.out')
-    top.add_kw('debug', 'INT', 0)
-    top.add_kw('dryrun', 'BOOL', False)
-    top.add_kw("show_axis", 'BOOL', True)
-    top.add_kw('calc', 'STR', '')
-    top.add_kw('basis', 'STR', 'mol')
-    top.add_kw('density', 'STR', '')
-    top.add_kw('mofile', 'STR', '')
+    top.add_kw('title', 'STR', ('',))
+    top.add_kw('debug_file', 'STR', ('DEBUG.out',))
+    top.add_kw('debug', 'INT', (0,))
+    top.add_kw('calc', 'STR', None)
+    top.add_kw('backend', 'STR', 'gimic')
+    top.add_kw('basis', 'STR', ('mol',))
+    top.add_kw('density', 'STR', ('',))
+    top.add_kw('mofile', 'STR', ('',))
     top.add_kw('mos', 'INT_ARRAY', (0, 0))
-    top.add_kw('xdens', 'STR', 'XDENS')
-    top.add_kw('magnet_axis', 'STR', '')
+    top.add_kw('xdens', 'STR', ('XDENS',))
+    top.add_kw('magnet_axis', 'STR', ('',))
     top.add_kw('magnet', 'DBL_ARRAY', (0.0, 0.0, 0.0))
-    top.add_kw('openshell', 'BOOL', False)
-    top.add_kw('scale_vectors', 'DBL', 1.0)
+    top.add_kw('openshell', 'BOOL', (False,))
 
     adv=getkw.Section('Advanced')
-    adv.add_kw('screening', 'BOOL', False)
-    adv.add_kw('screening_thrs', 'DBL', 1.0e-8)
-    adv.add_kw('spherical', 'BOOL', True)
-    adv.add_kw('GIAO', 'BOOL', True)
-    adv.add_kw('diamag', 'BOOL', True)
-    adv.add_kw('paramag', 'BOOL', True)
-    adv.add_kw('lip_order', 'INT', 3)
+    adv.add_kw('screening', 'BOOL', (False,))
+    adv.add_kw('screening_thrs', 'DBL', (1.0e-8,))
+    adv.add_kw('spherical', 'BOOL', (True,))
+    adv.add_kw('GIAO', 'BOOL', (True,))
+    adv.add_kw('diamag', 'BOOL', (True,))
+    adv.add_kw('paramag', 'BOOL', (True,))
 
     grid=getkw.Section('Grid', callback=check_grid)
-    grid.add_kw("type", 'STR', 'even')
+    grid.set_arg('STR', ('std',))
+    grid.add_kw("type", 'STR', ('even',))
     grid.add_kw("file", 'STR', 1)
-    grid.add_kw("origin", 'DBL_ARRAY', (0.0, 0.0, 0.0))
-    grid.add_kw("ivec", 'DBL_ARRAY', (1.0, 0.0, 0.0))
-    grid.add_kw("jvec", 'DBL_ARRAY', (0.0, 1.0, 0.0))
-    grid.add_kw("lengths", 'DBL_ARRAY')
-    grid.add_kw("bond", 'INT_ARRAY')
+    grid.add_kw("origin", 'DBL_ARRAY', 3)
+    grid.add_kw("ivec", 'DBL_ARRAY', 3)
+    grid.add_kw("jvec", 'DBL_ARRAY', 3)
+    grid.add_kw("lengths", 'DBL_ARRAY', 3)
+    grid.add_kw("bond", 'INT_ARRAY', 2)
     grid.add_kw("fixpoint", 'INT', 1)
-    grid.add_kw("coord1", 'DBL_ARRAY')
-    grid.add_kw("coord2", 'DBL_ARRAY')
-    grid.add_kw("fixcoord", 'DBL_ARRAY')
+    grid.add_kw("coord1", 'DBL_ARRAY', 3)
+    grid.add_kw("coord2", 'DBL_ARRAY', 3)
+    grid.add_kw("fixcoord", 'DBL_ARRAY', 3)
     grid.add_kw("distance", 'DBL', 1)
     grid.add_kw("rotation", 'DBL_ARRAY', (0.0,0.0,0.0))
-    grid.add_kw("spacing", 'DBL_ARRAY', (0.1, 0.1, 0.1))
-    grid.add_kw("map", 'DBL_ARRAY', (0.0, 0.0))
-    grid.add_kw("height", 'DBL_ARRAY')
-    grid.add_kw("width", 'DBL_ARRAY')
-    grid.add_kw("up", 'DBL', 1)
-    grid.add_kw("down", 'DBL', 1)
-    grid.add_kw("in", 'DBL', 1)
-    grid.add_kw("out", 'DBL', 1)
-    grid.add_kw("radius", 'DBL', -1.0)
+    grid.add_kw("spacing", 'DBL_ARRAY', 3)
+    grid.add_kw("height", 'DBL_ARRAY', 2)
+    grid.add_kw("width", 'DBL_ARRAY', 2)
+    grid.add_kw("radius", 'DBL', (-1.0,))
     grid.add_kw("gridplot", 'INT', 1)
-    grid.add_kw("grid_points", 'INT_ARRAY')
-    grid.add_kw("gauss_order", 'INT', 7)
-
+    grid.add_kw("grid_points", 'INT_ARRAY', 3)
+    grid.add_kw("gauss_order", 'INT', (7,))
     gimlet=getkw.Section('Gimlet')
-    gimlet.add_kw('calc', 'STR', 'anapole')
     gimlet.add_kw('teletype', 'BOOL', True)
     gimlet.add_kw('printlevel', 'INT', 3)
     gimlet.add_kw('rel_prec', 'DBL', 1.0e-4)
@@ -113,10 +126,9 @@ def main():
     top.add_sect(grid)
     top.add_sect(gimlet)
     
-    input=getkw.GetkwParser()
+    input=getkw.GetkwParser(top)
     inkw=input.parseFile(args.infile)
     inkw.sanitize(top)
-    inkw.run_callbacks(top)
 
     if args.title:
         inkw.setkw('title', args.title)
@@ -128,29 +140,32 @@ def main():
         inkw.setkw('outfile', args.outfile)
     if args.debug_file:
         inkw.setkw('debug_file', args.debugf)
+    if args.backend:
+        inkw.setkw('backend', args.backend)
 
+    #infile='GIMIC.in' + str(os.getpid())
+    #fd=open(infile,'w')
+    #print >>fd, inkw.top
 
-    infile='GIMIC.in' + str(os.getpid())
-    fd=open(infile,'w')
-    print >>fd, inkw.top
-
-    fd.close()
-    if inkw.getkw('calc')[0] == 'gimlet':
-        if gimlet is None:
-            print "The gimlet component is not available!"
-            sys.exit(1)
-        os.system(GIMLET_EXECUTABLE + ' < ' + infile)
-    else:
-        os.system(GIMIC_EXECUTABLE + ' < ' + infile)
-    if not args.keep:
-        os.unlink(infile)
+    #fd.close()
+    #if inkw.getkw('calc')[0] == 'gimlet':
+        #if gimlet is None:
+            #print "The gimlet component is not available!"
+            #sys.exit(1)
+        #os.system(GIMLET_EXECUTABLE + ' < ' + infile)
+    #else:
+        #os.system(GIMIC_EXECUTABLE + ' < ' + infile)
+    #if not args.keep:
+        #os.unlink(infile)
+    inkw.run_callbacks(top)
+    return inkw
 
 # sanity check
 def check_opt(sect,key):
     try:
-        k=sect[key]
+        k=sect[key][0]
     except:
-        print 'You have a typo in the code for key', key
+        print 'You have a typo in the code for key:', key
         sys.exit(1)
     if k is not None:
         if k.is_set():
@@ -162,11 +177,11 @@ def check_grid(grid):
     err="Error: Required option '%s' not set for grid(%s)!"
     if not grid.is_set():
         return
-    arg=grid.get_tag()
+    arg=grid.get_arg().arg[0]
     if (arg == 'std' or arg == 'base'):
         required=('origin', 'ivec', 'jvec', 'lengths')
-        ignore=('file', 'bond', 'coord1', 'coord2', 'width', 'height',
-                'in', 'out', 'up', 'down', 'radius')
+        ignore=('file', 'bond', 'width', 'height',
+                'radius')
         for i in required:
             if not check_opt(grid,i):
                 print err % (i,arg)
@@ -187,8 +202,8 @@ def check_grid(grid):
             sys.exit(1)
     elif arg == 'file': 
         required=('file',)
-        ignore=('ivec', 'jvec', 'bond', 'fixpoint', 'fixcoord', 'coord1', 
-                'coord2', 'origin', 'in', 'out', 'up', 'down', 'rotation', 
+        ignore=('ivec', 'jvec', 'bond', 'fixpoint', 
+                'origin', 'rotation', 
                 'radius', 'lengths','distance', 'spacing', 'map')
         for i in required:
             if not check_opt(grid,i):
@@ -215,17 +230,17 @@ def check_grid(grid):
             print "Error: Either fixpoint or fixcoord must be specified"
             sys.exit(1)
 
-        if check_opt(grid, 'in'):
-            inoutupdown=inoutupdown+1
-        if check_opt(grid, 'out'):
-            inoutupdown=inoutupdown+1
-        if check_opt(grid, 'up'):
-            inoutupdown=inoutupdown+1
-        if check_opt(grid, 'down'):
-            inoutupdown=inoutupdown+1
-        if (inoutupdown != 0 and inoutupdown != 4):
-            print "Error: incomplete specification for in/out and up/down"
-            sys.exit(1)
+#        if check_opt(grid, 'in'):
+#            inoutupdown=inoutupdown+1
+#        if check_opt(grid, 'out'):
+#            inoutupdown=inoutupdown+1
+#        if check_opt(grid, 'up'):
+#            inoutupdown=inoutupdown+1
+#        if check_opt(grid, 'down'):
+#            inoutupdown=inoutupdown+1
+#        if (inoutupdown != 0 and inoutupdown != 4):
+#            print "Error: incomplete specification for in/out and up/down"
+#            sys.exit(1)
 
         if check_opt(grid,'width'):
             wdthgt=wdthgt+1
@@ -294,7 +309,7 @@ def check_grid(grid):
 #            sys.exit(1)
 
 def check_top(top):
-    calc=top.getkw('calc')[0]
+    calc=top.getkw('calc')[0]	
     allow={'cdens':1, 'integral':1, 'divj':1, 'edens':1, 'gimlet':1}
     if not allow.has_key(calc):
         print 'Error: unknown option calc = ', calc

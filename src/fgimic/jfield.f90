@@ -7,15 +7,15 @@
 !
 
 module jfield_class
-    use globals_m
-    use settings_m
+    use globals_module
+    use settings_module
     use jtensor_class
     use dens_class
     use grid_class
     use basis_class
-    use teletype_m
-    use parallel_m
-    use tensor_m
+    use teletype_module
+    use parallel_module
+    use tensor_module
     implicit none
 
     type jfield_t
@@ -266,6 +266,49 @@ contains
         end if
     end subroutine
 
+    subroutine jmod_vtkplot(this)
+        use vtkplot_module
+        type(jfield_t) :: this
+
+        integer(I4) :: p1, p2, p3, fd1, fd2
+        integer(I4) :: i, j, k, l
+        real(DP), dimension(3) :: qmin, qmax
+        real(DP), dimension(3) :: norm, step, mag, v, rr
+        real(DP) :: maxi, mini, sgn 
+        integer(I4), dimension(3) :: npts
+        real(DP), dimension(:,:), pointer :: buf
+        real(DP), dimension(:,:,:), allocatable :: val
+
+        if (mpi_rank > 0) return
+
+        call get_grid_size(this%grid, p1, p2, p3)
+        allocate(val(p1,p2,p3))
+        npts=(/p1,p2,p3/)
+        norm=get_grid_normal(this%grid)
+        qmin=gridpoint(this%grid,1,1,1)
+        qmax=gridpoint(this%grid,p1,p2,p3)
+
+        step=(qmax-qmin)/(npts-1)
+
+        mag = this%b
+
+        buf => this%vec
+        maxi=0.d0
+        mini=0.d0
+        l=0
+        do i=1,p1
+            do j=1,p2
+                do k=1,p3
+                    v=buf(:,i+(j-1)*p1+(k-1)*p1*p2)
+                    rr=gridpoint(this%grid,i,j,k)
+                    val(i,j,k)=(sqrt(sum(v**2)))
+                end do
+            end do
+        end do
+        call write_vtk_imagedata('jmod.vti', this%grid, val)
+        deallocate(val)
+    end subroutine
+
     subroutine jmod_cubeplot(this, tag)
         type(jfield_t) :: this
         character(*), optional :: tag
@@ -280,6 +323,7 @@ contains
 
         if (mpi_rank > 0) return
 
+        call jmod_vtkplot(this)
         call get_grid_size(this%grid, p1, p2, p3)
         npts=(/p1,p2,p3/)
         norm=get_grid_normal(this%grid)

@@ -4,10 +4,10 @@
 ! atom and basis set info, used by ACES2, Dalton...
 !
 
-module intgrl_m
-    use globals_m
-    use settings_m
-    use teletype_m
+module intgrl_module
+    use globals_module
+    use settings_module
+    use teletype_module
     implicit none
     
     public read_intgrl

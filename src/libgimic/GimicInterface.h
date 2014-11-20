@@ -5,14 +5,14 @@ class GimicInterface {
     public:
         GimicInterface(const char *mol, const char *xdens);
         virtual ~GimicInterface();
-        void setUhf(int uhf);
-        void setMagnet(const double b[3]);
-        void setSpin(char *s);
-        void setScreening(double thrs);
-        void calcJTensor(const double r[3], double jt[9]);
-        void calcJVector(const double r[3], double jv[3]);
-        void calcDivJ(const double r[3], double *dj);
-        void calcModJ(const double r[3], double *mj);
-        void calcAnapole(const double r[3], double *aj);
+        void set_uhf(int uhf);
+        void set_magnet(const double b[3]);
+        void set_spin(char *s);
+        void set_screening(double thrs);
+        void calc_jtensor(const double r[3], double jt[9]);
+        void calc_jvector(const double r[3], double jv[3]);
+        void calc_divj(const double r[3], double *dj);
+        void calc_modj(const double r[3], double *mj);
+        void calc_edens(const double r[3], double *dj);
 };
 #endif

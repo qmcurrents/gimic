@@ -1,6 +1,6 @@
 
-module factorial_m
-    use kinds_m
+module factorial_module
+    use kinds_module
     implicit none
     public fact, fact2, binom
     contains

@@ -1,7 +1,7 @@
-module timer_m
-    use globals_m
-    use settings_m
-    use teletype_m
+module timer_module
+    use globals_module
+    use settings_module
+    use teletype_module
     implicit none
 
     real(4) :: delta_t

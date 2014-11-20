@@ -4,12 +4,12 @@
 ! 
 
 module edens_class
-    use globals_m
-    use settings_m
+    use globals_module
+    use settings_module
     use basis_class
     use bfeval_class
     use dens_class
-    use teletype_m
+    use teletype_module
     implicit none
     
     public new_edens, del_edens, edens_t

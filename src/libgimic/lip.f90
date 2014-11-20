@@ -1,7 +1,7 @@
 
-module lip_m
-    use globals_m
-    use settings_m
+module lip_module
+    use globals_module
+    use settings_module
     implicit none
     public lipn, lip3n, vector_t, lip3n_t
 

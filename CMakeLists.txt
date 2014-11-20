@@ -5,14 +5,14 @@ project(GIMIC)
 enable_language(Fortran)
 
 set (PROJECT_VERSION_MAJOR 2)
-set (PROJECT_VERSION_MINOR 0)
+set (PROJECT_VERSION_MINOR 1)
 set (PROJECT_VERSION_PATCH 0)
 
 option(ENABLE_PROFILING      "Enable profiling"              OFF)
 option(ENABLE_BOUNDS_CHECK   "Enable bounds check"           OFF)
 option(ENABLE_CODE_COVERAGE  "Enable code coverage"          OFF)
 option(ENABLE_MPI            "Enable MPI parallelization"    OFF)
-option(ENABLE_OPENMP          "Enable OpenMP parallelization" OFF)
+option(ENABLE_OPENMP         "Enable OpenMP parallelization" OFF)
 option(ENABLE_CFOUR          "Enable the CFOUR interface" OFF)
 option(ENABLE_TESTS          "Enable the test suite" ON)
 option(ENABLE_MRCPP          "Enable the MRCPP wavelet librbary" OFF)
@@ -26,20 +26,10 @@ include(ConfigureScript)
 include(ConfigCompilerFlags)
 
 find_package(Python REQUIRED)
-set (PYTHON_INST_DIR 
-    lib/python${PYTHON_VERSION}/site-packages
+set (PYTHON_INSTDIR 
+    ${CMAKE_INSTALL_FULL_LIBDIR}/python${PYTHON_VERSION}/site-packages
     )
 include(UseCython)
-
-include(FortranCInterface)
-if (FortranCInterface_GLOBAL_FOUND) 
-    FortranCInterface_HEADER(fcmangle.h
-        MACRO_NAMESPACE "FC_"
-        SYMBOL_NAMESPACE "FC_"
-        )
-else()
-    message(WARNING "Failed to detect Fortran name mangling scheme")
-endif()
 
 set(LIBS)
 if (BLAS_FOUND)

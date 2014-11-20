@@ -1,8 +1,8 @@
-module parallel_m
-    use kinds_m
-    use globals_m
-    use settings_m
-    use teletype_m
+module parallel_module
+    use kinds_module
+    use globals_module
+    use settings_module
+    use teletype_module
     implicit none
 #ifdef HAVE_MPI
     include 'mpif.h'

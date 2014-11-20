@@ -1,7 +1,7 @@
-module gaussint_m
-    use globals_m
-    use settings_m
-    use teletype_m
+module gaussint_module
+    use globals_module
+    use settings_module
+    use teletype_module
     implicit none
 
     type gdata_t
@@ -308,8 +308,9 @@ contains
                 stop
         end select 
         foo=1
+        tpts = tpts + 1.0
         do i=1,nblock
-            gdata%pts(foo:foo+ngp-1)=tpts*xl+real(i-1)*step+xl
+            gdata%pts(foo:foo+ngp-1)=tpts*xl+real(i-1)*step
             gdata%wgt(foo:foo+ngp-1)=twgt*xl
             foo=foo+ngp
         end do
