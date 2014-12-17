@@ -450,15 +450,16 @@ contains
         end if
 
         xsum3=0.d0
-!$OMP PARALLEL PRIVATE(i,j,k,r,rr,xsum,psum,nsum) &
-!$OMP PRIVATE(jt,w,jp,tt,jvec) &
-!$OMP SHARED(xsum2,psum2,nsum2) &
-!$OMP SHARED(p1,p2,p3,this,center,spin,bb,normal,mol,xdens,lo,hi) &
-!$OMP REDUCTION(+:xsum3,psum3,nsum3)
+! NB! Untested parallelization, check with valgrind!
+!$OMP PARALLEL PRIVATE(i,j,k,r,rr,xsum) &
+!$OMP PRIVATE(jt,w,tt) &
+!$OMP SHARED(xsum2) &
+!$OMP SHARED(p1,p2,p3,this,center,spin,mol,xdens,lo,hi) &
+!$OMP REDUCTION(+:xsum3)
         call new_jtensor(jt, mol, xdens)
         do k=1,p3
             xsum2=0.d0
-            !$OMP DO SCHEDULE(STATIC) REDUCTION(+:xsum2,psum2,nsum2)
+            !$OMP DO SCHEDULE(STATIC) REDUCTION(+:xsum2)
             do j=lo,hi
                 xsum=0.d0
                 do i=1,p1
@@ -499,6 +500,7 @@ contains
         call nl
     end subroutine
 
+! NB! Untested parallelization, check with valgrind!
     subroutine integrate_jav_current(this, mol, xdens, aref)
     ! based on integrate_current
     ! ptf =1 21x2 point integration formula
