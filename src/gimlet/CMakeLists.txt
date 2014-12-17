@@ -41,5 +41,4 @@ target_link_libraries(gimlet.bin
 
 install(TARGETS gimlet.bin
     RUNTIME DESTINATION bin
-    CONFIGURATIONS Release
     )

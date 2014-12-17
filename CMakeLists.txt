@@ -21,18 +21,13 @@ unset (CMAKE_LIBRARY_ARCHITECTURE)
 include(GNUInstallDirs)
 include(ConfigProjectVersion)
 include(ConfigSafeGuards)
-include(UseGlobalBuildTree)
 include(ConfigGitRevision)
 include(ConfigureScript)
 include(ConfigCompilerFlags)
 
 find_package(Python REQUIRED)
-set (PYTHON_INSTDIR 
-    ${CMAKE_INSTALL_LIBDIR}/python${PYTHON_VERSION}/site-packages
-    )
-set (PYTHON_INSTDIR 
-    ${CMAKE_INSTALL_FULL_LIBDIR}/python${PYTHON_VERSION}/site-packages
-    )
+set(PYTHON_SITE_INSTALL_DIR 
+    lib/python${PYTHON_VERSION}/site-packages/Symbioses)
 include(UseCython)
 
 set(LIBS)
@@ -56,6 +51,8 @@ if(ENABLE_OPENMP)
         include_directories(${OpenMP_INCLUDE_PATH})
     endif()
 endif()
+
+set(CMAKE_Fortran_MODULE_DIRECTORY ${CMAKE_BINARY_DIR}/modules)
 
 configure_file (
     ${PROJECT_SOURCE_DIR}/config.h.in

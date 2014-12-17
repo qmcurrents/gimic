@@ -9,13 +9,12 @@
 from __future__ import division
 import os
 import sys
-sys.path.insert(0, "@PYTHON_INSTDIR@")
-sys.path.insert(0, "@LIBDIR@")
-
+sys.path.insert(0, "@CMAKE_INSTALL_PREFIX@/@PYTHON_SITE_INSTALL_DIR@")
+sys.path.insert(0, "@CMAKE_INSTALL_FULL_LIBDIR@")
 if 'LD_LIBRARY_PATH' in os.environ:
-    os.environ['LD_LIBRARY_PATH'] += ':@LIBDIR@:'
+    os.environ['LD_LIBRARY_PATH'] += ':@CMAKE_INSTALL_FULL_LIBDIR@'
 else:
-    os.environ['LD_LIBRARY_PATH'] = '@LIBDIR@:'
+    os.environ['LD_LIBRARY_PATH'] = '@CMAKE_INSTALL_FULL_LIBDIR@'
 
 import re
 from argparse import ArgumentParser
@@ -325,6 +324,7 @@ def check_grid(grid):
 def check_top(top):
     calc=top.getkw('calc')[0]
     allow={'cdens':1, 'integral':1, 'divj':1, 'edens':1, 'gimlet':1}
+    ortho = ['T', 'X']
     if not allow.has_key(calc):
         print 'Error: unknown option calc = ', calc
         sys.exit(1)

@@ -1,5 +1,7 @@
-include_directories(${CMAKE_CURRENT_SOURCE_DIR})
-include_directories(${CMAKE_SOURCE_DIR}/src/pygimic)
+include_directories(
+    ${CMAKE_CURRENT_SOURCE_DIR} 
+    ${CMAKE_BINARY_DIR} 
+    ${CMAKE_SOURCE_DIR}/src/pygimic)
 
 set(sources
     globals.f90
@@ -60,8 +62,8 @@ target_link_libraries(gengauss
     gimic2
     )
 install(TARGETS gimic gengauss
-    ARCHIVE DESTINATION ${PYTHON_INSTDIR}
-    LIBRARY DESTINATION ${PYTHON_INSTDIR}
+    ARCHIVE DESTINATION ${PYTHON_SITE_INSTALL_DIR}
+    LIBRARY DESTINATION ${PYTHON_SITE_INSTALL_DIR}
     )
 endif()
 

@@ -1,24 +1,10 @@
+include_directories(${CMAKE_BINARY_DIR})
 include(ExternalProject)
 add_subdirectory(libgimic)
 add_subdirectory(pygimic)
 add_subdirectory(fgimic)
 
-# This is the "developer" driver
-set (LIBDIR ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
-set (_PYTHON_INSTDIR ${PYTHON_INSTDIR})
-set (PYTHON_INSTDIR ${CMAKE_CURRENT_SOURCE_DIR})
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/gimic.in
-    ${PROJECT_BINARY_DIR}/gimic)
-execute_process(COMMAND
-    chmod 755 ${PROJECT_BINARY_DIR}/gimic OUTPUT_QUIET)
-
-# This is the "installed" driver
-set (PYTHON_INSTDIR ${_PYTHON_INSTDIR})
-set (LIBDIR ${CMAKE_INSTALL_FULL_LIBDIR})
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/gimic.in
-    ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/gimic)
-execute_process(COMMAND
-    chmod 755 ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/gimic OUTPUT_QUIET)
+configure_file(gimic.in gimic)
 
 ExternalProject_Add(libgetkw
     DOWNLOAD_COMMAND git submodule update
@@ -68,16 +54,20 @@ if (ENABLE_MRCPP)
         )
 endif()
 
-install(PROGRAMS ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/gimic
-    DESTINATION ${CMAKE_INSTALL_FULL_BINDIR}
+install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/gimic
+    DESTINATION bin
+    )
+
+install(FILES fgimic/getkw.py
+    DESTINATION ${PYTHON_SITE_INSTALL_DIR}
     )
 
 install(DIRECTORY pygimic
-    DESTINATION ${PYTHON_INSTDIR}
+    DESTINATION ${PYTHON_SITE_INSTALL_DIR}
     FILES_MATCHING PATTERN "*.py"
     )
 
 install(DIRECTORY london
-    DESTINATION ${PYTHON_INSTDIR}
+    DESTINATION ${PYTHON_SITE_INSTALL_DIR}
     FILES_MATCHING PATTERN "*.py"
     )

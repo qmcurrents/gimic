@@ -3,11 +3,11 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 if (CYTHON_FOUND)
     cython_add_module(connector
         connector.pxd
-        connector.pyx 
+        connector.pyx
     )
-install(TARGETS connector 
-    RUNTIME DESTINATION ${CMAKE_INSTALL_FULL_BINDIR}
-    LIBRARY DESTINATION ${PYTHON_INSTDIR}
+install(TARGETS connector
+    RUNTIME DESTINATION bin
+    LIBRARY DESTINATION ${PYTHON_SITE_INSTALL_DIR}
     )
 
 endif()
