@@ -16,6 +16,9 @@ module integral_class
     use teletype_module
     use parallel_module
     use magnet_module
+    ! ACID stuff
+    use acid_module
+    use tensor_module
     implicit none
 
     type integral_t
@@ -25,6 +28,7 @@ module integral_class
     public new_integral, del_integral, integral_t
     public integrate_tensor_field, integrate_current
     public integrate_modulus
+    public integrate_acid, integrate_jav_current
 
     private
 
@@ -125,10 +129,13 @@ contains
                         w=get_weight(this%grid, i, 1)
                         jp=dot_product(normal,jvec)*w
                     end if
+                    ! total
                     xsum=xsum+jp
                     if (jp > 0.d0) then
+                        ! get positive contribution
                         psum=psum+jp
                     else
+                        ! get negative contribution
                         nsum=nsum+jp
                     end if
                 end do
@@ -362,31 +369,6 @@ contains
         end do
     end function
 
-    function au2si(au) result(si)
-        real(DP), intent(in) :: au
-        real(DP) :: si
-
-        real(DP) :: aulength, auspeedoflight, speedoflight, aucharge, hbar
-        real(DP) :: autime, autesla, audjdb
-
-        aulength=0.52917726D-10
-        auspeedoflight=137.03599D0
-        speedoflight=299792458.D0
-        aucharge=1.60217733D-19
-        hbar=1.05457267D-34
-
-        autime=aulength*auspeedoflight/speedoflight
-        autesla=hbar/aucharge/aulength/aulength
-        audjdb=aucharge/autime/autesla
-
-        si=au*audjdb*1.d+09 ! nA/T
-
-!        write(6,*) 'The obtained conversion factors'
-!        write(6,*) autime,' au time in seconds'
-!        write(6,*) autesla,' au magnetic field in tesla'
-!        write(6,*) audjdb*1.D+09,' au induced current in nanoampere/tesla'
-    end function
-
     subroutine print_tensor_int(xsum)
         real(DP), dimension(3,3) :: xsum
 
@@ -417,6 +399,256 @@ contains
         write(str_g, '(a,f13.6)') '        Conversion Factor   :', au2si(1.d0)
         call msg_out(str_g)
         call msg_out(repeat('*', 70))
+        call nl
+    end subroutine
+
+    ! do here ACID integration here !
+    subroutine integrate_acid(this, mol, xdens)
+    use acid_module
+    ! this subroutine is based on integrate_current !
+        type(integral_t), intent(inout) :: this
+        type(molecule_t) :: mol
+        type(dens_t) :: xdens
+
+        integer(I4) :: i, j, k, p1, p2, p3, lo, hi
+        real(DP), dimension(3) :: rr, center
+        real(DP) :: w, r, bound
+        real(DP) :: xsum, xsum2, xsum3
+        real(DP) :: val, acid_val
+        real(DP), dimension(9) :: tt
+        type(jtensor_t) :: jt
+
+        if (settings%is_uhf) then
+            select case(spin)
+                case('total')
+                    call msg_note("Integrating total density")
+                case('alpha')
+                    call msg_note("Integrating alpha density")
+                case('beta')
+                    call msg_note("Integrating beta density")
+                case('spindens')
+                    call msg_note("Integrating spin density")
+                case default
+                    call msg_error("Invalid spin: " // spin)
+                    stop
+            end select
+        end if
+
+        call get_grid_size(this%grid, p1, p2, p3)
+
+        bound=1.d+10
+        bound=this%grid%radius
+        if (bound < 1.d+10) then
+            write(str_g, *) 'Integration bound set to radius ', bound
+            call msg_out(str_g)
+        end if
+
+        call grid_center(this%grid,center)
+        call schedule(p2, lo, hi)
+        if (mpi_rank == 0) then
+            lo = 1
+        end if
+
+        xsum3=0.d0
+!$OMP PARALLEL PRIVATE(i,j,k,r,rr,xsum,psum,nsum) &
+!$OMP PRIVATE(jt,w,jp,tt,jvec) &
+!$OMP SHARED(xsum2,psum2,nsum2) &
+!$OMP SHARED(p1,p2,p3,this,center,spin,bb,normal,mol,xdens,lo,hi) &
+!$OMP REDUCTION(+:xsum3,psum3,nsum3)
+        call new_jtensor(jt, mol, xdens)
+        do k=1,p3
+            xsum2=0.d0
+            !$OMP DO SCHEDULE(STATIC) REDUCTION(+:xsum2,psum2,nsum2)
+            do j=lo,hi
+                xsum=0.d0
+                do i=1,p1
+                    rr=gridpoint(this%grid, i, j, k)
+                    r=sqrt(sum((rr-center)**2))
+                    call ctensor(jt, rr, tt, spin)
+                    ! attention: output of get_acid is in au !
+                    val = get_acid(rr,tt)
+                    if ( r > bound ) then
+                        w=0.d0
+                    else
+                        w=get_weight(this%grid, i, 1)
+                    end if
+                    xsum=xsum+val*w
+                end do
+                w=get_weight(this%grid,j,2)
+                xsum2=xsum2+xsum*w
+            end do
+            !$OMP END DO
+            !$OMP MASTER
+            call collect_sum(xsum2, xsum)
+            w=get_weight(this%grid,k,3)
+            xsum3=xsum3+xsum*w
+            !$OMP END MASTER
+        end do
+        call del_jtensor(jt)
+        acid_val = dsqrt(xsum3)
+!$OMP END PARALLEL
+
+        call nl
+        call msg_out(repeat('*', 60))
+        write(str_g, '(a,f13.6)') '   ACID (au) sqrt(delta J^2):', acid_val
+        call msg_out(str_g)
+        write(str_g, '(a,f13.6)') '   ACID (nA/T)              :', au2si(acid_val)
+        call msg_out(str_g)
+        call nl
+        call msg_out(repeat('*', 60))
+        call nl
+    end subroutine
+
+    subroutine integrate_jav_current(this, mol, xdens, aref)
+    ! based on integrate_current
+    ! ptf =1 21x2 point integration formula
+    ! ptf =2 33x2 point integration formula
+        type(integral_t), intent(inout) :: this
+        type(molecule_t) :: mol
+        type(dens_t) :: xdens
+
+        integer(I4) :: i, j, k, p1, p2, p3, lo, hi
+        integer(I4) :: ptf
+        real(DP), dimension(3) :: normal, rr, center, bb, basvec3
+        real(DP) :: psum, nsum, w, jp, r, bound
+        real(DP) :: psum2, nsum2
+        real(DP) :: psum3, nsum3
+        real(DP) :: xsum, xsum2, xsum3, fac
+        real(DP), dimension(3) :: jvec, norm_bond, y_int
+        real(DP), dimension(9) :: tt
+        type(jtensor_t) :: jt
+        type(acid_t) :: aref
+
+        if (settings%is_uhf) then
+            select case(spin)
+                case('total')
+                    call msg_note("Integrating total density")
+                case('alpha')
+                    call msg_note("Integrating alpha density")
+                case('beta')
+                    call msg_note("Integrating beta density")
+                case('spindens')
+                    call msg_note("Integrating spin density")
+                case default
+                    call msg_error("Invalid spin: " // spin)
+                    stop
+            end select
+        end if
+        ! decide what type of integration is done for Jav
+        ! better put this into a flag to decide in the input
+        ! what should be done
+        ptf = 1
+        ! ptf = 2
+        call get_grid_size(this%grid, p1, p2, p3)
+        ! get basvec 3
+        call get_basvec(this%grid,3,basvec3)
+
+        normal=get_grid_normal(this%grid)
+        print*, "grid normal", normal(1), normal(2), normal(3)
+        !norm_bond = get_norm_bond(aref)
+        y_int = get_y_internal(aref)
+        print*, "y internal", y_int(1), y_int(2), y_int(3)
+
+        bound=1.d+10
+        bound=this%grid%radius
+        if (bound < 1.d+10) then
+            write(str_g, *) 'Integration bound set to radius ', bound
+            call msg_out(str_g)
+        end if
+
+        call grid_center(this%grid,center)
+        call schedule(p2, lo, hi)
+        if (mpi_rank == 0) then
+            lo = 1
+        end if
+
+        xsum3=0.d0
+        psum3=0.d0
+        nsum3=0.d0
+!$OMP PARALLEL PRIVATE(i,j,k,r,rr,xsum,psum,nsum) &
+!$OMP PRIVATE(jt,w,jp,tt,jvec) &
+!$OMP SHARED(xsum2,psum2,nsum2) &
+!$OMP SHARED(p1,p2,p3,this,center,spin,bb,normal,mol,xdens,lo,hi) &
+!$OMP REDUCTION(+:xsum3,psum3,nsum3)
+        call new_jtensor(jt, mol, xdens)
+        jvec =0.0d0
+        do k=1,p3
+            xsum2=0.d0
+            psum2=0.d0
+            nsum2=0.d0
+            !$OMP DO SCHEDULE(STATIC) REDUCTION(+:xsum2,psum2,nsum2)
+            do j=lo,hi
+                xsum=0.d0
+                psum=0.d0
+                nsum=0.d0
+                do i=1,p1
+                    rr=gridpoint(this%grid, i, j, k)
+                    r=sqrt(sum((rr-center)**2))
+                    call ctensor(jt, rr, tt, spin)
+                    ! jvec = (get_jav(tt,ptf,aref))
+                    jvec = get_jess(tt,aref)
+                    ! rest can remain as it is...
+                    if ( r > bound ) then
+                        w=0.d0
+                        jp=0.d0
+                    else
+                        w=get_weight(this%grid, i, 1)
+                        ! fac = dot_product(norm_bond,normal)
+                        ! fac = dot_product(normal,jvec)
+                        ! if (fac.ge.0.0d0) then
+                        !   jp=dot_product(normal,jvec)*w
+                        ! else
+                        !   jp=-1.0d0*dot_product(normal,jvec)*w
+                        ! end if
+                        ! jp=dot_product(normal,jvec)*w
+                        jp=dot_product(y_int,jvec)*w
+                    end if
+                    ! total
+                    xsum=xsum+jp
+                    if (jp > 0.d0) then
+                        ! get positive contribution
+                        psum=psum+jp
+                    else
+                        ! get negative contribution
+                        nsum=nsum+jp
+                    end if
+                end do
+
+                w=get_weight(this%grid,j,2)
+                xsum2=xsum2+xsum*w
+                psum2=psum2+psum*w
+                nsum2=nsum2+nsum*w
+            end do
+            !$OMP END DO
+            !$OMP MASTER
+            call collect_sum(xsum2, xsum)
+            call collect_sum(psum2, psum)
+            call collect_sum(nsum2, nsum)
+            w=get_weight(this%grid,k,3)
+            xsum3=xsum3+xsum*w
+            psum3=psum3+psum*w
+            nsum3=nsum3+nsum*w
+            !$OMP END MASTER
+        end do
+        call del_jtensor(jt)
+!$OMP END PARALLEL
+
+        call nl
+        call msg_out(repeat('*', 60))
+        write(str_g, '(a,f13.6)') '   Induced essential current (au)    :', xsum3
+        call msg_out(str_g)
+        write(str_g, '(a,f13.6,a,f11.6,a)') &
+            '      Positive contribution:', psum3, '  (',au2si(psum3),' )'
+        call msg_out(str_g)
+        write(str_g, '(a,f13.6,a,f11.6,a)') &
+            '      Negative contribution:', nsum3, '  (',au2si(nsum3),' )'
+        call msg_out(str_g)
+        call nl
+        write(str_g, '(a,f13.6)') '   Induced essential current (nA/T)  :', au2si(xsum3)
+        call msg_out(str_g)
+        write(str_g, '(a,f13.6)') '      (conversion factor)  :', au2si(1.d0)
+        call msg_out(str_g)
+        call msg_out(repeat('*', 60))
         call nl
     end subroutine
 end module

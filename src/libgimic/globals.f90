@@ -58,6 +58,7 @@ module globals_module
 
     real(DP), parameter :: D0=0.0D0,D1=1.0D0,D2=2.0D0,D4=4.0D0,D5=5.0D0
     real(DP), parameter :: DP25=0.25D0, DP50=0.50D0, DP75=0.75D0
+    real(DP), parameter :: DP33=0.3333333D0 
     real(DP), dimension(3), parameter :: NILL_VECTOR=(/0.d0, 0.d0, 0.d0/)
 
 
@@ -74,6 +75,8 @@ module globals_module
     logical :: bert_is_evil = .false.
     integer :: mpi_world_size = 1
     integer :: mpi_rank = -1
+
+    public au2si
 
     type cao2sao_t
         real(DP), dimension(:,:), pointer :: po
@@ -301,6 +304,31 @@ contains
         end if
 
     end subroutine
+
+    function au2si(au) result(si)
+        real(DP), intent(in) :: au
+        real(DP) :: si
+        
+        real(DP) :: aulength, auspeedoflight, speedoflight, aucharge, hbar
+        real(DP) :: autime, autesla, audjdb
+
+        aulength=0.52917726D-10
+        auspeedoflight=137.03599D0
+        speedoflight=299792458.D0
+        aucharge=1.60217733D-19
+        hbar=1.05457267D-34
+
+        autime=aulength*auspeedoflight/speedoflight
+        autesla=hbar/aucharge/aulength/aulength
+        audjdb=aucharge/autime/autesla
+
+        si=au*audjdb*1.d+09 ! nA/T
+
+!        write(6,*) 'The obtained conversion factors'
+!        write(6,*) autime,' au time in seconds'
+!        write(6,*) autesla,' au magnetic field in tesla'
+!        write(6,*) audjdb*1.D+09,' au induced current in nanoampere/tesla'
+    end function 
 
 
 end module

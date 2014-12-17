@@ -21,6 +21,8 @@ program gimic
     use jfield_class
     use caos_module
     use gaussint_module
+    ! acid and jav stuff
+    use acid_module
     implicit none
 
     type(molecule_t) :: mol
@@ -30,6 +32,7 @@ program gimic
     type(jtensor_t) :: jt
     type(dens_t) :: xdens
     real(DP), dimension(3) :: magnet
+    type(acid_t) :: aref
 
     character(BUFLEN) :: buf
 
@@ -88,6 +91,12 @@ contains
         call getkw(input, 'Advanced.screening_thrs', settings%screen_thrs)
 !        call getkw(input, 'Advanced.lip_order', settings%lip_order)
 
+        call getkw(input, 'Essential.acid', settings%acid)
+        call getkw(input, 'Essential.jav', settings%jav)
+        call getkw(input, 'Essential.intp21', settings%intp21)
+        call getkw(input, 'Essential.intp33', settings%intp33)
+        call getkw(input, 'Essential.pabove', settings%pabove)
+
         ierr=hostnm(sys)
         if (mpi_rank == 0) then
             write(str_g, '(a,i3,a,a)') 'MPI master', rank,' on ', trim(sys)
@@ -133,6 +142,7 @@ contains
 
     subroutine driver
         type(cao2sao_t) :: c2s
+        type(acid_t) :: aref
 
         if (settings%use_screening) then
             call new_basis(mol, settings%basis, settings%screen_thrs)
@@ -148,7 +158,7 @@ contains
         call new_dens(xdens, mol)
         call read_dens(xdens, settings%xdens)
 
-        call new_grid(grid, input, mol)
+        call new_grid(grid, input, mol, aref)
         if (mpi_rank == 0) then
             call plot_grid_xyz(grid, 'grid.xyz',  mol)
         end if
@@ -168,9 +178,9 @@ contains
         end if
 
         if (settings%calc(1:5) == 'cdens') then
-            call run_cdens(jf, xdens)
+            call run_cdens(jf,mol,xdens,aref)
         else if (settings%calc(1:8) == 'integral') then
-            call run_integral()
+            call run_integral(aref)
         else if (settings%calc(1:4) == 'divj') then
             call run_divj()
         else if (settings%calc(1:5) == 'edens') then
@@ -186,9 +196,11 @@ contains
         call del_grid(grid)
     end subroutine
 
-    subroutine run_cdens(jf, xdens)
+    subroutine run_cdens(jf,mol,xdens,aref)
         type(jfield_t) :: jf
         type(dens_t) :: xdens
+        type(molecule_t) :: mol
+        type(acid_t) :: aref
         call msg_out('Calculating current density')
         call msg_out('*****************************************')
         call new_jfield(jf, grid, magnet)
@@ -196,24 +208,26 @@ contains
         if (settings%dryrun) return
 
         call calc_jvectors(jf, mol, xdens)
-        call jvector_plots(jf)
+        call jvector_plots(jf,mol,'',aref)
 
         if (settings%is_uhf) then
             call calc_jvectors(jf, mol, xdens, 'alpha')
-            call jvector_plots(jf, 'alpha')
+            call jvector_plots(jf,mol, 'alpha',aref)
 
             call calc_jvectors(jf, mol, xdens, 'beta')
-            call jvector_plots(jf, 'beta')
+            call jvector_plots(jf,mol, 'beta',aref)
 
             call calc_jvectors(jf, mol, xdens, 'spindens')
-            call jvector_plots(jf, 'spindens')
+            call jvector_plots(jf,mol, 'spindens',aref)
         endif
         call del_jfield(jf)
     end subroutine
 
-    subroutine run_integral()
+    subroutine run_integral(aref)
         use integral_class
         type(integral_t) :: it
+        type(acid_t) :: aref
+
         call msg_out('Integrating current density')
         call msg_out('*****************************************')
         call new_integral(it, grid)
@@ -237,6 +251,19 @@ contains
             call integrate_current(it, mol, xdens, 'spindens')
         end if
         call nl
+        if (settings%jav) then
+        ! add here GIMAC integration !
+           call msg_note('Integrating B field averaged current density')
+           call integrate_jav_current(it, mol, xdens, aref)
+           call nl
+        end if
+        if (settings%acid) then
+        ! add here ACID integration !
+           call msg_note('Integrating ACID density')
+           call integrate_acid(it, mol, xdens)
+           call nl
+        end if
+
 !        call msg_note('Integrating current tensor')
 !        call int_t_direct(it)  ! tensor integral
 !        call write_integral(it)
@@ -263,7 +290,14 @@ contains
         type(dens_t) :: modens
         call msg_out('Calculating charge density')
         call msg_out('*****************************************')
+        ! do some allocation stuff !
         call new_dens(modens, mol, .true.)
+        ! read all information in !
+        ! print *, "morange default", settings%morange
+        ! this is 0 0
+        print *, 'DEBUG'
+        print *, 'morange', settings%morange
+        !                             edens             mos   0,0
         call read_modens(modens, settings%density, settings%mofile, &
             settings%morange)
         call new_edens_field(ed, mol, modens, grid, 'edens.bin')
