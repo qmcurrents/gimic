@@ -33,8 +33,9 @@ if (ENABLE_MRCPP)
     find_package(Git)
 
     ExternalProject_Add(libmwrepr
-        DOWNLOAD_COMMAND git submodule update
-        DOWNLOAD_DIR ${PROJECT_SOURCE_DIR}
+        DOWNLOAD_COMMAND git clone git@repo.ctcc.no:mrcpp/libmwrepr.git
+        DOWNLOAD_DIR ${CMAKE_CURRENT_SOURCE_DIR}
+        UPDATE_COMMAND git pull
         PREFIX ${CMAKE_CURRENT_BINARY_DIR}
         SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/libmwrepr
         BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/libmwrepr

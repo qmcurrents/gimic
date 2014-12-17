@@ -1,6 +1,3 @@
-[submodule "src/libmwrepr"]
-	path = src/libmwrepr
-    url = git@repo.ctcc.no:mrcpp/libmwrepr.git
 [submodule "src/libgetkw"]
 	path = src/libgetkw
 	url = git://repo.ctcc.no/libgetkw.git
