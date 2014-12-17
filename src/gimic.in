@@ -314,14 +314,18 @@ def check_top(top):
     if not allow.has_key(calc):
         print 'Error: unknown option calc = ', calc
         sys.exit(1)
-    omagn=top.getkw('magnet')[0]
-    pmagn=top.getkw('magnet_axis')[0]
-    if omagn == 'True' and pmagn == 'True':
+    omagn = top['magnet'][0].is_set()
+    pmagn = top['magnet_axis'][0].is_set()
+    if omagn == True and pmagn == True:
         print 'Error: Both magnet vector and axis set simultaneously!'
         sys.exit(1)
-    if omagn == 'False' and pmagn == 'False':
+    if omagn == False and pmagn == False:
         print 'Error: Direction of magnetic field must be set!'
         sys.exit(1)
+    if pmagn:
+        b = top.getkw('magnet_axis')[0]
+        if b in ortho:
+            top['magnet_axis'][0].setkw('X')
 
 if __name__ == '__main__':
     main()

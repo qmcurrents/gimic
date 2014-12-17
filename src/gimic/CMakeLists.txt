@@ -58,3 +58,4 @@ if (ENABLE_CFOUR)
     endif()
 endif()
 
+unset (_PYTHON_FULL_INSTDIR)

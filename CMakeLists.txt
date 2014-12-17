@@ -6,7 +6,7 @@ enable_language(Fortran)
 
 set (PROJECT_VERSION_MAJOR 2)
 set (PROJECT_VERSION_MINOR 1)
-set (PROJECT_VERSION_PATCH 0)
+set (PROJECT_VERSION_PATCH 4)
 
 option(ENABLE_PROFILING      "Enable profiling"              OFF)
 option(ENABLE_BOUNDS_CHECK   "Enable bounds check"           OFF)
@@ -17,6 +17,7 @@ option(ENABLE_CFOUR          "Enable the CFOUR interface" OFF)
 option(ENABLE_TESTS          "Enable the test suite" ON)
 option(ENABLE_MRCPP          "Enable the MRCPP wavelet librbary" OFF)
 
+unset (CMAKE_LIBRARY_ARCHITECTURE)
 include(GNUInstallDirs)
 include(ConfigProjectVersion)
 include(ConfigSafeGuards)
@@ -26,6 +27,9 @@ include(ConfigureScript)
 include(ConfigCompilerFlags)
 
 find_package(Python REQUIRED)
+set (PYTHON_INSTDIR 
+    ${CMAKE_INSTALL_LIBDIR}/python${PYTHON_VERSION}/site-packages
+    )
 set (PYTHON_INSTDIR 
     ${CMAKE_INSTALL_FULL_LIBDIR}/python${PYTHON_VERSION}/site-packages
     )

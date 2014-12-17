@@ -219,6 +219,11 @@ contains
         this%basv(:,2)=v2
         this%basv(:,3)=v3
 
+        if (keyword_is_set(input, 'magnet')) then
+            call getkw(input, 'magnet', this%ortho)
+            this%ortho=norm(this%ortho)
+        endif
+
         call nl
         call msg_out('Integration grid data')
         call msg_out('------------------------------------------------')
@@ -621,11 +626,11 @@ contains
         if (show_axis) then
             select case (trim(this%mode))
                 case ('std','base')
-                    write(77,'(a,3f16.10)') 'X ', &
-                        (this%origin+this%basv(:,3))*au2a
+                    write(77,'(a,3f16.10)') 'Be ', &
+                        (this%origin+this%basv(:,3)*2.0)*au2a
                 case ('bond')
-                    write(77,'(a,3f16.10)') 'X ', &
-                        (this%origin+this%ortho)*au2a
+                    write(77,'(a,3f16.10)') 'Be ', &
+                        (this%origin+this%ortho*2.0)*au2a
             end select
         end if
 
