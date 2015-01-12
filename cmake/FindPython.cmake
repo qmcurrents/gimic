@@ -114,13 +114,23 @@ ENDIF(WIN32)
 EXECUTE_PROCESS(COMMAND "${PYTHON_EXECUTABLE}" # maybe there's a simpler way to do this? I haven't found it yet
   "-c" "import distutils.sysconfig; import sys; import os; sys.stdout.write(distutils.sysconfig.get_config_var('LIBDIR'))"
   OUTPUT_VARIABLE _PYTHON_LIBRARY_PATH
+  )
+EXECUTE_PROCESS(COMMAND "${PYTHON_EXECUTABLE}" 
+    "-c" "import distutils.sysconfig; import sys; import os; sys.stdout.write(distutils.sysconfig.get_config_var('MULTIARCH') or '')"
+  OUTPUT_VARIABLE _PYTHON_LIBRARY_MULTIARCH
 )
 EXECUTE_PROCESS(COMMAND "${PYTHON_EXECUTABLE}"
   "-c" "import distutils.sysconfig; import sys; sys.stdout.write(distutils.sysconfig.get_python_inc())"
   OUTPUT_VARIABLE PYTHON_INCLUDE_DIR
 )
 
-FIND_FILE(PYTHON_LIBRARY ${_PYTHON_LIBRARY_NAME} PATHS ${_PYTHON_LIBRARY_PATH} NO_DEFAULT_PATH)
+FIND_FILE(PYTHON_LIBRARY 
+    ${_PYTHON_LIBRARY_NAME} 
+    PATHS 
+        ${_PYTHON_LIBRARY_PATH} 
+        ${_PYTHON_LIBRARY_PATH}/${_PYTHON_LIBRARY_MULTIARCH}
+    NO_DEFAULT_PATH
+    )
 FIND_FILE(PYTHON_HEADER "Python.h" PATHS ${PYTHON_INCLUDE_DIR} NO_DEFAULT_PATH)
 
 
