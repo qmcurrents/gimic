@@ -27,7 +27,7 @@ include(ConfigCompilerFlags)
 
 find_package(Python REQUIRED)
 set(PYTHON_SITE_INSTALL_DIR 
-    lib/python${PYTHON_VERSION}/site-packages/Symbioses)
+    lib/python${PYTHON_VERSION}/site-packages/gimic)
 include(UseCython)
 
 set(LIBS)

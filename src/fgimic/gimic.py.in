@@ -3,7 +3,7 @@
 #
 import os
 
-GIMIC_EXECUTABLE = '@CMAKE_INSTALL_BINDIR@/gimic.bin'
+GIMIC_EXECUTABLE = '@CMAKE_INSTALL_FULL_BINDIR@/gimic.bin'
 
 class GimicDriver:
     def __init__(self, args, inkeys):
