@@ -13,7 +13,7 @@ module grid_class
     use basis_class
     use teletype_module
     ! ACID and Jav stuff
-    use acid_module
+    ! use acid_module
     implicit none
 
     type grid_t
@@ -150,7 +150,7 @@ contains
         real(DP), dimension(3) :: normv
         integer(I4), dimension(3) :: atoms
         real(DP), dimension(3) :: v1, v2, v3, oo
-        real(DP), dimension(2,3) :: refbond
+        !real(DP), dimension(2,3) :: refbond
         real(DP), dimension(2) :: hgt, wdt
         real(DP) :: l3
 
@@ -188,8 +188,8 @@ contains
         if (keyword_is_set(input, 'Grid.height')) then
             call getkw(input, 'Grid.height', hgt)
             call getkw(input, 'Grid.width', wdt)
-            hgt(1)=hgt(1)
-            wdt(1)=wdt(1)
+            hgt(1)=-hgt(1)
+            wdt(1)=-wdt(1)
         else
             call getkw(input, 'Grid.in', wdt(1))
             call getkw(input, 'Grid.out', wdt(2))
