@@ -32,7 +32,6 @@ program gimic
     type(jtensor_t) :: jt
     type(dens_t) :: xdens
     real(DP), dimension(3) :: magnet
-    type(acid_t) :: aref
 
     character(BUFLEN) :: buf
 
@@ -74,7 +73,8 @@ contains
         call getkw(input, 'magnet_axis', settings%magnet_axis)
         call getkw(input, 'magnet', settings%magnet)
         call getkw(input, 'openshell', settings%is_uhf)
-        call getkw(input, 'dryrun', settings%dryrun)
+        !call getkw(input, 'dryrun', settings%dryrun)
+        !call getkw(input, 'show_axis', settings%show_axis)
         call getkw(input, 'calc', settings%calc)
         call getkw(input, 'xdens', settings%xdens)
         call getkw(input, 'density', settings%density)
@@ -92,10 +92,7 @@ contains
 !        call getkw(input, 'Advanced.lip_order', settings%lip_order)
 
         call getkw(input, 'Essential.acid', settings%acid)
-        call getkw(input, 'Essential.jav', settings%jav)
-        call getkw(input, 'Essential.intp21', settings%intp21)
-        call getkw(input, 'Essential.intp33', settings%intp33)
-        call getkw(input, 'Essential.pabove', settings%pabove)
+       ! call getkw(input, 'Essential.jav', settings%jav)
 
         ierr=hostnm(sys)
         if (mpi_rank == 0) then
@@ -142,7 +139,6 @@ contains
 
     subroutine driver
         type(cao2sao_t) :: c2s
-        type(acid_t) :: aref
 
         if (settings%use_screening) then
             call new_basis(mol, settings%basis, settings%screen_thrs)
@@ -158,7 +154,7 @@ contains
         call new_dens(xdens, mol)
         call read_dens(xdens, settings%xdens)
 
-        call new_grid(grid, input, mol, aref)
+        call new_grid(grid, input, mol)
         if (mpi_rank == 0) then
             call plot_grid_xyz(grid, 'grid.xyz',  mol)
         end if
@@ -178,9 +174,9 @@ contains
         end if
 
         if (settings%calc(1:5) == 'cdens') then
-            call run_cdens(jf,mol,xdens,aref)
+            call run_cdens(jf,mol,xdens)
         else if (settings%calc(1:8) == 'integral') then
-            call run_integral(aref)
+            call run_integral()
         else if (settings%calc(1:4) == 'divj') then
             call run_divj()
         else if (settings%calc(1:5) == 'edens') then
@@ -196,11 +192,10 @@ contains
         call del_grid(grid)
     end subroutine
 
-    subroutine run_cdens(jf,mol,xdens,aref)
+    subroutine run_cdens(jf,mol,xdens)
         type(jfield_t) :: jf
         type(dens_t) :: xdens
         type(molecule_t) :: mol
-        type(acid_t) :: aref
         call msg_out('Calculating current density')
         call msg_out('*****************************************')
         call new_jfield(jf, grid, magnet)
@@ -208,25 +203,24 @@ contains
         if (settings%dryrun) return
 
         call calc_jvectors(jf, mol, xdens)
-        call jvector_plots(jf,mol,'',aref)
+        call jvector_plots(jf,mol,'')
 
         if (settings%is_uhf) then
             call calc_jvectors(jf, mol, xdens, 'alpha')
-            call jvector_plots(jf,mol, 'alpha',aref)
+            call jvector_plots(jf,mol, 'alpha')
 
             call calc_jvectors(jf, mol, xdens, 'beta')
-            call jvector_plots(jf,mol, 'beta',aref)
+            call jvector_plots(jf,mol, 'beta')
 
             call calc_jvectors(jf, mol, xdens, 'spindens')
-            call jvector_plots(jf,mol, 'spindens',aref)
+            call jvector_plots(jf,mol, 'spindens')
         endif
         call del_jfield(jf)
     end subroutine
 
-    subroutine run_integral(aref)
+    subroutine run_integral()
         use integral_class
         type(integral_t) :: it
-        type(acid_t) :: aref
 
         call msg_out('Integrating current density')
         call msg_out('*****************************************')
@@ -251,12 +245,6 @@ contains
             call integrate_current(it, mol, xdens, 'spindens')
         end if
         call nl
-        if (settings%jav) then
-        ! add here GIMAC integration !
-           call msg_note('Integrating B field averaged current density')
-           call integrate_jav_current(it, mol, xdens, aref)
-           call nl
-        end if
         if (settings%acid) then
         ! add here ACID integration !
            call msg_note('Integrating ACID density')

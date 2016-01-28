@@ -229,7 +229,7 @@ contains
         return 
     end function
 
-    subroutine jvector_plots(this,mol,tag,aref)
+    subroutine jvector_plots(this,mol,tag)
         use vtkplot_module
 
         type(jfield_t), intent(inout) :: this
@@ -240,27 +240,15 @@ contains
         integer(I4) :: i, j, k, p1, p2, p3
         integer(I4) :: fd1, fd2, fd3, fd4, fd5
         integer(I4) :: idx, ptf
-        real(DP), dimension(3) :: v, rr, jav
+        real(DP), dimension(3) :: v, rr
         real(DP), dimension(3) :: center, normal
         real(DP), dimension(:,:), pointer :: jv
         real(DP), dimension(:,:), pointer :: jtens
         real(DP), dimension(:,:,:,:), allocatable :: jval
-        real(DP), dimension(:,:,:,:), allocatable :: j2d 
         real(DP) :: val
         real(DP) :: bound, r 
-        type(acid_t) :: aref
 
         if (mpi_rank > 0) return
-
-        if (settings%intp21) then
-          ! take 21 point integration formula
-          ptf = 1
-        else if (settings%intp33) then
-          ! take 33 point integration formula
-          ptf = 2
-        else
-            print *, "Attention, no integration formula define for Jav!"
-        end if
 
         if (present(tag)) then
             !fd1 = open_plot('jvec_' // tag // '.txt')
@@ -274,11 +262,6 @@ contains
 
         if (settings%acid) then
             fd3 = open_plot('acid.txt')
-            jtens=>this%tens
-        end if
-        if (settings%jav) then
-            fd4 = open_plot('jav_vec.txt')
-            fd5 = open_plot('jav_mod.txt')
             jtens=>this%tens
         end if
 
@@ -296,7 +279,6 @@ contains
         normal = normal*AU2A
 
         allocate(jval(p1,p2,p3,3))
-        allocate(j2d(p1,p2,p3,3))
 
         jv=>this%vec
         do k=1,p3
@@ -317,7 +299,6 @@ contains
                     end if
                     ! collect jv vec information to put it on vti file
                     jval(i,j,k,1:3) = v
-                    j2d(i,j,k,1:3) = v - normal*dot_product(v,normal)
                     call wrt_jvec(rr,v,fd1)
                     call wrt_jmod(rr,v,fd2)
                     ! case ACID
@@ -326,23 +307,11 @@ contains
                       val = get_acid(rr,jtens(:,idx))
                       call wrt_acid(rr,val,fd3)
                     end if
-                    ! case GIMAC J average
-                    if (settings%jav) then
-                      idx = i+(j-1)*p1+(k-1)*p1*p2
-                      ! jav = get_jav(jtens(:,idx),ptf,aref)
-                      jav = get_jess(jtens(:,idx),aref)
-                      call wrt_jvec(rr,jav,fd4)
-                      call wrt_jmod(rr,v,fd5)
-                    end if
                 end do
                 if (fd1 /= 0) write(fd1, *)
                 if (fd2 /= 0) write(fd2, *)
                 if (settings%acid) then
                   if (fd3 /= 0) write(fd3, *)
-                end if
-                if (settings%jav) then
-                  if (fd4 /= 0) write(fd4, *)
-                  if (fd5 /= 0) write(fd5, *)
                 end if
             end do
         end do
@@ -351,27 +320,15 @@ contains
         if (settings%acid) then
           call closefd(fd3)
         end if
-        if (settings%jav) then
-          call closefd(fd4)
-          call closefd(fd5)
-        end if
         ! put jvec information on vti file
         call write_vtk_vector_imagedata("jvec.vti", this%grid, jval) 
-        call write_j2d_imagedata("j2d.txt", this%grid, j2d)
-        deallocate(jval, j2d)
+        deallocate(jval)
 
         ! case 3D Grid
         if (grid_is_3d(this%grid)) then 
             if (settings%acid) then
               ! add here ACID plot stuff ! 
               call acid_cube_plot(this)
-            end if
-            if (settings%jav) then
-              ! GIMAC ! plot averaged current  
-              ! plotting function for Javerage
-              ! later this can be fused into the J we have
-              ! at the moment
-              call jav_cubeplot(this,tag,aref)
             end if
             if (present(tag)) then
                 call jmod_cubeplot(this, tag)
@@ -706,93 +663,6 @@ contains
         print *, 'ACID: maxi, mini', maxi, mini
 
         call closefd(fd1)
-    end subroutine
-
-    subroutine jav_cubeplot(this, tag, aref)
-    ! this routine is based on jmod_cube_plot() 
-        type(jfield_t) :: this
-        type(molecule_t) :: mol
-        type(acid_t) :: aref
-        character(*), optional :: tag
-
-        integer(I4) :: p1, p2, p3, fd1, fd2
-        integer(I4) :: i, j, k, l, idx
-        real(DP), dimension(:,:), pointer :: jtens
-        real(DP), dimension(3) :: qmin, qmax
-        real(DP), dimension(3) :: norm, step, mag, v, rr, rr_2
-        real(DP) :: maxi, mini, val, sgn
-        integer(I4), dimension(3) :: npts
-        integer :: ptf
-        ! real(DP), dimension(:,:), pointer :: buf
-
-        if (mpi_rank > 0) return
-        if (settings%intp21) then
-          ! take 21 point integration formula
-          ptf = 1
-        else if (settings%intp33) then
-          ! take 33 point integration formula
-          ptf = 2
-        else
-            print *, "Attention, no integration formula define for Jav!"
-        end if
-        ! call jmod_vtkplot(this) 
-        call get_grid_size(this%grid, p1, p2, p3)
-        npts=(/p1,p2,p3/)
-        norm=get_grid_normal(this%grid)
-        qmin=gridpoint(this%grid,1,1,1)
-        qmax=gridpoint(this%grid,p1,p2,p3)
-
-        step=(qmax-qmin)/(npts-1)
-
-        !if (present(tag)) then
-        !   fd1=opencube('jav_'// tag // '.cube', qmin, step, npts)
-        !    fd2=opencube('jav_quasi'// tag // '.cube', qmin, step, npts)
-        !else
-        !    fd1=opencube('jav.cube', qmin, step, npts)
-        !    fd2=opencube('jav_quasi.cube', qmin, step, npts)
-        !end if
-        fd1=opencube('jav.cube', qmin, step, npts)
-        fd2=opencube('jav_quasi.cube', qmin, step, npts)
-
-        ! if Jav is independent of B then the plot must also be 
-        jtens => this%tens
-        maxi=0.d0
-        mini=0.d0
-        l=0
-        do i=1,p1
-            do j=1,p2
-                do k=1,p3
-                   idx = i+(j-1)*npts(1) + (k-1)*npts(1)*npts(2) 
-                   ! v=buf(:,i+(j-1)*p1+(k-1)*p1*p2)
-                    rr=gridpoint(this%grid,i,j,k)
-                    ! get now jav for one grid point !
-                    v = get_jav(jtens(:,idx),ptf,aref)
-                    val=(sqrt(sum(v**2)))
-                    ! rr=rr-dot_product(mag,rr)*mag
-                    ! norm=cross_product(mag,rr)
-                    norm=cross_product(aref%norm,rr)
-                    sgn=dot_product(norm,v)
-                    if (val > maxi) maxi=val
-                    if (val < mini) mini=val
-                    if (fd1 /= 0) then 
-                        write(fd1,'(f12.6)',advance='no') au2si(val)
-                        if (mod(l,6) == 5) write(fd1,*)
-                    end if
-                    if (fd2 /= 0) then 
-                      if (sgn >= 0.d0 ) then
-                        write(fd2,'(f12.6)',advance='no') au2si(val)
-                      else
-                        write(fd2,'(f12.6)',advance='no') -1.d0*au2si(val)
-                      end if
-                      if (mod(l,6) == 5) write(fd2,*)
-                    end if
-                    l=l+1
-                end do
-            end do
-        end do
-        print *, 'in JAV: maxi, mini:', maxi, mini
-        call closefd(fd1)
-        call closefd(fd2)
     end subroutine
 
     subroutine acid_vtkplot(this)

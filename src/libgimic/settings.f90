@@ -11,7 +11,7 @@ module settings_module
         character(256) :: title
         character(128) :: debug_file
         logical :: dryrun
-        logical :: show_axis
+        !logical :: show_axis=.true.
         character(16) :: calc
         character(128) :: basis
         character(128) :: xdens
@@ -26,10 +26,10 @@ module settings_module
         logical :: use_diamag=.true.
         logical :: use_paramag=.true.
         logical :: acid=.true.
-        logical :: jav=.true.
-        logical :: intp21=.true.
-        logical :: intp33=.true.
-        logical :: pabove=.true.
+        !logical :: jav=.true.
+        !logical :: intp21=.true.
+        !logical :: intp33=.true.
+        !logical :: pabove=.true.
         real(DP) :: screen_thrs
         logical :: use_screening
         integer(I4), dimension(2) :: morange
