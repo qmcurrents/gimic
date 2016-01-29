@@ -573,12 +573,12 @@ contains
         real(DP), dimension(3) :: r, coord
         character(2) :: symbol
         type(atom_t), pointer :: atom
-        logical :: show_axis = .false.
+        logical :: show_axis = .true.
 
         natoms=get_natoms(mol)
 
         call get_grid_size(this,p1,p2,p3)
-!        call getkw(input, 'show_axis', show_axis)
+        !  call getkw(input, 'show_axis', show_axis)
         i=0
         if (show_axis) i=1
 

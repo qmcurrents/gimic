@@ -11,7 +11,7 @@ module settings_module
         character(256) :: title
         character(128) :: debug_file
         logical :: dryrun
-        !logical :: show_axis=.true.
+        logical :: show_axis
         character(16) :: calc
         character(128) :: basis
         character(128) :: xdens

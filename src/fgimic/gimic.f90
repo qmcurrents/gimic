@@ -74,7 +74,7 @@ contains
         call getkw(input, 'magnet', settings%magnet)
         call getkw(input, 'openshell', settings%is_uhf)
         !call getkw(input, 'dryrun', settings%dryrun)
-        !call getkw(input, 'show_axis', settings%show_axis)
+        ! call getkw(input, 'show_axis', settings%show_axis)
         call getkw(input, 'calc', settings%calc)
         call getkw(input, 'xdens', settings%xdens)
         call getkw(input, 'density', settings%density)
@@ -156,7 +156,7 @@ contains
 
         call new_grid(grid, input, mol)
         if (mpi_rank == 0) then
-            call plot_grid_xyz(grid, 'grid.xyz',  mol)
+            call plot_grid_xyz(grid, 'grid.xyz', mol)
         end if
 
         call get_magnet(grid, magnet)
