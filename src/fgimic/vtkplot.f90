@@ -42,7 +42,7 @@ contains
             0, npts(3)-1, &
             '">'
         write(fd, *) '  <PointData Scalars="scalars">'
-        write(fd, *) '  <DataArray Name="scalars" type="Float32" ', &
+        write(fd, *) '  <DataArray Name="scalars" type="Float64" ', &
             'NumberOfComponents="1" Format="ascii">'
 
         l=0
@@ -121,7 +121,7 @@ contains
             !</ VTKFile> 
         write(fd, *) '  <PointData Scalars="scalars">'
         ! data name data type nocomp format
-        write(fd, *) '  <DataArray Name="scalars" type="Float32" ', &
+        write(fd, *) '  <DataArray Name="vectors" type="Float64" ', &
             'NumberOfComponents="3" Format="ascii">'
 
         l=0
