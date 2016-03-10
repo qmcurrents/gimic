@@ -93,7 +93,7 @@ def readbasis(file):
     ll=f.readlines()
     f.close()
     elmt_def=re.compile('([a-zA-Z]{1,2}) .*')
-    seg_def=re.compile('([1-9]*) *(s|p|d|f|g|h|i)$')
+    seg_def=re.compile('([1-9][0-9]*) *(s|p|d|f|g|h|i)$')
 
     # some sanity, thank you...
     ll=map(string.strip,ll)
