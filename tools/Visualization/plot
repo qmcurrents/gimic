@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+# note you need to have PyNgl installed and working
+# adapted for gimic
+python get_stream_input.py 
+python streamline.py --data=jvec_2d.txt --molecule=coord.xy 
+
+for file in *ps; do
+    convert -trim -density 300 $file -quality 80 ${file%ps}jpg
+done
+
+exit 0
