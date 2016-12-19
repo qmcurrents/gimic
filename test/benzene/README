@@ -1,0 +1,20 @@
+
+Example: benzene B2LYP/def2-TZVP
+
+- Integration over a bond 
+    - J, Jmod, ACID
+- 3D cube files and VTK vti files
+    - JVEC, JMOD, ACID
+    - JVEC as vector and 3D streamline
+    - ACID as surface
+    - paraview examples see files.pvsm 
+    - open paraview, load pvsm file 
+    - paraview needs files.vti as input information
+    - note ALL vti files contain data in atomic units
+      therefore you need to convert the mol.xyz file from Angstroem
+      to bohr
+    - note this is not the case for the cube files
+- 2D VTK vti file for JVEC
+    - visualization as vectors and streamlines LIC
+    - note you need to replace NAN in the header of the vti file with zero
+    - this needs to be fixed
