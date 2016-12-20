@@ -1,0 +1,5 @@
+The script gimic-test.sh is executed by giving the directory where the binary is located. On my laptop this is:
+
+./gimic-test.sh /home/suzanka/Shared/PhD/gimic-source/gimic-develop-version/bin
+
+The script executes the calculation for the given gimic.inp file and writes to gimic.test.out. Then the values for the diatropic paratropic, and the total currents are extracted from the output file and compared to the corresponding value obtained with master version of Gimic. When the difference between these results is less than 1e-5, the script considers it a success and prints the word "success" on stdout.
