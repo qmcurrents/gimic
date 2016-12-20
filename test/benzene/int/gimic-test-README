@@ -2,6 +2,6 @@ The script gimic-test.sh is executed in a directory with existing input files by
 
 ./gimic-test.sh /home/suzanka/Shared/PhD/gimic-source/gimic-develop-version/bin
 
-The script executes the calculation for the given gimic.inp file and writes to gimic.test.out. Then the values for the diatropic paratropic, and the total currents are extracted from the output file and compared to the corresponding value obtained with master version of Gimic that have to be provided in the file gimic.out. When the difference between these results is less than 1e-5, the script considers it a success and prints the word "success" on stdout.
+The script executes the calculation for the given gimic.inp file and writes to gimic.test.out. Then the values for the diatropic paratropic, and the total currents are extracted from the output file and compared to the corresponding value obtained with master version of Gimic that have to be provided in the file gimic.out. When the difference between these results is less than 1e-5, the script considers it a success and prints 0 on stdout. Else it prints 1.
 
 Currently it is placed in the test case of the benzene molecule. In order to test it on another molecule it is necessary to provide the file gimic.out from a calculation from the master version to use as reference. The script is executed as shown above.
