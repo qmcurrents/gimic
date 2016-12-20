@@ -4,7 +4,7 @@ gimicdir="$1"
 
 if [ -z $gimicdir ]
 then
-    echo "Gimic directory not specified"
+    echo "Gimic directory not specified as a command line argument"
     exit
 fi
 
@@ -14,13 +14,13 @@ diatropic=$(grep -A 2 "Induced current" gimic.test.out | awk '{ if (NR == 2) pri
 paratropic=$(grep -A 2 "Induced current" gimic.test.out | awk '{ if (NR == 3) printf("% f\n", $5); }')
 total=$(grep "Induced current (nA/T)" gimic.test.out | awk '{printf("% f\n", $5); }')
 
-#echo $diatropic
-#echo $paratropic
-#echo $total
+dia_ref=$(grep -A 2 "Induced current" gimic.out | awk '{ if (NR == 2) printf("% f\n", $5); }')
+para_ref=$(grep -A 2 "Induced current" gimic.out | awk '{ if (NR == 3) printf("% f\n", $5); }')
+total_ref=$(grep "Induced current (nA/T)" gimic.out | awk '{printf("% f\n", $5); }')
 
-test1=$( awk -v diatropic="$diatropic" 'BEGIN{ if ((16.771417 - diatropic) < 1e-5) { print 0; } }'  )
-test2=$( awk -v paratropic="$paratropic" 'BEGIN{ if ((-4.969283 - paratropic) < 1e-5) { print 0; } }' )
-test3=$( awk -v total="$total" 'BEGIN{ if ((11.802134 - total) < 1e-5) { print 0; } }' )
+test1=$( awk -v diatropic="$diatropic" -v dia_ref="$dia_ref" 'BEGIN{ if ((dia_ref - diatropic) < 1e-5) { print 0; } }'  )
+test2=$( awk -v paratropic="$paratropic" -v para_ref="$para_ref" 'BEGIN{ if ((para_ref - paratropic) < 1e-5) { print 0; } }' )
+test3=$( awk -v total="$total" -v total_ref="$total_ref" 'BEGIN{ if ((total_ref - total) < 1e-5) { print 0; } }' )
 
 if [ $test1 -eq 0 ] && [ $test2 -eq 0 ] && [ $test3 -eq 0 ]
 then
