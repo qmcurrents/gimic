@@ -56,5 +56,3 @@ $ qsub gimic.run
 ```
 
 That's it! May the foo be with you!
-
-(Bugs to <jonas@iki.f>)
