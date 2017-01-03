@@ -31,7 +31,6 @@ set(sources
     gimic_interface.h
     GimicInterface.cpp
     GimicInterface.h
-    acid.f90
     )
 
 
