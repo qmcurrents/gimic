@@ -1,0 +1,48 @@
+This script has been provided by Vincent Liegeois University Namur.
+vincent.liegeois@unamur.be
+
+
+The program is made of two parts: 
+
+1) Gaussian2gimic.py which is the main program
+2) BasisSet.py which is a module file containing the functions to read the basis set and to do the transformations from Spherical to Cartesian.
+This file just need to be put in the same directory as Gaussian2gimic.py
+
+Gaussian2gimic.py use optionparser to sets its different options.
+Therefore, « Gaussian2gimic.py -h » will give you the full description.
+
+There is only two options, only one of them is required.
+  The command line to run the program on a formatted checkpoint file from gaussian is the following:
+
+Gaussian2gimic.py -i file.fchk
+
+This will produce two files: XDENS and MOL files
+
+The extra option is -t followed by a XDENS coming from turbo2gimic.py
+
+Gaussian2gimic.py -i file.fchk -t XDENS_turbo
+
+This will, in addition to creating XDENS and MOL files, print in the standard output (on the terminal) a comparison with the values obtained from gaussian and from turbomole.
+This is intended as a way to control that both numbers are similar.
+
+
+For example, for a calculation on paranitroaniline with HF/6-311G(2df,2pd), the maximum error on the density matrix is 5.8E-5 while the maximum errors on the perturbed density matrices are 2.1e-2, 2.6e-2, 5.0e-2.
+
+For the same molecule but with HF/cc-pVTZ, the maximum errors are: 4.8e-5, 2.5e-2, 5.4e-2, 7.8e-2.
+
+ATTENTION, to have these agreements with turbomole, one need to specify "int=NoBasisTransform » in the Gaussian NMR calculation in order to prevent Gaussian from transforming the generalized contraction basis sets.
+
+
+At last, the MOL file produced by Gaussian2gimic is slightly different from the one obtained by turbo2gimic.`
+
+Indeed, turbo2gimic gives the basis set exactly as obtained on https://bse.pnl.gov/bse/portal with « optimized general contractions » checked.
+BUT, the coefficients are not normalized with  « optimized general contractions » checked. but are normalized with « optimized general contractions » unchecked.
+
+As an example, the first atomic orbital for cc-pVTZ basis set for the C with  « optimized general contractions » checked consist of a contraction of 8 GTOs while there are 10 GTOs in the contraction if « optimized general contractions » is unchecked.
+The coefficients given in the website and in turbo2gimic are optimized for the contraction of the 10 GTOs not the 8.
+Gaussian and therefore Gaussian2gimic gives the coefficients that are normalized for the contraction of the 8 GTOs.
+
+To do:
+
+Can you check that this has no influence in GIMIC?
+
