@@ -8,6 +8,9 @@ then
     exit
 fi
 
+cp ../XDENS XDENS
+cp ../MOL MOL
+
 $gimicdir/gimic gimic.inp > gimic.test.out 
 
 diatropic=$(grep -A 2 "Induced current" gimic.test.out | awk '{ if (NR == 2) printf("% f\n", $5); }')
@@ -33,3 +36,5 @@ then
 else
     echo "1" # failure
 fi
+
+rm -rf XDENS MOL
