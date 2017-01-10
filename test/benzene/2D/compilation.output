@@ -1,0 +1,176 @@
+suzanka@Lucifer:~/Shared/PhD/gimic$ rm -rf build
+suzanka@Lucifer:~/Shared/PhD/gimic$ mkdir build
+suzanka@Lucifer:~/Shared/PhD/gimic$ 
+suzanka@Lucifer:~/Shared/PhD/gimic$ cd build
+suzanka@Lucifer:~/Shared/PhD/gimic/build$ cmake ..
+-- The C compiler identification is GNU 5.4.0
+-- The CXX compiler identification is GNU 5.4.0
+-- Check for working C compiler: /usr/bin/cc
+-- Check for working C compiler: /usr/bin/cc -- works
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Check for working CXX compiler: /usr/bin/c++
+-- Check for working CXX compiler: /usr/bin/c++ -- works
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- The Fortran compiler identification is GNU 5.4.0
+-- Check for working Fortran compiler: /usr/bin/gfortran
+-- Check for working Fortran compiler: /usr/bin/gfortran  -- works
+-- Detecting Fortran compiler ABI info
+-- Detecting Fortran compiler ABI info - done
+-- Checking whether /usr/bin/gfortran supports Fortran 90
+-- Checking whether /usr/bin/gfortran supports Fortran 90 -- yes
+-- Found Python: /usr/bin/python2.7  
+-- Found Git: /usr/bin/git (found version "2.7.4") 
+-- Found Cython: /usr/local/bin/cython  
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /home/suzanka/Shared/PhD/gimic/build
+suzanka@Lucifer:~/Shared/PhD/gimic/build$ make
+Scanning dependencies of target gimic2
+[  2%] Building Fortran object src/libgimic/CMakeFiles/gimic2.dir/kinds.f90.o
+[  4%] Building Fortran object src/libgimic/CMakeFiles/gimic2.dir/settings.f90.o
+[  6%] Building Fortran object src/libgimic/CMakeFiles/gimic2.dir/teletype.f90.o
+[  8%] Building Fortran object src/libgimic/CMakeFiles/gimic2.dir/globals.f90.o
+[ 10%] Building Fortran object src/libgimic/CMakeFiles/gimic2.dir/gtodefs.f90.o
+[ 12%] Building Fortran object src/libgimic/CMakeFiles/gimic2.dir/intgrl.f90.o
+[ 14%] Building Fortran object src/libgimic/CMakeFiles/gimic2.dir/basis.f90.o
+[ 17%] Building Fortran object src/libgimic/CMakeFiles/gimic2.dir/factorial.f90.o
+[ 19%] Building Fortran object src/libgimic/CMakeFiles/gimic2.dir/cao2sao.f90.o
+[ 21%] Building Fortran object src/libgimic/CMakeFiles/gimic2.dir/caos.f90.o
+[ 23%] Building Fortran object src/libgimic/CMakeFiles/gimic2.dir/reorder.f90.o
+[ 25%] Building Fortran object src/libgimic/CMakeFiles/gimic2.dir/bfeval.f90.o
+[ 27%] Building Fortran object src/libgimic/CMakeFiles/gimic2.dir/dens.f90.o
+[ 29%] Building Fortran object src/libgimic/CMakeFiles/gimic2.dir/jtensor.f90.o
+[ 31%] Building Fortran object src/libgimic/CMakeFiles/gimic2.dir/gaussint.f90.o
+[ 34%] Building Fortran object src/libgimic/CMakeFiles/gimic2.dir/divj.f90.o
+[ 36%] Building Fortran object src/libgimic/CMakeFiles/gimic2.dir/edens.f90.o
+[ 38%] Building Fortran object src/libgimic/CMakeFiles/gimic2.dir/timer.f90.o
+[ 40%] Building Fortran object src/libgimic/CMakeFiles/gimic2.dir/tensor.f90.o
+[ 42%] Building Fortran object src/libgimic/CMakeFiles/gimic2.dir/acid.f90.o
+[ 44%] Building Fortran object src/libgimic/CMakeFiles/gimic2.dir/gausspoints.f90.o
+[ 46%] Building Fortran object src/libgimic/CMakeFiles/gimic2.dir/gimic_interface.f90.o
+[ 48%] Building Fortran object src/libgimic/CMakeFiles/gimic2.dir/lip.f90.o
+[ 51%] Building C object src/libgimic/CMakeFiles/gimic2.dir/gausspoints.c.o
+[ 53%] Building CXX object src/libgimic/CMakeFiles/gimic2.dir/GimicInterface.cpp.o
+[ 55%] Linking CXX shared library libgimic2.so
+[ 55%] Built target gimic2
+[ 57%] Compiling Cython C source for gengauss...
+Scanning dependencies of target gengauss
+[ 59%] Building C object src/libgimic/CMakeFiles/gengauss.dir/gengauss.c.o
+In file included from /usr/include/python2.7/numpy/ndarraytypes.h:1777:0,
+                 from /usr/include/python2.7/numpy/ndarrayobject.h:18,
+                 from /usr/include/python2.7/numpy/arrayobject.h:4,
+                 from /home/suzanka/Shared/PhD/gimic/build/src/libgimic/gengauss.c:275:
+/usr/include/python2.7/numpy/npy_1_7_deprecated_api.h:15:2: warning: #warning "Using deprecated NumPy API, disable it by " "#defining NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION" [-Wcpp]
+ #warning "Using deprecated NumPy API, disable it by " \
+  ^
+In file included from /usr/include/python2.7/numpy/ndarrayobject.h:27:0,
+                 from /usr/include/python2.7/numpy/arrayobject.h:4,
+                 from /home/suzanka/Shared/PhD/gimic/build/src/libgimic/gengauss.c:275:
+/usr/include/python2.7/numpy/__multiarray_api.h:1448:1: warning: ‘_import_array’ defined but not used [-Wunused-function]
+ _import_array(void)
+ ^
+[ 61%] Linking C shared module gengauss.so
+[ 61%] Built target gengauss
+[ 63%] Compiling Cython CXX source for gimic...
+Scanning dependencies of target gimic
+[ 65%] Building CXX object src/libgimic/CMakeFiles/gimic.dir/gimic.cxx.o
+[ 68%] Linking CXX shared module gimic.so
+[ 68%] Built target gimic
+[ 70%] Compiling Cython C source for connector...
+Scanning dependencies of target connector
+[ 72%] Building C object src/pygimic/CMakeFiles/connector.dir/connector.c.o
+[ 74%] Linking C shared module connector.so
+[ 74%] Built target connector
+Scanning dependencies of target gimic.bin
+[ 76%] Building Fortran object src/fgimic/CMakeFiles/gimic.bin.dir/getkw.f90.o
+[ 78%] Building Fortran object src/fgimic/CMakeFiles/gimic.bin.dir/grid.f90.o
+[ 80%] Building Fortran object src/fgimic/CMakeFiles/gimic.bin.dir/parallel.f90.o
+[ 82%] Building Fortran object src/fgimic/CMakeFiles/gimic.bin.dir/vtkplot.f90.o
+[ 85%] Building Fortran object src/fgimic/CMakeFiles/gimic.bin.dir/jfield.f90.o
+[ 87%] Building Fortran object src/fgimic/CMakeFiles/gimic.bin.dir/divj_field.f90.o
+[ 89%] Building Fortran object src/fgimic/CMakeFiles/gimic.bin.dir/cubeplot.f90.o
+[ 91%] Building Fortran object src/fgimic/CMakeFiles/gimic.bin.dir/edens_field.f90.o
+[ 93%] Building Fortran object src/fgimic/CMakeFiles/gimic.bin.dir/magnet.f90.o
+[ 95%] Building Fortran object src/fgimic/CMakeFiles/gimic.bin.dir/integral.f90.o
+[ 97%] Building Fortran object src/fgimic/CMakeFiles/gimic.bin.dir/gimic.f90.o
+[100%] Linking Fortran executable gimic.bin
+[100%] Built target gimic.bin
+suzanka@Lucifer:~/Shared/PhD/gimic/build$ make install
+[ 55%] Built target gimic2
+[ 61%] Built target gengauss
+[ 68%] Built target gimic
+[ 74%] Built target connector
+[100%] Built target gimic.bin
+Install the project...
+-- Install configuration: "Debug"
+-- Installing: /usr/local/bin/gimic
+CMake Error at src/cmake_install.cmake:36 (file):
+  file INSTALL cannot copy file
+  "/home/suzanka/Shared/PhD/gimic/build/src/gimic" to "/usr/local/bin/gimic".
+Call Stack (most recent call first):
+  cmake_install.cmake:37 (include)
+
+
+Makefile:93: recipe for target 'install' failed
+make: *** [install] Error 1
+suzanka@Lucifer:~/Shared/PhD/gimic/build$ sudo make install
+[sudo] password for suzanka: 
+[ 55%] Built target gimic2
+[ 61%] Built target gengauss
+[ 68%] Built target gimic
+[ 74%] Built target connector
+[100%] Built target gimic.bin
+Install the project...
+-- Install configuration: "Debug"
+-- Installing: /usr/local/bin/gimic
+-- Installing: /usr/local/lib/python2.7/site-packages/gimic/getkw.py
+-- Installing: /usr/local/lib/python2.7/site-packages/gimic/pygimic
+-- Installing: /usr/local/lib/python2.7/site-packages/gimic/pygimic/atom.py
+-- Installing: /usr/local/lib/python2.7/site-packages/gimic/pygimic/atomic_units.py
+-- Installing: /usr/local/lib/python2.7/site-packages/gimic/pygimic/currents.py
+-- Installing: /usr/local/lib/python2.7/site-packages/gimic/pygimic/elements.py
+-- Installing: /usr/local/lib/python2.7/site-packages/gimic/pygimic/field.py
+-- Installing: /usr/local/lib/python2.7/site-packages/gimic/pygimic/gimic_exceptions.py
+-- Installing: /usr/local/lib/python2.7/site-packages/gimic/pygimic/grid.py
+-- Installing: /usr/local/lib/python2.7/site-packages/gimic/pygimic/magnet.py
+-- Installing: /usr/local/lib/python2.7/site-packages/gimic/pygimic/molecule.py
+-- Installing: /usr/local/lib/python2.7/site-packages/gimic/pygimic/plot.py
+-- Installing: /usr/local/lib/python2.7/site-packages/gimic/pygimic/pygimic.py
+-- Installing: /usr/local/lib/python2.7/site-packages/gimic/pygimic/quadrature.py
+-- Installing: /usr/local/lib/python2.7/site-packages/gimic/pygimic/streamplot.py
+-- Installing: /usr/local/lib/python2.7/site-packages/gimic/pygimic/__init__.py
+-- Installing: /usr/local/lib/python2.7/site-packages/gimic/london
+-- Installing: /usr/local/lib/python2.7/site-packages/gimic/london/current.py
+-- Installing: /usr/local/lib/python2.7/site-packages/gimic/london/london.py
+-- Installing: /usr/local/lib/python2.7/site-packages/gimic/london/__init__.py
+-- Installing: /usr/local/lib/python2.7/site-packages/gimic/gimic.so
+-- Set runtime path of "/usr/local/lib/python2.7/site-packages/gimic/gimic.so" to ""
+-- Installing: /usr/local/lib/python2.7/site-packages/gimic/gengauss.so
+-- Set runtime path of "/usr/local/lib/python2.7/site-packages/gimic/gengauss.so" to ""
+-- Installing: /usr/local/lib/libgimic2.so
+-- Installing: /usr/local/include/GimicInterface.h
+-- Installing: /usr/local/include/gimic_interface.h
+-- Installing: /usr/local/include/gimic.pxd
+-- Installing: /usr/local/lib/python2.7/site-packages/gimic/connector.so
+-- Installing: /usr/local/lib/python2.7/site-packages/gimic/fgimic/__init__.py
+-- Installing: /usr/local/lib/python2.7/site-packages/gimic/fgimic/gimic.py
+-- Installing: /usr/local/lib/python2.7/site-packages/gimic/fgimic/getkw.py
+-- Installing: /usr/local/bin/gimic.bin
+-- Set runtime path of "/usr/local/bin/gimic.bin" to ""
+-- Installing: /usr/local/bin/MOL2mol.sh
+-- Installing: /usr/local/bin/qgimic.sh
+-- Installing: /usr/local/bin/quesys.sh
+-- Installing: /usr/local/bin/turbo2gimic.py
+-- Installing: /usr/local/lib/python2.7/site-packages/gimic/QCTools
+-- Installing: /usr/local/lib/python2.7/site-packages/gimic/QCTools/Atom.py
+-- Installing: /usr/local/lib/python2.7/site-packages/gimic/QCTools/Const.py
+-- Installing: /usr/local/lib/python2.7/site-packages/gimic/QCTools/Elements.py
+-- Installing: /usr/local/lib/python2.7/site-packages/gimic/QCTools/QCTools.py
+-- Installing: /usr/local/lib/python2.7/site-packages/gimic/QCTools/__init__.py
+
