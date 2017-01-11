@@ -9,9 +9,6 @@ tags
 build/*
 release/*
 debug/*
-examples/*
 lib/*
 share/*
-cdash/*
-tools/*
 cmake/bump-version
