@@ -1,3 +1,17 @@
+#if 0
+
+  Convert output of Q-Chem or FermiONs++ to TURBOMOLE
+  format
+
+  This Source Code Form is subject to the terms of the
+  Mozilla Public License, v. 2.0. If a copy of the MPL
+  was not distributed with this file, You can obtain
+  one at https://mozilla.org/MPL/2.0/.
+
+  (C) J. Kussmann
+
+#endif
+
 #include <cstdlib>
 #include <cstdio>
 #include <cstring>
@@ -8,39 +22,25 @@
 #include <sstream>
 #include <algorithm>
 
-//void die(const char* mess){
-//
-//  printf("  Fatal Error:\n\n\t%s\n\n",mess);
-//  exit(1);
-//
-//}
-
 #define ANG2BOHR 1.88972612456506198632e0
 
 #define die(x) dieLoc(x,__FILE__,__LINE__)
 
-//  ! TURBOMOLE ordering... (in symlib/pdfgtr.f)
-//  real(DP), dimension(3,6), target :: GTD_TM = reshape &
-//      ((/D_XX, D_YY, D_ZZ, D_XY, D_XZ, D_YZ /), (/3,6/))
+/*  TURBOMOLE ordering...
 
-//  real(DP), dimension(3,10), target :: GTF_TM = reshape &
-//      ((/F_XXX, F_YYY, F_ZZZ, F_XXY, F_XXZ, &
-//      F_XYY, F_YYZ, F_XZZ, F_YZZ, F_XYZ/), (/3,10/))
+  D: 200 020 002 110 101 011
+  F: 300 030 003 210 201 120 021 102 012 111
+  G: 400 040 004 310 301 130 031 103 013 220
+     202 022 211 121 112
+  H: 500 050 005 410 401 140 041 104 014 320
+     302 230 032 203 023 311 131 113 221 212
+     122
 
-//  real(DP), dimension(3,15), target :: GTG_TM = reshape &
-//      ((/G_400, G_040, G_004, G_310, G_301, G_130, G_031, G_103, &
-//      G_013, G_220, G_202, G_022, G_211, G_121, G_112/), (/3,15/))
-
-//  real(DP), dimension(3,21), target :: GTH_TM = reshape &
-//      ((/H_500, H_050, H_005, H_410, H_401, H_140, H_041, H_104, H_014, &
-//         H_320, H_302, H_230, H_032, H_203, H_023, H_311, H_131, H_113, &
-//         H_221, H_212, H_122 /),(/3,21/))
+*/
 
 // from a fermions-perspective...
 static int tm_d[6] = {0,3,4,1,5,2};
-
 static int tm_f[10] = {0,3,4,5,9,7,1,6,8,2};
-
 static int tm_g[15] = {0,3,4,9,12,10,5,13,14,7,1,6,11,8,2};
 
 void dieLoc(const char* bye, const char* fff, int ll){
@@ -102,10 +102,10 @@ void conv_s2c(prog_type typ, std::vector<double>& matrix, std::vector<atom>& the
 void nonaxc(prog_type typ, std::vector<double>& matrix, std::vector<atom>& theAtoms, std::vector<atombasis>& theBasis, int nbf, int nbfc);
 void qchem_reorder(std::vector<double>& matrix, std::vector<atom>& theAtoms, std::vector<atombasis>& theBasis, int nbf, int nbfc);
 void fermions2turbo(std::vector<double>& matrix, std::vector<atom>& theAtoms, std::vector<atombasis>& theBasis, int nbf, int nbfc);
-void build_c2p_fermions(double*** c2p_tm, int max_lqn, bool undo);
-void form_nax_fermions(double*** nax, int max_lqn, bool inv);
-void build_c2p_qchem(double*** c2p_tm, int max_lqn, bool undo);
-void form_nax_qchem(double*** nax, int max_lqn, bool inv);
+void build_c2p_fermions(double*** c2p_tm, int max_lqn);
+void form_nax_fermions(double*** nax, int max_lqn);
+void build_c2p_qchem(double*** c2p_tm, int max_lqn);
+void form_nax_qchem(double*** nax, int max_lqn);
 
 int get_lqn(const std::string& clqn){
 
@@ -224,7 +224,6 @@ int main(int argc, char* argv[]){
   std::string scr_dir; // fermions
   prog_type type = qchem;
 
-  //if (std::getenv("QCAUX") == NULL) die("Env 'QCAUX' is not set!");
   std::string basfile;
   bool do_s2c = false;
   bool opensh = false;
@@ -767,35 +766,20 @@ void read_density_qchem(std::string& dens_file, std::string& xdens_file, std::ve
 
   fclose(fin);
 
-//int ldim = nbfc;
-//if (do_s2c) ldim = nbf;
-//print_mat(ldim,ldim,&matrix0[0],"mat0");
-//ldim = nbfc;
   if (do_s2c) conv_s2c(qchem,matrix0,theAtoms,theBasis,nbf,nbfc);
-//print_mat(ldim,ldim,&matrix0[0],"mat1");
   nonaxc(qchem,matrix0,theAtoms,theBasis,nbf,nbfc);
-//print_mat(ldim,ldim,&matrix0[0],"mat2");
   qchem_reorder(matrix0,theAtoms,theBasis,nbf,nbfc);
-//print_mat(ldim,ldim,&matrix0[0],"mat3");
 
 
-  //FILE* fout = fopen("dens","wb");
   FILE* fout = fopen("xdens","w");
   if (fout == NULL) die("Could not create density-output 0!");
 
-  //if (fwrite(&matrix0[0],nbfc*nbfc*8,1,fout) != 1){
-  //  die("Failed to write to density-file!");
-  //}
   for(int elem=0;elem<nbfc*nbfc;elem++)
     fprintf(fout,"%.14E\n",matrix0[elem]);
   fprintf(fout,"\n");
-  //fclose(fout);
 
   fin = fopen(xdens_file.c_str(),"rb");
   if (fin == NULL) die("Could not open density-file!");
-  //fout = fopen("xdens","wb");
-  //fout = fopen("xdens","w");
-  //if (fout == NULL) die("Could not create density-output 1!");
   size_t off = 0;
   for(int ii=0;ii<3;ii++){
 
@@ -811,9 +795,6 @@ void read_density_qchem(std::string& dens_file, std::string& xdens_file, std::ve
     qchem_reorder(matrix0,theAtoms,theBasis,nbf,nbfc);
   
   
-    //if (fwrite(&matrix0[0],nbfc*nbfc*8,1,fout) != 1){
-    //  die("Failed to write to density-file!");
-    //}
     for(int elem=0;elem<nbfc*nbfc;elem++)
       fprintf(fout,"%.14E\n",matrix0[elem]);
     fprintf(fout,"\n");
@@ -892,9 +873,9 @@ void nonaxc(prog_type typ, std::vector<double>& matrix, std::vector<atom>& theAt
 
   double** nax;
   if (typ == qchem)
-    form_nax_qchem(&nax,max_lqn,false);
+    form_nax_qchem(&nax,max_lqn);
   else if (typ == fermions)
-    form_nax_fermions(&nax,max_lqn,false);
+    form_nax_fermions(&nax,max_lqn);
   else
     die("Illegal prog-type!");
   double* mat = &matrix[0];
@@ -929,7 +910,6 @@ void nonaxc(prog_type typ, std::vector<double>& matrix, std::vector<atom>& theAt
           if (lqn1 > 1){
             for(int J=0;J<dim2c;J++){
               for(int ii=0;ii<dim1c;ii++){
-//printf("mult: %20.10f\n",nax[lqn1][ii]);
                 mat[ii+offc1 + (J+offc2)*nbfc] *= nax[lqn1][ii];
               }
             }
@@ -937,7 +917,6 @@ void nonaxc(prog_type typ, std::vector<double>& matrix, std::vector<atom>& theAt
           if (lqn2 > 1){
             for(int J=0;J<dim1c;J++){
               for(int ii=0;ii<dim2c;ii++){
-//printf("mult: %20.10f\n",nax[lqn2][ii]);
                 mat[J+offc1 + (ii+offc2)*nbfc] *= nax[lqn2][ii];
               }
             }
@@ -963,9 +942,9 @@ void conv_s2c(prog_type typ, std::vector<double>& matrix, std::vector<atom>& the
 
   double** c2p;
   if (typ == qchem)
-    build_c2p_qchem(&c2p,max_lqn,false);
+    build_c2p_qchem(&c2p,max_lqn);
   else if (typ == fermions)
-    build_c2p_fermions(&c2p,max_lqn,false);
+    build_c2p_fermions(&c2p,max_lqn);
   else
     die("Illegal prog-type!");
 
@@ -1073,8 +1052,6 @@ double xyz2lm_Coeff(int, int, int, int, int);
 
 #define parity(m) ((m)%2 ? -1 : 1)
 
-void CartGSelfOverlap(double* S, int L);
-
 double factorial(int n)
 {
 
@@ -1150,7 +1127,7 @@ double xyz2lm_Coeff(int l, int m, int lx, int ly, int lz, double* bc, int bc_dim
     return sqrt(2.e0)*pfac*sum;
 }
 
-void build_c2p_qchem(double*** c2p_tm, int max_lqn, bool undo) {
+void build_c2p_qchem(double*** c2p_tm, int max_lqn) {
 
     int i, j, m;
     int ao, l;
@@ -1184,25 +1161,13 @@ void build_c2p_qchem(double*** c2p_tm, int max_lqn, bool undo) {
       }
     }
     
-    if (undo){
-      die("undo?!?");
-      //double* S1 = new double[(((max_lqn+1)*(max_lqn+2)/2)*((max_lqn+1)*(max_lqn+2)/2))];
-      //double* S2 = new double[(2*max_lqn+1)*((max_lqn+1)*(max_lqn+2)/2)];
-      //for (l=2; l<=max_lqn; l++) {
-      //  CartGSelfOverlap(S1,l);
-      //  matmult(S2, 2*l+1, (l+1)*(l+2)/2, (*c2p_tm)[l], 2*l+1, (l+1)*(l+2)/2, S1, (l+1)*(l+2)/2, (l+1)*(l+2)/2,1);
-      //  for(int ii=0;ii<(2*l+1)*(l+1)*(l+2)/2;ii++) (*c2p_tm)[l][ii] = S2[ii];
-      //}
-      //delete[] S2;
-      //delete[] S1;
-    }
     delete[] fac;
     delete[] bc;
     return;
 
 }
 
-void build_c2p_fermions(double*** c2p_tm, int max_lqn, bool undo) {
+void build_c2p_fermions(double*** c2p_tm, int max_lqn) {
     int i, j, m;
     int ao, l;
     
@@ -1234,90 +1199,15 @@ void build_c2p_fermions(double*** c2p_tm, int max_lqn, bool undo) {
       }
     }
     
-    if (undo){
-      die("undo?!?");
-      //double* S1 = new double[(((max_lqn+1)*(max_lqn+2)/2)*((max_lqn+1)*(max_lqn+2)/2))];
-      //double* S2 = new double[(2*max_lqn+1)*((max_lqn+1)*(max_lqn+2)/2)];
-      //for (l=2; l<=max_lqn; l++) {
-      //  CartGSelfOverlap(S1,l);
-      //  matmult(S2, 2*l+1, (l+1)*(l+2)/2, (*c2p_tm)[l], 2*l+1, (l+1)*(l+2)/2, S1, (l+1)*(l+2)/2, (l+1)*(l+2)/2,1);
-      //  for(int ii=0;ii<(2*l+1)*(l+1)*(l+2)/2;ii++) (*c2p_tm)[l][ii] = S2[ii];
-      //}
-      //delete[] S2;
-      //delete[] S1;
-    }
     delete[] fac;
     delete[] bc;
     return;
 }
 
-void CartGSelfOverlap(double* S, int L){
-
-      int sdim1 = (L+1)*(L+2)/2;
-
-      for(int ii=0;ii<sdim1*sdim1;ii++) S[ii] = 0.e0;
-      int k1 = 0;
-      for(int Lx1=L;Lx1>=0;Lx1--){
-        int m2_1 = L-Lx1;
-        for(int Ly1=m2_1;Ly1>=0;Ly1--){
-          int Lz1 = L-Lx1-Ly1;
-          int k2 = 0;
-          for(int Lx2=L;Lx2>=0;Lx2--){
-            int m2_2 = L-Lx2;
-            for(int Ly2=m2_2;Ly2>=0;Ly2--){
-              int Lz2 = L-Lx2-Ly2;
-              int Lx = Lx1+Lx2;
-              int Ly = Ly1+Ly2;
-              int Lz = Lz1+Lz2;
-              if ((Lx % 2) == 0 && (Ly % 2) == 0 && (Lz % 2) == 0){
-                 double Fac1x = 1e0;
-                 double Fac1y = 1e0;
-                 double Fac1z = 1e0;
-                 for(int i=Lx/2+1;i<=Lx;i++){
-                    Fac1x *= (double) i;
-                 }
-                 for(int i=Ly/2+1;i<=Ly;i++){
-                    Fac1y *= (double) i;
-                 }
-                 for(int i=Lz/2+1;i<=Lz;i++){
-                    Fac1z *= (double) i;
-                 }
-                 double Fac2x = 1e0;
-                 double Fac2y = 1e0;
-                 double Fac2z = 1e0;
-                 for(int i=Lx1+1;i<=2*Lx1;i++){
-                    Fac2x *= sqrt((double)i);
-                 }
-                 for(int i=Lx2+1;i<=2*Lx2;i++){
-                    Fac2x *= sqrt((double)i);
-                 }
-                 for(int i=Ly1+1;i<=2*Ly1;i++){
-                    Fac2y *= sqrt((double)i);
-                 }
-                 for(int i=Ly2+1;i<=2*Ly2;i++){
-                    Fac2y *= sqrt((double)i);
-                 }
-                 for(int i=Lz1+1;i<=2*Lz1;i++){
-                    Fac2z *= sqrt((double)i);
-                 }
-                 for(int i=Lz2+1;i<=2*Lz2;i++){
-                    Fac2z *= sqrt((double)i);
-                 }
-                 S[k1+k2*sdim1] = (Fac1x/Fac2x) * (Fac1y/Fac2y) * (Fac1z/Fac2z);
-              }
-              k2++;
-            }
-          }
-          k1++;
-        }
-      }
-}
-
-
-void form_nax_qchem(double*** nax, int max_lqn, bool inv){
+void form_nax_qchem(double*** nax, int max_lqn){
 
   double** nax0;
-  form_nax_fermions(&nax0,max_lqn,inv);
+  form_nax_fermions(&nax0,max_lqn);
   *nax = new double*[max_lqn+1];
   for(int ii=0;ii<=max_lqn;ii++) (*nax)[ii] = new double[((ii+1)*(ii+2))/2];
   
@@ -1332,11 +1222,7 @@ void form_nax_qchem(double*** nax, int max_lqn, bool inv){
         cc++;
       }
     }
-    if (inv){
-      for(int ii=0;ii<(L+1)*(L+2)/2;ii++) (*nax)[L][ii] = 1.e0/sqrt((*nax)[L][ii]);
-    }else{
-      for(int ii=0;ii<(L+1)*(L+2)/2;ii++) (*nax)[L][ii] = sqrt((*nax)[L][ii]);
-    }
+    for(int ii=0;ii<(L+1)*(L+2)/2;ii++) (*nax)[L][ii] = sqrt((*nax)[L][ii]);
   }
 
   for (int l=0; l<=max_lqn; l++)
@@ -1346,7 +1232,7 @@ void form_nax_qchem(double*** nax, int max_lqn, bool inv){
 
 }
 
-void form_nax_fermions(double*** nax, int max_lqn, bool inv){
+void form_nax_fermions(double*** nax, int max_lqn){
 
   *nax = new double*[max_lqn+1];
   for(int ii=0;ii<=max_lqn;ii++) (*nax)[ii] = new double[(ii+1)*(ii+2)/2];
@@ -1367,12 +1253,8 @@ void form_nax_fermions(double*** nax, int max_lqn, bool inv){
       }
       d1 *= (((double)(2*Lx-1))/((double)(2*i2+1)));
     }
-    if (inv){
-      for(int ii=0;ii<(L+1)*(L+2)/2;ii++) (*nax)[L][ii] = 1.e0/sqrt((*nax)[L][ii]);
-    }else{
-      for(int ii=0;ii<(L+1)*(L+2)/2;ii++) (*nax)[L][ii] = sqrt((*nax)[L][ii]);
-      if (L > 1) for(int ii=0;ii<(L+1)*(L+2)/2;ii++) (*nax)[L][ii] *= sq3i;
-    }
+    for(int ii=0;ii<(L+1)*(L+2)/2;ii++) (*nax)[L][ii] = sqrt((*nax)[L][ii]);
+    if (L > 1) for(int ii=0;ii<(L+1)*(L+2)/2;ii++) (*nax)[L][ii] *= sq3i;
   }
 }
 
@@ -1444,7 +1326,6 @@ void print_mat(int nrow, int ncol, double* scr, const char* name){
         printf("\n");
       }
     }
-//    printf("\n");
   }
   fflush(stdout);
 }
@@ -1563,8 +1444,6 @@ void read_output_fermions(std::string& fname, std::string& basfile, std::vector<
       buff.clear();
       while(ss >> buf) buff.push_back(buf);
       if (buff.size() != 2){
-        //printf("line: %s\n",line.c_str());
-        //die("Illegal format!");
         state = 0;
       }else{
         int ioz_act = get_ioz(buff[0]);
@@ -1642,7 +1521,6 @@ void read_output_fermions(std::string& fname, std::string& basfile, std::vector<
   FILE* fout = fopen("mol","w");
   if (fout == NULL) die("Error creating file 'mol'!");
   fprintf(fout,"INTGRL        1    0    1    0    0    0    0    0    0\n");
-  //fprintf(fout,"QCMine\n");
   fprintf(fout,"TURBOMOLE\n");
   fprintf(fout,"              Generated by gimic_conv\n");
   fprintf(fout,"%i    0            0.10E-08              0    0\n",(int)theAtoms.size());
@@ -1674,8 +1552,6 @@ void read_output_fermions(std::string& fname, std::string& basfile, std::vector<
     std::string coz;
     get_coz(it.ioz,coz);
     fprintf(fout,"%2s 1%20.12f%20.12f%20.12f\n",coz.c_str(),it.x,it.y,it.z);
-    //fprintf(fout,"%2s 1%20.12f%20.12f%20.12f\n",coz.c_str(),it.x * ANG2BOHR,it.y * ANG2BOHR,it.z * ANG2BOHR);
-    // print basis
     int nbf_act  = 0;
     int nbfc_act = 0;
     for(auto it2 : theBasis[which].shells){
@@ -1719,14 +1595,8 @@ void read_density_fermions(std::string& scr_dir, std::vector<atom>& theAtoms, st
 
   fclose(fin);
 
-//int ldim = nbfc;
-//if (do_s2c) ldim = nbf;
-//print_mat(ldim,ldim,&matrix0[0],"mat0");
-//ldim = nbfc;
   if (do_s2c) conv_s2c(fermions,matrix0,theAtoms,theBasis,nbf,nbfc);
-//print_mat(ldim,ldim,&matrix0[0],"mat1");
   nonaxc(fermions,matrix0,theAtoms,theBasis,nbf,nbfc);
-//print_mat(ldim,ldim,&matrix0[0],"mat2");
   fermions2turbo(matrix0,theAtoms,theBasis,nbf,nbfc);
 
 
