@@ -6,9 +6,6 @@ function runtest() {
 	printf "\n\nPerforming test on $testname bond integral\n\n"
     fi
 
-    cp ./$testname/XDENS ./$testname/int/XDENS
-    cp ./$testname/MOL ./$testname/int/MOL
-
     (cd ./$testname/int && $gimicdir/gimic gimic.inp > gimic.test.out )
 
     diatropic=$(grep -A 2 "Induced current" ./$testname/int/gimic.test.out | awk '{ if (NR == 2) printf("% f\n", $5); }')

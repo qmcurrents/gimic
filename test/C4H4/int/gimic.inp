@@ -3,8 +3,8 @@
 calc=integral          # cdens, integral, edens, divj
 #dryrun=off        # don't actually calculate (good for tuning grids, etc.)
 title=""
-basis="MOL"
-xdens="XDENS"
+basis="../MOL"
+xdens="../XDENS"
 debug=1           # debug print level
 openshell=false 
 #show_axis=true   # mark "up" axis in .xyz files
