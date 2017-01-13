@@ -271,6 +271,7 @@ contains
         bound=1.d+10
         bound=this%grid%radius
 
+        circle_log = .false.
         if (grid_is_3d(this%grid)) then 
             circle_log = .false.
         else 
