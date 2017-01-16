@@ -1,1 +1,5 @@
+<<<<<<< HEAD
 g++ -std=c++0x -g gimic_prep.cpp -o gimic_prep
+=======
+g++ -std=c++0x -g qc2tm.cpp -o qc2tm
+>>>>>>> master
