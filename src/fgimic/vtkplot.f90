@@ -23,9 +23,23 @@ contains
         open(fd, file=trim(fname), form='formatted', status='unknown')
 
         call get_grid_size(grid, npts(1), npts(2), npts(3))
+        ! Maria debugging 
+        !print *,  "### Debugging: grid, npts 1-3";
+        !print *, npts(1);
+        !print *, npts(2);
+        !print *, npts(3);
+        ! end debugging
+
         qmin=gridpoint(grid,1,1,1)
         qmax=gridpoint(grid,npts(1),npts(2),npts(3))
         step=(qmax-qmin)/(npts-1)
+
+        !Maria debugging
+        !print *, "### Debugging: qmin, qmax, step";
+        !print *, qmin;
+        !print *, qmax;
+        !print *, step;
+        ! end debugging
 
         write(fd, '(a)') '<?xml version="1.0"?>'
         write(fd, *) '<VTKFile type="ImageData" ', &
