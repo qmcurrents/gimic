@@ -271,8 +271,12 @@ contains
         bound=1.d+10
         bound=this%grid%radius
         circle_log = .false.
-        if (this%grid%radius.gt.0.0d0) then
+        if (grid_is_3d(this%grid)) then 
+            circle_log = .false.
+        else 
+          if (this%grid%radius.gt.0.1d0) then
             circle_log = .true.
+          end if
         end if
         ! get grid normal vector n
         normal=get_grid_normal(this%grid)

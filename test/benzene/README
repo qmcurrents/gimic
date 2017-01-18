@@ -1,5 +1,5 @@
 
-Example: benzene B2LYP/def2-TZVP
+Example: benzene B3LYP/def2-TZVP
 
 - Integration over a bond 
     - J, Jmod, ACID
@@ -18,3 +18,19 @@ Example: benzene B2LYP/def2-TZVP
     - visualization as vectors and streamlines LIC
     - note you need to replace NAN in the header of the vti file with zero
     - this needs to be fixed
+
+
+
+
+    Visualizations in ParaView
+
+- In order to view the sample ParaView states, it is necessary to give the path to the jvec.vti file on your computer. This can be done from the directory containing the README file in the following way:
+
+(cd ./2D/ && JVEC=$(pwd) && sedstring="s:@JVEC@:$JVEC/jvec.vti:" && sed "$sedstring" jvec-2d-paraview.pvsm.in > jvec-2d-paraview.pvsm)
+
+NOTE: Please do not forget the brackets. They cause all the commands to be exectued in the same shell.
+
+NOTE 2: If your ParaView is installed under Windows, you need to provide the path manually, and each backslash should be writen three times
+
+( cd ./2D/ && JVEC="C:\\\Users\\\path\\\to\\\jvec.vti" && sedstring=$(echo "s,@JVEC@,$JVEC,g"); echo; echo $sedstring; sed "$sedstring" jvec-2d-paraview.pvsm.in > jvec-2d-paraview.pvsm )
+
