@@ -6,6 +6,10 @@ module vtkplot_module
     use settings_module
     use grid_class
 
+    ! Maria debugging
+    use teletype_module
+    ! end debugging
+
     implicit none
 
 
@@ -98,6 +102,10 @@ contains
         real(DP), dimension(3) :: qmin, qmax, step
         real(DP) :: norm 
 
+        ! Maria debugging
+        ! character(120) :: debug_str
+        ! end debugging
+
         call getfd(fd)
         open(fd, file=trim(fname), form='formatted', status='unknown')
 
@@ -111,6 +119,19 @@ contains
                step(i) = step(i) / ( npts(i) - 1)  ! if ( step(i) != 0 ) divide, else leave it 0
            end if
         end do
+
+! Maria debugging
+!        write(debug_str, '(3(a,i0,x))') "### Debugging: npts 1", npts(1), "npts 2", npts(2), "npts 3", npts(3);
+!        call msg_out(debug_str)
+!        write(debug_str, '(3(a,f8.4,x))') "### Debugging: qmin 1", qmin(1), "qmin 2", qmin(2), "qmin 3", qmin(3);
+!        call msg_out(debug_str)
+!        write(debug_str, '(3(a,f8.4,x))') "### Debugging: qmax 1", qmax(1), "qmax 2", qmax(2), "qmax 3", qmax(3);
+!        call msg_out(debug_str)
+!        write(debug_str, '(i0)') npoints;
+!        call msg_out(debug_str)
+!        write(debug_str, '(3(a,f8.4,x))') "### Debugging: step 1", step(1), "step 2", step(2), "step 3", step(3);
+!        call msg_out(debug_str)
+! end debugging
 
         write(fd, '(a)') '<?xml version="1.0"?>'
         write(fd, *) '<VTKFile type="ImageData" ', &
