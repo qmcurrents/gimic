@@ -16,9 +16,8 @@ module jfield_class
     use teletype_module
     use parallel_module
     use tensor_module
-    ! ACID stuff
     use acid_module
-    !
+
     implicit none
 
     type jfield_t
@@ -251,8 +250,6 @@ contains
         if (mpi_rank > 0) return
 
         if (present(tag)) then
-            !fd1 = open_plot('jvec_' // tag // '.txt')
-            !fd2 = open_plot('jmod_' // tag // '.txt')
             fd1 = open_plot('jvec' // tag // '.txt')
             fd2 = open_plot('jmod' // tag // '.txt')
         else
@@ -289,17 +286,22 @@ contains
             do j=1,p2
                 do i=1,p1
                     rr=gridpoint(this%grid, i,j,k)*AU2A
-                    ! v=jv(:,i+(j-1)*p1+(k-1)*p1*p2)*AU2A
                     if (circle_log) then
                        ! for radius option
                        r = sqrt(sum((rr-center)**2)) 
                        if (r > bound) then
                            v = 0.0d0
                        else
-                           v=jv(:,i+(j-1)*p1+(k-1)*p1*p2)*AU2A
+                           ! Vincent correction
+                           ! v=jv(:,i+(j-1)*p1+(k-1)*p1*p2)*AU2A
+                           v = jv(:,i+(j-1)*p1+(k-1)*p1*p2)  
+                           ! end corr
                        end if
                     else
-                       v=jv(:,i+(j-1)*p1+(k-1)*p1*p2)*AU2A
+                        ! Vincent correction
+                        ! v=jv(:,i+(j-1)*p1+(k-1)*p1*p2)*AU2A
+                        v = jv(:,i+(j-1)*p1+(k-1)*p1*p2) 
+                        ! end corr
                     end if
                     ! collect jv vec information to put it on vti file
                     jval(i,j,k,1:3) = v
@@ -415,7 +417,13 @@ contains
         qmin=gridpoint(this%grid,1,1,1)
         qmax=gridpoint(this%grid,p1,p2,p3)
 
-        step=(qmax-qmin)/(npts-1)
+!        step=(qmax-qmin)/(npts-1) ! In a 2D plot qmin(3)-qmax(3) = 0 -> dividing it by npts(3) gives a NaN
+        do i=1,3
+           step(i) = qmax(i) - qmin(i)    
+           if ( step(i) > 1E-8 ) then    ! floating point numbers cannot be compared as ( step(i) == 0.0 )
+               step(i) = step(i) / ( npts(i) - 1)  ! if ( step(i) != 0 ) divide, else leave it 0
+           end if
+        end do
 
         mag = this%b
 
@@ -429,8 +437,7 @@ contains
         do k=1,p3
             do j=1,p2
                 do i=1,p1
-                    ! v=jv(:,i+(j-1)*p1+(k-1)*p1*p2)*AU2A
-                    v=buf(:,i+(j-1)*p1+(k-1)*p1*p2)
+                    v = buf(:,i+(j-1)*p1+(k-1)*p1*p2) 
                     rr=gridpoint(this%grid,i,j,k)
                     val(i,j,k)=(sqrt(sum(v**2)))
                     rr=rr-dot_product(mag,rr)*mag
@@ -470,7 +477,13 @@ contains
         qmin=gridpoint(this%grid,1,1,1)
         qmax=gridpoint(this%grid,p1,p2,p3)
 
-        step=(qmax-qmin)/(npts-1)
+!        step=(qmax-qmin)/(npts-1) ! In a 2D plot qmin(3)-qmax(3) = 0 -> dividing it by npts(3) gives a NaN
+        do i=1,3
+           step(i) = qmax(i) - qmin(i)    
+           if ( step(i) > 1E-8 ) then    ! floating point numbers cannot be compared as ( step(i) == 0.0 )
+               step(i) = step(i) / ( npts(i) - 1)  ! if ( step(i) != 0 ) divide, else leave it 0
+           end if
+        end do
 
         !if (present(tag)) then
         !    fd1=opencube('jmod_'// tag // '.cube', qmin, step, npts)
@@ -490,7 +503,7 @@ contains
         do i=1,p1
             do j=1,p2
                 do k=1,p3
-                    v=buf(:,i+(j-1)*p1+(k-1)*p1*p2)
+                    v=buf(:,i+(j-1)*p1+(k-1)*p1*p2) 
                     rr=gridpoint(this%grid,i,j,k)
                     val=(sqrt(sum(v**2)))
                     rr=rr-dot_product(mag,rr)*mag
@@ -634,7 +647,14 @@ contains
         call get_grid_size(this%grid, npts(1), npts(2), npts(3))
         qmin = gridpoint(this%grid, 1, 1, 1)
         qmax = gridpoint(this%grid, npts(1), npts(2), npts(3))
-        step = (qmax - qmin)/(npts - 1)
+!        step=(qmax-qmin)/(npts-1) ! In a 2D plot qmin(3)-qmax(3) = 0 -> dividing it by npts(3) gives a NaN
+        do i=1,3
+           step(i) = qmax(i) - qmin(i)    
+           if ( step(i) > 1E-8 ) then    ! floating point numbers cannot be compared as ( step(i) == 0.0 )
+               step(i) = step(i) / ( npts(i) - 1)  ! if ( step(i) != 0 ) divide, else leave it 0
+           end if
+        end do
+
         ! get T tensor assume that this information is kept
         ! not sure because tens gets deallocated at one point...
         jtens => this%tens
@@ -694,7 +714,13 @@ contains
         qmin=gridpoint(this%grid,1,1,1)
         qmax=gridpoint(this%grid,p1,p2,p3)
 
-        step=(qmax-qmin)/(npts-1)
+!        step=(qmax-qmin)/(npts-1) ! In a 2D plot qmin(3)-qmax(3) = 0 -> dividing it by npts(3) gives a NaN
+        do i=1,3
+           step(i) = qmax(i) - qmin(i)    
+           if ( step(i) > 1E-8 ) then    ! floating point numbers cannot be compared as ( step(i) == 0.0 )
+               step(i) = step(i) / ( npts(i) - 1)  ! if ( step(i) != 0 ) divide, else leave it 0
+           end if
+        end do
 
         jtens => this%tens
         mag = this%b

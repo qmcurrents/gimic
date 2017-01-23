@@ -1,0 +1,98 @@
+
+ ****************************************************************
+ ***                                                          ***
+ ***           GIMIC 2.1.4 (2162b60)                          ***
+ ***              Written by Jonas Juselius                   ***
+ ***                                                          ***
+ ***  This software is copyright (c) 2003-2011 by             ***
+ ***  Jonas Juselius,  University of Tromsø.                  ***
+ ***                                                          ***
+ ***  You are free to distribute this software under the      ***
+ ***  terms of the GNU General Public License                 ***
+ ***                                                          ***
+ ***  A Pretty Advanced 'Hello World!' Program                ***
+ ****************************************************************
+
+ Fri Jan 20 15:09:42 2017
+  TITLE:
+
+ INFO: Detected TURBOMOLE input
+
+ Number of atoms =   8
+
+ Normalizing basis
+
+   Total number of primitive  GTO's  236
+   Total number of contracted GTO's  168
+
+ *** Calculating screening coefficients
+ INFO: Screening threshold:   0.1000E-07
+
+ INFO: Reordering densities [TURBOMOLE]
+
+ Integration grid data
+ ------------------------------------------------
+ center    -2.708895    0.182485    0.000000
+ origin    -2.708915   -5.817515    5.000000
+ basv1     -0.000000    0.000000   -1.000000
+ basv2      0.000003    1.000000    0.000000
+ basv3      1.000000   -0.000003   -0.000000
+ lenghts   10.000000    7.256140    0.000000
+ magnet     0.000000   -0.000000    1.000000
+
+ Grid mode = bond
+ INFO: Rotation is:   0.00000  0.00000  0.00000
+ INFO: Integration grid selected.
+ INFO: Adjusted number of grid points for quadrature:    36   36    0
+   Number of grid points <v1,v2>:   36   36    1
+   Total number of grid points  :      1296
+
+ *** Grid plot in grid.xyz
+    Magnetic field <x,y,z> =   0.00000   0.00000   1.00000
+
+ INFO: Closed-shell calculation
+
+ Integrating current density
+ *****************************************
+ *** Integrating |J|
+    Magnetic field <x,y,z> =   0.00000   0.00000   1.00000
+
+
+ ************************************************************
+ Induced mod current (au)   :    -0.708546
+       Positive contribution:     0.095009  (   2.677300 )
+       Negative contribution:    -0.803555  ( -22.643717 )
+
+ Induced mod current (nA/T) :   -19.966417
+       (conversion factor)  :    28.179409
+ ************************************************************
+
+
+ *** Integrating current
+    Magnetic field <x,y,z> =   0.00000   0.00000   1.00000
+
+
+ ************************************************************
+    Induced current (au)    :    -0.708546
+       Positive contribution:     0.095009  (   2.677300 )
+       Negative contribution:    -0.803555  ( -22.643716 )
+
+    Induced current (nA/T)  :   -19.966416
+       (conversion factor)  :    28.179409
+ ************************************************************
+
+
+ *** Deallocated grid data
+ INFO: Deallocated basis set and atom data
+
+ ----------------------------------------------------------------------
+    wall time:     2.13sec
+         user:     2.11sec
+          sys:     0.02sec
+ ----------------------------------------------------------------------
+ Fri Jan 20 15:09:44 2017
+ Hello World! (tm)
+
+ done.
+
+This is F-GIMIC.
