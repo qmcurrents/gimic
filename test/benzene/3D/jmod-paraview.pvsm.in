@@ -3300,11 +3300,11 @@
     </Proxy>
     <Proxy group="sources" type="XMLImageDataReader" id="9872" servers="1">
       <Property name="FileName" id="9872.FileName" number_of_elements="1">
-        <Element index="0" value="/Users/heike/gimic2/benzene-test/tzvp/gimic/jmod.vti"/>
+        <Element index="0" value="@JMOD@"/>
         <Domain name="files" id="9872.FileName.files"/>
       </Property>
       <Property name="FileNameInfo" id="9872.FileNameInfo" number_of_elements="1">
-        <Element index="0" value="/Users/heike/gimic2/benzene-test/tzvp/gimic/jmod.vti"/>
+        <Element index="0" value="@JMOD@"/>
       </Property>
       <Property name="TimestepValues" id="9872.TimestepValues"/>
       <Property name="CellArrayInfo" id="9872.CellArrayInfo"/>

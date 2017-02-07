@@ -3217,11 +3217,11 @@
     </Proxy>
     <Proxy group="sources" type="XMLImageDataReader" id="20451" servers="1">
       <Property name="FileName" id="20451.FileName" number_of_elements="1">
-        <Element index="0" value="/Users/heike/gimic2/benzene-test/tzvp/gimic/2D/jvec.vti"/>
+        <Element index="0" value="@JVEC@"/>
         <Domain name="files" id="20451.FileName.files"/>
       </Property>
       <Property name="FileNameInfo" id="20451.FileNameInfo" number_of_elements="1">
-        <Element index="0" value="/Users/heike/gimic2/benzene-test/tzvp/gimic/2D/jvec.vti"/>
+        <Element index="0" value="@JVEC@"/>
       </Property>
       <Property name="TimestepValues" id="20451.TimestepValues"/>
       <Property name="CellArrayInfo" id="20451.CellArrayInfo"/>

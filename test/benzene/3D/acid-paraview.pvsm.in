@@ -2303,11 +2303,11 @@
     </Proxy>
     <Proxy group="sources" type="XMLImageDataReader" id="4827" servers="1">
       <Property name="FileName" id="4827.FileName" number_of_elements="1">
-        <Element index="0" value="/Users/heike/gimic2/benzene-test/tzvp/gimic/acid.vti"/>
+        <Element index="0" value="@VTI@"/>
         <Domain name="files" id="4827.FileName.files"/>
       </Property>
       <Property name="FileNameInfo" id="4827.FileNameInfo" number_of_elements="1">
-        <Element index="0" value="/Users/heike/gimic2/benzene-test/tzvp/gimic/acid.vti"/>
+        <Element index="0" value="@VTI@"/>
       </Property>
       <Property name="TimestepValues" id="4827.TimestepValues"/>
       <Property name="CellArrayInfo" id="4827.CellArrayInfo"/>
