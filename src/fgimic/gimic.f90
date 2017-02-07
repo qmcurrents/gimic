@@ -73,7 +73,7 @@ contains
         call getkw(input, 'magnet_axis', settings%magnet_axis)
         call getkw(input, 'magnet', settings%magnet)
         call getkw(input, 'openshell', settings%is_uhf)
-        !call getkw(input, 'dryrun', settings%dryrun)
+        call getkw(input, 'dryrun', settings%dryrun)
         ! call getkw(input, 'show_axis', settings%show_axis)
         call getkw(input, 'calc', settings%calc)
         call getkw(input, 'xdens', settings%xdens)

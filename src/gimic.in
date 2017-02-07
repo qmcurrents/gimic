@@ -78,6 +78,7 @@ def parse_keywords(args):
     top.add_kw('magnet_axis', 'STR', ('',))
     top.add_kw('magnet', 'DBL_ARRAY', (0.0, 0.0, 0.0))
     top.add_kw('openshell', 'BOOL', (False,))
+    top.add_kw('dryrun', 'BOOL', (False,))
 
     adv=getkw.Section('Advanced')
     adv.add_kw('screening', 'BOOL', (False,))
