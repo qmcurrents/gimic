@@ -1,0 +1,13 @@
+
+    Visualizations in ParaView
+------------------------------------------------
+
+- In order to view the sample ParaView states, it is necessary to give the path to the jvec.vti file on your computer. This can be done from the directory containing the README file in the following way:
+
+(cd ./2D/ && JVEC=$(pwd) && sedstring="s:@JVEC@:$JVEC/jvec.vti:" && sed "$sedstring" jvec-2d-paraview.pvsm.in > jvec-2d-paraview.pvsm)
+
+(cd ./3D/ && VTI=$(pwd) && for fname in acid jmod jvec; do sedstring="s:@VTI@:$VTI/$fname.vti:" && sed "$sedstring" $fname-paraview.pvsm.in > $fname-paraview.pvsm; done)
+
+NOTE: Please do not forget the brackets. They cause all the commands to be exectued in the same shell.
+
+NOTE 2: If your ParaView is installed under Windows, you need to provide the path manually by replacing @VTI@ in the pvsm.in files with C:\path\to\jvec.vti
