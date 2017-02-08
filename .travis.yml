@@ -1,0 +1,33 @@
+language: python
+
+sudo: false
+
+matrix:
+  include:
+    - os: linux
+      compiler: gcc
+      python: 2.7
+      addons: &gcc49
+        apt:
+          sources: ['ubuntu-toolchain-r-test']
+          packages: ['g++', 'gcc', 'gfortran']
+      env:
+        - CXX='g++'
+        - CC='gcc'
+        - FC='gfortran'
+        - TRAVIS_TEST=1  # this is a workaround to trigger include in src/CMakeLists.txt
+
+install:
+  - pip install -r requirements.txt
+
+script:
+  - ./setup
+  - cd build
+  - make
+  - make install
+  - BUILD_DIR=$PWD
+  - cd ../test
+  - ./gimic-test.sh $BUILD_DIR/bin
+
+notifications:
+  email: false
