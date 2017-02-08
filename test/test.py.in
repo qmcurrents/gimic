@@ -78,7 +78,7 @@ def test_bond_integral():
         if 'Induced current (nA/T)  :' in line:
             intgrl = float(line[30:])
     f.close()
-    if abs(intgrl - 16.2535) > 1.e-6:
+    if abs(intgrl - 11.855308) > 1.e-6:
         print "Invalid integral", intgrl
         return False
     return True
@@ -89,7 +89,7 @@ def main():
     os.chdir(work_dir)
     if args.name[0] == 'vectors':
         result = test_vectors()
-    elif args.name[0] == 'bond_integral':
+    elif args.name[0] == 'bondint':
         result = test_bond_integral()
     else:
         print "Invalid test: ", args.name[0]

@@ -15,13 +15,13 @@ magnet_axis=-z #[-] i,j,k || x,y,z -> align magnet along axis
 #mofile="mos"
 
 # grid type can be: base/std, bond or file (see examples below)
-Grid<base> {    
+Grid(base) {    
     type=even                   # even or gauss 
     origin=[-8.0, -8.0, -2.0]   # origin of grid
     ivec=[1.0, 0.0, 0.0]        # basis vector i
     jvec=[ 0.0, 1.0, 0.0]       # basis vector j ( k = i x j )
     lengths=[16.0, 16.0, 4.0]   # lenthts of (i,j,k)
-    grid_points=[50,50,0]       # number of gridpoints on grid (i,j,k)
+    grid_points=[10,10,10]       # number of gridpoints on grid (i,j,k)
     rotation=[0.0,0.0,0.0]      # Rotation of (i,j,k) -> (i',j',k') in degrees
 }
 
