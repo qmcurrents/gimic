@@ -28,6 +28,8 @@ script:
   - BUILD_DIR=$PWD
   - cd ../test
   - ./gimic-test.sh $BUILD_DIR/bin
+  - ./gimic-test-2D.sh $BUILD_DIR/bin
+  - ./gimic-test-3D.sh $BUILD_DIR/bin
 
 notifications:
   email: false
