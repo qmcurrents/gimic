@@ -6,11 +6,16 @@ function runtest() {
 	printf "\n\nPerforming test on $testname bond integral\n\n"
     fi
 
-    (cd ./$testname/int && $gimicdir/gimic gimic.inp > gimic.test.out )
+    # Create a temporary directory for each test molecule, copy the input file there, then execute the calculation in it
+    mkdir ../tmp/$testname
 
-    diatropic=$(grep -A 2 "Induced current" ./$testname/int/gimic.test.out | awk '{ if (NR == 2) printf("% f\n", $5); }')
-    paratropic=$(grep -A 2 "Induced current" ./$testname/int/gimic.test.out | awk '{ if (NR == 3) printf("% f\n", $5); }')
-    total=$(grep "Induced current (nA/T)" ./$testname/int/gimic.test.out | awk '{printf("% f\n", $5); }')
+    cp ./$testname/int/gimic.inp ../tmp/$testname 
+    cp ./$testname/MOL ./$testname/XDENS ../tmp
+    (cd ../tmp/$testname  && $gimicdir/gimic gimic.inp > gimic.test.out )
+
+    diatropic=$(grep -A 2 "Induced current" ../tmp/$testname/gimic.test.out | awk '{ if (NR == 2) printf("% f\n", $5); }')
+    paratropic=$(grep -A 2 "Induced current" ../tmp/$testname/gimic.test.out | awk '{ if (NR == 3) printf("% f\n", $5); }')
+    total=$(grep "Induced current (nA/T)" ../tmp/$testname/gimic.test.out | awk '{printf("% f\n", $5); }')
 
     # Debugging
     if [ $verbose -eq 1 ]
@@ -53,7 +58,7 @@ function runtest() {
 	echo $success # successful result is success=0
     fi
 
-    rm -rf ./$testname/int/XDENS ./$testname/int/MOL
+    rm -rf ../tmp/XDENS ../tmp/MOL
 }
 
 arg="$2"
@@ -71,8 +76,6 @@ else
     verbose=0 # verbose off
 fi
 
-#echo Verbose? $verbose
-
 gimicdir="$1"
 
 if [ -z $gimicdir ]
@@ -83,6 +86,9 @@ fi
 
 # Initialize the variable to check the success of the test runs
 success=0
+
+# Make a temporary directory for the test
+mkdir ../tmp
 
 molecules="benzene C4H4"
 
@@ -95,5 +101,11 @@ if [ $verbose -eq 1 ]
 then
     printf "\nSuccess of all tests:\n"
 fi
+
+#    if [ $success -eq 0 ]
+#    then
+	rm -rf ../tmp
+ #   fi
+
 
 echo $success
