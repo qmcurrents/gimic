@@ -1,0 +1,71 @@
+This is a bash script which interactively prepares the input files for the current profile calculation and submit a batch job on a computing cluster with the SLURM system. It is meant to make the calculation more user-friendly. Please report any difficulties or unclear points either to the Git or directly to maria.dimitrova@helsinki.fi. Only through your feedback will Gimic calculations become straight-forward to execute routinely, as well as easy for beginners to get started. 
+
+The script has to be set up before its first use. Please use the template current-profile.sh.in and specify the path to the template input files gimic.inp in the environment variable PROFILE_TEMPLATE_PATH:
+
+export PROFILE_TEMPLATE_PATH=/path/to/gimic.inp.in
+sed !!!!!!!!!!!!!!!!!!
+
+With that done, you are ready to start your first calculation. It might make life easier if there is an alias to the script. 
+
+NOTE: The script assumes that the MOL and XDENS files exist. They can prepared using the script turbo2gimic.py
+
+
+1. Go to the directory with the files MOL, XDENS, coord, and an xyz file.
+
+2. Check the indices of the atoms from the xyz file, for example with xmakemol. 
+
+3. Execute the script.
+
+4. The script asks for two atoms that form the bond of interest.
+   A directory with their indices in the name is created.   
+
+5. Enter the fixed atom. 
+   Make sure that atom1->atom2->fixed are ordered clockwise! Otherwise, the signs of the diatropic and paratropic contributions will be inverted.
+
+6. Choose where to start the integration from. 
+   If you decide to start at the centre of a ring, enter the indices of the atoms in the ring.
+
+   NOTE: Enter them on the same line and only then press Enter, for example: 
+         1 2 3 4 5 [ENTER]
+   TIP: For six member rings only three atoms are necessary to define the centroid of the ring
+
+   If you choose to start from the centre of the bond, enter the indices of the two atoms that form it.
+   If you want to start the integration from a particular atom enter its index only.
+
+7. The script calculates the centroid and asks for confirmation. 
+
+   TIP: Often times the vortex does not start at the geometrical centre of the ring, so it might be useful to increase the suggested value by 0.2 bohr for example. The exact amount of the increase depends on the system. 
+
+8. Choose where the integration ends. 
+   By default, the script offers integration to infinity, which for practical purposes means 10 bohr. 
+
+   If you want the integration to stop at the centre of a ring, the centre of a bond, or an atom, press a and enter the atomic indices on the same line and press Enter.
+
+   Alternatively, if you want to end the integration at a known distance from the bond, press v and enter the value in bohr.
+
+   The script once again asks for confirmation.
+
+9. Choose how far above and below the molecule to integrate. The default values are 10 bohr.
+
+10. Choose the width of the slices for the differentiation along the integration plane. 
+
+    NOTE: The default step is 0.1 bohr. 
+    TIP: Integrating along bonds, and especially through atoms may require tighter steps of 0.05 bohr, 0.02 bohr, or even less. 
+
+11. Choose the spacing of the Gaussian grid points in each step. 
+
+    NOTE: Through practice it was found that having a spacing value of 0.02 bohr gives enough grid points when the step length is 0.1 bohr
+    NOTE: If the step length is different from the default value of 0.1 bohr, the script calculates how much tighter the grid points should be. The value can be changed manually.
+
+12. Enter the direction of the external magnetic field (x, y or z). It has to be perpendicular to the plane of the molecule.
+    NOTE: The molecule has to be oriented to be parallel to two of the axes BEFORE doing the calculation on TURBOMOLE!
+
+13. The calculation parameters are summarized and confirmation is expected to start creating the input files in the subdirectory for the current profile calculation. 
+
+    A dry run is performed on one of the input files to ensure that the number of grid points is satisfactory.
+
+14. Enter how many calculations on the input files should be executed at the same time. 
+
+    A batch script submits the job to the computing cluster. Time to sit and wait. 
+
+    NOTE: After completion, in the directory for the current profile analysis there is the file current_profile.dat including the data from each calculation step: distance along the integration plane, diatropic component, paratropic component and total induced current. These results are plotted in eps format. 
