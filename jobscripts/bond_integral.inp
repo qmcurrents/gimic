@@ -1,0 +1,52 @@
+# NEW INPUT
+
+calc=integral          # cdens, integral, edens, divj
+dryrun=off        # don't actually calculate (good for tuning grids, etc.)
+title=""
+basis="MOL"
+xdens="XDENS"
+debug=1           # debug print level
+openshell=false 
+show_axis=true   # mark "up" axis in .xyz files
+magnet_axis=@MF@ #[-] i,j,k || x,y,z -> align magnet along axis, X -> magnet perpendicular to molecular plane parallel to grid
+#magnet=[0.0, -1.0, 0.0]   # magnet vector
+scale_vectors=1.0
+
+
+# grid type can be: base/std, bond or file (see examples below)
+Grid(bond) {                    # define grid orthogonal to a bond 
+    type=gauss                  # gauss distribution of grid points
+    gauss_order=9               # order for gauss quadrature
+    bond=[@bond@]
+    fixpoint=@fixed@
+#    coord1=[0.0, 0.0, 2.145166] # "atom" coordinates
+#    coord2=[0.0, 0.0, -2.145166] 
+#    fixcoord=[0.0, 0.0, 0.0]
+    distance=@distance@                # place grid 'distance' between atoms
+    up=@up@
+    down=@down@
+    in=@in@
+    out=@out@
+    rotation=[0.0,0.0,0.0]      # Rotation of (i,j,k) -> (i',j',k') degrees
+    spacing=[@spacing@, @spacing@, @spacing@]     # spacing of points on grid (i,j,k)
+#    grid_points=[30, 30, 0]   
+#    height=[-5.0, 5.0]
+#    width=[-5.0, 5.0]
+#    radius=1.0                  # round grid: cut off at radius
+}
+
+Advanced {
+    lip_order=5      # order of Lagrange Interpolating Polynominals to use
+    spherical=off     # don't touch, unless you REALLY know what you are doing
+    diamag=on           # turn on/off diamagnetic contributions
+    paramag=on          # turn on/off paramagnetic contributions
+    GIAO=on             # turn on/off GIAOs. Don't change unless you know why.
+    screening=on        # use screening to speed up 
+    screening_thrs=1.d-8   # Screening threshold
+}
+
+## Read in grid from external file. 
+# Grid(file) {   
+#     file=gridfile.grd
+# }
+
