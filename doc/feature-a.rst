@@ -6,7 +6,7 @@ Feature A
 Subsection
 ----------
 
-Exciting documentation in here.
+In progress ...
 
 
 Another subsection
