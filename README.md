@@ -1,5 +1,7 @@
 [![Build Status](https://travis-ci.org/qmcurrents/gimic.svg?branch=master)](https://travis-ci.org/qmcurrents/gimic/builds)
 
+- [Documentation](http://gimic.readthedocs.io) (currently empty)
+
 This is the GIMIC program for calculating magnetically induced currents in
 molecules. For this program produce any kind of useful information, you
 need to provide it with an AO density matrix and three (effective)
