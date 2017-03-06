@@ -262,6 +262,11 @@ contains
             jtens=>this%tens
         end if
 
+        ! print out magnetic field        
+        write(*,*) "magnetic field"
+        write(*,*) this%b
+        write(*,*) ""
+
         call get_grid_size(this%grid, p1, p2, p3)
         ! this is for cdens visualization when radius option is used
         call grid_center(this%grid,center)
