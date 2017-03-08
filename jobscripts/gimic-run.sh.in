@@ -32,10 +32,17 @@ then
             rm -f $dirname/*out $dirname/*inp # Remove leftover input and output to avoid confusion
         fi
     else
-        mkdir $dirname
-        cp MOL XDENS coord $dirname/
-    fi  
-fi
+        if [ -e MOL ] && [ -e XDENS ] && [ -e coord ]
+        then
+            mkdir $dirname
+            cp coord $dirname/
+            echo "Directory $dirname created."; echo
+        else
+            echo "Please run the bond integral calculation from a directory containing the files MOL, XDENS and coord"
+            exit
+        fi # end if MOL, XDENS, coord exist
+    fi # end if current_profile_#.#
+fi # end if directory current_profile_#.# exists or we are inside it
 
 echo dista $atom1 $atom2
 echo $(dista $atom1 $atom2)
@@ -53,7 +60,10 @@ echo "Bond centre coordinates:"
 printf "("$Bx"; "$By"; "$Bz")\n"
 
 echo "Fixed point:"
-fixed=1; read fixed # avoid empty value
+while [ -z $fixed ]
+do
+    read fixed # avoid empty value
+done
 
 in=2
 printf "Define the starting point of integration\nPress [a] to enter atomic indices or press [v] the desired value\n"
@@ -65,9 +75,9 @@ then
     atoms=0; read atoms
     echo $atoms
 	CENTROID=$(centroid $atoms)
-	Dx=$( echo $CENTROID | awk '{print $1} ' )
-	Dy=$( echo $CENTROID | awk '{print $2} ' )
-	Dz=$( echo $CENTROID | awk '{print $3} ' )
+	Cx=$( echo $CENTROID | awk '{print $1} ' )
+	Cy=$( echo $CENTROID | awk '{print $2} ' )
+	Cz=$( echo $CENTROID | awk '{print $3} ' )
 	echo "Centroid:"
 	printf "("$Dx"; "$Dy"; "$Dz")\n"
 	awk -v Bx=$Bx -v By=$By -v Bz=$Bz -v Cx=$Cx -v Cy=$Cy -v Cz=$Cz BEGIN'{dist=sqrt( (Cx-Bx)*(Cx-Bx) + (Cy-By)*(Cy-By) + (Cz-Bz)*(Cz-Bz) ); print "Bond: ", Bx, By, Bz; print "Cent: ", Cx, Cy, Cz; print "diff: ", Cx-Bx, Cy-By, Cz-Bz; print dist}'
