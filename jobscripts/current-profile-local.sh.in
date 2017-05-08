@@ -276,7 +276,4 @@ cat $wrkdir/profile-points.out
 
 #######################################################################
 
-# print some info like used time, disk, reserved memory and actual used memory
-sacct -a --format=elapsed,maxdiskwrite,reqmem,maxrss  -j $SLURM_JOB_ID
-
 echo

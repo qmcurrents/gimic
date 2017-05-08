@@ -56,8 +56,8 @@ Bx=$( echo $BOND | awk '{print $1} ' )
 By=$( echo $BOND | awk '{print $2} ' )
 Bz=$( echo $BOND | awk '{print $3} ' )
 
-echo "Bond centre coordinates:"
-printf "("$Bx"; "$By"; "$Bz")\n"
+# echo "Bond centre coordinates:"
+# printf "("$Bx"; "$By"; "$Bz")\n"
 
 echo "Fixed point:"
 while [ -z $fixed ]
@@ -78,9 +78,9 @@ then
 	Cx=$( echo $CENTROID | awk '{print $1} ' )
 	Cy=$( echo $CENTROID | awk '{print $2} ' )
 	Cz=$( echo $CENTROID | awk '{print $3} ' )
-	echo "Centroid:"
-	printf "("$Dx"; "$Dy"; "$Dz")\n"
-	awk -v Bx=$Bx -v By=$By -v Bz=$Bz -v Cx=$Cx -v Cy=$Cy -v Cz=$Cz BEGIN'{dist=sqrt( (Cx-Bx)*(Cx-Bx) + (Cy-By)*(Cy-By) + (Cz-Bz)*(Cz-Bz) ); print "Bond: ", Bx, By, Bz; print "Cent: ", Cx, Cy, Cz; print "diff: ", Cx-Bx, Cy-By, Cz-Bz; print dist}'
+	# echo "Centroid:"
+	# printf "("$Cx"; "$Cy"; "$Cz")\n"
+	awk -v Bx=$Bx -v By=$By -v Bz=$Bz -v Cx=$Cx -v Cy=$Cy -v Cz=$Cz BEGIN'{dist=sqrt( (Cx-Bx)*(Cx-Bx) + (Cy-By)*(Cy-By) + (Cz-Bz)*(Cz-Bz) ); print dist}'
 	in=$( awk -v Bx=$Bx -v By=$By -v Bz=$Bz -v Cx=$Cx -v Cy=$Cy -v Cz=$Cz BEGIN'{dist=sqrt( (Cx-Bx)*(Cx-Bx) + (Cy-By)*(Cy-By) + (Cz-Bz)*(Cz-Bz) ); print -dist}' )
 	
 	printf  "Do you accept in="$in"?\nPress [n] to change\n"
@@ -136,7 +136,7 @@ fi # end if accept out = 10
 
 up=10
 down=0
-printf  "Do you accept up=10 and down=0?\nPress [n] to change\n"
+printf  "Do you accept up=$up and down=$down?\nPress [n] to change\n"
 read accept;
 if [ ! -z $accept ] && [ $accept == "n" ]
 then
