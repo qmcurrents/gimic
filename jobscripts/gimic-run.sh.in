@@ -109,12 +109,12 @@ then
     echo "Centroid of atoms: "
     atoms=0; read atoms
 	CENTROID=$(centroid $atoms)
-	Dx=$( echo $CENTROID | awk '{print $1} ' )
-	Dy=$( echo $CENTROID | awk '{print $2} ' )
-	Dz=$( echo $CENTROID | awk '{print $3} ' )
+	Cx=$( echo $CENTROID | awk '{print $1} ' )
+	Cy=$( echo $CENTROID | awk '{print $2} ' )
+	Cz=$( echo $CENTROID | awk '{print $3} ' )
 	echo "Centroid:"
-	printf "("$Dx"; "$Dy"; "$Dz")\n"
-	out=$( awk -v Dx=$Dx -v Dy=$Dy -v Dz=$Dz -v Bx=$Bx -v By=$By -v Bz=$Bz BEGIN'{dist=sqrt( (Bx-Dx)*(Bx-Dx) + (By-Dy)*(By-Dy) + (Bz-Dz)*(Bz-Dz) ); print dist}' )
+	printf "("$Cx"; "$Cy"; "$Cz")\n"
+	out=$( awk -v Cx=$Cx -v Cy=$Cy -v Cz=$Cz -v Bx=$Bx -v By=$By -v Bz=$Bz BEGIN'{dist=sqrt( (Bx-Cx)*(Bx-Cx) + (By-Cy)*(By-Cy) + (Bz-Cz)*(Bz-Cz) ); print dist}' )
 	
 	printf  "Do you accept out="$out"?\nPress [n] to change\n"
 	read accept;

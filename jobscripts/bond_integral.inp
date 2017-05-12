@@ -3,14 +3,14 @@
 calc=integral          # cdens, integral, edens, divj
 dryrun=off        # don't actually calculate (good for tuning grids, etc.)
 title=""
-basis="MOL"
-xdens="XDENS"
+basis="../MOL"
+xdens="../XDENS"
 debug=1           # debug print level
 openshell=false 
-show_axis=true   # mark "up" axis in .xyz files
+#show_axis=true   # mark "up" axis in .xyz files
 magnet_axis=@MF@ #[-] i,j,k || x,y,z -> align magnet along axis, X -> magnet perpendicular to molecular plane parallel to grid
 #magnet=[0.0, -1.0, 0.0]   # magnet vector
-scale_vectors=1.0
+#scale_vectors=1.0
 
 
 # grid type can be: base/std, bond or file (see examples below)
@@ -23,12 +23,17 @@ Grid(bond) {                    # define grid orthogonal to a bond
 #    coord2=[0.0, 0.0, -2.145166] 
 #    fixcoord=[0.0, 0.0, 0.0]
     distance=@distance@                # place grid 'distance' between atoms
-    up=@up@
-    down=@down@
-    in=@in@
-    out=@out@
+#    up=@up@
+#    down=@down@
+#    in=@in@
+#    out=@out@
+     height=[@down@,@up@]
+     width=[@in@,@out@]
+  #   rotation=[0.0,0.0,@rotation@]      # Rotation of (i,j,k) -> (i',j',k') degrees
+
     rotation=[0.0,0.0,0.0]      # Rotation of (i,j,k) -> (i',j',k') degrees
     spacing=[@spacing@, @spacing@, @spacing@]     # spacing of points on grid (i,j,k)
+# spacing=[@spacingX@,@spacingY@,@spacingZ@]
 #    grid_points=[30, 30, 0]   
 #    height=[-5.0, 5.0]
 #    width=[-5.0, 5.0]
