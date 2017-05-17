@@ -115,7 +115,14 @@ printf "Atom 2:  "; read atom2
 distance=$( awk -v a1="$atom1" -v a2="$atom2" '{ if (NR == a1+1) { x+=$1;y+=$2;z+=$3;}; if (NR == a2+1) {x-=$1;y-=$2;z-=$3} } END{ dist=sqrt(x*x+y*y+z*z); print dist*0.5; }' coord ; )
 bond=$atom1","$atom2
 
-dirname=vertical_profile_$atom1.$atom2
+
+echo "Enter the suffix for the directory name"
+read suffix
+suffix=$(printf _$suffix)
+dirname=vertical_profile_$atom1.$atom2$suffix
+echo $dirname
+
+#dirname=vertical_profile_$atom1.$atom2
 	
 # If we are not in the vertical_profile folder, check if it exists. If it did, just go there. If it did not, create it and copy the necessary files
 dir=$(pwd | grep "vertical_profile")
