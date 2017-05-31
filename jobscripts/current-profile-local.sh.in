@@ -15,11 +15,11 @@ function userInp()
         printf "\nEnter the indices of the selected atoms to calculate their midpoint and then press enter.\n\n" 
      atoms=0; read atoms
      CENTROID=$(centroid $atoms)
-     Dx=$( echo $CENTROID | awk '{print $1} ' )
-     Dy=$( echo $CENTROID | awk '{print $2} ' )
-     Dz=$( echo $CENTROID | awk '{print $3} ' )
-     #echo "Centroid:"; printf "("$Dx"; "$Dy"; "$Dz")\n"
-     __varValue=$( awk -v Dx=$Dx -v Dy=$Dy -v Dz=$Dz -v Bx=$Bx -v By=$By -v Bz=$Bz BEGIN'{dist=sqrt( (Bx-Dx)*(Bx-Dx) + (By-Dy)*(By-Dy) + (Bz-Dz)*(Bz-Dz) ); print dist}' )
+     Cx=$( echo $CENTROID | awk '{print $1} ' )
+     Cy=$( echo $CENTROID | awk '{print $2} ' )
+     Cz=$( echo $CENTROID | awk '{print $3} ' )
+     #echo "Centroid:"; printf "("$Cx"; "$Cy"; "$Cz")\n"
+     __varValue=$( awk -v Cx=$Cx -v Cy=$Cy -v Cz=$Cz -v Bx=$Bx -v By=$By -v Bz=$Bz BEGIN'{dist=sqrt( (Bx-Cx)*(Bx-Cx) + (By-Cy)*(By-Cy) + (Bz-Cz)*(Bz-Cz) ); print dist}' )
      
      printf  "\nDo you accept $__resultVar=$__varValue bohr?\nPress [n] to change\n"
      read accept;
@@ -39,6 +39,21 @@ function userInp()
 fi # end if accept out = 10
 
 eval $__resultVar="'$__varValue'"
+}
+
+function valueInp()
+{
+    local __resultVar=$1
+    local __varValue="$2"
+
+    printf  "\nDo you accept $__resultVar=$__varValue bohr?\nPress [n] to change\n"
+    read accept;
+    if [ ! -z $accept ] && [ $accept == "n" ]
+    then
+	printf "$__resultVar="; read __varValue
+    fi # if centroid calculation not accepted 
+
+    eval $__resultVar="'$__varValue'"
 }
 
 function calculateRot() {
@@ -92,15 +107,25 @@ awk -v a1=$atom1 -v a2=$atom2 -v a3=$atom3 '{
 printf "\nStarting current profile analysis\n"
 printf "\nUsing atomic units of length\n\n"
 
+if [ ! -e MOL ] || [ ! -e XDENS ] || [ ! -e coord ]
+then
+    echo "Please run the current profile analysis from a directory containing the files MOL, XDENS and coord"
+    exit
+fi # end if MOL, XDENS, coord exist
+
 echo "Define the bond perpendicular to which to integrate"; echo
 echo "Enter the indices of the atoms according to the coord file"
 printf "Atom 1:  "; read atom1; 
 printf "Atom 2:  "; read atom2
 distance=$( awk -v a1="$atom1" -v a2="$atom2" '{ if (NR == a1+1) { x+=$1;y+=$2;z+=$3;}; if (NR == a2+1) {x-=$1;y-=$2;z-=$3} } END{ dist=sqrt(x*x+y*y+z*z); print dist*0.5; }' coord ; )
+
+echo "The default position of the integration plane is at the midpoint of the bond."
+valueInp distance $distance
+
 bond=$atom1","$atom2
 
 dirname=current_profile_$atom1.$atom2
-	
+
 # If we are not in the current_profile folder, check if it exists. If it did, just go there. If it did not, create it and copy the necessary files
 dir=$(pwd | grep "current_profile")
 #echo $dir
@@ -143,7 +168,7 @@ Bz=$( echo $BOND | awk '{print $3} ' )
 # Check if there already is an input file
 if [ -f $dirname/calculation.dat ] 
 then
-    fixed=$( sed -n -e 's/^.*fixed=*//p' $dirname/calculation.dat | awk 'BEGIN { FS = "," } ; { print $2 }'
+    fixed=$( sed -n -e 's/^.*fixed=*//p' $dirname/calculation.dat | awk 'BEGIN { FS = "," } ; { print $2 }' )
 fi
 # If there was not a previous calculation, $fixed will be empty. Ask if it should be changed
 if [ ! -z $fixed ] 
@@ -166,28 +191,17 @@ out=10
 printf "\nDo you accept out=$out bohr?"
 userInp out $out
 
+printf "\n\nUPPER AND LOWER BOUNDS OF THE INTEGRATION\n"
 up=10
 down=-10
-printf "\n\nUPPER AND LOWER BOUNDS OF THE INTEGRATION\n"
-printf  "\nDo you accept up=$up bohr and down=$down bohr?\nPress [n] to change\n"
-read accept;
-if [ ! -z $accept ] && [ $accept == "n" ]
-then
-    printf "up="; read up
-    printf "down="; read down
-fi
+valueInp up $up 
+valueInp down $down
 
-delta=0.02
 printf "\n\nWIDTH OF THE SLICES\n"
-printf  "\nDo you accept delta=$delta bohr?\nPress [n] to change\n"
-read accept;
-if [ ! -z $accept ] && [ $accept == "n" ]
-then
-    printf "delta="; read delta
-fi
+delta=0.02
+valueInp delta $delta
 
-nsteps=$( awk -v start=$start -v out=$out -v delta=$delta 'BEGIN{nsteps=(out+start)/delta; if (nsteps > 0) {printf("%d",nsteps)} else {printf("%d",-nsteps);}; }'   )
-
+nsteps=$( awk -v start=$start -v out=$out -v delta=$delta 'BEGIN{nsteps=(out-start)/delta; if (nsteps > 0) {printf("%d",nsteps)} else {printf("%d",-nsteps);}; }'   )
 
 #Practice has shown that for delta=0.1, the spacing value should be 0.02 in order to have at least 9 Gaussian points per slice
 # If the delta is smaller than 0.1, recalculate:
@@ -207,13 +221,9 @@ then
     printf "spacingZ="; read spacingZ
 fi
 
+echo "MAGNETIC FIELD DIRECTION"
 MF=z
-printf  "\nMagnetic field direction = $MF. Do you accept?\nPress [n] to change\n"
-read accept;
-if [ ! -z $accept ] && [ $accept == "n" ]
-then
-    printf "MF="; read MF
-fi
+valueInp MF $MF
 
 rotation=0.0
 printf  "\nRotation from the normal to the bond at the bond centre: $rotation degrees. Do you accept?\nPress [n] to modify\n"
