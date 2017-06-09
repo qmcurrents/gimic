@@ -3,6 +3,30 @@
 function centroid() { atoms="$@"; for i in $atoms; do awk -v i=$i '{ if (NR == i+1) print $0 }' coord; done | awk '{ x+=$1; y+=$2; z+=$3; n++} END{ print x/n, y/n, z/n; }'; }
 function dist() { awk -v a1="$1" -v a2="$2" '{ if (NR == a1+1) { x+=$1;y+=$2;z+=$3;}; if (NR == a2+1) {x-=$1;y-=$2;z-=$3} } END{ dist=sqrt(x*x+y*y+z*z); print dist, dist*0.5; }' coord ; }
 
+function checkPreviousCalc() {
+    local __resultVar=$1
+    local __sedVar="$2"
+    # Check if there already is an input file
+    if [ -f $dirname/calculation.dat ] 
+    then
+	__sedVar=$( sed -n -e 's/^.*$__resultVar=*//p' $dirname/calculation.dat | awk '{print $1}')
+    fi
+    # If there was not a previous calculation, $fixed will be empty. Ask if it should be changed
+    if [ ! -z $__sedVar ] 
+    then
+	printf "\nThe previously selected $__resultVar atom is $__sedVar.\nPress [n] to change\n"
+	read accept
+    fi
+    # If the $fixed is empty or the user wants to change it, ask to enter 
+    if [[ ( -z $__sedVar ) || ( ! -z $accept  &&  "$accept" == "n" ) ]]
+    then 
+	printf "\nEnter the index of the $__resultVar atom:\n"
+	read __sedVar
+    fi
+
+    eval $__resultVar="'$__sedVar'"
+}
+
 function userInp()
 {
     local __resultVar=$1
@@ -117,11 +141,6 @@ echo "Define the bond perpendicular to which to integrate"; echo
 echo "Enter the indices of the atoms according to the coord file"
 printf "Atom 1:  "; read atom1; 
 printf "Atom 2:  "; read atom2
-distance=$( awk -v a1="$atom1" -v a2="$atom2" '{ if (NR == a1+1) { x+=$1;y+=$2;z+=$3;}; if (NR == a2+1) {x-=$1;y-=$2;z-=$3} } END{ dist=sqrt(x*x+y*y+z*z); print dist*0.5; }' coord ; )
-
-echo "The default position of the integration plane is at the midpoint of the bond."
-valueInp distance $distance
-
 bond=$atom1","$atom2
 
 dirname=current_profile_$atom1.$atom2
@@ -143,7 +162,8 @@ then
 	else
 	    rm -f $dirname/*out $dirname/*inp # Remove leftover input and output to avoid confusion
 	fi 
-    else
+checkPreviousCalc fixed $fixed
+else
 	if [ -e MOL ] && [ -e XDENS ] && [ -e coord ]
 	then
 	    mkdir $dirname
@@ -155,6 +175,11 @@ then
 	fi # end if MOL, XDENS, coord exist
     fi # end if current_profile_#.#
 fi # end if directory current_profile_#.# exists or we are inside it
+
+
+echo "The default position of the integration plane is at the midpoint of the bond."
+distance=$( awk -v a1="$atom1" -v a2="$atom2" '{ if (NR == a1+1) { x+=$1;y+=$2;z+=$3;}; if (NR == a2+1) {x-=$1;y-=$2;z-=$3} } END{ dist=sqrt(x*x+y*y+z*z); print dist*0.5; }' coord ; )
+valueInp distance $distance
 
 # Coordinates of the centre:
 BOND=$(centroid $atom1 $atom2)
@@ -201,13 +226,13 @@ printf "\n\nWIDTH OF THE SLICES\n"
 delta=0.02
 valueInp delta $delta
 
-nsteps=$( awk -v start=$start -v out=$out -v delta=$delta 'BEGIN{nsteps=(out-start)/delta; if (nsteps > 0) {printf("%d",nsteps)} else {printf("%d",-nsteps);}; }'   )
+nsteps=$( awk -v start=$start -v out=$out -v delta=$delta 'BEGIN{if (start > 0) {start = -start}; nsteps=(out-start)/delta; if (nsteps > 0) {printf("%d",nsteps)} else {printf("%d",-nsteps);}; }'   )
 
 #Practice has shown that for delta=0.1, the spacing value should be 0.02 in order to have at least 9 Gaussian points per slice
 # If the delta is smaller than 0.1, recalculate:
 # spacingFactor=$( awk -v delta=$delta 'BEGIN{ printf("%.4f",delta/0.02) }' )    # how many times smaller the chosen delta value is
 # spacing=$( awk -v f=$spacingFactor 'BEGIN{ printf("%.3f",0.013*f) }' )
-spacingX=$( awk -v delta=$delta 'BEGIN{ f=delta/0.02; printf("%.3f",0.10*f); }' )
+spacingX=$( awk -v delta=$delta 'BEGIN{ f=delta/0.02; printf("%.3f",1.00*f); }' )
 spacingY=$( awk -v delta=$delta 'BEGIN{ f=delta/0.02; printf("%.3f",0.01*f); }' )
 spacingZ=$( awk -v delta=$delta 'BEGIN{ f=delta/0.02; printf("%.3f",0.01*f); }' )
 
@@ -246,7 +271,7 @@ fi
 string="s/@bond@/$bond/; s/@fixed@/$fixed/; s/@distance@/$distance/; s/@up@/$up/; s/@down@/$down/; s/@MF@/$MF/; s/@spacingX@/$spacingX/; s/@spacingY@/$spacingY/; s/@spacingZ@/$spacingZ/;  s/@rotation@/$rotation/; "
 sed "$string" @SCRIPTS_DIR@/gimic.int > $dirname/gimic.int
 
-end=$( awk -v delta=$delta -v start=$start 'BEGIN{print delta-start}' ) 
+#end=$( awk -v delta=$delta -v start=$start 'BEGIN{print delta-start}' ) 
 
 #echo "Enter title:"
 #read heading
@@ -268,8 +293,9 @@ printf "Magnetic field direction: $MF \n\n"
 
 printf "\n*****************************************************************************\n\n"
 
-xstart=$( awk -v delta=$delta -v start=$start 'BEGIN{printf "%.3f\n", -start }' )
-xend=$end
+xstart=$( awk -v delta=$delta -v start=$start 'BEGIN{printf "%.3f\n", -start }' )  # start is a negative number 
+xend=$( awk -v delta=$delta -v xstart=$xstart 'BEGIN{ printf "%.3f\n", xstart+delta }' ) 
+#xend=$( awk -v delta=$delta -v start=$start 'BEGIN{ if (start < 0) {print start+delta} else {print start-delta}; }' ) 
 #xend=$( awk -v i=$i -v delta=$delta -v end=$end 'BEGIN{printf "%.3f\n", end+delta*i }' )
 smaller=$(awk -v start=$xstart -v end=$xend 'BEGIN{ if (start > end) {print "1"} else {print "0"} }')
 if [ $smaller -eq 1 ]
@@ -293,16 +319,18 @@ fi
 
 
 echo "Preparing input files..."
-for (( i=0; i<$nsteps; i++ ))
+for (( i=1; i<$nsteps; i++ ))
 do
-    xstart=$( awk -v i=$i -v delta=$delta -v start=$start 'BEGIN{printf "%.3f\n", -start+delta*i }' )
-    xend=$( awk -v i=$i -v delta=$delta -v end=$end 'BEGIN{printf "%.3f\n", end+delta*i }' )
-    if [ $smaller -eq 1 ]
-    then
-        tmp=$xstart
-        xstart=$xend
-        xend=$tmp
-    fi
+    xstart=$( awk -v xstart=$xstart -v delta=$delta 'BEGIN{printf "%.3f\n", xstart+delta }' )
+    xend=$( awk -v delta=$delta -v xstart=$xstart 'BEGIN{ printf "%.3f\n", xstart+delta }' ) 
+#    xstart=$( awk -v i=$i -v delta=$delta -v start=$start 'BEGIN{printf "%.3f\n", start+delta*i }' )
+#    xend=$( awk -v i=$i -v delta=$delta -v end=$end 'BEGIN{printf "%.3f\n", end+delta*i }' )
+#    if [ $smaller -eq 1 ]
+#    then
+#        tmp=$xstart
+#        xstart=$xend
+#        xend=$tmp
+#    fi
     string=" s/@start@/$xstart/; s/@end@/$xend/"
     sed "$string" $dirname/gimic.int > $dirname/gimic.$i.inp
 done    
