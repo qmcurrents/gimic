@@ -87,9 +87,9 @@ function centroid() {
 }
 
 function startCentroid() {
-echo "Enter the indices of the atoms according to the coord file"
+echo "DEFINE THE POINT x=0 ON THE PLOT"
+echo "Enter the indices of the atoms according to the coord file and then press ENTER"
 read atoms
-echo $atoms
 
 echo "centroid:"
 cent=$(centroid $atoms)
@@ -153,8 +153,8 @@ function calculateDistanceBefore() {
 distanceBefore=$( awk -v Cx=$Cx -v Cy=$Cy -v Cz=$Cz -v Bx=$Bx -v By=$By -v Bz=$Bz BEGIN'{
                   dist=sqrt( (Bx-Cx)*(Bx-Cx) + (By-Cy)*(By-Cy) + (Bz-Cz)*(Bz-Cz) ); print dist}' )
 echo "DistanceB centre to bond: $distanceBefore"
-#offsetBefore=$( awk -v dist=$distance -v start=$start 'BEGIN{print dist-start}' )
-offsetBefore=$( awk -v distB=$distanceBefore 'BEGIN{ print -distB}' )
+offsetBefore=$( awk -v dist=$distance -v start=$start 'BEGIN{print dist-start}' )
+#offsetBefore=$( awk -v distB=$distanceBefore 'BEGIN{ print -distB}' )
 }
 
 
@@ -167,15 +167,18 @@ offsets[2]=0
 
 echo
 startCentroid;
+echo $atoms
+echo "Vertical axis atoms=($atoms)" >> calculation.dat
+
 bondCentroid;
 calculateOffset;
-#echo "Cx=$Cx Cy=$Cy Cz=$Cz" >> calculation.dat
-#echo "Bx=$Bx By=$By Bz=$Bz" >> calculation.dat
+echo "Cx=$Cx Cy=$Cy Cz=$Cz" >> calculation.dat
+echo "Bx=$Bx By=$By Bz=$Bz" >> calculation.dat
 
 idx=0;
 offsets[$idx]=$offset  # save the original value of the offset because it will be modified
 echo "offsets[$idx] = ${offsets[$idx]}";
-#echo "offset=${offsets[$idx]}" >> calculation.dat
+echo "offset=${offsets[$idx]}" >> calculation.dat
 
 max_x=$(tail -n 1 current_profile.dat | awk 'END {print $1}')
 printf  "\nWould you like to define other vertical lines?\nPress [S] if the line lies at x < 0 bohr.\nPress [L] if the line lies at x > 0 bohr.\n Or press [ENTER] to skip.\n"
