@@ -128,6 +128,78 @@ awk -v a1=$atom1 -v a2=$atom2 -v a3=$atom3 '{
 
 }
 
+function shiftNormal() 
+{
+# usage: 
+# echo $normalCoord $shiftCoord | shiftNormal
+# where the coordinates are in bohr
+    # take the coordinates of the normal vector
+    # translate the vector to be normal at the point shiftCoord
+
+    awk '{
+          split($0,crd);
+
+          nx = crd[1]; 
+          ny = crd[2];
+          nz = crd[3];
+
+          sx = crd[4]; 
+          sy = crd[5];
+          sz = crd[6];
+
+          tx = nx + sx ; 
+          ty = ny + sy ;
+          tz = nz + sz ;
+
+          print tx , ",", ty , ",", tz; 
+    }'
+};
+
+function normalPlane() 
+{
+# usage: 
+# echo $x0 $x1 1 | normalPlane
+# where the coordinates are in bohr
+    # take the coordinates of x0 and x1
+    # take a third point C that lies at (x0x, x0y, 1)
+    # define vector a: C -> x0; vector b: C -> x1;
+    # calculate their cross product to find the normal vector to the plane at point C
+
+    awk '{
+          split($0,crd);
+
+          cx = crd[1]; 
+          cy = crd[2]; 
+          cz = crd[7]; 
+
+          ax = cx - crd[1]; 
+          ay = cy - crd[2];
+          az = cz - crd[3];
+
+          bx = cx - crd[4]; 
+          by = cy - crd[5];
+          bz = cz - crd[6];
+
+          nx = -ay*bz + az*by ; 
+          ny = -az*bx + ax*bz ;
+          nz = -ax*by + ay*by ;
+
+          nmod=sqrt(nx*nx + ny*ny + nz*nz); 
+          print nx/nmod, ny/nmod, nz/nmod; 
+    }'
+};
+
+function point_dist() 
+{
+awk '{
+     split($0,crd);
+     dx=crd[1]-crd[4]; 
+     dy=crd[2]-crd[5]; 
+     dz=crd[3]-crd[6]; 
+     dist=sqrt(dx*dx + dy*dy + dz*dz);
+     print dist; }'
+};
+
 printf "\nStarting current profile analysis\n"
 printf "\nUsing atomic units of length\n\n"
 
@@ -137,13 +209,16 @@ then
     exit
 fi # end if MOL, XDENS, coord exist
 
-echo "Define the bond perpendicular to which to integrate"; echo
+echo "Define the atoms which define the start and end point"; echo
 echo "Enter the indices of the atoms according to the coord file"
 printf "Atom 1:  "; read atom1; 
 printf "Atom 2:  "; read atom2
-bond=$atom1","$atom2
 
-dirname=current_profile_$atom1.$atom2
+# create a directory for the calculation
+ATOMS1=$(echo $atom1 | sed 's/ /-/g')
+ATOMS2=$(echo $atom2 | sed 's/ /-/g')
+#ATOMS=$(echo $atom1.$atom2 | sed 's/ /-/g')
+dirname=current_profile_$ATOMS1.$ATOMS2
 
 # If we are not in the current_profile folder, check if it exists. If it did, just go there. If it did not, create it and copy the necessary files
 dir=$(pwd | grep "current_profile")
@@ -154,7 +229,7 @@ then
     if [ -d $dirname ] 
     then
 	printf "\n\n*** Directory already exists.\n\nCalculation parameters:\n"
-	grep "bond=\|fixed=\|up=\|down=\|MF=" $dirname/gimic.int.gcur
+	grep "bond=\|fixed=\|up=\|down=\|MF=" $dirname/gimic.int.coord
 	echo "Enter [y] to overwrite or any key to exit."; read accept
 	if [ -z $accept ] || [ ! $accept == "y" ]  # if the variable is empty or different from "y", exit 
 	then 
@@ -176,9 +251,31 @@ else
     fi # end if current_profile_#.#
 fi # end if directory current_profile_#.# exists or we are inside it
 
+# Calculate the coordinates of the line normal to the desired atoms
+coordStart=$(centroid $atom1)
+echo coordStart = $coordStart
+coordEnd=$(centroid $atom2)
+echo coordEnd = $coordEnd
+echo normalPlanes
+normalCoord=$(echo $coordStart $coordEnd 2 | normalPlane)
+echo $normalCoord
+
+# Shift the normal vector to start at the desired point, e.g. the starting point
+shiftCoord=$( centroid $atom1)
+echo shifted Normal plane:
+COORD1=$(echo $normalCoord $shiftCoord | shiftNormal)
+echo $COORD1
+echo
+normalCoord1=$(echo $coordStart $coordEnd -2 | normalPlane)
+shiftCoord1=$( centroid $atom1 )
+echo shifted Normal plane:
+COORD2=$(echo $normalCoord1 $shiftCoord1 | shiftNormal)
+echo $COORD2
 
 echo "The default position of the integration plane is at the midpoint of the bond."
-distance=$( awk -v a1="$atom1" -v a2="$atom2" '{ if (NR == a1+1) { x+=$1;y+=$2;z+=$3;}; if (NR == a2+1) {x-=$1;y-=$2;z-=$3} } END{ dist=sqrt(x*x+y*y+z*z); print dist*0.5; }' coord ; )
+echo Distance between the two normal points:
+distance2=$(echo $normalCoord $normalCoord1 | point_dist)
+distance=$( awk -v dist2=$distance2 'BEGIN{ print dist2/2 }')
 valueInp distance $distance
 
 # Coordinates of the centre:
@@ -268,18 +365,18 @@ then
 fi
 
 
-string="s/@bond@/$bond/; s/@fixed@/$fixed/; s/@distance@/$distance/; s/@up@/$up/; s/@down@/$down/; s/@MF@/$MF/; s/@spacingX@/$spacingX/; s/@spacingY@/$spacingY/; s/@spacingZ@/$spacingZ/;  s/@rotation@/$rotation/; "
-sed "$string" @SCRIPTS_DIR@/gimic.int.gcur > $dirname/gimic.int.gcur
+string="s/@COORD1@/$COORD1/; s/@COORD2@/$COORD2/; s/@fixed@/$fixed/; s/@distance@/$distance/; s/@up@/$up/; s/@down@/$down/; s/@MF@/$MF/; s/@spacingX@/$spacingX/; s/@spacingY@/$spacingY/; s/@spacingZ@/$spacingZ/;  s/@rotation@/$rotation/; "
+sed "$string" @SCRIPTS_DIR@/gimic.int.coord > $dirname/gimic.int.coord
 
 #end=$( awk -v delta=$delta -v start=$start 'BEGIN{print delta-start}' ) 
 
 #echo "Enter title:"
 #read heading
 #heading=\"$heading"\n bond=["$bond"], fixed="$fixed", in="$start", out="$out", delta="$delta", up="$up", down="$down\"
-heading=\""bond=[$bond] fixed=$fixed delta=$delta \nspacing=[ $spacingX;$spacingY;$spacingZ] in=$start out=$out \nup=$up down=$down"\"
+heading=\""atom1=$ATOMS1 atom2=$ATOMS2 fixed=$fixed delta=$delta \nspacing=[ $spacingX;$spacingY;$spacingZ] in=$start out=$out \nup=$up down=$down"\"
 
 echo $heading > ./$dirname/calculation.dat
-echo atom1=$atom1 atom2=$atom2 >> ./$dirname/calculation.dat
+
 
 ################################################################################
 
@@ -306,7 +403,7 @@ then
     xend=$tmp
 fi
 string=" s/@start@/$xstart/; s/@end@/$xend/; s/@up@/$xup/; s/@down@/$xdown/"
-sed "$string" $dirname/gimic.int.gcur > $dirname/gimic.0.inp
+sed "$string" $dirname/gimic.int.coord > $dirname/gimic.0.inp
 
 printf "\nPerforming a dry run...\n\n"
 (cd ./$dirname/ && gimic --dryrun gimic.0.inp | grep "grid points" )
@@ -333,7 +430,7 @@ do
 #        xend=$tmp
 #    fi
     string=" s/@start@/$xstart/; s/@end@/$xend/"
-    sed "$string" $dirname/gimic.int.gcur > $dirname/gimic.$i.inp
+    sed "$string" $dirname/gimic.int.coord > $dirname/gimic.$i.inp
 done    
 echo "done"
 
@@ -391,16 +488,16 @@ do
     wait
     completed=$(( $completed+$parallel ))
     date
-    echo "$completed of $filenum completed"; echo
+    echo $completed of $filenum completed; echo
 done
 
-if [[ "$remain" -gt "0" ]]; then
+if [[ "$remain" -gt 0 ]]; then
     for ((i=0; i<$remain; i++))
     do  
         (cd $wrkdir && gimic $wrkdir/gimic.$(($parallel*$whole+$i)).inp >  $wrkdir/gimic.$(($parallel*$whole+$i)).out &) 
     done
 fi
-echo "$filenum of $filenum completed"
+echo $filenum of $filenum completed
 
 
 #    cd $wrkdir && gimic gimic.$index.inp > $wrkdir/gimic.$index.out
@@ -461,9 +558,13 @@ echo
 #######################################################################
 # Find the zeroes on the current profile plot
 
+echo "Calculating the critical points of the current profile..."
+echo DirName: $dirname 
+echo Dir: $wrkdir
+
 @SCRIPTS_DIR@/crit_pts.sh $wrkdir
 
-cat $wrkdir/profile-points.out
+#cat $wrkdir/profile-points.out
 
 #######################################################################
 
