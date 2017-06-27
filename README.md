@@ -1,6 +1,6 @@
 [![Build Status](https://travis-ci.org/qmcurrents/gimic.svg?branch=master)](https://travis-ci.org/qmcurrents/gimic/builds)
 
-- [Documentation](http://gimic.readthedocs.io) (currently empty)
+- [Documentation](http://gimic.readthedocs.io)
 
 This is the GIMIC program for calculating magnetically induced currents in
 molecules. For this program produce any kind of useful information, you
@@ -12,8 +12,6 @@ list please use the source, Luke.
 
 - For instructions how to compile and install this program refer to
   the INSTALL file in the top level directory.
-- For more detailed information on how to use the program read the documents
-  found in the Documentation directory.
 - There is an annotated example input in the examples/ directory.
 - For information on command line flags available run: 'gimic --help'
 
