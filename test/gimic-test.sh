@@ -61,8 +61,8 @@ function runtest() {
     rm -rf ../tmp/XDENS ../tmp/MOL
 }
 
+
 arg="$2"
-#echo Argument 2: $arg
 
 if [ -z $arg ]
 then
@@ -70,7 +70,7 @@ then
 fi
 
 if [ $arg = "-v" ]
-then 
+then
     verbose=1 # verbose on
 else
     verbose=0 # verbose off
@@ -102,10 +102,6 @@ then
     printf "\nSuccess of all tests:\n"
 fi
 
-#    if [ $success -eq 0 ]
-#    then
-	rm -rf ../tmp
- #   fi
-
+rm -rf ../tmp
 
 echo $success
