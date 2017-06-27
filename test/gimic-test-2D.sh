@@ -20,20 +20,17 @@ function runtest_2D() {
 	i=$(( $i + 1 ))
 	if diff ../tmp/$testname/$file ./$testname/2D/$file.ref >/dev/null
 	then
-#	    test$i=0
 	    if [ $verbose -eq 1 ]
 	    then
 		echo test$i: $file Same
 	    fi
 	else
-#	    test$i=1
 	    success=$(( $success + 1 ))
 	    if [ $verbose -eq 1 ]
 	    then
 		echo test$i: $file Different
 	    fi
 	fi
-#	success=$(( $success + $(test$i) ))
     done
 
     if [ $verbose -eq 1 ]
@@ -47,7 +44,6 @@ function runtest_2D() {
 
 
 arg="$2"
-#echo Argument 2: $arg
 
 if [ -z $arg ]
 then
@@ -60,8 +56,6 @@ then
 else
     verbose=0 # verbose off
 fi
-
-#echo Verbose? $verbose
 
 gimicdir="$1"
 
@@ -77,7 +71,6 @@ success=0
 # Make a temporary directory for the test
 mkdir ../tmp
 
-#molecules="benzene C4H4"
 molecules="benzene"
 
 for testname in $molecules
