@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 function runtest_3D() {
     if [ $verbose -eq 1 ]
