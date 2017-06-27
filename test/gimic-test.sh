@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 function runtest() {
     if [ $verbose -eq 1 ]
