@@ -11,7 +11,7 @@ grid which is mostly useful for defining cut-planes through bonds for
 integration. There is also a third grid type ’file’, which specifies a
 file containing gridpoints For the exact format of this file please
 refer to the source in grid.f90. Furthermore there are two types of
-grids, evenly spaced or with grid points distributed for Gauss-Legendere
+grids, evenly spaced or with grid points distributed for Gauss-Legendre
 or Guass-Lobato quadrature. This is specified with the
 ’type=even\|gauss\|lobato’ keyword. When a quadrature grid is specified
 the order of the quadrature must also be specified with the
