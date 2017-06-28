@@ -1,6 +1,6 @@
 
 
-GIMIC: Gauge-Including Magentically Induced Currents
+GIMIC: gauge-including magnetically induced currents
 ====================================================
 
 .. toctree::
