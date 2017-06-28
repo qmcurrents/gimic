@@ -1,6 +1,6 @@
 
 
-GIMIC: Gauge-Including Magentically Induced Currents
+GIMIC: gauge-including magnetically induced currents
 ====================================================
 
 .. toctree::
@@ -12,3 +12,4 @@ GIMIC: Gauge-Including Magentically Induced Currents
    input.rst
    grids.rst
    output.rst
+   testing.rst
