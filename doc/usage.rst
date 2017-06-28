@@ -84,6 +84,16 @@ execute
 
     $ gimic [--mpi] [gimic.inp] >gimic.out
 
+To produce the mol and XDENS files:
+
+- CFOUR: Do a normal NMR calculation and then run the 'xcpdens' program
+  distributed with GIMIC to make the XDENS file. Then run the MOL2mol.sh
+  script to produce the mol file.
+
+- Turbomole: Add the $gimic keyword to the control file and then run mpshift
+  as normal to produce a XDENS file. Then run the turbo2mol.py script to
+  create the mol file from the coord and basis files.
+
 Before doing the actual calculation it might be a good idea to check
 that the grids are correct, run:
 
