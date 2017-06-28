@@ -1,6 +1,14 @@
 [![Build Status](https://travis-ci.org/qmcurrents/gimic.svg?branch=master)](https://travis-ci.org/qmcurrents/gimic/builds)
 
-- [Documentation](http://gimic.readthedocs.io)
+
+# GIMIC: gauge-including magnetically induced currents
+
+## Documentation
+
+- http://gimic.readthedocs.io
+
+
+## About GIMIC
 
 This is the GIMIC program for calculating magnetically induced currents in
 molecules. For this program produce any kind of useful information, you
@@ -10,10 +18,13 @@ only recent versions of ACES2 and Turbomole can produce these matrices, but
 Dalton is in the works. If you would like to add your favourite program to the
 list please use the source, Luke.
 
-- For instructions how to compile and install this program refer to
-  the INSTALL file in the top level directory.
-- There is an annotated example input in the examples/ directory.
-- For information on command line flags available run: 'gimic --help'
+
+## Example
+
+There is an annotated example input in the examples/ directory.
+
+
+## Running GIMIC
 
 To run gimic you need to have at least three files: The gimic input file
 (gimic.inp), the compound density file (XDENS) and the compound basis set and
@@ -57,4 +68,4 @@ then submit it to the queueing system:
 $ qsub gimic.run
 ```
 
-That's it! May the foo be with you!
+For information on command line flags available run: 'gimic --help'
