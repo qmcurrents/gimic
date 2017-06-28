@@ -42,11 +42,6 @@ execute_process(
     COMMAND chmod 755 ${CMAKE_CURRENT_BINARY_DIR}/test.py 
     OUTPUT_QUIET
     ) 
-# old execution
-#execute_process(
-#    COMMAND chmod 755 ${CMAKE_CURRENT_BINARY_DIR}/PyGimicTest.py 
-#    OUTPUT_QUIET
-#    ) 
 
 # Add tests
 add_test(NAME Vectors
@@ -57,23 +52,12 @@ add_test(NAME BondIntegral
     COMMAND ${CMAKE_CURRENT_BINARY_DIR}/test.py bondint
     )
 
-#add_test(NAME VectorsMPI
-#    COMMAND ${MPIRUN} ${CMAKE_CURRENT_BINARY_DIR}/test.py vectors
-#    )
+add_test(
+    NAME shell-test
+    COMMAND ${PROJECT_SOURCE_DIR}/test/gimic-test.sh ${PROJECT_BINARY_DIR}/bin -v
+    )
 
-#add_test(NAME BondIntegralMPI
-#    COMMAND ${MPIRUN} ${CMAKE_CURRENT_BINARY_DIR}/test.py bond_integral
-#    )
-
-#add_test(NAME PyGimicDens
-#    COMMAND ${CMAKE_CURRENT_BINARY_DIR}/PyGimicTest.py --dens
-#    )
-#add_test(NAME PyGimicCurrent
-#    COMMAND ${CMAKE_CURRENT_BINARY_DIR}/PyGimicTest.py
-#    )
-#add_test(NAME PyLondonDens
-#    COMMAND ${CMAKE_CURRENT_BINARY_DIR}/PyGimicTest.py --london --dens
-#    )
-#add_test(NAME PyLondonCurrent
-#    COMMAND ${CMAKE_CURRENT_BINARY_DIR}/PyGimicTest.py --londo
-#    )
+add_test(
+    NAME 2D-3D
+    COMMAND ${PROJECT_SOURCE_DIR}/test/gimic-test-2D-3D.sh ${PROJECT_BINARY_DIR}/bin -v
+    )
