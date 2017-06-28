@@ -1,8 +1,8 @@
 The new version of the Gimic test script runs tests for two molecules - benzene
 and cyclobutadiene. The script is executed at the test directory by giving the
-directory where the binary is located. On my laptop this is:
+directory where the binary is located. On my laptop this is::
 
-~/Shared/PhD/gimic/test/gimic-test.sh /home/suzanka/Shared/PhD/gimic-fork/bin
+  ~/Shared/PhD/gimic/test/gimic-test.sh /home/suzanka/Shared/PhD/gimic-fork/bin
 
 The script executes the calculations in the directories ./benzene/int/ and
 ./C4H4/int/ for the provided gimic.inp file and writes to gimic.test.out. Then
@@ -16,16 +16,16 @@ at the end printed on stdout.
 In order to test it on another molecule it is necessary to create a directory
 ./your-molecule/int/ and provide the file gimic.out from a calculation from the
 master version to use as reference. The name your-molecule should be added to
-the list of molecules at the end of the script:
+the list of molecules at the end of the script::
 
-molecules="benzene C4H4 your-molecule"
+  molecules="benzene C4H4 your-molecule"
 
 The script will loop over them and give the final test result.
 
 If you want to see more detailed results from the tests - such as the values
 that were calculated and see which test(s) failed, type -v as the SECOND
-command-line argument:
+command-line argument::
 
-~/Shared/PhD/gimic/test/gimic-test.sh /home/suzanka/Shared/PhD/gimic-fork/bin -v
+  ~/Shared/PhD/gimic/test/gimic-test.sh /home/suzanka/Shared/PhD/gimic-fork/bin -v
 
 Good luck!
