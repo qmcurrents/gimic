@@ -51,3 +51,13 @@ add_test(NAME Vectors
 add_test(NAME BondIntegral
     COMMAND ${CMAKE_CURRENT_BINARY_DIR}/test.py bondint
     )
+
+add_test(
+    NAME shell-test
+    COMMAND ${PROJECT_SOURCE_DIR}/test/gimic-test.sh ${PROJECT_BINARY_DIR}/bin -v
+    )
+
+add_test(
+    NAME 2D-3D
+    COMMAND ${PROJECT_SOURCE_DIR}/test/gimic-test-2D-3D.sh ${PROJECT_BINARY_DIR}/bin -v
+    )

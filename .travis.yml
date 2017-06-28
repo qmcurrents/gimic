@@ -25,8 +25,7 @@ script:
   - cd build
   - make
   - make install
-  - ../test/gimic-test.sh $PWD/bin -v
-  - ../test/gimic-test-2D-3D.sh $PWD/bin -v
+  - make test
 
 notifications:
   email: false
