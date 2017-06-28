@@ -25,10 +25,8 @@ script:
   - cd build
   - make
   - make install
-  - BUILD_DIR=$PWD
-  - cd ../test
-  - ./gimic-test.sh $BUILD_DIR/bin -v
-  - ./gimic-test-2D-3D.sh $BUILD_DIR/bin -v
+  - ../test/gimic-test.sh $PWD/bin -v
+  - ../test/gimic-test-2D-3D.sh $PWD/bin -v
 
 notifications:
   email: false
