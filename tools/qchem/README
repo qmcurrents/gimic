@@ -1,7 +1,7 @@
 
 Written by J. Kussmann, University of Munich, jkupc@cup.uni-muenchen.de
 
-Convert Output of Q-Chemor FermiONs++ for GIMIC (TURBOMOLE format)
+Convert Output of Q-Chem or FermiONs++ for GIMIC (TURBOMOLE format)
 
 For a list of options, type 'qc2tm -h'...
 
