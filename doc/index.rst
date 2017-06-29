@@ -1,7 +1,7 @@
 
 
-GIMIC: gauge-including magnetically induced current method
-==========================================================
+GIMIC: gauge-including magnetically induced current 
+===================================================
 
 .. toctree::
    :maxdepth: 2
