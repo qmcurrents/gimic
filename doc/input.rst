@@ -25,10 +25,6 @@ Keywords
 
 The top level section defines a few global parameters:
 
-dryrun=off
-    Don’t actually calculate anything. Good for tuning grids, etc. Can
-    also be specified on the command line.
-
 mpirun=off
     [boolean] Run in parallel mode.
 
@@ -36,7 +32,7 @@ title
     Useless keyword, but since every program with a bit of self respect
     has a title, GIMIC also has one…
 
-basis=mol
+basis=MOL
     Name of the MOL file (eg. MOL or mol or whatever)
 
 density=XDENS
@@ -51,10 +47,13 @@ debug=1
     gets.
 
 diamag=on
-    Turn on/off diamagnetic contributions
+    Turn on/off diamagnetic contributions (experts only)
 
 paramag=on
-    Turn on/off paramagnetic contributions
+    Turn on/off paramagnetic contributions (experts only)
+
+GIAO=on
+    Turn on/off gauge including atomic orbtitals (experts only)
 
 openshell=false
     Open-shell calculation
@@ -65,9 +64,6 @@ screening=off
 screen\_thrs=1.d-8
     Screening threshold
 
-show\_up\_axis=true
-    Mark the “up” axis in .xyz files
-
 calc=cdens,…
     This keyword determines what is to be calculated, and in what order.
     Possible options are: ’cdens’ – calculate current densities,
@@ -75,49 +71,41 @@ calc=cdens,…
     – calculate the divergence of the current. Each of these options
     have their own respective sections to specify options and grids.
 
+magnet=[Bx,By,Bz] 
+    Define the direction of the external magnetic field
+
+magnet\_axis=z] 
+    Specify the magnetic field along a defined axis. Valid
+    options are: i,j,k or x,y,z or T. “i,j,k” are the directions of the
+    basis vectors defining the computational grid after any Euler rotation.
+    “x,y,z” are the absolute fixed laboratory axis. “T“ is used for
+    integration and specifies the direction which is orthogonal to the
+    molecular plane, but parallel to the integration plane.
+
+
 The current density
 -------------------
 
 Section: cdens
 ~~~~~~~~~~~~~~
 
-Name of output file containing the current tensors
-
-Name of output file containing the current vectors
-
-Vector which specifies the direction of the magnetic field.
-
-magnet\_axis=z] Specify the magnetic field along a defined axis. Valid
-options are: i,j,k or x,y,z or T. “i,j,k” are the directions of the
-basis vectors defining the computational grid after any Euler rotation.
-“x,y,z” are the absolute fixed laboratory axis. “T“ is used for
-integration and specifies the direction which is orthogonal to the
-molecular plane, but parallel to the integration plane.
-
-Scaling factor for plotting purposes.
-
-Annihilate the diamagnetic contribution to the current. Experts only.
-
-Annihilate the paramagnetic contribution to the current. Experts only.
-
 Grid to be used for calculating the currents. See the ”Grids“ section
 for a description of how to specify grids.
 
-Produce files suitable for plotting with ’gnuplot’ or ’gopenmol’
+acid=on
+    Turn on/off ACID calculation 
 
-vector=JVEC
-    File to contain the current vector field (gnuplot friendly)
+Produce files suitable for plotting with ’gnuplot’, ’ParaView’, 'JMol'
 
-modulus=JMOD
-    File to contain the modulus of the current density (gnuplot
-    friendly)
-
-nvector=NJVEC
-    File to contain the normalized current vector field (gnuplot
-    friendly). Mostly useful for debugging purposes.
-
-gopenmol=jmod.plt
-    File to contain the current density in a gopenmol friendly format.
+* ``acid.txt``: contains information about a grid point and the ACID function value in atomic units at that point. x, y, z, f_acid(x,y,z), x,y,z are given in bohr
+* ``acid.cube``: contains information about ACID function as Gaussian cube file
+* ``acid.vti``: contains information about ACID function as VTK file compatible with ParaView
+* ``jvec.txt``: contains information about a grid point x,y,z and the current density vector in that point jx, jy, jz (x,y,z, f_current(x,y,z), the point is given in bohr (it used to be in Ångstrøm) 
+* ``jvec.vti``: contains information about the current density vector function as VTK file compatible with ParaView
+* ``jmod.txt``: contains a grid point and the modulus of the current density vector function, x,y,z, f_mod(x,y,z)
+* ``jmod.vti``: contains the signed modulus of the current density vector function and can be visualized via two isosurfaces in ParaView
+* ``jmod.cube``: contains the modulus of the current density vector function as Gaussian cube file
+* ``jmod_quasi.cube``: contains the negative part of the signed modulus as Gaussian cube file
 
 Integration
 -----------
@@ -125,7 +113,7 @@ Integration
 Section: integral
 ~~~~~~~~~~~~~~~~~
 
-magnet\_axis=T] Specify the magnetic field along the direction which is
+magnet\_axis=X] Specify the magnetic field along the direction which is
 orthogonal to the molecular plane, but parallel to the integration
 plane.
 
@@ -144,45 +132,5 @@ Polynomial order of the Lagrange Interpolation Polynomials
 Grid to be used for calculating the currents. See the ”Grids“ section
 for a description of how to specify grids.
 
-The divergence of the current field
------------------------------------
+All output is collected in ``gimic.out``.
 
-Subsection: divj
-~~~~~~~~~~~~~~~~
-
-Vector which specifies the direction of the magnetic field.
-
-magnet\_axis=z] Specify the magnetic field along a defined axis. Valid
-options are: i,j,k or x,y,z or T. “i,j,k” are the directions of the
-basis vectors defining the computational grid after any Euler rotation.
-“x,y,z” are the absolute fixed laboratory axis. “T“ is used for
-integration and specifies the direction which is orthogonal to the
-molecular plane, but parallel to the integration plane.
-
-Filename of gOpenMol plot
-
-Grid to be used for calculating the currents. See the ”Grids“ section
-for a description of how to specify grids.
-
-The electronic density
-----------------------
-
-The GIMIC program can also produce plots of the electronic density. This
-code is very rudimentary currently, and cannot produce densities of
-specific MOs or ranges of MOs.
-
-Section: edens
-~~~~~~~~~~~~~~
-
-density=’EDENS’
-    Filename which contains AO density. XDENS is fine usually.
-
-density\_plot=’edens\_plt.txt’
-    File name of density plot
-
-gopemol=edens.plt
-    Filename of gOpenMol plot
-
-grid(std)
-    [subsection] Grid to be used for calculating the currents. See the
-    ”Grids“ section for a description of how to specify grids.
