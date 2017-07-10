@@ -147,6 +147,49 @@ As an example, the first atomic orbital for cc-pVTZ basis set for the C with  «
 The coefficients given in the website and in turbo2gimic are optimized for the contraction of the 10 GTOs not the 8.
 Gaussian and therefore Gaussian2gimic gives the coefficients that are normalized for the contraction of the 8 GTOs.
 
+Example input for benzene:
+
+::
+
+%Chk=benzeneg09.chk
+%mem=2000mb
+
+#p B3LYP/Def2TZVP SCF=Tight NMR=GIAO Int=NoBasisTransform IOp(10/33=2) 
+
+Benzene Gaussian NMR example
+
+0 1
+C    1.2049777911    0.6956942520    0.0000000000
+C    1.2049777911   -0.6956942520    0.0000000000
+C    0.0000000000   -1.3913885041    0.0000000000
+C   -1.2049777911   -0.6956942520    0.0000000000
+C   -1.2049777911    0.6956942520    0.0000000000
+C    0.0000000000    1.3913885041    0.0000000000
+H    2.1430161769    1.2372709666    0.0000000000
+H    2.1430161769   -1.2372709666    0.0000000000
+H    0.0000000000   -2.4745419332    0.0000000000
+H   -2.1430161769   -1.2372709666    0.0000000000
+H   -2.1430161769    1.2372709666    0.0000000000
+H    0.0000000000    2.4745419332    0.0000000000
+
+Running Gaussian creates a file "benzeneg09.chk" 
+You need to convert this "*.chk" file to a formatted "*.fchk" file. 
+
+::
+
+$ formchk file.chk file.fchk  
+
+Then you can proceed as described above and generate the MOL and XDENS
+files with:
+
+::
+
+$ Gaussian2gimic.py --input=benzeneg09.fchk
+
+Note, open-shell is currently not supported with the Gaussian2gimic.py
+script. 
+
+
 Running GIMIC
 -------------
 
