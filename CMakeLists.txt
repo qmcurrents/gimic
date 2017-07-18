@@ -28,9 +28,6 @@ set(PYTHON_SITE_INSTALL_DIR
 include(UseCython)
 
 set(LIBS)
-if (BLAS_FOUND)
-    add_definitions(-DHAVE_BLAS)
-endif()
 
 if(ENABLE_MPI)
     find_package(MPI)
