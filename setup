@@ -153,11 +153,6 @@ group.add_argument('--cfour-dir',
         default=None,
         help='set the path to the cfour install [default: %(default)s]',
         metavar='PATH')
-group.add_argument('--netcdf-dir',
-        action='store',
-        default=None,
-        help='directory containing NETCDF libraries [default: pick automatically based on NETCDF_ROOT (see INSTALL.rst)]',
-        metavar='PATH')
 
 
 # process input
@@ -255,12 +250,6 @@ def gen_cmake_command():
 
     if args.cfour_dir:
         command += ' -DCFOUR_ROOT=' + args.cfour_dir
-
-    if args.netcdf_dir:
-        if not os.path.exists(args.netcdf_dir):
-            print("Specified NETCDF directory does not exist!")
-            sys.exit(1)
-        command += ' -DNETCDF_ROOT="%s"' % args.netcdf_dir
 
     if args.define:
         for definition in args.define:
