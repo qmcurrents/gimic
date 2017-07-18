@@ -10,7 +10,6 @@ set(PYTHON_SITE_INSTALL_DIR
     lib/python${PYTHON_VERSION}/site-packages/gimic)
 include(UseCython)
 include(ConfigTesting)
-include(ConfigPackaging)
 
 set(CMAKE_Fortran_MODULE_DIRECTORY ${CMAKE_BINARY_DIR}/modules)
 
