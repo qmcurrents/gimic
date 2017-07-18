@@ -14,7 +14,6 @@ option(ENABLE_CODE_COVERAGE  "Enable code coverage"          OFF)
 option(ENABLE_MPI            "Enable MPI parallelization"    OFF)
 option(ENABLE_OPENMP         "Enable OpenMP parallelization" OFF)
 option(ENABLE_CFOUR          "Enable the CFOUR interface" OFF)
-option(ENABLE_TESTS          "Enable the test suite" ON)
 
 unset (CMAKE_LIBRARY_ARCHITECTURE)
 include(GNUInstallDirs)
@@ -60,11 +59,8 @@ configure_file (
 add_subdirectory(src)
 add_subdirectory(tools)
 
-if (ENABLE_TESTS)
-    set (PROJECT_REPOSITORY "git@repo.ctcc.no:gimic.git")
-    include(ConfigTesting)
-    add_subdirectory(test)
-endif()
+include(ConfigTesting)
+add_subdirectory(test)
 
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY
     "GIMIC - Gauge-Including Magnetically Induced Currents program")
