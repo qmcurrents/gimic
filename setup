@@ -222,10 +222,10 @@ def gen_cmake_command():
     if args.static:
         command += ' -DENABLE_STATIC_LINKING=ON'
 
-    if args.prefix:
-        command += ' -DCMAKE_INSTALL_PREFIX=' + args.prefix
-    else:
-        command += ' -DCMAKE_INSTALL_PREFIX=' + args.builddir
+#   if args.prefix:
+#       command += ' -DCMAKE_INSTALL_PREFIX=' + args.prefix
+#   else:
+#       command += ' -DCMAKE_INSTALL_PREFIX=' + args.builddir
 
     if args.debug and args.release:
         command += ' -DCMAKE_BUILD_TYPE=Relwithdebinfo'

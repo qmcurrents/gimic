@@ -4,6 +4,8 @@ set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/custom ${CMAKE_MODULE_PA
 project(GIMIC)
 enable_language(Fortran)
 
+set(CMAKE_INSTALL_PREFIX ${PROJECT_BINARY_DIR})
+
 option(ENABLE_PROFILING      "Enable profiling"              OFF)
 option(ENABLE_BOUNDS_CHECK   "Enable bounds check"           OFF)
 option(ENABLE_CODE_COVERAGE  "Enable code coverage"          OFF)
