@@ -21,7 +21,6 @@ include(GNUInstallDirs)
 include(ConfigProjectVersion)
 include(ConfigSafeGuards)
 include(ConfigGitRevision)
-include(ConfigureScript)
 include(ConfigCompilerFlags)
 
 find_package(Python REQUIRED)
