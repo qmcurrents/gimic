@@ -14,9 +14,8 @@ need to provide this program with a density matrix in atomic-orbital (AO) basis
 and three (effective) magnetically perturbed AO density matrices in the proper
 format.
 
-Currently only recent versions of ACES2 and Turbomole can produce these
-matrices, but Dalton is in the works. If you would like to add your favourite
-program to the list please use the source, Luke.
+Currently ACES2, Turbomole, G09, QChem, FERMION++, and LSDalton can produce these
+matrices.
 
 
 ## Example
