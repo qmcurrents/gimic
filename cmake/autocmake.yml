@@ -1,7 +1,34 @@
-# CMakeLists.txt and setup script will be generated from this file
-# see: http://autocmake.readthedocs.io/en/latest/developers/configuration.html
-# adapt the following lines and expand
-
-name: myproject
+name: gimic
 
 min_cmake_version: 2.8
+
+default_build_type: release
+
+language:
+  - Fortran
+  - C
+  - CXX
+
+url_root: https://github.com/coderefinery/autocmake/raw/master/
+
+modules:
+- compilers:
+  - source:
+    - '%(url_root)modules/fc.cmake'
+    - '%(url_root)modules/cc.cmake'
+    - '%(url_root)modules/cxx.cmake'
+- flags:
+  - source:
+    - '%(url_root)compilers/GNU.CXX.cmake'
+    - '%(url_root)compilers/Intel.CXX.cmake'
+- plugins:
+  - source:
+    - '%(url_root)modules/omp.cmake'
+    - '%(url_root)modules/mpi.cmake'
+#   - '%(url_root)modules/ccache.cmake'
+#   - '%(url_root)modules/definitions.cmake'
+#   - '%(url_root)modules/code_coverage.cmake'
+#   - '%(url_root)modules/safeguards.cmake'
+#   - '%(url_root)modules/default_build_paths.cmake'
+#   - '%(url_root)modules/src.cmake'
+#   - 'custom/own.cmake'
