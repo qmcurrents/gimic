@@ -1,3 +1,19 @@
+set (PROJECT_VERSION_MAJOR 2)
+set (PROJECT_VERSION_MINOR 1)
+set (PROJECT_VERSION_PATCH 4)
+
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY
+    "GIMIC - Gauge-Including Magnetically Induced Currents program")
+set(CPACK_PACKAGE_VENDOR "University of Helsinki")
+set(CPACK_PACKAGE_CONTACT "Jonas Juselius <jonas.juselius@uit.no>")
+set(CPACK_PACKAGE_EXECUTABLES "gimic" "The GIMIC program")
+set(CPACK_PACKAGE_URL "http://repo.ctcc.no/projects/gimic")
+set(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/INSTALL")
+set(CPACK_RESOURCE_FILE_README "${CMAKE_CURRENT_SOURCE_DIR}/README.md")
+set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
+set(CPACK_GENERATOR TGZ DEB RPM)
+
+
 include(InstallRequiredSystemLibraries)
 
 string(TOLOWER ${PROJECT_NAME} CPACK_PACKAGE_NAME)
