@@ -141,11 +141,6 @@ group.add_argument('--host',
         default=None,
         help="use predefined defaults for 'host'",
         metavar='STRING')
-group.add_argument('--cfour-dir',
-        action='store',
-        default=None,
-        help='set the path to the cfour install [default: %(default)s]',
-        metavar='PATH')
 
 
 # process input
@@ -238,10 +233,6 @@ def gen_cmake_command():
         command += ' -DCMAKE_BUILD_TYPE=Release'
     else:
         command += ' -DCMAKE_BUILD_TYPE=Debug'
-
-
-    if args.cfour_dir:
-        command += ' -DCFOUR_ROOT=' + args.cfour_dir
 
     if args.define:
         for definition in args.define:
