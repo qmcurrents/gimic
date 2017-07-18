@@ -4,10 +4,8 @@ unset(CMAKE_LIBRARY_ARCHITECTURE)
 
 include(GNUInstallDirs)
 include(ConfigProjectVersion)
-include(ConfigSafeGuards)
 include(ConfigGitRevision)
 
-find_package(Python REQUIRED)
 set(PYTHON_SITE_INSTALL_DIR
     lib/python${PYTHON_VERSION}/site-packages/gimic)
 include(UseCython)
