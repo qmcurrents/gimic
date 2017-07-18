@@ -1,11 +1,11 @@
 set(CMAKE_INSTALL_PREFIX ${PROJECT_BINARY_DIR})
 
-unset (CMAKE_LIBRARY_ARCHITECTURE)
+unset(CMAKE_LIBRARY_ARCHITECTURE)
+
 include(GNUInstallDirs)
 include(ConfigProjectVersion)
 include(ConfigSafeGuards)
 include(ConfigGitRevision)
-include(ConfigCompilerFlags)
 
 find_package(Python REQUIRED)
 set(PYTHON_SITE_INSTALL_DIR
@@ -21,6 +21,5 @@ configure_file (
     ${PROJECT_BINARY_DIR}/config.h
     )
 
-add_subdirectory(src)
 add_subdirectory(tools)
 add_subdirectory(test)

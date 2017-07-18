@@ -25,10 +25,7 @@ modules:
   - source:
     - '%(url_root)modules/omp.cmake'
     - '%(url_root)modules/mpi.cmake'
-#   - '%(url_root)modules/ccache.cmake'
-#   - '%(url_root)modules/definitions.cmake'
     - '%(url_root)modules/code_coverage.cmake'
     - '%(url_root)modules/safeguards.cmake'
-#   - '%(url_root)modules/default_build_paths.cmake'
-#   - '%(url_root)modules/src.cmake'
     - 'custom/own.cmake'
+    - '%(url_root)modules/src.cmake'
