@@ -19,11 +19,11 @@ include(ConfigGitRevision)
 include(ConfigCompilerFlags)
 
 find_package(Python REQUIRED)
-set(PYTHON_SITE_INSTALL_DIR 
+set(PYTHON_SITE_INSTALL_DIR
     lib/python${PYTHON_VERSION}/site-packages/gimic)
 include(UseCython)
-
-set(LIBS)
+include(ConfigTesting)
+include(ConfigPackaging)
 
 if(ENABLE_MPI)
     find_package(MPI)
@@ -49,10 +49,6 @@ configure_file (
     ${PROJECT_BINARY_DIR}/config.h
     )
 
-include(ConfigTesting)
-
 add_subdirectory(src)
 add_subdirectory(tools)
 add_subdirectory(test)
-
-include(ConfigPackaging) 
