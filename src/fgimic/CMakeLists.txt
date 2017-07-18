@@ -20,9 +20,9 @@ install(FILES __init__.py ${CMAKE_CURRENT_BINARY_DIR}/gimic.py getkw.py
     DESTINATION ${PYTHON_SITE_INSTALL_DIR}/fgimic
     )
 
-#install(TARGETS gimic.bin
-#    DESTINATION bin
-#    )
+install(TARGETS gimic.bin
+    DESTINATION bin
+    )
 
 if (ENABLE_CFOUR)
     find_package(CFour)
