@@ -1,4 +1,4 @@
-set (GIT_REVISION)
+set(GIT_REVISION)
 find_package(Git)
 if (GIT_FOUND)
     execute_process(
@@ -10,4 +10,3 @@ if (GIT_FOUND)
         ${GIT_REVISION}
         GIT_REVISION)
 endif()
-

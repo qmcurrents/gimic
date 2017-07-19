@@ -15,12 +15,6 @@
 
 #cmakedefine HAVE_MPI
 
-#cmakedefine HAVE_OPENMP
-
-#cmakedefine HAVE_BLAS
-
-#cmakedefine HAVE_LAPACK
-
 @DEFINE_FC_FUNC@
 @DEFINE_FC_FUNC_@
 
