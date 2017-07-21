@@ -24,3 +24,6 @@ GIMIC requires CMake to configure and build.::
   $ make
   $ make install
 
+Test the installation with::
+  $ make test
+

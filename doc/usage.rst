@@ -67,9 +67,15 @@ official distribution. To produce the necessary files to run GIMIC, you
 first need to optimize the wavefunction/density of the molecule, before
 running the ``mpshift`` program to produce the perturbed densities.
 Before you run ``mpshift`` you need to edit the ``control`` file and add
-the ``$gimic`` keyword. When the calculation has finished run the
-``turbo2gimic.py`` script (distributed with GIMIC) to produce the
-``mol`` and ``XDENS`` files.
+the ``$gimic`` keyword. When the calculation has finished Turbomole
+writes out two files called ``CAODENS`` (AO density information) and
+``XCAODEND`` (perturbed density information). Then run in the same
+directory the ``turbo2gimic.py`` script (distributed with GIMIC) 
+to produce the ``MOL`` and ``XDENS`` files.
+
+::
+    $ turbo2gimic.py > MOL
+
 
 Running QChem and FERMION++
 ---------------------------
