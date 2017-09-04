@@ -192,8 +192,8 @@ files with:
 
 $ Gaussian2gimic.py --input=benzeneg09.fchk
 
-Note, open-shell is currently not supported with the Gaussian2gimic.py
-script. 
+Note, for open-shell cases you need to add "gfprint pop=regular iop(10/33=2)"
+and use the Gaussian "log" file instead of the "fchk" file. 
 
 
 Running GIMIC
