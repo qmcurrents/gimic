@@ -1,5 +1,18 @@
 #!/bin/bash
 
+function validateInput() {
+# usage: validateInput variable $variable 
+    local __inputVar=$1
+    local __inputValue="$2"
+    while [ -z "$__inputValue" ]
+    do
+        printf "Incorrect input. Please try again:\n"
+        read __inputValue
+    done
+    echo "Checked value: $__inputValue"
+    eval $__inputVar="'$__inputValue'"
+}
+
 function centroid() { atoms="$@"; for i in $atoms; do awk -v i=$i '{ if (NR == i+1) print $0 }' coord; done | awk '{ x+=$1; y+=$2; z+=$3; n++} END{ print x/n, y/n, z/n; }'; }
 function dist() { awk -v a1="$1" -v a2="$2" '{ if (NR == a1+1) { x+=$1;y+=$2;z+=$3;}; if (NR == a2+1) {x-=$1;y-=$2;z-=$3} } END{ dist=sqrt(x*x+y*y+z*z); print dist, dist*0.5; }' coord ; }
 
@@ -22,6 +35,7 @@ function checkPreviousCalc() {
     then 
 	printf "\nEnter the index of the $__resultVar atom:\n"
 	read __sedVar
+	validateInput __sedVar $__sedVar
     fi
 
     eval $__resultVar="'$__sedVar'"
@@ -38,6 +52,7 @@ function userInp()
     then
         printf "\nEnter the indices of the selected atoms to calculate their midpoint and then press enter.\n\n" 
      atoms=0; read atoms
+     validateInput atoms  "$atoms"
      CENTROID=$(centroid $atoms)
      Cx=$( echo $CENTROID | awk '{print $1} ' )
      Cy=$( echo $CENTROID | awk '{print $2} ' )
@@ -49,11 +64,16 @@ function userInp()
      read accept;
      if [ ! -z $accept ] && [ $accept == "n" ]
      then
-         printf "$__resultVar="; read __varValue
+         printf "$__resultVar="; 
+	 read __varValue
+	 validateInput __varValue  $__varValue
+
      fi # if centroid calculation not accepted 
      elif [ ! -z $accept ] && [ $accept == "v" ]
      then
-         printf "$__resultVar="; read __varValue
+         printf "$__resultVar="; 
+	 read __varValue
+	 validateInput __varValue  $__varValue
          printf  "\nDo you accept $__resultVar=$__varValue bohr?\nPress [n] to change\n"
      read accept;
      if [ ! -z $accept ] && [ $accept == "n" ]
@@ -74,7 +94,9 @@ function valueInp()
     read accept;
     if [ ! -z $accept ] && [ $accept == "n" ]
     then
-	printf "$__resultVar="; read __varValue
+	printf "$__resultVar="; 
+	read __varValue
+	validateInput __varValue  $__varValue
     fi # if centroid calculation not accepted 
 
     eval $__resultVar="'$__varValue'"
@@ -212,7 +234,9 @@ fi # end if MOL, XDENS, coord exist
 echo "Define the atoms which define the start and end point"; echo
 echo "Enter the indices of the atoms according to the coord file"
 printf "Atom 1:  "; read atom1; 
+validateInput  atom1  "$atom1"
 printf "Atom 2:  "; read atom2
+validateInput atom2 "$atom2"
 
 # create a directory for the calculation
 ATOMS1=$(echo $atom1 | sed 's/ /-/g')
@@ -303,6 +327,7 @@ if [[ ( -z $fixed ) || ( ! -z $accept  &&  "$accept" == "n" ) ]]
     then 
         printf "\nEnter the index of the fixed atom:\n"
         read fixed
+	validateInput fixed $fixed
 fi
 
 printf "\n\nSTARTING POINT OF THE INTEGRATION\n"
@@ -323,6 +348,67 @@ printf "\n\nWIDTH OF THE SLICES\n"
 delta=0.02
 valueInp delta $delta
 
+echo "MAGNETIC FIELD DIRECTION"
+MF=z
+valueInp MF $MF
+
+
+################################################################################
+
+printf "\n\n*****************************************************************************\n\nSUMMARY\n\n"
+printf "Bond: ["$bond"]\n"
+printf "Fixed atom: $fixed\n"
+echo "Integration plane coordinates:"
+printf "in = $start  out = $out  up = $up  down = $down \n"
+printf "Width of the slices: $delta\n"
+printf "Magnetic field direction: $MF \n\n"
+
+printf "\n*****************************************************************************\n\n"
+
+
+echo "Would you like to do any modifications? Press [y] to list the options."
+read accept
+if  [ ! -z $accept ] && [ $accept == "y" ]
+then
+    printf "\nParameters for the calculation:\n"
+    echo "[1] start value"
+    echo "[2] out value"
+    echo "[3] up value"
+    echo "[4] down value"
+    echo "[5] delta"
+    echo "[6] magnetic field direction"
+    entry="0"
+    printf "\n\nEnter the number of the entry to change it or press [ENTER] to continue\n"
+    read entry
+    while [ ! -z $entry ] # while it has a value 
+    do
+	if  [ $entry == "1" ]
+	then
+	    valueInp start $start
+	elif [ $entry == "2" ]
+	then
+	    valueInp out $out
+	elif [ $entry == "3" ]
+	then
+	    valueInp up $up
+	elif [ $entry == "4" ]
+	then
+	    valueInp down $down
+	elif [ $entry == "5" ]
+	then
+	    valueInp delta $delta
+	elif [ $entry == "6" ]
+	then
+	    valueInp MF $MF
+	else
+	    echo "Invalid entry. Try again."
+	    read entry
+	fi
+	printf "\n\nEnter the number of the entry to change it or press [ENTER] to continue\n"
+	read entry
+    done
+fi
+
 nsteps=$( awk -v start=$start -v out=$out -v delta=$delta 'BEGIN{if (start > 0) {start = -start}; nsteps=(out-start)/delta; if (nsteps > 0) {printf("%d",nsteps)} else {printf("%d",-nsteps);}; }'   )
 
 #Practice has shown that for delta=0.1, the spacing value should be 0.02 in order to have at least 9 Gaussian points per slice
@@ -339,13 +425,14 @@ read accept;
 if [ ! -z $accept ] && [ $accept == "n" ]
 then
     printf "spacingX="; read spacingX
+    validateInput spacingX $spacingX
     printf "spacingY="; read spacingY
+    validateInput spacingY $spacingY
     printf "spacingZ="; read spacingZ
+    validateInput spacingZ $spacingZ
 fi
 
-echo "MAGNETIC FIELD DIRECTION"
-MF=z
-valueInp MF $MF
+printf "Integration plane split into $nsteps slices with width $delta bohr and grid spacing [$spacingX; $spacingY; $spacingZ] \n"
 
 rotation=0.0
 printf  "\nRotation from the normal to the bond at the bond centre: $rotation degrees. Do you accept?\nPress [n] to modify\n"
@@ -354,6 +441,7 @@ if [ ! -z $accept ] && [ $accept == "n" ]
 then
     printf "Enter the index of the atom, which the plane has to go through: "
     read atom3;
+    validateInput atom3 $atom3
     rotation=$(calculateRot);
     
     printf "Do you accept rotation to $rotation degrees?\nPress [n] to modify\n"
@@ -361,6 +449,7 @@ then
     if [ ! -z $accept ] && [ $accept == "n" ]
     then
         printf "rotation="; read rotation
+	validateInput rotation $rotation
     fi  
 fi
 
@@ -368,28 +457,11 @@ fi
 string="s/@COORD1@/$COORD1/; s/@COORD2@/$COORD2/; s/@fixed@/$fixed/; s/@distance@/$distance/; s/@up@/$up/; s/@down@/$down/; s/@MF@/$MF/; s/@spacingX@/$spacingX/; s/@spacingY@/$spacingY/; s/@spacingZ@/$spacingZ/;  s/@rotation@/$rotation/; "
 sed "$string" @SCRIPTS_DIR@/gimic.int.coord > $dirname/gimic.int.coord
 
-#end=$( awk -v delta=$delta -v start=$start 'BEGIN{print delta-start}' ) 
-
-#echo "Enter title:"
-#read heading
-#heading=\"$heading"\n bond=["$bond"], fixed="$fixed", in="$start", out="$out", delta="$delta", up="$up", down="$down\"
 heading=\""atom1=$ATOMS1 atom2=$ATOMS2 fixed=$fixed delta=$delta \nspacing=[ $spacingX;$spacingY;$spacingZ] in=$start out=$out \nup=$up down=$down"\"
 
 echo $heading > ./$dirname/calculation.dat
 
 
-################################################################################
-
-#printf "\nnsteps="$nsteps", delta="$delta", spacing="$spacing", in="$start", out="$out", up="$up", down="$down", bond=["$bond"], fixed="$fixed"\n"
-printf "\n\n*****************************************************************************\n\nSUMMARY\n\n"
-printf "Bond: ["$bond"]\n"
-printf "Fixed atom: $fixed\n"
-echo "Integration plane coordinates"
-printf "in = $start  out = $out  up = $up  down = $down \n"
-printf "Split into $nsteps slices with width $delta and grid spacing [$spacingX; $spacingY; $spacingZ] \n"
-printf "Magnetic field direction: $MF \n\n"
-
-printf "\n*****************************************************************************\n\n"
 
 xstart=$( awk -v delta=$delta -v start=$start 'BEGIN{printf "%.3f\n", -start }' )  # start is a negative number 
 xend=$( awk -v delta=$delta -v xstart=$xstart 'BEGIN{ printf "%.3f\n", xstart+delta }' ) 
@@ -449,6 +521,7 @@ parallel=4
 
 echo "How many parallel tasks to execute?"
 read parallel
+validateInput parallel $parallel
 
 # check if too many parallel tasks are called
 if [ $parallel -gt $nsteps ]
@@ -491,7 +564,7 @@ do
     echo $completed of $filenum completed; echo
 done
 
-if [[ "$remain" -gt 0 ]]; then
+if [ "$remain" -gt 0 ]; then
     for ((i=0; i<$remain; i++))
     do  
         (cd $wrkdir && gimic $wrkdir/gimic.$(($parallel*$whole+$i)).inp >  $wrkdir/gimic.$(($parallel*$whole+$i)).out &) 
@@ -559,12 +632,11 @@ echo
 # Find the zeroes on the current profile plot
 
 echo "Calculating the critical points of the current profile..."
-echo DirName: $dirname 
-echo Dir: $wrkdir
+echo
+#echo DirName: $dirname 
+#echo Dir: $wrkdir
 
-@SCRIPTS_DIR@/crit_pts.sh $wrkdir
-
-#cat $wrkdir/profile-points.out
+@SCRIPTS_DIR@/crit_pts.sh $wrkdir    && cat $wrkdir/profile-points.out
 
 #######################################################################
 

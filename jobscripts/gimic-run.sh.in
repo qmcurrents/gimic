@@ -104,7 +104,7 @@ out=10
 printf "Do you accept out=$out?\nPress [a] to enter atomic indices or press [v] the desired value\n"
 read accept
 echo $accept
-if [ ! -z $accept ] && [ $accept == "a" ]
+if [ ! -z "$accept" ] && [ "$accept" == "a" ]
 then
     echo "Centroid of atoms: "
     atoms=0; read atoms
@@ -118,16 +118,16 @@ then
 	
 	printf  "Do you accept out="$out"?\nPress [n] to change\n"
 	read accept;
-	if [ ! -z $accept ] && [ $accept == "n" ]
+	if [ ! -z "$accept" ] && [ "$accept" == "n" ]
 	then
 	    printf "out="; read out
 	fi
-    elif [ ! -z $accept ] && [ $accept == "v" ]
+    elif [ ! -z "$accept" ] && [ "$accept" == "v" ]
     then
 	printf "out="; read out
 	printf  "Do you accept out="$out"?\nPress [n] to change\n"
 	read accept;
-	if [ ! -z $accept ] && [ $accept == "n" ]
+	if [ ! -z "$accept" ] && [ "$accept" == "n" ]
 	then
 	    printf "out="; read out
 	fi

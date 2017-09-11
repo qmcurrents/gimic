@@ -394,7 +394,7 @@ do
     echo "$completed of $filenum completed"; echo
 done
 
-if [[ "$remain" -gt "0" ]]; then
+if [[ "$remain" -gt 0 ]]; then
     for ((i=0; i<$remain; i++))
     do  
         (cd $wrkdir && gimic $wrkdir/gimic.$(($parallel*$whole+$i)).inp >  $wrkdir/gimic.$(($parallel*$whole+$i)).out &) 

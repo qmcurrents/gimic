@@ -24,7 +24,9 @@ Advanced {
 
 Grid(bond) {                    # define grid orthogonal to a bond 
      type=gauss                  # gauss distribution of grid points
-     bond=[@bond@]           
+#     bond=[@bond@]           
+     coord1=[@COORD1@]
+     coord2=[@COORD2@]
      fixpoint=@fixed@
      distance=@distance@               # place grid 'distance' between atoms
      gauss_order=9               # order for gauss quadrature
