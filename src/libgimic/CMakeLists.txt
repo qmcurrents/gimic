@@ -35,7 +35,7 @@ set(sources
     )
 
 
-add_library(gimic2 SHARED
+add_library(gimic2
     ${sources}
     )
 
