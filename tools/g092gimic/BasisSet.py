@@ -5,6 +5,7 @@ import re
 import math
 
 Table=['Xx', 'H', 'He', 'Li', 'Be', 'B', 'C', 'N', 'O', 'F', 'Ne', 'Na', 'Mg', 'Al', 'Si', 'P', 'S', 'Cl', 'Ar', 'K', 'Ca', 'Sc', 'Ti', 'V', 'Cr', 'Mn', 'Fe', 'Co', 'Ni', 'Cu', 'Zn', 'Ga', 'Ge', 'As', 'Se', 'Br', 'Kr', 'Rb', 'Sr', 'Y', 'Zr', 'Nb', 'Mo', 'Tc', 'Ru', 'Rh', 'Pd', 'Ag', 'Cd', 'In', 'Sn', 'Sb', 'Te', 'I', 'Xe', 'Cs', 'Ba', 'La', 'Ce', 'Pr', 'Nd', 'Pm', 'Sm', 'Eu', 'Gd', 'Tb', 'Dy', 'Ho', 'Er', 'Tm', 'Yb', 'Lu', 'Hf', 'Ta', 'W', 'Re', 'Os', 'Ir', 'Pt', 'Au', 'Hg', 'Tl', 'Pb', 'Bi', 'Po', 'At', 'Rn', 'Fr', 'Ra', 'Ac', 'Th', 'Pa', 'U', 'Np', 'Pu', 'Am', 'Cm', 'Bk', 'Cf', 'Es', 'Fm', 'Md', 'No', 'Lr', 'Rf', 'Db', 'Sg', 'Bh', 'Hs', 'Mt', 'Ds', 'Rg', 'Cn']
+
 multiplicity={0:1,1:3,-1:4,-2:5,2:6,-3:7,3:10,-4:9,4:15,-5:11,5:21,-6:13,6:28}
 mult2type={1:0,3:1,4:-1,5:-2,6:2,7:-3,10:3,9:-4,15:4,11:-5,21:5,13:-6,28:6}
 shelltypes = {0:"S",1:"P",2:"D",3:"F",4:"G",5:"H",6:"I",-2:"D",-3:"F",-4:"G",-5:"H",-6:"I",-1:"SP"}
@@ -13,7 +14,7 @@ orbitaltypes = ["S","SP","P","D","F","G","H","I"]
 angularmomenta_turbomole={}
 angularmomenta_turbomole["S"]=[(0,0,0)]
 angularmomenta_turbomole["P"]=[(1,0,0),(0,1,0),(0,0,1)]
-angularmomenta_turbomole["SP"]=[(0,0,0),(1,0,0),(0,1,0),(0,0,1)]
+#angularmomenta_turbomole["SP"]=[(0,0,0),(1,0,0),(0,1,0),(0,0,1)]
 angularmomenta_turbomole["D"]=[(2,0,0),(0,2,0),(0,0,2),(1,1,0),(1,0,1),(0,1,1)]
 angularmomenta_turbomole["F"]=[(3,0,0),(0,3,0),(0,0,3),(2,1,0),(2,0,1),(1,2,0),(0,2,1),(1,0,2),(0,1,2),(1,1,1)]
 angularmomenta_turbomole["G"]=[(4,0,0),(0,4,0),(0,0,4),(3,1,0),(3,0,1),(1,3,0),(0,3,1),(1,0,3),(0,1,3),(2,2,0),(2,0,2),(0,2,2),(2,1,1),(1,2,1),(1,1,2)]
@@ -23,19 +24,28 @@ angularmomenta_turbomole["I"]=[(6,0,0),(0,6,0),(0,0,6),(5,1,0),(5,0,1),(1,5,0),(
 angularmomenta_gaussian={}
 angularmomenta_gaussian["S"]=[(0,0,0)]
 angularmomenta_gaussian["P"]=[(1,0,0),(0,1,0),(0,0,1)]
-angularmomenta_gaussian["SP"]=[(0,0,0),(1,0,0),(0,1,0),(0,0,1)]
+#angularmomenta_gaussian["SP"]=[(0,0,0),(1,0,0),(0,1,0),(0,0,1)]
 angularmomenta_gaussian["D"]=[(2,0,0),(0,2,0),(0,0,2),(1,1,0),(1,0,1),(0,1,1)]
 angularmomenta_gaussian["F"]=[(3,0,0),(0,3,0),(0,0,3),(1,2,0),(2,1,0),(2,0,1),(1,0,2),(0,1,2),(0,2,1),(1,1,1)]
 angularmomenta_gaussian["G"]=[(0,0,4),(0,1,3),(0,2,2),(0,3,1),(0,4,0),(1,0,3),(1,1,2),(1,2,1),(1,3,0),(2,0,2),(2,1,1),(2,2,0),(3,0,1),(3,1,0),(4,0,0)]
 angularmomenta_gaussian["H"]=[(0,0,5),(0,1,4),(0,2,3),(0,3,2),(0,4,1),(0,5,0),(1,0,4),(1,1,3),(1,2,2),(1,3,1),(1,4,0),(2,0,3),(2,1,2),(2,2,1),(2,3,0),(3,0,2),(3,1,1),(3,2,0),(4,0,1),(4,1,0),(5,0,0)]
 angularmomenta_gaussian["I"]=[(0,0,6),(0,1,5),(0,2,4),(0,3,3),(0,4,2),(0,5,1),(0,6,0),(1,0,5),(1,1,4),(1,2,3),(1,3,2),(1,4,1),(1,5,0),(2,0,4),(2,1,3),(2,2,2),(2,3,1),(2,4,0),(3,0,3),(3,1,2),(3,2,1),(3,3,0),(4,0,2),(4,1,1),(4,2,0),(5,0,1),(5,1,0),(6,0,0)]
 
+angularmomenta_cfour={}
+angularmomenta_cfour["S"]=[(0,0,0)]
+angularmomenta_cfour["P"]=[(1,0,0),(0,1,0),(0,0,1)]
+#angularmomenta_cfour["SP"]=[(0,0,0),(1,0,0),(0,1,0),(0,0,1)]
+angularmomenta_cfour["D"]=[(2,0,0),(1,1,0),(1,0,1),(0,2,0),(0,1,1),(0,0,2)]
+angularmomenta_cfour["F"]=[(3,0,0),(2,1,0),(2,0,1),(1,2,0),(1,1,1),(1,0,2),(0,3,0),(0,2,1),(0,1,2),(0,0,3)]
+angularmomenta_cfour["G"]=[(4,0,0),(3,1,0),(3,0,1),(2,2,0),(2,1,1),(2,0,2),(1,3,0),(1,2,1),(1,1,2),(1,0,3),(0,4,0),(0,3,1),(0,2,2),(0,1,3),(0,0,4)]
+angularmomenta_cfour["H"]=[(5,0,0),(4,1,0),(4,0,1),(3,2,0),(3,1,1),(3,0,2),(2,3,0),(2,2,1),(2,1,2),(2,0,3),(1,4,0),(1,3,1),(1,2,2),(1,1,3),(1,0,4),(0,5,0),(0,4,1),(0,3,2),(0,2,3),(0,1,4),(0,0,5)]
+angularmomenta_cfour["I"]=[(6,0,0),(5,1,0),(5,0,1),(4,2,0),(4,1,1),(4,0,2),(3,3,0),(3,2,1),(3,1,2),(3,0,3),(2,4,0),(2,3,1),(2,2,2),(2,1,3),(2,0,4),(1,5,0),(1,4,1),(1,3,2),(1,2,3),(1,1,4),(1,0,5),(0,6,0),(0,5,1),(0,4,2),(0,3,3),(0,2,4),(0,1,5),(0,0,6)]
 
 Fields = ["x","y","z"]
 
 mqn={}
 mqn["S"]=[0]
-mqn["SP"]=[0,1,-1,0]
+#mqn["SP"]=[0,1,-1,0]
 mqn["P"]=[1,-1,0]
 mqn["D"]=[0,1,-1,2,-2]
 mqn["F"]=[0,1,-1,2,-2,3,-3]
@@ -44,14 +54,14 @@ mqn["H"]=[0,1,-1,2,-2,3,-3,4,-4,5,-5]
 mqn["I"]=[0,1,-1,2,-2,3,-3,4,-4,5,-5,6,-6]
 
 
-def coeff_Cart2Spher(m,l,real=False,turbomole=False):
+def coeff_Cart2Spher(m,l,real=False,normalized=True):
     """
     Coefficient of transformation between a normalized Cartesian orbitals and a normalized spherical-harmonic ones
     \chi^sphe_{l,m} = \sum_{lx,ly,lz} c_{l,m,lx,ly,lz) \chi^cart_{lx,ly,lz}
     Param m: m value for normalized spherical-harmonic orbital
     Param l: l vector with lx,ly,lz values for normalized Cartesian orbital
     Param real: transform into real spherical-harmonic instead of complex (default)
-    Param turbomole: use turbomole normalization for Cartesian orbitals
+    Param normalized: whether or not to use normalized Cartesian orbitals
     """
     lx,ly,lz = l
     l = sum(l)
@@ -97,11 +107,13 @@ def coeff_Cart2Spher(m,l,real=False,turbomole=False):
         elif m < 0:
             N3 = fm[N3 % 4]
         else:
-            N3 = 1.0
+#            fp = [1,1j,-1,-1j]
+#            N3 = fp[N3 % 4]
+            N3 = 1.0 # the formula can be simplified into 1.0
         fact2 = fact2 + bin3 * bin4 * N3
     coeff =  N * fact1 * fact2
-    if turbomole:
-        coeff = coeff * math.sqrt(float( (math.factorial(lx)*math.factorial(ly)*math.factorial(lz))**3 * 2**l ) / float( math.factorial(2*lx) * math.factorial(2*ly) * math.factorial(2*lz) ))
+    if not normalized:
+        coeff = coeff * math.sqrt(float( math.factorial(lx)*math.factorial(ly)*math.factorial(lz) * 2**l ) / float( math.factorial(2*lx) * math.factorial(2*ly) * math.factorial(2*lz) ))
     return coeff
 
 
@@ -164,7 +176,7 @@ class SHELL(object):
 
 
     @staticmethod
-    def mat_Cart2Spher(shelltype,square=False,real=False,order="gaussian",turbomole=False):
+    def mat_Cart2Spher(shelltype,square=False,real=False,order="gaussian",normalized=True):
         """
         Transformation matrices from normalized Cartesian orbitals to normalized spherical-harmonic ones
         for one type of orbital, one shell
@@ -173,8 +185,9 @@ class SHELL(object):
         Param shelltype: one of orbitaltypes
         Param square: return square matrices with blank lines instead of rectangular matrices (default)
         Param real: transform into real spherical-harmonic instead of complex (default)
-        Param order: order of the angularmomenta. Either "gaussian" or "turbomole"
-        Param turbomole: use turbomole normalization for Cartesian orbitals
+        Param order: order of the angularmomenta. Either "gaussian", "turbomole" or "cfour"
+        Param normalized: whether or not to use normalized Cartesian orbitals
+        Return: c_cart,spher
         """
         mqns = mqn[shelltype]
         angmoms = eval("angularmomenta_"+order)[shelltype]
@@ -188,16 +201,16 @@ class SHELL(object):
             c = numpy.zeros((len(angmoms),len(mqns)),dtype)
         for il,l in enumerate(angmoms):
             for im,m in enumerate(mqns):
-                c[il,im]= coeff_Cart2Spher(m,l,real=real,turbomole=turbomole)
+                c[il,im]= coeff_Cart2Spher(m,l,real=real,normalized=normalized)
         return c
 
     @staticmethod
-    def Overlap_Cart(shelltype,order="gaussian",turbomole=False):
+    def Overlap_Cart(shelltype,order="gaussian",normalized=True):
         """
         Overlap matrix between Cartesian atomic orbitals of same l
         Param shelltype: one of orbitaltypes
-        Param order: order of the angularmomenta. Either "gaussian" or "turbomole"
-        Param turbomole: use turbomole normalization for Cartesian orbitals
+        Param order: order of the angularmomenta. Either "gaussian", "turbomole" or "cfour"
+        Param normalized: whether or not to use normalized Cartesian orbitals
         """
         angmoms = eval("angularmomenta_"+order)[shelltype]
         ov = numpy.zeros((len(angmoms),len(angmoms)))
@@ -213,14 +226,14 @@ class SHELL(object):
                     den2 = math.factorial(2*l1[0]) * math.factorial(2*l1[1]) * math.factorial(2*l1[2]) *\
                         math.factorial(2*l2[0]) * math.factorial(2*l2[1]) * math.factorial(2*l2[2]) 
                     ov[il,jl] = float(num1) / float(den1) * math.sqrt(float(num2)/float(den2))
-                    if turbomole:
-                        f1 = math.sqrt( float(math.factorial(2*l1[0]) * math.factorial(2*l1[1]) * math.factorial(2*l1[2]) ) / float( (math.factorial(l1[0])*math.factorial(l1[1])*math.factorial(l1[2]))**3 * 2**(sum(l1)) ))
-                        f2 = math.sqrt( float(math.factorial(2*l2[0]) * math.factorial(2*l2[1]) * math.factorial(2*l2[2]) ) / float( (math.factorial(l2[0])*math.factorial(l2[1])*math.factorial(l2[2]))**3 * 2**(sum(l2)) ))
+                    if not normalized:
+                        f1 = math.sqrt( float(math.factorial(2*l1[0]) * math.factorial(2*l1[1]) * math.factorial(2*l1[2]) ) / float( (math.factorial(l1[0])*math.factorial(l1[1])*math.factorial(l1[2])) * 2**(sum(l1)) ))
+                        f2 = math.sqrt( float(math.factorial(2*l2[0]) * math.factorial(2*l2[1]) * math.factorial(2*l2[2]) ) / float( (math.factorial(l2[0])*math.factorial(l2[1])*math.factorial(l2[2])) * 2**(sum(l2)) ))
                         ov[il,jl] = ov[il,jl] * f1 * f2
         return ov
 
     @staticmethod
-    def mat_Spher2Cart(shelltype,square=False,real=False,order="gaussian",turbomole=False):
+    def mat_Spher2Cart(shelltype,square=False,real=False,order="gaussian",normalized=True):
         """
         Transformation matrices from normalized spherical-harmonic orbitals to normalized Cartesian ones
         for one type of orbital
@@ -230,35 +243,38 @@ class SHELL(object):
         Param shelltype: one of orbitaltypes
         Param square: return square matrices with blank lines instead of rectangular matrices (default)
         Param real: transform into real spherical-harmonic instead of complex (default)
-        Param order: order of the angularmomenta. Either "gaussian" or "turbomole"
-        Param turbomole: use turbomole normalization for Cartesian orbitals
+        Param order: order of the angularmomenta. Either "gaussian", "turbomole" or "cfour"
+        Param normalized: whether or not to use normalized Cartesian orbitals
+        Return: c-1_spher,cart
         """
-        C = SHELL.mat_Cart2Spher(shelltype,square=square,real=real,order=order,turbomole=turbomole)
+        C = SHELL.mat_Cart2Spher(shelltype,square=square,real=real,order=order,normalized=normalized)
         if numpy.dtype("complex") == C.dtype:
             C = C.conjugate()
-        S = SHELL.Overlap_Cart(shelltype,order=order,turbomole=turbomole)
+        S = SHELL.Overlap_Cart(shelltype,order=order,normalized=normalized)
         Cm1 = numpy.dot(C.transpose(),S)
         return Cm1
 
     @staticmethod
-    def mat_Cart2Cart(shelltype,order1="gaussian",order2="gaussian",turbomole1=False,turbomole2=False):
+    def mat_Cart2Cart(shelltype,order1="gaussian",order2="gaussian",normalized1=True, normalized2=True):
         """
         Transformation matrices from normalized Cartesian orbitals to normalized Cartesian ones
         for one type of orbital
+        Lines : normalized cartesian orbitals 1. Columns: normalized cartesian orbitals 2.
         The arrangement of the angular momenta of the orbitals can be different between the two sets
         Param shelltype: one of orbitaltypes
-        Param order1, order1: order of the angularmomenta. Either "gaussian" or "turbomole"
-        Param turbomole1, turbomole2: use turbomole normalization for Cartesian orbitals
+        Param order1, order2: order of the angularmomenta. Either "gaussian", "turbomole" or "cfour"
+        Param normalized1, normalized2: whether or not to use normalized Cartesian orbitals
+        Return: c_cartold,cartnew
         """
         angmoms1 = eval("angularmomenta_"+order1)[shelltype]
         angmoms2 = eval("angularmomenta_"+order2)[shelltype]
         c = numpy.zeros((len(angmoms1),len(angmoms2)))
         for il,l1 in enumerate(angmoms1):
             fct = 1.0
-            if turbomole1 and (not turbomole2):
-                fct = math.sqrt( float( (math.factorial(l1[0])*math.factorial(l1[1])*math.factorial(l1[2]))**3 * 2**(sum(l1)) ) / float(math.factorial(2*l1[0]) * math.factorial(2*l1[1]) * math.factorial(2*l1[2]) ) )
-            elif (not turbomole1) and turbomole2:
-                fct = math.sqrt( float(math.factorial(2*l1[0]) * math.factorial(2*l1[1]) * math.factorial(2*l1[2]) ) / float( (math.factorial(l1[0])*math.factorial(l1[1])*math.factorial(l1[2]))**3 * 2**(sum(l1)) ))
+            if (not normalized1) and normalized2:
+                fct = math.sqrt( float( (math.factorial(l1[0])*math.factorial(l1[1])*math.factorial(l1[2])) * 2**(sum(l1)) ) / float(math.factorial(2*l1[0]) * math.factorial(2*l1[1]) * math.factorial(2*l1[2]) ) )
+            elif normalized1 and (not normalized2):
+                fct = math.sqrt( float(math.factorial(2*l1[0]) * math.factorial(2*l1[1]) * math.factorial(2*l1[2]) ) / float( (math.factorial(l1[0])*math.factorial(l1[1])*math.factorial(l1[2])) * 2**(sum(l1)) ))
             jl = angmoms2.index(l1)
             c[il,jl]= fct 
         return c
@@ -268,9 +284,11 @@ class SHELL(object):
         """
         Transformation matrices from normalized spherical-harmonic orbitals to normalized spherical-harmonic ones
         for one type of orbital
+        Lines : normalized spherical-harmonic orbitals 1. Columns: normalized spherical-harmonic orbitals 2.
         Both sets can be real or complex
         Param shelltype: one of orbitaltypes
         Param real1, real1: transform into real spherical-harmonic instead of complex (default)
+        Return: c_spherold,sphernew
         """
         mqns = mqn[shelltype]
         if (real1 == real2):
@@ -405,6 +423,14 @@ class BasisSet(object):
         self.atoms   = sorted(set(self.mapatom)) # list of atoms
         self.atnums  = sorted(set(self.mapatnum)) #list of atnums
         self.natoms = len(self.atoms)
+        # check the type of orbital
+        self.spherical = None
+        if numpy.all(self.maptype >= -1): # are all Cartesian orbitals
+            self.spherical = False
+        elif numpy.all(self.maptype <= 1): # are all Spherical-harmonic orbitals
+            self.spherical = True
+        else:
+            raise Exception("Basis set contains both Cartesian and Spherical-harmonic functions")
 
     def to_Cartesian(self):
         """
@@ -448,55 +474,75 @@ class BasisSet(object):
         newbasis = BasisSet(newbasis)
         return newbasis
 
-    def Trans2Spher(self,square=False,order="gaussian",turbomole=False):
+    def applyTransform(self, command):
         """
-        Transformation matrices to normalized real spherical-harmonic orbitals for a basis set
-        Lines : normalized orbitals. Columns: normalized spherical-harmonic orbitals
-        Param square: return square matrices with blank lines instead of rectangular matrices (default)
-        Param order: order of the angularmomenta. Either "gaussian" or "turbomole"
-        Param turbomole: use turbomole normalization for Cartesian orbitals
+        Param command: python command to apply to every shell
         """
         index1 = 0
         index2 = 0
         m = numpy.zeros((10000,10000))
         # Build the block-diagonal transformation matrix m
         for shell in self.basis:
-            if shell.type <= 1:
-                # already in spherical
-                data = SHELL.mat_Spher2Spher(shell.shelltype,real1=True,real2=True)
-            else:
-                data = SHELL.mat_Cart2Spher(shell.shelltype,square=square,real=True,order=order,turbomole=turbomole)
+            shelltype = shell.shelltype
+            data = eval(command.replace("@T",shelltype))
             end1 = index1 + data.shape[0]
             end2 = index2 + data.shape[1]
             m[index1:end1,index2:end2] = data
             index1 = end1
             index2 = end2
-        return m[:index1,:index2]
+        return m[:index1,:index2]        
 
-    def Trans2Cart(self,square=False,order1="gaussian",order2="gaussian",turbomole1=False, turbomole2=False):
+
+    def Cart2Spher(self,square=False,real=False,order="gaussian",normalized=True):
         """
-        Transformation matrices to normalized Cartesian orbitals for a basis set
-        Lines: normalized orbitals. Columns : normalized cartesian orbitals. 
+        Transformation matrices from normalized Cartesian orbitals to normalized spherical-harmonic ones
+        Lines : normalized cartesian orbitals. Columns: normalized spherical-harmonic orbitals
         Param square: return square matrices with blank lines instead of rectangular matrices (default)
+        Param real: transform into real spherical-harmonic instead of complex (default)
         Param order: order of the angularmomenta. Either "gaussian" or "turbomole"
-        Param turbomole: use turbomole normalization for Cartesian orbitals
+        Param normalized: whether or not to use normalized Cartesian orbitals
+        Return: c_cart,spher
         """
-        index1 = 0
-        index2 = 0
-        m = numpy.zeros((10000,10000))
-        # Build the block-diagonal transformation matrix m
-        for shell in self.basis:
-            if shell.type >= -1:
-                # already in Cartesian
-                data = SHELL.mat_Cart2Cart(shell.shelltype,order1=order1,order2=order2,turbomole1=turbomole1,turbomole2=turbomole2)
-            else:
-                data = SHELL.mat_Spher2Cart(shell.shelltype,square=square,real=True,order=order2,turbomole=turbomole2)
-            end1 = index1 + data.shape[0]
-            end2 = index2 + data.shape[1]
-            m[index1:end1,index2:end2] = data
-            index1 = end1
-            index2 = end2
-        return m[:index1,:index2]
+        command = "SHELL.mat_Cart2Spher('@T',square="+str(square)+",real="+str(real)+",order='"+order+"',normalized="+str(normalized)+")"
+        return self.applyTransform(command)
+
+    def Spher2Cart(self,square=False,real=False,order="gaussian",normalized=True):
+        """
+        Transformation matrices from normalized spherical-harmonic orbitals to normalized Cartesian ones
+        c-1 = c^dagger S since c^dagger S c = 1 = c-1 c
+        Lines: normalized spherical-harmonic orbitals. Columns : normalized cartesian orbitals. 
+        Param square: return square matrices with blank lines instead of rectangular matrices (default)
+        Param real: transform into real spherical-harmonic instead of complex (default)
+        Param order: order of the angularmomenta. Either "gaussian" or "turbomole"
+        Param normalized: whether or not to use normalized Cartesian orbitals
+        Return: c-1_spher,cart
+        """
+        command = "SHELL.mat_Spher2Cart('@T',square="+str(square)+",real="+str(real)+",order='"+order+"',normalized="+str(normalized)+")"
+        return self.applyTransform(command)
+
+    def Cart2Cart(self,order1="gaussian",order2="gaussian",normalized1=True, normalized2=True):
+        """
+        Transformation matrices from normalized Cartesian orbitals to normalized Cartesian ones
+        Lines : normalized cartesian orbitals 1. Columns: normalized cartesian orbitals 2.
+        The arrangement of the angular momenta of the orbitals can be different between the two sets
+        Param order1, order2: order of the angularmomenta. Either "gaussian" or "turbomole"
+        Param normalized1, normalized2: whether or not to use normalized Cartesian orbitals
+        Return: c_cartold,cartnew
+        """
+        command = "SHELL.mat_Cart2Cart('@T',order1='"+order1+"',order2='"+order2+"',normalized1="+str(normalized1)+", normalized2="+str(normalized2)+")"
+        return self.applyTransform(command)
+
+    def Spher2Spher(self,real1=False,real2=False):
+        """
+        Transformation matrices from normalized spherical-harmonic orbitals to normalized spherical-harmonic ones
+        Lines : normalized spherical-harmonic orbitals 1. Columns: normalized spherical-harmonic orbitals 2.
+        Both sets can be real or complex
+        Param shelltype: one of orbitaltypes
+        Param real1, real1: transform into real spherical-harmonic instead of complex (default)
+        Return: c_spherold,sphernew
+        """
+        command = "SHELL.mat_Spher2Spher('@T',real1="+str(real1)+",real2="+str(real2)+")"
+        return self.applyTransform(command)
 
     def get_index_for_atom(self,iatom):
         """
@@ -586,28 +632,34 @@ class BasisSet(object):
             iatom = self.mapatom[numpy.where(self.mapatnum == atnum)][0]
             atombasis = self.get_atombasis(iatom)
             file.write("****\n")
-            file.write("%s\n"%(Table[atnum]))
+            file.write("%s\n"%(Table[int(atnum)]))
             file.write("Nb_shells %i\n"%(atombasis.nshells))
             for shell in atombasis.basis:
                 file.write("%s  %i \n"%(shell.shelltype,shell.nprimitive))
                 coeffs = shell.coefficients
                 coeffs_p = shell.coefficients_p
                 exp = shell.exponents
-                if coeffs_p!= None:
+                if coeffs_p is not None:
                     for a,b,c in zip(exp,coeffs,coeffs_p):
                         file.write("  %18.10E  %18.10E  %18.10E\n"%(a,b,c))
                 else:
                      for a,b in zip(exp,coeffs):
                         file.write("  %18.10E  %18.10E\n"%(a,b))
                     
-    def write_MOL(self,filename,coords=None):
+    def write_MOL(self,filename,coords=None, turbomole=False):
         """
         write the basis set in file
         Param filename: filename to write into
         Param coords: coordinates of the atoms
         """
-        HEADER="""INTGRL        1    0    1    0    0    0    0    0    0
+        if turbomole:
+            HEADER="""INTGRL        1    0    1    0    0    0    0    0    0
 TURBOMOLE
+              Generated by Gaussian2gimic
+"""
+        else:
+            HEADER="""INTGRL        1    0    1    0    0    0    0    0    0
+CFOUR
               Generated by Gaussian2gimic
 """
         file=open(filename,"w")
@@ -618,23 +670,23 @@ TURBOMOLE
             atombasis=self.get_atombasis(iatom)
             nborbitals = [x for x in atombasis.get_nborbitals() if x != 0] # keep the nb of orbitals that are non-zero
             atnum = atombasis.atnums[0]
-            if coords != None:
+            if coords is not None:
                 coord = coords[iatom-1]
             else:
                 coord = atombasis.basis[0].coord
-                if coord == None:
+                if coord is None:
                     raise Exception("No atomic coordinate found for atom %i"%(iatom))
             file.write("%2.1f  %3i %3i"%(float(atnum),1,len(nborbitals)))
             for norb in nborbitals:
                 file.write(" %3i"%(norb))
             file.write("\n")
-            file.write("%s %i %19.12f %19.12f %19.12f\n"%(Table[atnum],1,coord[0],coord[1],coord[2]))
+            file.write("%s %i %19.12f %19.12f %19.12f\n"%(Table[int(atnum)],1,coord[0],coord[1],coord[2]))
             for shell in atombasis.basis:
                 file.write("   %3i %3i\n"%(shell.nprimitive,1))
                 coeffs = shell.coefficients
                 coeffs_p = shell.coefficients_p
                 exp = shell.exponents
-                if coeffs_p!= None:
+                if coeffs_p is not None:
                     for a,b,c in zip(exp,coeffs,coeffs_p):
                         file.write("  %16.10f  %16.10f  %16.10f\n"%(a,b,c))
                 else:
@@ -702,7 +754,7 @@ TURBOMOLE
             coeffs = shell.coefficients
             coeffs_p = shell.coefficients_p
             exponents = shell.exponents
-            if coeffs_p == None:
+            if coeffs_p is None:
                 coefficients = coeffs[numpy.newaxis,:]
             else:
                 coefficients = numpy.vstack((coeffs,coeffs_p))
