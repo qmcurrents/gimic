@@ -23,7 +23,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/cmake/downloade
 find_package( PythonLibs REQUIRED )
 include_directories( ${PYTHON_INCLUDE_DIRS} )
 find_package( NumPy REQUIRED )
-include_directories( ${PYTHON_NUMPY_INCLUDE_DIR} )
+include_directories( ${NUMPY_INCLUDE_DIRS} )
 
 # Set RPATH for MACOSX to fix policy warning
 set( CMAKE_MACOSX_RPATH 1 )
