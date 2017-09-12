@@ -35,9 +35,10 @@ set(sources
     )
 
 
-add_library(gimic2
+add_library( gimic2
     ${sources}
     )
+set_property( TARGET gimic2 PROPERTY POSITION_INDEPENDENT_CODE ON )
 
 if (CYTHON_FOUND)
     set_source_files_properties(
