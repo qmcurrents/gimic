@@ -20,6 +20,9 @@ matrix:
 install:
   - pip install -r requirements.txt
 
+virtualenv:
+  system_site_packages: true
+
 script:
   - ./setup
   - cd build
