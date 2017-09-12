@@ -19,6 +19,15 @@ endif()
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/cmake/custom)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/cmake/downloaded)
 
+# Find Python and NumPy
+find_package( PythonLibs REQUIRED )
+include_directories( ${PYTHON_INCLUDE_DIRS} )
+find_package( NumPy REQUIRED )
+include_directories( ${PYTHON_NUMPY_INCLUDE_DIR} )
+
+# Set RPATH for MACOSX to fix policy warning
+set( CMAKE_MACOSX_RPATH 1 )
+
 # included cmake modules
 include(autocmake_fc)
 include(autocmake_cc)
