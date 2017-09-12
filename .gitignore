@@ -13,3 +13,4 @@ lib/*
 share/*
 cmake/bump-version
 venv/
+*.DS_Store

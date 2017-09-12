@@ -35,7 +35,7 @@ set(sources
     )
 
 
-add_library(gimic2 SHARED
+add_library(gimic2
     ${sources}
     )
 
@@ -51,7 +51,7 @@ cython_add_module(gimic
     gimic.pyx 
     )
 target_link_libraries(gimic 
-    gimic2
+    gimic2 ${PYTHON_LIBRARIES}
     )
 
 cython_add_module(gengauss
@@ -59,7 +59,7 @@ cython_add_module(gengauss
     gengauss.pyx 
     )
 target_link_libraries(gengauss
-    gimic2
+    gimic2 ${PYTHON_LIBRARIES}
     )
 install(TARGETS gimic gengauss
     ARCHIVE DESTINATION ${PYTHON_SITE_INSTALL_DIR}
