@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#!/usr/bin/env python
 
 import BasisSet
 import os.path
@@ -150,7 +150,7 @@ class FCHK (object) :
             exponents = primitive_exp[start:start+nprim]
             coefficients = primitive_coeff[start:start+nprim]
             coefficients_p =None
-            if primitive_coeff_p != None:
+            if primitive_coeff_p is not None:
                 if numpy.nonzero(primitive_coeff_p[start:start+nprim])[0].size !=0 :
                     coefficients_p = primitive_coeff_p[start:start+nprim]
             iatom = shell2atom[ishell]
