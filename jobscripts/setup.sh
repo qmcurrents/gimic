@@ -10,7 +10,7 @@ do
     then
         AGE=$(( $(date -r $file +%s) - $(date -r $SCRIPT_OUT +%s) ))
     else
-        AGE=-1
+        AGE=1
     fi
     if [ "$AGE" -gt 0 ] 
     then 
