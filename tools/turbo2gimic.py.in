@@ -28,6 +28,9 @@ def main():
     for i in range(1,len(atoms)):
         a=atoms[i]
         sym=string.upper(a.element.symbol)
+        if sym == 'Q':
+            sys.stderr.write("\n*** ERROR ***\nAtoms without basis functions should be removed from the control file \n\n")
+            sys.exit(1)
         b=basis[sym]
         print float(a.element.number),'  ', 1, b
         print "%2s%2i%20.12f%20.12f%20.12f" % \
