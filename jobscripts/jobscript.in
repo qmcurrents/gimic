@@ -1,12 +1,10 @@
 #!/bin/bash -l
 #SBATCH -p normal
-##SBATCH -n 16             # number of cores
 #SBATCH -t 24:00:00        # time as hh:mm:ss
-##SBATCH -J current-profile
 #SBATCH -e jobfile.err%J
 #SBATCH -o jobfile.out%J
-#SBATCH --mail-type=END
-#SBATCH --mail-user=maria.dimitrova@helsinki.fi
+##SBATCH --mail-type=END
+##SBATCH --mail-user=maria.dimitrova@helsinki.fi
 
 # This jobscript takes three arguments: 
 # $1 is the working directory for the calculation
