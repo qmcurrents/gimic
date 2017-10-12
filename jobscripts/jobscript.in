@@ -50,20 +50,20 @@ completed=0
 for ((i=0; i<$whole; i++)) 
 do 
     for ((j=0; j<$parallel; j++))
-    do 
-	index=$(($i+$j*$whole))
-	grepstring=""
-	if [ -f "$wrkdir/gimic.$index.out" ]
-	then
-	    echo "The file $wrkdir/gimic.$index.out already exists."
-	    grepstring=$(grep "wall" $wrkdir/gimic.$index.out)
-	    echo "$grepstring"
-	fi
+    do  
+        index=$(($i+$j*$whole))
+        grepstring=""
+        if [ -f "$wrkdir/gimic.$index.out" ]
+        then
+            echo "The file $wrkdir/gimic.$index.out already exists."
+            grepstring=$(grep "wall" $wrkdir/gimic.$index.out)
+            echo "$grepstring"
+        fi
 
-	if [ -z "$grepstring" ]
-	then
-	    cd $wrkdir && gimic gimic.$index.inp > $wrkdir/gimic.$index.out & 
-	fi
+        if [ -z "$grepstring" ]
+        then
+            cd $wrkdir && gimic gimic.$index.inp > $wrkdir/gimic.$index.out & 
+        fi
     done 
     wait
     completed=$(( $completed+$parallel ))
@@ -71,13 +71,14 @@ do
     echo "$completed of $filenum completed"; echo
 done
 
-if [[ "$remain" -gt "0" ]]; then
+if [[ "$remain" -gt 0 ]]; then
     for ((i=0; i<$remain; i++))
     do  
-	(cd $wrkdir && gimic $wrkdir/gimic.$(($parallel*$whole+$i)).inp >  $wrkdir/gimic.$(($parallel*$whole+$i)).out &) 
+        (cd $wrkdir && gimic $wrkdir/gimic.$(($parallel*$whole+$i)).inp >  $wrkdir/gimic.$(($parallel*$whole+$i)).out &) 
     done
 fi
 echo "$filenum of $filenum completed"
+
 
 rm -rf GIMIC* 
 
@@ -107,9 +108,9 @@ printf "\nData saved in current_profile.dat\n\n"
 
 gnuplot << EOF                                                                                   
 
-set format x "%4.1f"
-set format y "%4.1f"
-set format z "%4.1f"
+set format x "%5.2f"
+set format y "%5.2f"
+set format z "%5.2f"
 unset label
 set xlabel "Distance [bohr]"
 set ylabel "dJ/dx [nA/T / bohr]"
