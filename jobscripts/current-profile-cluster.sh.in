@@ -359,6 +359,6 @@ then
     $parallel=$($nsteps)
 fi
 
-sbatch --ntasks="$parallel" --job-name="$dirname" SCRIPTS_DIR/jobscript "$wrkdirname" "$parallel" "$heading" 
+sbatch --ntasks="$parallel" --job-name="$dirname" @SCRIPTS_DIR@/jobscript "$wrkdirname" "$parallel" "$heading"
 echo
 
