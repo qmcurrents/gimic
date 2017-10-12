@@ -75,7 +75,7 @@ if ( ${offsets[2]}!=0) set arrow from (${offsets[2]}), graph 0 to (${offsets[2]}
 
 set output "current_profile_$atom1_idx.$atom2_idx-dia-para.eps"
 plot "current_profile.dat" u (\$1-${offsets[0]}):3 w l ls 1 title "Diatropic", "current_profile.dat" u (\$1-${offsets[0]}):4 w l ls 2 title "Paratropic"
-# for the weird bond 23.9 in BNBN: 
+# for the weird bond 23.9 in BNBN when the x axis starts at x>0: 
 #plot "current_profile.dat" u (\$1+${offsets[0]}):3 w l ls 1 title "Diatropic", "current_profile.dat" u (\$1+${offsets[0]}):4 w l ls 2 title "Paratropic"
 
 EOF
@@ -195,6 +195,8 @@ distanceAfter=$( awk -v Cx=$Cx -v Cy=$Cy -v Cz=$Cz -v Bx=$Bx -v By=$By -v Bz=$Bz
                   dist=sqrt( (Bx-Cx)*(Bx-Cx) + (By-Cy)*(By-Cy) + (Bz-Cz)*(Bz-Cz) ); print dist}' )
 echo "DistanceA centre to bond: $distanceAfter"
 offsetAfter=$( awk -v dist=$distance -v offset=$offset -v after=$distanceAfter 'BEGIN{print dist-after-offset}' )
+#offsetAfter=$( awk -v dist=$distance -v offset=$offset -v after=$distanceAfter 'BEGIN{print -(dist-after)}' )
+
 }
 
 
@@ -202,8 +204,8 @@ function calculateDistanceBefore() {
 distanceBefore=$( awk -v Cx=$Cx -v Cy=$Cy -v Cz=$Cz -v Bx=$Bx -v By=$By -v Bz=$Bz BEGIN'{
                   dist=sqrt( (Bx-Cx)*(Bx-Cx) + (By-Cy)*(By-Cy) + (Bz-Cz)*(Bz-Cz) ); print dist}' )
 echo "DistanceB centre to bond: $distanceBefore"
-#offsetBefore=$( awk -v dist=$distance -v start=$start 'BEGIN{print dist-start}' )
-offsetBefore=$( awk -v distB=$distanceBefore 'BEGIN{ print -distB}' )
+offsetBefore=$( awk -v dist=$distance -v start=$start 'BEGIN{print dist-start}' )
+#offsetBefore=$( awk -v distB=$distanceBefore 'BEGIN{ print -distB}' )
 }
 
 
@@ -267,6 +269,7 @@ then
     echo "Enter the new y range:"
     echo "Bottom limit: "; read bottom
     echo "Upper limit: "; read upper
+    mv current_profile_$atom1_idx.$atom2_idx-dia-para.eps current_profile_$atom1_idx.$atom2_idx-dia-para-full.eps
     createPlot;
 fi
 
