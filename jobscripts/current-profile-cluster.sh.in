@@ -128,6 +128,7 @@ awk -v a1=$atom1 -v a2=$atom2 -v a3=$atom3 '{
 
 }
 
+
 printf "\nStarting current profile analysis\n"
 printf "\nUsing atomic units of length\n\n"
 
@@ -337,13 +338,44 @@ do
 done    
 echo "done"
 
+# sanity check for the integration plane
+
+echo "Do you want to create an xyz file showing the ends of the integration plane?"
+echo "Press [y] or any other key to skip"; read accept
+if  [ ! -z $accept ] && [ $accept == "y" ]
+then
+(cd ./$dirname/ && gimic --dryrun gimic.0.inp | grep "grid points" )
+#    gimic --dryrun gimic.0.inp
+    mv ./$dirname/grid.xyz ./$dirname/grid.check.xyz
+    last=$(ls ./$dirname/*inp | wc -l)
+    last=$(( $last -1 ))
+    (cd ./$dirname/ && gimic --dryrun gimic.$last.inp )
+    grep X ./$dirname/grid.xyz >> ./$dirname/grid.check.xyz
+    atomNum=$(head -n 1 ./$dirname/grid.xyz)
+    atomNum=$(( $atomNum + 4 ))
+    sed -i "1s/.*/$atomNum/" ./$dirname/grid.check.xyz
+
+    echo
+    echo "The file grid.check.xyz created at $wrkdir/grid.check.xyz"
+    echo "You can now put this script to the background and inspect the molecule."
+    echo "Bring the script to foreground to run the calculation."
+    read accept # just wait
+
+    echo "Current profile analysis resumed." 
+fi
+
+
+
+
 # Submit the calculation
 
 wrkdir=$(pwd)
 wrkdir=$(echo $wrkdir/$dirname)
+
+
 echo "Working directory:"; echo $wrkdir; echo
 
-echo "Running Gimic calculations..."
+#echo "Running Gimic calculations..."
 
 filenum=$(ls $wrkdir/*inp | wc -l)
 #filenum=$(echo $nsteps)
