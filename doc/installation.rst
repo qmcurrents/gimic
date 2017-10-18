@@ -3,7 +3,6 @@
 Installation
 ============
 
-Branch "stable":: 
 GIMIC requires CMake to configure and build. CMake is invoked via a front-end script called ``setup``::  
 
   $ ./setup
