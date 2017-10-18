@@ -3,7 +3,7 @@
 Installation
 ============
 
-GIMIC requires CMake to configure and build. CMake is invoked via a front-end script called ``setup``::  
+GIMIC requires CMake to configure and build. CMake is invoked via a front-end script called ``setup``::
 
   $ ./setup
   $ cd build
@@ -14,12 +14,12 @@ To see all available options, run::
 
   $ ./setup --help
 
-Branch "master":: 
+Branch "master"::
 GIMIC requires CMake to configure and build.::
 
   $ mkdir build
   $ cd build
-  $ cmake ../ 
+  $ cmake ../
   $ make
   $ make install
 
