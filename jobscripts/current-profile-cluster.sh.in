@@ -251,22 +251,22 @@ echo "MAGNETIC FIELD DIRECTION"
 MF=z
 valueInp MF $MF
 
-rotation=0.0
-printf  "\nRotation from the normal to the bond at the bond centre: $rotation degrees. Do you accept?\nPress [n] to modify\n"
-read accept;
-if [ ! -z $accept ] && [ $accept == "n" ]
-then
-    printf "Enter the index of the atom, which the plane has to go through: "
-    read atom3;
-    rotation=$(calculateRot);
-    
-    printf "Do you accept rotation to $rotation degrees?\nPress [n] to modify\n"
-    read accept;
-    if [ ! -z $accept ] && [ $accept == "n" ]
-    then
-        printf "rotation="; read rotation
-    fi  
-fi
+# rotation=0.0
+# printf  "\nRotation from the normal to the bond at the bond centre: $rotation degrees. Do you accept?\nPress [n] to modify\n"
+# read accept;
+# if [ ! -z $accept ] && [ $accept == "n" ]
+# then
+#     printf "Enter the index of the atom, which the plane has to go through: "
+#     read atom3;
+#     rotation=$(calculateRot);
+#     
+#     printf "Do you accept rotation to $rotation degrees?\nPress [n] to modify\n"
+#     read accept;
+#     if [ ! -z $accept ] && [ $accept == "n" ]
+#     then
+#         printf "rotation="; read rotation
+#     fi  
+# fi
 
 
 string="s/@bond@/$bond/; s/@fixed@/$fixed/; s/@distance@/$distance/; s/@up@/$up/; s/@down@/$down/; s/@MF@/$MF/; s/@spacingX@/$spacingX/; s/@spacingY@/$spacingY/; s/@spacingZ@/$spacingZ/;  s/@rotation@/$rotation/; "
