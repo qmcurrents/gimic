@@ -23,7 +23,7 @@ project_version = '@PROJECT_VERSION@'
 
 gimic = os.path.join('@CMAKE_CURRENT_BINARY_DIR@', 'gimic')
 if not os.path.exists(gimic):
-    print "Could not find program: ", work_dir
+    print("Could not find program: ", work_dir)
 
 parser = ArgumentParser(description="Run GIMIC tests",
         epilog="Version @PROJECT_VERSION@")
@@ -60,9 +60,9 @@ def test_vectors():
             continue
         if empty.match(j):
             continue
-        j = map(float, j.split())
-        r = map(float, r.split())
-        v = zip(j, r)
+        j = list(map(float, j.split()))
+        r = list(map(float, r.split()))
+        v = list(zip(j, r))
         for (a, b) in v:
             if abs(a - b) > 1.e-6:
                 return False
@@ -79,20 +79,20 @@ def test_bond_integral():
             intgrl = float(line[30:])
     f.close()
     if abs(intgrl - 11.855308) > 1.e-6:
-        print "Invalid integral", intgrl
+        print("Invalid integral", intgrl)
         return False
     return True
 
 def main():
     if not os.path.exists(work_dir):
-        print "No such directory: ", work_dir
+        print("No such directory: ", work_dir)
     os.chdir(work_dir)
     if args.name[0] == 'vectors':
         result = test_vectors()
     elif args.name[0] == 'bondint':
         result = test_bond_integral()
     else:
-        print "Invalid test: ", args.name[0]
+        print("Invalid test: ", args.name[0])
         return False
     return result
 

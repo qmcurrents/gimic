@@ -171,7 +171,7 @@ def check_opt(sect,key):
     try:
         k=sect[key][0]
     except:
-        print 'You have a typo in the code for key:', key
+        print('You have a typo in the code for key:', key)
         sys.exit(1)
     if k is not None:
         if k.is_set():
@@ -190,21 +190,21 @@ def check_grid(grid):
                 'radius')
         for i in required:
             if not check_opt(grid,i):
-                print err % (i,arg)
+                print(err % (i,arg))
                 sys.exit(1)
         for i in ignore:
             if check_opt(grid,i):
-                print warn % (i,arg)
+                print(warn % (i,arg))
         flag=0
         if check_opt(grid, 'spacing'):
             flag=1
         if check_opt(grid, 'grid_points'):
             flag=flag+2
         if flag == 0:
-            print "Error: Either spacing or grid_points must be set"
+            print("Error: Either spacing or grid_points must be set")
             sys.exit(1)
         if flag == 3:
-            print "Error: Both spacing and grid_points set!"
+            print("Error: Both spacing and grid_points set!")
             sys.exit(1)
     elif arg == 'file':
         required=('file',)
@@ -213,11 +213,11 @@ def check_grid(grid):
                 'radius', 'lengths','distance', 'spacing', 'map')
         for i in required:
             if not check_opt(grid,i):
-                print err % (i,arg)
+                print(err % (i,arg))
                 sys.exit(1)
         for i in ignore:
             if check_opt(grid,i):
-                print warn % (i,arg)
+                print(warn % (i,arg))
         return
     elif arg == 'bond':
 #        required=('in', 'out', 'up', 'down', 'distance')
@@ -227,13 +227,13 @@ def check_grid(grid):
         wdthgt=0
         for i in required:
             if not check_opt(grid,i):
-                print err % (i,arg)
+                print(err % (i,arg))
                 sys.exit(1)
         if check_opt(grid, 'origin'):
-            print "Error: Keyword 'origin' incompatible with 'bond' grids"
+            print("Error: Keyword 'origin' incompatible with 'bond' grids")
             sys.exit(1)
         if not (check_opt(grid, 'fixpoint') or check_opt(grid, 'fixcoord')):
-            print "Error: Either fixpoint or fixcoord must be specified"
+            print("Error: Either fixpoint or fixcoord must be specified")
             sys.exit(1)
 
 #        if check_opt(grid, 'in'):
@@ -253,55 +253,55 @@ def check_grid(grid):
         if check_opt(grid,'height'):
             wdthgt=wdthgt+1
         if (wdthgt != 0 and wdthgt != 2):
-            print "Error: incomplete specification for width and height"
+            print("Error: incomplete specification for width and height")
             sys.exit(1)
 
         if (wdthgt != 0 and inoutupdown != 0):
-            print "Error: both width/height and in/out/up/down specified"
+            print("Error: both width/height and in/out/up/down specified")
             sys.exit(1)
 
         if (wdthgt == 0 and inoutupdown == 0):
-            print "Error: either width/height or in/out/up/down must be specified"
+            print("Error: either width/height or in/out/up/down must be specified")
             sys.exit(1)
 
         if check_opt(grid,'bond'):
             if check_opt(grid,'coord1') or check_opt(grid,'coord2'):
-                print "Error: Both bond and coord(s) have been specified"
+                print("Error: Both bond and coord(s) have been specified")
                 sys.exit(1)
         elif check_opt(grid,'coord1'):
             if not check_opt(grid,'coord2'):
-                print "Error: coord2 not specified"
+                print("Error: coord2 not specified")
                 sys.exit(1)
             if check_opt(grid,'bond'):
-                print "Error: Both atom(s) and coord(s) have been specified"
+                print("Error: Both atom(s) and coord(s) have been specified")
                 sys.exit(1)
         elif check_opt(grid,'coord2'):
             if not check_opt(grid,'coord1'):
-                print "Error: coord1 not specified"
+                print("Error: coord1 not specified")
                 sys.exit(1)
             if check_opt(grid,'bond'):
-                print "Error: Both atom(s) and coord(s) have been specified"
+                print("Error: Both atom(s) and coord(s) have been specified")
                 sys.exit(1)
         else:
-            print "Error: Invalid bond specification"
+            print("Error: Invalid bond specification")
             sys.exit(1)
 
         for i in ignore:
             if check_opt(grid,i):
-                print warn % (i,arg)
+                print(warn % (i,arg))
     else:
-        print "Error: unknown grid type '%s'" % arg
+        print("Error: unknown grid type '%s'" % arg)
         sys.exit(1)
 
     if grid.getkw('type')[0] == 'even':
         if check_opt(grid,'gauss_order'):
-            print "Error: 'gauss_order' incompatible with type=even grids"
+            print("Error: 'gauss_order' incompatible with type=even grids")
             sys.exit(1)
         if  check_opt(grid,'spacing') and check_opt(grid, 'grid_points'):
-            print "Error: both spacing and grid_points cannot be specified"
+            print("Error: both spacing and grid_points cannot be specified")
             sys.exit(1)
         if not check_opt(grid,'spacing') and not check_opt(grid, 'grid_points'):
-            print "Error: either spacing or grid_points must be specified"
+            print("Error: either spacing or grid_points must be specified")
             sys.exit(1)
 
 #    if grid.getkw('type')[0] == 'gauss':
@@ -318,16 +318,16 @@ def check_top(top):
     calc=top.getkw('calc')[0]
     allow={'cdens':1, 'integral':1, 'divj':1, 'edens':1, 'gimlet':1}
     ortho = ['T', 'X']
-    if not allow.has_key(calc):
-        print 'Error: unknown option calc = ', calc
+    if calc not in allow:
+        print('Error: unknown option calc = ', calc)
         sys.exit(1)
     omagn = top['magnet'][0].is_set()
     pmagn = top['magnet_axis'][0].is_set()
     if omagn == True and pmagn == True:
-        print 'Error: Both magnet vector and axis set simultaneously!'
+        print('Error: Both magnet vector and axis set simultaneously!')
         sys.exit(1)
     if omagn == False and pmagn == False:
-        print 'Error: Direction of magnetic field must be set!'
+        print('Error: Direction of magnetic field must be set!')
         sys.exit(1)
     if pmagn:
         b = top.getkw('magnet_axis')[0]
