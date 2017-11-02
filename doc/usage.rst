@@ -195,6 +195,40 @@ $ Gaussian2gimic.py --input=benzeneg09.fchk
 Note, for open-shell cases you need to add "gfprint pop=regular iop(10/33=2)"
 and use the Gaussian "log" file instead of the "fchk" file. 
 
+Example input for benzene triplet dication 
+
+::
+
+    %LindaWorkers=cib26-2
+    %NProcShared=20
+    %Chk=benzeneg09.chk
+    %mem=2000mb
+
+    #p POP=FULL GFPrint Symmetry=None B3LYP/DEF2TZVP SCF=Tight NMR=GIAO Int=NoBasisTransform IOp(10/33=2)
+
+    Benzene Gaussian NMR example triplet dication
+
+    2 3
+    C    1.2049777911    0.6956942520    0.0000000000
+    C    1.2049777911   -0.6956942520    0.0000000000
+    C    0.0000000000   -1.3913885041    0.0000000000
+    C   -1.2049777911   -0.6956942520    0.0000000000
+    C   -1.2049777911    0.6956942520    0.0000000000
+    C    0.0000000000    1.3913885041    0.0000000000
+    H    2.1430161769    1.2372709666    0.0000000000
+    H    2.1430161769   -1.2372709666    0.0000000000
+    H    0.0000000000   -2.4745419332    0.0000000000
+    H   -2.1430161769   -1.2372709666    0.0000000000
+    H   -2.1430161769    1.2372709666    0.0000000000
+    H    0.0000000000    2.4745419332    0.0000000000
+
+::
+$ mv file.out > file.log
+$ Gaussian2gimic.py --input=file.log 
+
+For the present example a current strength susceptibility of 8.4 nA/T
+was calculated. 
+
 
 Running GIMIC
 -------------
