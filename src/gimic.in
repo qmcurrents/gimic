@@ -149,20 +149,6 @@ def parse_keywords(args):
     if args.backend:
         inkw.setkw('backend', args.backend)
 
-    #infile='GIMIC.in' + str(os.getpid())
-    #fd=open(infile,'w')
-    #print >>fd, inkw.top
-
-    #fd.close()
-    #if inkw.getkw('calc')[0] == 'gimlet':
-        #if gimlet is None:
-            #print "The gimlet component is not available!"
-            #sys.exit(1)
-        #os.system(GIMLET_EXECUTABLE + ' < ' + infile)
-    #else:
-        #os.system(GIMIC_EXECUTABLE + ' < ' + infile)
-    #if not args.keep:
-        #os.unlink(infile)
     inkw.run_callbacks(top)
     return inkw
 
@@ -236,18 +222,6 @@ def check_grid(grid):
             print("Error: Either fixpoint or fixcoord must be specified")
             sys.exit(1)
 
-#        if check_opt(grid, 'in'):
-#            inoutupdown=inoutupdown+1
-#        if check_opt(grid, 'out'):
-#            inoutupdown=inoutupdown+1
-#        if check_opt(grid, 'up'):
-#            inoutupdown=inoutupdown+1
-#        if check_opt(grid, 'down'):
-#            inoutupdown=inoutupdown+1
-#        if (inoutupdown != 0 and inoutupdown != 4):
-#            print "Error: incomplete specification for in/out and up/down"
-#            sys.exit(1)
-
         if check_opt(grid,'width'):
             wdthgt=wdthgt+1
         if check_opt(grid,'height'):
@@ -303,16 +277,6 @@ def check_grid(grid):
         if not check_opt(grid,'spacing') and not check_opt(grid, 'grid_points'):
             print("Error: either spacing or grid_points must be specified")
             sys.exit(1)
-
-#    if grid.getkw('type')[0] == 'gauss':
-#        if check_opt(grid,'spacing'):
-#            print "Error: 'spacing' incompatible with type=gauss grids"
-#            sys.exit(1)
-#        if not (check_opt(grid,'gauss_order') and \
-#                check_opt(grid, 'grid_points')):
-#            print "Error: both 'grid_points' and 'gauss_order' must be \
-#specified"
-#            sys.exit(1)
 
 def check_top(top):
     calc=top.getkw('calc')[0]
