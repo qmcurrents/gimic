@@ -73,13 +73,13 @@ def test_bond_integral():
     if not run_gimic('bondint'):
         return False
     f = open('bondint.out', 'r')
-    intgrl = -1.e10
+    integral = -1.e10
     for line in f:
         if 'Induced current (nA/T)  :' in line:
-            intgrl = float(line[30:])
+            integral = float(line[30:])
     f.close()
-    if abs(intgrl - 11.855308) > 1.e-6:
-        print("Invalid integral", intgrl)
+    if abs(integral - 11.855308) > 1.e-6:
+        print("Invalid integral", integral)
         return False
     return True
 
