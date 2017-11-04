@@ -259,10 +259,10 @@ echo "Press [n] to calculate the direction automatically" # TODO: or [e] to ente
 read accept;
 if [ ! -z $accept ] && [ $accept == "n" ]
 then
-   maximise_projection opt.xyz > 3D/field.dat
-   MFx=$( cat 3D/field.dat | sed -e 's#{#_#g; s#}#_#g; s#,#_#g' | awk -F [_] '{ {print $2} }')
-   MFy=$( cat 3D/field.dat | sed -e 's#{#_#g; s#}#_#g; s#,#_#g' | awk -F [_] '{ {print $3} }')
-   MFz=$( cat 3D/field.dat | sed -e 's#{#_#g; s#}#_#g; s#,#_#g' | awk -F [_] '{ {print $4} }')
+   maximise_projection opt.xyz > $dirname/field.dat
+   MFx=$( cat $dirname/field.dat | sed -e 's#{#_#g; s#}#_#g; s#,#_#g' | awk -F [_] '{ {print $2} }')
+   MFy=$( cat $dirname/field.dat | sed -e 's#{#_#g; s#}#_#g; s#,#_#g' | awk -F [_] '{ {print $3} }')
+   MFz=$( cat $dirname/field.dat | sed -e 's#{#_#g; s#}#_#g; s#,#_#g' | awk -F [_] '{ {print $4} }')
 fi
 
 echo "Magnetic field vector coordinates: ($MFx; $MFy; $MFz)"
@@ -447,7 +447,7 @@ do
     echo "$completed of $filenum completed"; echo
 done
 
-if [[ "$remain" -gt 0 ]]; then
+if [ "$remain" -gt 0 ]; then
     for ((i=0; i<$remain; i++))
     do  
         (cd $wrkdir && gimic $wrkdir/gimic.$(($parallel*$whole+$i)).inp >  $wrkdir/gimic.$(($parallel*$whole+$i)).out &) 
