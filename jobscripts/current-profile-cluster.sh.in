@@ -248,9 +248,31 @@ then
 fi
 
 echo "MAGNETIC FIELD DIRECTION"
-MF=z
-valueInp MF $MF
 
+# default along the Z axis
+MFx=0.0
+MFy=0.0
+MFz=1.0
+
+echo "Do you accept the default MF orientation along the Z axis?"
+echo "Press [n] to calculate the direction automatically" # TODO: or [e] to enter manually"
+
+read accept;
+if [ ! -z $accept ] && [ $accept == "n" ]
+then
+   maximise_projection opt.xyz > 3D/field.dat
+   MFx=$( cat 3D/field.dat | sed -e 's#{#_#g; s#}#_#g; s#,#_#g' | awk -F [_] '{ {print $2} }')
+   MFy=$( cat 3D/field.dat | sed -e 's#{#_#g; s#}#_#g; s#,#_#g' | awk -F [_] '{ {print $3} }')
+   MFz=$( cat 3D/field.dat | sed -e 's#{#_#g; s#}#_#g; s#,#_#g' | awk -F [_] '{ {print $4} }')
+fi
+
+echo "Magnetic field vector coordinates: ($MFx; $MFy; $MFz)"
+
+
+
+
+#MF=z
+#valueInp MF $MF
 # rotation=0.0
 # printf  "\nRotation from the normal to the bond at the bond centre: $rotation degrees. Do you accept?\nPress [n] to modify\n"
 # read accept;
@@ -269,7 +291,8 @@ valueInp MF $MF
 # fi
 
 
-string="s/@bond@/$bond/; s/@fixed@/$fixed/; s/@distance@/$distance/; s/@up@/$up/; s/@down@/$down/; s/@MF@/$MF/; s/@spacingX@/$spacingX/; s/@spacingY@/$spacingY/; s/@spacingZ@/$spacingZ/;  s/@rotation@/$rotation/; "
+string="s/@bond@/$bond/; s/@fixed@/$fixed/; s/@distance@/$distance/; s/@up@/$up/; s/@down@/$down/; s/@spacingX@/$spacingX/; s/@spacingY@/$spacingY/; s/@spacingZ@/$spacingZ/;  s/@rotation@/$rotation/; s/@MFx@/$MFx/; s/@MFy@/$MFy/; s/@MFz@/$MFz/;"
+#string="s/@bond@/$bond/; s/@fixed@/$fixed/; s/@distance@/$distance/; s/@up@/$up/; s/@down@/$down/; s/@MF@/$MF/; s/@spacingX@/$spacingX/; s/@spacingY@/$spacingY/; s/@spacingZ@/$spacingZ/;  s/@rotation@/$rotation/; "
 sed "$string" @SCRIPTS_DIR@/gimic.int.gcur > $dirname/gimic.int.gcur
 
 #end=$( awk -v delta=$delta -v start=$start 'BEGIN{print delta-start}' ) 
@@ -371,8 +394,6 @@ fi
 
 wrkdir=$(pwd)
 wrkdir=$(echo $wrkdir/$dirname)
-
-
 echo "Working directory:"; echo $wrkdir; echo
 
 #echo "Running Gimic calculations..."

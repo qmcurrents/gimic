@@ -8,7 +8,8 @@ xdens="../XDENS"
 debug=1           # debug print level
 openshell=false 
 #show_axis=true   # mark "up" axis in .xyz files
-magnet_axis=@MF@ #[-] i,j,k || x,y,z -> align magnet along axis
+#magnet_axis=@MF@ #[-] i,j,k || x,y,z -> align magnet along axis
+magnet=[@MFx@, @MFy@, @MFz@]   # magnet vector
 #magnet=[0.0, -1.0, 0.0]   # magnet vector
 #scale_vectors=1.0
 
@@ -37,6 +38,6 @@ Grid(bond) {                    # define grid orthogonal to a bond
 #     down=@down@
      height=[@down@,@up@]
      width=[@start@,@end@]
-     rotation=[0.0,0.0,@rotation@]      # Rotation of (i,j,k) -> (i',j',k') degrees
+#     rotation=[0.0,0.0,@rotation@]      # Rotation of (i,j,k) -> (i',j',k') degrees
 }
 
