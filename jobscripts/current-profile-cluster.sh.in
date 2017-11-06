@@ -252,7 +252,7 @@ echo "MAGNETIC FIELD DIRECTION"
 # default along the Z axis
 MFx=0.0
 MFy=0.0
-MFz=1.0
+MFz=-1.0
 
 echo "Do you accept the default MF orientation along the Z axis?"
 echo "Press [n] to calculate the direction automatically" # TODO: or [e] to enter manually"
@@ -261,9 +261,9 @@ read accept;
 if [ ! -z $accept ] && [ $accept == "n" ]
 then
    maximise_projection opt.xyz > $dirname/field.dat
-   MFx=$( cat $dirname/field.dat | sed -e 's#{#_#g; s#}#_#g; s#,#_#g' | awk -F [_] '{ {print $2} }')
-   MFy=$( cat $dirname/field.dat | sed -e 's#{#_#g; s#}#_#g; s#,#_#g' | awk -F [_] '{ {print $3} }')
-   MFz=$( cat $dirname/field.dat | sed -e 's#{#_#g; s#}#_#g; s#,#_#g' | awk -F [_] '{ {print $4} }')
+   MFx=$( cat $dirname/field.dat | sed -e 's#{#_#g; s#}#_#g; s#,#_#g' | awk -F [_] '{ {print -$2} }')
+   MFy=$( cat $dirname/field.dat | sed -e 's#{#_#g; s#}#_#g; s#,#_#g' | awk -F [_] '{ {print -$3} }')
+   MFz=$( cat $dirname/field.dat | sed -e 's#{#_#g; s#}#_#g; s#,#_#g' | awk -F [_] '{ {print -$4} }')
 fi
 
 echo "Magnetic field vector coordinates: ($MFx; $MFy; $MFz)"
