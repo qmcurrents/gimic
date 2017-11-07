@@ -97,13 +97,9 @@ fi
 
 echo "Magnetic field vector coordinates: ($MFx; $MFy; $MFz)"
 
-#Practice has shown that for delta=0.1, the spacing value should be 0.02 in order to have at least 9 Gaussian points per slice
-# If the delta is smaller than 0.1, recalculate:
-# spacingFactor=$( awk -v delta=$delta 'BEGIN{ printf("%.4f",delta/0.02) }' )    # how many times smaller the chosen delta value is
-# spacing=$( awk -v f=$spacingFactor 'BEGIN{ printf("%.3f",0.013*f) }' )
-spacingX=$( awk -v delta=$delta 'BEGIN{ f=delta/0.02; printf("%.3f",1.00*f); }' )
-spacingY=$( awk -v delta=$delta 'BEGIN{ f=delta/0.02; printf("%.3f",0.01*f); }' )
-spacingZ=$( awk -v delta=$delta 'BEGIN{ f=delta/0.02; printf("%.3f",0.01*f); }' )
+spacingX=0.02
+spacingY=0.02
+spacingZ=0.02
 
 printf "\n\nSPACING\n"
 printf  "\nDo you accept spacing=[$spacingX, $spacingY, $spacingZ]?\nPress [n] to change\n"
@@ -116,7 +112,7 @@ then
 fi
 
 
-string="s/@bond@/$bond/; s/@fixed@/$fixed/; s/@distance@/$distance/; s/@up@/$up/; s/@down@/$down/; s/@start@/$start/; s/@out@/$out/; s/@FX@/$Fx/; s/@FY@/$Fy/; s/@FZ@/$Fz/; s/@MFx@/$MFx/; s/@MFy@/$MFy/; s/@MFz@/$MFz/; s/@spacingX@/$spacingX/; s/@spacingY@/$spacingY/; s/@spacingZ@/$spacingZ/; "
+string="s/@bond@/$bond/; s/@fixed@/$fixed/; s/@distance@/$distance/; s/@up@/$up/; s/@down@/$down/; s/@start@/$start/; s/@end@/$out/; s/@FX@/$Fx/; s/@FY@/$Fy/; s/@FZ@/$Fz/; s/@MFx@/$MFx/; s/@MFy@/$MFy/; s/@MFz@/$MFz/; s/@spacingX@/$spacingX/; s/@spacingY@/$spacingY/; s/@spacingZ@/$spacingZ/; "
 sed "$string" @SCRIPTS_DIR@/gimic.Inp > ./$dirname/gimic.inp
 
 printf "Performing dryrun...\n\n"
