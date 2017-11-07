@@ -107,7 +107,7 @@ then
 fi
 
 
-string="s/@bond@/$bond/; s/@fixed@/$fixed/; s/@distance@/$distance/; s/@up@/$up/; s/@down@/$down/; s/@spacing@/$spacing/g; s/@start@/$start/; s/@out@/$out/; s/@FX@/$Fx/; s/@FY@/$Fy/; s/@FZ@/$Fz/ s/@MFx@/$MFx/; s/@MFy@/$MFy/; s/@MFz@/$MFz/; "
+string="s/@bond@/$bond/; s/@fixed@/$fixed/; s/@distance@/$distance/; s/@up@/$up/; s/@down@/$down/; s/@spacing@/$spacing/g; s/@start@/$start/; s/@out@/$out/; s/@FX@/$Fx/; s/@FY@/$Fy/; s/@FZ@/$Fz/; s/@MFx@/$MFx/; s/@MFy@/$MFy/; s/@MFz@/$MFz/; "
 sed "$string" @SCRIPTS_DIR@/gimic.Inp > ./$dirname/gimic.inp
 
 printf "Performing dryrun...\n\n"
