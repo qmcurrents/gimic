@@ -39,13 +39,14 @@ echo 'python $GIMIC_HOME/install/bin/turbo2gimic.py > MOL; '
 echo 'alias gim="$GIMIC_HOME/jobscripts/gimic-run.sh" '
 echo 'alias gmol="python $GIMIC_HOME/jobscripts/turbo2gimic.py > MOL" '
 echo 'alias grid="xmakemol -f grid.xyz &" '
-echo 'alias dgrid="gimic --dryrun bond_integral.inp > /dev/null && xmakemol -f grid.xyz &" '
 echo 'alias plotcurrent=" $GIMIC_HOME/jobscripts/plot-current-profile.sh" '
-echo 'alias revplotcurrent="gnuplot $GIMIC_HOME/jobscripts/current-profile-plot-reverse.gnu" '
+echo "alias revcurrent=\"mv current_profile.dat current_profile.dat.1 && awk '{printf \"%.6f\t%.6f\t%.6f\t%.6f\n\", \$1, -\$2, -\$4, -\$3}' current_profile.dat.1 > current_profile.dat\" "
+#echo 'alias revplotcurrent="gnuplot $GIMIC_HOME/jobscripts/current-profile-plot-reverse.gnu" '
 #echo 'alias gpng="file=$(ls *para.eps) && convert -density 300 $file -resize 1024x1024 $file.png" '
-echo 'alias gsq="$GIMIC_HOME/jobscripts/squares-profile.sh" '
+#echo 'alias gsq="$GIMIC_HOME/jobscripts/squares-profile.sh" '
 echo 'alias geps="display *eps &" '
 echo 'alias intprofile="$GIMIC_HOME/jobscripts/intprofile.sh" '
+echo 'alias 3g="$GIMIC_HOME/3D-run.sh" '
 echo
 echo "Note: on a cluster replace the name of the script below to current-profile-cluster.sh"
 echo 'alias gcurrent="$GIMIC_HOME/jobscripts/current-profile-local.sh" '
@@ -53,3 +54,5 @@ echo
 echo "function anprofile() { awk -v lower=$1 -v upper=$2 '{ if (($1 >= lower) && ($1 <= upper)) { total+=$2; dia+=$3; para+=$4; } } END { printf("\nTotal current: %f\nDiatropic: %f\nParatropic: %f\n\n", total, dia, para); } ' current_profile.dat ;  }; "
 echo
 echo 'function dryrun() { gimic --dryrun "$@" > /dev/null ; xmakemol -f grid.xyz;  }; '
+echo
+echo 'function critpoints() { CURRDIR=$(pwd); $GIMIC_HOME/crit_pts.sh $CURRDIR; };'

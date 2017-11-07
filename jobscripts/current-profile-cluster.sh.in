@@ -155,7 +155,7 @@ then
     if [ -d $dirname ] 
     then
 	printf "\n\n*** Directory already exists.\n\nCalculation parameters:\n"
-	grep "bond=\|fixed=\|up=\|down=\|MF=" $dirname/gimic.int.gcur
+	grep "bond=\|fixed=\|up=\|down=\|MF=" $dirname/gimic.Inp
 	echo "Enter [y] to overwrite or any key to exit."; read accept
 	if [ -z $accept ] || [ ! $accept == "y" ]  # if the variable is empty or different from "y", exit 
 	then 
@@ -260,7 +260,7 @@ echo "Press [n] to calculate the direction automatically" # TODO: or [e] to ente
 read accept;
 if [ ! -z $accept ] && [ $accept == "n" ]
 then
-   maximise_projection opt.xyz > $dirname/field.dat
+   maximise_projection coord.xyz > $dirname/field.dat
    MFx=$( cat $dirname/field.dat | sed -e 's#{#_#g; s#}#_#g; s#,#_#g' | awk -F [_] '{ {print -$2} }')
    MFy=$( cat $dirname/field.dat | sed -e 's#{#_#g; s#}#_#g; s#,#_#g' | awk -F [_] '{ {print -$3} }')
    MFz=$( cat $dirname/field.dat | sed -e 's#{#_#g; s#}#_#g; s#,#_#g' | awk -F [_] '{ {print -$4} }')
@@ -293,7 +293,7 @@ echo "Magnetic field vector coordinates: ($MFx; $MFy; $MFz)"
 
 string="s/@bond@/$bond/; s/@fixed@/$fixed/; s/@distance@/$distance/; s/@up@/$up/; s/@down@/$down/; s/@spacingX@/$spacingX/; s/@spacingY@/$spacingY/; s/@spacingZ@/$spacingZ/;  s/@rotation@/$rotation/; s/@MFx@/$MFx/; s/@MFy@/$MFy/; s/@MFz@/$MFz/;"
 #string="s/@bond@/$bond/; s/@fixed@/$fixed/; s/@distance@/$distance/; s/@up@/$up/; s/@down@/$down/; s/@MF@/$MF/; s/@spacingX@/$spacingX/; s/@spacingY@/$spacingY/; s/@spacingZ@/$spacingZ/;  s/@rotation@/$rotation/; "
-sed "$string" @SCRIPTS_DIR@/gimic.int.gcur > $dirname/gimic.int.gcur
+sed "$string" @SCRIPTS_DIR@/gimic.Inp > $dirname/gimic.Inp
 
 #end=$( awk -v delta=$delta -v start=$start 'BEGIN{print delta-start}' ) 
 
@@ -330,7 +330,7 @@ then
     xend=$tmp
 fi
 string=" s/@start@/$xstart/; s/@end@/$xend/; s/@up@/$xup/; s/@down@/$xdown/"
-sed "$string" $dirname/gimic.int.gcur > $dirname/gimic.0.inp
+sed "$string" $dirname/gimic.Inp > $dirname/gimic.0.inp
 
 printf "\nPerforming a dry run...\n\n"
 (cd ./$dirname/ && gimic --dryrun gimic.0.inp | grep "grid points" )
@@ -357,7 +357,7 @@ do
 #        xend=$tmp
 #    fi
     string=" s/@start@/$xstart/; s/@end@/$xend/"
-    sed "$string" $dirname/gimic.int.gcur > $dirname/gimic.$i.inp
+    sed "$string" $dirname/gimic.Inp > $dirname/gimic.$i.inp
 done    
 echo "done"
 

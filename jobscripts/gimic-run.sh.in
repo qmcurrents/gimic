@@ -1,7 +1,10 @@
 #!/bin/bash
 
-function centroid() { atoms="$@"; for i in $atoms; do awk -v i=$i '{ if (NR == i+1) print $0 }' coord; done | awk '{ x+=$1; y+=$2; z+=$3; n++} END{ print x/n, y/n, z/n; }'; }
-function dista() { awk -v a1="$1" -v a2="$2" '{ if (NR == a1+1) { x+=$1;y+=$2;z+=$3;}; if (NR == a2+1) {x-=$1;y-=$2;z-=$3} } END{ dist=sqrt(x*x+y*y+z*z); print dist*0.5; }' coord ; }
+# Function definitions:
+source /hdd/gimic/jobscripts/functions-def
+# Usage:
+# centroid $atomic_indices_according_to_the_coord_file
+# dista $index_of_atom1 $index_of_atom2
 
 echo
 echo "Bond between the atoms:"
@@ -17,38 +20,20 @@ echo $dirname
 # If we are not in the current_profile folder, check if it exists. If it did, just go there. If it did not, create it and copy the necessary files
 dir=$(pwd | grep "bond_int")
 #echo $dir
-if [ -z $dir ] # if the path does not contain "current_profile", $dir is empty, so the directory either does not exist, or we are not inside it
-then
-    #echo "Currently not in the directory current_profile"
-    if [ -d $dirname ] 
-    then
-        printf "\nDirectory already exists.\nCalculation parameters:\n"
-        grep "bond=\|fixed=\|in=\|out=\|up=\|down=\|MF=" $dirname/bond_integral.inp
-        echo "Enter [y] to overwrite or any key to exit."; read accept
-        if [ -z $accept ] || [ ! $accept == "y" ]  # if the variable is empty or different from "y", exit 
-        then 
-            exit
-        else
-            rm -f $dirname/*out $dirname/*inp # Remove leftover input and output to avoid confusion
-        fi
-    else
-        if [ -e MOL ] && [ -e XDENS ] && [ -e coord ]
-        then
-            mkdir $dirname
-            cp coord $dirname/
-            echo "Directory $dirname created."; echo
-        else
-            echo "Please run the bond integral calculation from a directory containing the files MOL, XDENS and coord"
-            exit
-        fi # end if MOL, XDENS, coord exist
-    fi # end if current_profile_#.#
-fi # end if directory current_profile_#.# exists or we are inside it
 
-echo dista $atom1 $atom2
-echo $(dista $atom1 $atom2)
+checkIfPreviousCalculationExists $dir
+
+# Calculate the distance between the atoms
+echo "Define where between the two atoms the integration plane passes"
+echo "Default: through the midpoint"
+#echo dista $atom1 $atom2
+#echo $(dista $atom1 $atom2)
 
 distance=$( dista $atom1 $atom2 )
 echo distance=$distance
+
+valueInp distance $distance
+
 
 # Coordinates of the centre of the bond:
 BOND=$(centroid $atom1 $atom2)
@@ -59,98 +44,59 @@ Bz=$( echo $BOND | awk '{print $3} ' )
 # echo "Bond centre coordinates:"
 # printf "("$Bx"; "$By"; "$Bz")\n"
 
-echo "Fixed point:"
-while [ -z $fixed ]
-do
-    read fixed # avoid empty value
-done
+echo
 
-in=2
-printf "Define the starting point of integration\nPress [a] to enter atomic indices or press [v] the desired value\n"
-read accept
-echo $accept
-if [ ! -z $accept ] && [ $accept == "a" ]
-then
-    echo "Centroid of atoms: "
-    atoms=0; read atoms
-    echo $atoms
-	CENTROID=$(centroid $atoms)
-	Cx=$( echo $CENTROID | awk '{print $1} ' )
-	Cy=$( echo $CENTROID | awk '{print $2} ' )
-	Cz=$( echo $CENTROID | awk '{print $3} ' )
-	# echo "Centroid:"
-	# printf "("$Cx"; "$Cy"; "$Cz")\n"
-	awk -v Bx=$Bx -v By=$By -v Bz=$Bz -v Cx=$Cx -v Cy=$Cy -v Cz=$Cz BEGIN'{dist=sqrt( (Cx-Bx)*(Cx-Bx) + (Cy-By)*(Cy-By) + (Cz-Bz)*(Cz-Bz) ); print dist}'
-	in=$( awk -v Bx=$Bx -v By=$By -v Bz=$Bz -v Cx=$Cx -v Cy=$Cy -v Cz=$Cz BEGIN'{dist=sqrt( (Cx-Bx)*(Cx-Bx) + (Cy-By)*(Cy-By) + (Cz-Bz)*(Cz-Bz) ); print -dist}' )
-	
-	printf  "Do you accept in="$in"?\nPress [n] to change\n"
-	read accept;
-	if [ ! -z $accept ] && [ $accept == "n" ]
-	then
-	    printf "in="; read in
-	fi
-    elif [ ! -z $accept ] && [ $accept == "v" ]
-    then
-	printf "in="; read in
-	printf  "Do you accept in="$in"?\nPress [n] to change\n"
-	read accept;
-	if [ ! -z $accept ] && [ $accept == "n" ]
-	then
-	    printf "in="; read in
-	fi
-fi # end if accept in 
+# Read the coordinates of atom1:
+A1z=$( awk -v atom1=$atom1 '{ if (NR==(atom1+1)) {print $3} }' coord  )
 
+# Read the coordinates of atom2:
+A2x=$( awk -v atom2=$atom2 '{ if (NR==(atom2+1)) {print $1} }' coord  )
+A2y=$( awk -v atom2=$atom2 '{ if (NR==(atom2+1)) {print $2} }' coord  )
+A2z=$( awk -v atom2=$atom2 '{ if (NR==(atom2+1)) {print $3} }' coord  )
+
+Fx=$(calculateFixedCoord $A2x $A2y $A2z | awk '{print $1}')
+Fy=$(calculateFixedCoord $A2x $A2y $A2z | awk '{print $2}')
+#Fz=$( awk -v A1z=$A1z -v A2z=$A2z 'BEGIN{ print (A1z+A2z)*0.5 }')
+Fz=$( awk -v A1z=$A1z -v A2z=$A2z 'BEGIN{ print A2z }')
+
+echo "Fixed coordinate: ($Fx; $Fy; $Fz)"
+
+
+printf "\n\nSTARTING POINT OF THE INTEGRATION\n"
+userInp start $start
+
+printf "\nEND POINT OF THE INTEGRATION\n"
 out=10
-printf "Do you accept out=$out?\nPress [a] to enter atomic indices or press [v] the desired value\n"
-read accept
-echo $accept
-if [ ! -z "$accept" ] && [ "$accept" == "a" ]
-then
-    echo "Centroid of atoms: "
-    atoms=0; read atoms
-	CENTROID=$(centroid $atoms)
-	Cx=$( echo $CENTROID | awk '{print $1} ' )
-	Cy=$( echo $CENTROID | awk '{print $2} ' )
-	Cz=$( echo $CENTROID | awk '{print $3} ' )
-	echo "Centroid:"
-	printf "("$Cx"; "$Cy"; "$Cz")\n"
-	out=$( awk -v Cx=$Cx -v Cy=$Cy -v Cz=$Cz -v Bx=$Bx -v By=$By -v Bz=$Bz BEGIN'{dist=sqrt( (Bx-Cx)*(Bx-Cx) + (By-Cy)*(By-Cy) + (Bz-Cz)*(Bz-Cz) ); print dist}' )
-	
-	printf  "Do you accept out="$out"?\nPress [n] to change\n"
-	read accept;
-	if [ ! -z "$accept" ] && [ "$accept" == "n" ]
-	then
-	    printf "out="; read out
-	fi
-    elif [ ! -z "$accept" ] && [ "$accept" == "v" ]
-    then
-	printf "out="; read out
-	printf  "Do you accept out="$out"?\nPress [n] to change\n"
-	read accept;
-	if [ ! -z "$accept" ] && [ "$accept" == "n" ]
-	then
-	    printf "out="; read out
-	fi
-fi # end if accept out = 10
+printf "\nDo you accept out=$out bohr?"
+userInp out $out
 
-
+printf "\n\nUPPER AND LOWER BOUNDS OF THE INTEGRATION\n"
 up=10
-down=0
-printf  "Do you accept up=$up and down=$down?\nPress [n] to change\n"
+down=-10
+valueInp up $up 
+valueInp down $down
+
+echo "MAGNETIC FIELD DIRECTION"
+
+# default along the Z axis
+MFx=0.0
+MFy=0.0
+MFz=-1.0
+
+echo "Do you accept the default MF orientation along the Z axis?"
+echo "Press [n] to calculate the direction automatically" # TODO: or [e] to enter manually"
+
 read accept;
 if [ ! -z $accept ] && [ $accept == "n" ]
 then
-    printf "up="; read up
-    printf "down="; read down
+   maximise_projection coord.xyz > $dirname/field.dat
+   MFx=$( cat $dirname/field.dat | sed -e 's#{#_#g; s#}#_#g; s#,#_#g' | awk -F [_] '{ {print -$2} }')
+   MFy=$( cat $dirname/field.dat | sed -e 's#{#_#g; s#}#_#g; s#,#_#g' | awk -F [_] '{ {print -$3} }')
+   MFz=$( cat $dirname/field.dat | sed -e 's#{#_#g; s#}#_#g; s#,#_#g' | awk -F [_] '{ {print -$4} }')
 fi
 
-MF=z
-printf  "Magnetic field direction = $MF. Do you accept?\nPress [n] to change\n"
-read accept;
-if [ ! -z $accept ] && [ $accept == "n" ]
-then
-    printf "MF="; read MF
-fi
+echo "Magnetic field vector coordinates: ($MFx; $MFy; $MFz)"
+
 
 spacing=0.02
 printf  "Do you accept spacing=[$spacing, $spacing, $spacing]?\nPress [n] to change\n"
@@ -161,11 +107,11 @@ then
 fi
 
 
-string="s/@bond@/$bond/; s/@fixed@/$fixed/; s/@distance@/$distance/; s/@up@/$up/; s/@down@/$down/; s/@MF@/$MF/; s/@spacing@/$spacing/g; s/@in@/$in/; s/@out@/$out/"
-sed "$string" @SCRIPTS_DIR@/bond_integral.inp > ./$dirname/bond_integral.inp
+string="s/@bond@/$bond/; s/@fixed@/$fixed/; s/@distance@/$distance/; s/@up@/$up/; s/@down@/$down/; s/@MF@/$MF/; s/@spacing@/$spacing/g; s/@start@/$start/; s/@out@/$out/; s/@FX@/$Fx/; s/@FY@/$Fy/; s/@FZ@/$Fz/ "
+sed "$string" @SCRIPTS_DIR@/gimic.Inp > ./$dirname/gimic.inp
 
 printf "Performing dryrun...\n\n"
-(cd ./$dirname/ && gimic --dryrun bond_integral.inp | grep "grid points" )
+(cd ./$dirname/ && gimic --dryrun gimic.inp | grep "grid points" )
 printf "\n\n"
 
 echo "Ready for analysis"

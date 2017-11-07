@@ -361,7 +361,7 @@ echo "Press [n] to calculate the direction automatically" # TODO: or [e] to ente
 read accept;
 if [ ! -z $accept ] && [ $accept == "n" ]
 then
-   maximise_projection opt.xyz > $dirname/field.dat
+   maximise_projection coord.xyz > $dirname/field.dat
    MFx=$( cat $dirname/field.dat | sed -e 's#{#_#g; s#}#_#g; s#,#_#g' | awk -F [_] '{ {print -$2} }')
    MFy=$( cat $dirname/field.dat | sed -e 's#{#_#g; s#}#_#g; s#,#_#g' | awk -F [_] '{ {print -$3} }')
    MFz=$( cat $dirname/field.dat | sed -e 's#{#_#g; s#}#_#g; s#,#_#g' | awk -F [_] '{ {print -$4} }')
@@ -471,7 +471,7 @@ printf "Integration plane split into $nsteps slices with width $delta bohr and g
 #fi
 
 
-string="s/@COORD1@/$COORD1/; s/@COORD2@/$COORD2/; s/@fixed@/$fixed/; s/@distance@/$distance/; s/@up@/$up/; s/@down@/$down/; s/@MF@/$MF/; s/@spacingX@/$spacingX/; s/@spacingY@/$spacingY/; s/@spacingZ@/$spacingZ/;  s/@rotation@/$rotation/; "
+string="s/@COORD1@/$COORD1/; s/@COORD2@/$COORD2/; s/@fixed@/$fixed/; s/@distance@/$distance/; s/@up@/$up/; s/@down@/$down/; s/@MF@/$MF/; s/@spacingX@/$spacingX/; s/@spacingY@/$spacingY/; s/@spacingZ@/$spacingZ/;  s/@rotation@/$rotation/; s/@FX@/$Fx/; s/@FY@/$Fy/; s/@FZ@/$Fz/ ; "
 sed "$string" @SCRIPTS_DIR@/gimic.int.coord > $dirname/gimic.int.coord
 
 heading=\""atom1=$ATOMS1 atom2=$ATOMS2 fixed=$fixed delta=$delta \nspacing=[ $spacingX;$spacingY;$spacingZ] in=$start out=$out \nup=$up down=$down"\"
