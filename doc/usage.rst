@@ -204,7 +204,7 @@ Example input for benzene triplet dication
     %Chk=benzeneg09.chk
     %mem=2000mb
 
-    #p POP=FULL GFPrint Symmetry=None B3LYP/DEF2TZVP SCF=Tight NMR=GIAO Int=NoBasisTransform IOp(10/33=2)
+    #p POP=FULL GFPrint nosymmetry B3LYP/DEF2TZVP SCF=Tight NMR IOp(10/33=2)
 
     Benzene Gaussian NMR example triplet dication
 
@@ -223,11 +223,19 @@ Example input for benzene triplet dication
     H    0.0000000000    2.4745419332    0.0000000000
 
 ::
+
 $ mv file.out > file.log
 $ Gaussian2gimic.py --input=file.log 
 
 For the present example a current strength susceptibility of 8.4 nA/T
 was calculated. 
+
+Note the keyword "Int=NoBasisTransform" is only needed for reproducing
+Turbomole based results. "NMR=GIAO" is not necessarily needed since 
+using GIAO's is the default in G09.  
+It seems there is a small difference between the keywords "nosymmetry"
+and "Symmetry=None". The latter should only be used if "nosymmetry"
+generates an error. 
 
 
 Running GIMIC
