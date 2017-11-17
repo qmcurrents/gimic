@@ -338,14 +338,19 @@ if  [ ! -z $accept ] && [ $accept == "y" ]
 then
 (cd ./$dirname/ && gimic --dryrun gimic.0.inp | grep "grid points" )
 #    gimic --dryrun gimic.0.inp
-    mv ./$dirname/grid.xyz ./$dirname/grid.check.xyz
+    # take the first two coordinates of the int plane
+    mv ./$dirname/grid.xyz | head -n -3 | ./$dirname/grid.check.xyz
+
     last=$(ls ./$dirname/*inp | wc -l)
     last=$(( $last -1 ))
     (cd ./$dirname/ && gimic --dryrun gimic.$last.inp )
-    grep X ./$dirname/grid.xyz >> ./$dirname/grid.check.xyz
-    atomNum=$(head -n 1 ./$dirname/grid.xyz)
-    atomNum=$(( $atomNum + 4 ))
-    sed -i "1s/.*/$atomNum/" ./$dirname/grid.check.xyz
+
+    # take the coords of the end of the int plane
+    grep X ./$dirname/grid.xyz awk '{ if (NR <=2) {print $0} }' >> ./$dirname/grid.check.xyz
+
+#    atomNum=$(head -n 1 ./$dirname/grid.xyz)
+#    atomNum=$(( $atomNum + 2 ))
+#    sed -i "1s/.*/$atomNum/" ./$dirname/grid.check.xyz
 
     echo
     echo "The file grid.check.xyz created at $wrkdir/grid.check.xyz"
