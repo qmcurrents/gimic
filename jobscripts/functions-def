@@ -39,7 +39,8 @@ function userInp()
      read accept;
      if [ ! -z $accept ] && [ $accept == "n" ]
      then
-         printf $__resultVar=$__varValue
+         printf "$__resultVar="; read __varValue
+         #printf $__resultVar=$__varValue
      fi
 fi # end if accept out = 10
 
