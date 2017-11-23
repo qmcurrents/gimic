@@ -1,38 +1,9 @@
 #!/bin/bash
 
 function calcVertices() {
-
-echo "calculating vertices" 
-
-
- cat coord | sed -n '2,/^\\$/p' |  awk 'BEGIN{
-  			 infinity=10000;
-                         minX=infinity; 
-                         minY=infinity; 
-                         minZ=infinity;  
-                         maxX=-infinity; 
-                         maxY=-infinity; 
-                         maxZ=-infinity
-		         offset=8} 
-                         /\$/{next} {
-                                 if ($1 < minX) {minX = $1;}; 
-                                 if ($2 < minY) {minY = $2;};
-                                 if ($3 < minZ) {minZ = $3;}; 
-                                 if ($1 > maxX) {maxX = $1;}; 
-                                 if ($2 > maxY) {maxY = $2;};
-                                 if ($3 > maxZ) {maxZ = $3;}; 
-                                 }  
-                         END{print minX-offset, minY-offset, minZ-0.5*offset, maxX-minX+2*offset, maxY-minY+2*offset, maxZ-minZ+offset}' 
-		     }
-                         #END{print minX-8, minY-8, minZ-4, maxX, maxY, maxZ}' coord
-
-
-
-################################################################################################################################
-# DEBUG the min and max:
-
 cat coord | sed -n "2,/^\\$/p" |  awk 'BEGIN{
   			 infinity=10000;
+			 offset=8;
                           minX=infinity; 
                           minY=infinity; 
                           minZ=infinity;  
@@ -47,8 +18,36 @@ cat coord | sed -n "2,/^\\$/p" |  awk 'BEGIN{
                                   if ($2 > maxY) {maxY = $2;};
                                   if ($3 > maxZ) {maxZ = $3;}; 
                                   }  
-                          END{print "Min x, y, z: ", minX, minY, minZ; print "Max x, y, z: ", maxX, maxY, maxZ}' 
+		      	  END{print minX-offset, minY-offset, minZ-0.5*offset, maxX-minX+2*offset, maxY-minY+2*offset, maxZ-minZ+offset;}' 
  
+}
+
+
+
+################################################################################################################################
+# DEBUG the min and max:
+
+cat coord | sed -n "2,/^\\$/p" |  awk 'BEGIN{
+  			 infinity=10000;
+			 offset=8;
+                          minX=infinity; 
+                          minY=infinity; 
+                          minZ=infinity;  
+                          maxX=-infinity; 
+                          maxY=-infinity; 
+                          maxZ=-infinity} 
+                          /\$/{next} {
+                                  if ($1 < minX) {minX = $1;}; 
+                                  if ($2 < minY) {minY = $2;};
+                                  if ($3 < minZ) {minZ = $3;}; 
+                                  if ($1 > maxX) {maxX = $1;}; 
+                                  if ($2 > maxY) {maxY = $2;};
+                                  if ($3 > maxZ) {maxZ = $3;}; 
+                                  }  
+                          END{print "Min x, y, z: ", minX, minY, minZ; print "Max x, y, z: ", maxX, maxY, maxZ;
+		      		print minX-offset, minY-offset, minZ-0.5*offset, maxX-minX+2*offset, maxY-minY+2*offset, maxZ-minZ+offset;}' 
+ 
+################################################################################################################################
 
 
 if [ -d 3D ] # Does it exists
@@ -73,14 +72,14 @@ vertices=$( calcVertices )
 
 vert=(${vertices// / })
 
-#echo MINX = ${vert[0]}
-#echo MINY = ${vert[1]}
-#echo MINZ = ${vert[2]}
-
-
-#echo ${vert[3]}
-#echo ${vert[4]}
-#echo ${vert[5]}
+ echo MINX = ${vert[0]}
+ echo MINY = ${vert[1]}
+ echo MINZ = ${vert[2]}
+ 
+ 
+ echo MAXX = ${vert[3]}
+ echo MAXY = ${vert[4]}
+ echo MAXZ = ${vert[5]}
 
 echo "Magnetic field direction"
 # default along the Z axis
