@@ -1,7 +1,12 @@
 #!/bin/bash
 
 function calcVertices() {
- awk -v infinity=1000 'BEGIN{
+
+echo "calculating vertices" 
+
+
+ cat coord | sed -n '2,/^\\$/p' |  awk 'BEGIN{
+  			 infinity=10000;
                          minX=infinity; 
                          minY=infinity; 
                          minZ=infinity;  
@@ -17,7 +22,7 @@ function calcVertices() {
                                  if ($2 > maxY) {maxY = $2;};
                                  if ($3 > maxZ) {maxZ = $3;}; 
                                  }  
-                         END{print minX-offset, minY-offset, minZ-0.5*offset, maxX-minX+2*offset, maxY-minY+2*offset, maxZ-minZ+offset}' coord
+                         END{print minX-offset, minY-offset, minZ-0.5*offset, maxX-minX+2*offset, maxY-minY+2*offset, maxZ-minZ+offset}' 
 		     }
                          #END{print minX-8, minY-8, minZ-4, maxX, maxY, maxZ}' coord
 
@@ -25,7 +30,9 @@ function calcVertices() {
 
 ################################################################################################################################
 # DEBUG the min and max:
-  awk -v infinity=1000 'BEGIN{
+
+cat coord | sed -n "2,/^\\$/p" |  awk 'BEGIN{
+  			 infinity=10000;
                           minX=infinity; 
                           minY=infinity; 
                           minZ=infinity;  
@@ -40,7 +47,7 @@ function calcVertices() {
                                   if ($2 > maxY) {maxY = $2;};
                                   if ($3 > maxZ) {maxZ = $3;}; 
                                   }  
-                          END{print "Min x, y, z: ", minX, minY, minZ; print "Max x, y, z: ", maxX, maxY, maxZ}' coord
+                          END{print "Min x, y, z: ", minX, minY, minZ; print "Max x, y, z: ", maxX, maxY, maxZ}' 
  
 
 
@@ -48,11 +55,11 @@ if [ -d 3D ] # Does it exists
 then
         printf "\n\n*** Directory 3D already exists.\n"
         echo "Enter [y] to overwrite or any key to exit."; read accept
-        if [ -z $accept ] || [ ! $accept == "y" ]  # if the variable is empty or different from "y", exit
+        if [ -n "$accept" ] && [ "$accept" == "y" ]  # if the variable is not empty or equal to "y", remove the dir
         then
-            rm -rf 3D # delete it if the user does not want to keep the existing dir
-#        else
-#            mkdir 3D #
+            rm -rf 3D/* # delete it if the user does not want to keep the existing dir
+        else
+            exit 
         fi
 else
     mkdir 3D
@@ -85,14 +92,25 @@ echo "Do you accept the default MF orientation along the Z axis?"
 echo "Press [n] to calculate the direction automatically or [e] to enter manually"
 
 read accept;
-if [ ! -z $accept ] && [ $accept == "n" ]
+if [ -n "$accept" ] 
 then
-   #Bcoords=$(maximise_projection grid.xyz | sed -e 's#{#_#g; s#}#_#g; s#,#_#g' | awk -F [_] '{ {print $2, $3, $4} }')
-   maximise_projection coord.xyz > 3D/field.dat
-   MFx=$( cat 3D/field.dat | sed -e 's#{#_#g; s#}#_#g; s#,#_#g' | awk -F [_] '{ {print -$2} }')
-   MFy=$( cat 3D/field.dat | sed -e 's#{#_#g; s#}#_#g; s#,#_#g' | awk -F [_] '{ {print -$3} }')
-   MFz=$( cat 3D/field.dat | sed -e 's#{#_#g; s#}#_#g; s#,#_#g' | awk -F [_] '{ {print -$4} }')
+    if [ "$accept" == "n" ]
+    then
+	#Bcoords=$(maximise_projection grid.xyz | sed -e 's#{#_#g; s#}#_#g; s#,#_#g' | awk -F [_] '{ {print $2, $3, $4} }')
+	echo debug:
+	maximise_projection coord.xyz 
+	maximise_projection coord.xyz > 3D/field.dat
+	MFx=$( cat 3D/field.dat | sed -e 's#{#_#g; s#}#_#g; s#,#_#g' | awk -F [_] '{ {print -$2} }')
+	MFy=$( cat 3D/field.dat | sed -e 's#{#_#g; s#}#_#g; s#,#_#g' | awk -F [_] '{ {print -$3} }')
+	MFz=$( cat 3D/field.dat | sed -e 's#{#_#g; s#}#_#g; s#,#_#g' | awk -F [_] '{ {print -$4} }')
+    elif [ "$accept" == "e" ]
+    then
+	print "MFx = "; read MFx
+	print "MFy = "; read MFy
+	print "MFz = "; read MFz
+    fi
 fi
+
 
 echo "Magnetic field vector coordinates: ($MFx; $MFy; $MFz)"
 
