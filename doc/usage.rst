@@ -116,8 +116,9 @@ vincent.liegeois@unamur.be
 The program is made of two parts: 
 
 1) Gaussian2gimic.py which is the main program
+
 2) BasisSet.py which is a module file containing the functions to read the basis set and to do the transformations from Spherical to Cartesian.
-This file just need to be put in the same directory as Gaussian2gimic.py
+   This file just need to be put in the same directory as Gaussian2gimic.py
 
 Gaussian2gimic.py use optionparser to sets its different options.
 Therefore, « Gaussian2gimic.py -h » will give you the full description.
