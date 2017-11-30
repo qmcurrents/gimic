@@ -103,7 +103,7 @@ success=0
 # Make a temporary directory for the test
 mkdir ../tmp
 
-molecules="benzene C4H4"
+molecules="benzene-old C4H4-old"
 
 for testname in $molecules
 do

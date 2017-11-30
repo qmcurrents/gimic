@@ -93,7 +93,7 @@ fi
 # Initialize the variable to check the success of the test runs
 success=0
 
-molecules="benzene"
+molecules="benzene-old"
 
 for testname in $molecules
 do
