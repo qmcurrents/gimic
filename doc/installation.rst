@@ -40,7 +40,7 @@ Installation on Stallo supercomputer
   $ virtualenv venv
   $ source venv/bin/activate
   $ pip install -r requirements.txt
-  $ ./setup --cmake-options="-DPYTHON_LIBRARY=/global/hds/software/cpu/eb3/Python/2.7.12-foss-2016b/lib/libpython2.7.so -DPYTHON_INCLUDE_DIR=/global/hds/software/cpu/eb3/Python/2.7.12-foss-2016b/include"
+  $ ./setup
   $ cd build
   $ make
   $ make install
