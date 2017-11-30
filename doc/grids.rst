@@ -40,31 +40,33 @@ vectors ’ivec’ and ’jvec’ which define a plane. The third axis is
 determined from :math:`\vec k=\vec i\times\vec j`. The array ’lengths’
 specifies the grid dimensions in each direction.
 
-grid(std):
-~~~~~~~~~~
+grid(std)
+~~~~~~~~~
 
-type=even
-origin=-8.0, -8.0, 0.0
-    Origin of grid
+::
 
-ivec=1.0, 0.0, 0.0
-    Basis vector i
-
-jvec=0.0, 1.0, 0.0
-    Basis vector j ( k = i x j )
-
-lengths=16.0, 16.0, 0.0
-    Lenthts of (i,j,k)
-
-spacing=0.5, 0.5, 0.5
-    Spacing of points on grid (i,j,k)
-
-grid\_points=50, 50, 0
-    Number of gridpoints on grid (i,j,k)
-
-rotation=0.0, 0.0, 0.0
-    Rotation of (i,j,k) -> (i’,j’,k’) in degrees. Given as Euler angles
-    in the x->y->z convention.
+  type=even
+  origin=-8.0, -8.0, 0.0
+      Origin of grid
+  
+  ivec=1.0, 0.0, 0.0
+      Basis vector i
+  
+  jvec=0.0, 1.0, 0.0
+      Basis vector j ( k = i x j )
+  
+  lengths=16.0, 16.0, 0.0
+      Lenthts of (i,j,k)
+  
+  spacing=0.5, 0.5, 0.5
+      Spacing of points on grid (i,j,k)
+  
+  grid\_points=50, 50, 0
+      Number of gridpoints on grid (i,j,k)
+  
+  rotation=0.0, 0.0, 0.0
+      Rotation of (i,j,k) -> (i’,j’,k’) in degrees. Given as Euler angles
+      in the x->y->z convention.
 
 Bond grids
 ----------
