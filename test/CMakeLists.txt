@@ -15,8 +15,8 @@ set (PYTHON_INSTDIR ${PROJECT_SOURCE_DIR}/src/gimic)
 configure_file(${CMAKE_SOURCE_DIR}/src/gimic.in
     ${CMAKE_CURRENT_BINARY_DIR}/gimic @ONLY
     )
-execute_process(COMMAND 
-    chmod 755 ${CMAKE_CURRENT_BINARY_DIR}/gimic OUTPUT_QUIET) 
+execute_process(COMMAND
+    chmod 755 ${CMAKE_CURRENT_BINARY_DIR}/gimic OUTPUT_QUIET)
 
 # Configure input
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/vectors.inp.in
@@ -31,17 +31,17 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/test.py.in
     ${CMAKE_CURRENT_BINARY_DIR}/test.py @ONLY
     )
 execute_process(
-    COMMAND chmod 755 ${CMAKE_CURRENT_BINARY_DIR}/test.py 
+    COMMAND chmod 755 ${CMAKE_CURRENT_BINARY_DIR}/test.py
     OUTPUT_QUIET
-    ) 
+    )
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/PyGimicTest.py.in
     ${CMAKE_CURRENT_BINARY_DIR}/PyGimicTest.py @ONLY
     )
 execute_process(
-    COMMAND chmod 755 ${CMAKE_CURRENT_BINARY_DIR}/test.py 
+    COMMAND chmod 755 ${CMAKE_CURRENT_BINARY_DIR}/test.py
     OUTPUT_QUIET
-    ) 
+    )
 
 # Add tests
 add_test(NAME Vectors
