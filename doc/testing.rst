@@ -1,3 +1,8 @@
+
+
+Testing
+=======
+
 The new version of the Gimic test script runs tests for two molecules - benzene
 and cyclobutadiene. The script is executed at the test directory by giving the
 directory where the binary is located. On my laptop this is::
