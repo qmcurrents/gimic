@@ -1,0 +1,16 @@
+*/*/*.diff
+*/*/*.filtered
+*/*/*.reference
+*/*/stderr
+*/*/stdout
+*/*/grid.xyz
+*/*/mol.xyz
+*/*/acid.txt
+*/*/jmod.txt
+*/*/jvec.txt
+*/*/jvec.vti
+*/*/acid.cube
+*/*/acid.vti
+*/*/jmod.cube
+*/*/jmod.vti
+*/*/jmod_quasi.cube
