@@ -2,3 +2,5 @@ cython
 numpy
 pyparsing
 pyyaml
+sphinx
+sphinx_rtd_theme
