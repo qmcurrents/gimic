@@ -52,12 +52,14 @@ add_test(NAME BondIntegral
     COMMAND ${CMAKE_CURRENT_BINARY_DIR}/test.py bondint
     )
 
-add_test(
-    NAME shell-test
-    COMMAND ${PROJECT_SOURCE_DIR}/test/gimic-test.sh ${PROJECT_BINARY_DIR}/bin -v
+foreach(_name
+    benzene/integration
+    benzene/2d
+    benzene/3d
+    c4h4/integration
     )
-
-add_test(
-    NAME 2D-3D
-    COMMAND ${PROJECT_SOURCE_DIR}/test/gimic-test-2D-3D.sh ${PROJECT_BINARY_DIR}/bin -v
-    )
+    add_test(
+        NAME ${_name}
+        COMMAND ${PROJECT_SOURCE_DIR}/test/${_name}/test --binary-dir=${PROJECT_BINARY_DIR}/bin --work-dir=${PROJECT_BINARY_DIR}/test/${_name} --verbose
+        )
+endforeach()
