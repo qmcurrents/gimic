@@ -12,6 +12,10 @@ language:
 url_root: https://github.com/coderefinery/autocmake/raw/master/
 
 modules:
+- custom:
+  - source:
+    - 'custom/python-discovery.cmake'
+    - 'custom/rpath-workaround.cmake'
 - compilers:
   - source:
     - '%(url_root)modules/fc.cmake'
