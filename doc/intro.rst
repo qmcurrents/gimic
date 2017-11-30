@@ -28,7 +28,7 @@ The following features have been implemented in the program
 
 -  The divergence of the current (this is useful for checking gauge
    invariance vs. gauge independence). Note, this module does not
-work at the moment.
+   work at the moment.
 
 -  Vector representation of the current in 2D or 3D
 
@@ -38,7 +38,7 @@ work at the moment.
 -  Open-shells and spin currents
 
 -  Parallel execution through MPI (optional). Note, this works only if
-you check out the "stable" branch.
+   you check out the "stable" branch.
 
 Utility programs to extract the AO density and perturbed densities 
 from ACES2, Turbomole, QChem, LSDALTON and FERMION++
