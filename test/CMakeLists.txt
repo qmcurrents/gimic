@@ -1,5 +1,3 @@
-include_directories (${PROJECT_SOURCE_DIR}/src)
-
 # Configure driver
 set (GIMIC_EXECUTABLE ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/gimic.bin)
 set (LIBDIR ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
