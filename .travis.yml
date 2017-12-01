@@ -28,6 +28,7 @@ script:
   - make
   - make install
   - make test
+  - cat Testing/Temporary/LastTest.log
 
 notifications:
   email: false
