@@ -322,7 +322,7 @@ call msg_out('***           GIMIC '// PROJECT_VERSION // &
 call msg_out('***              Written by Jonas Juselius                   ***')
 call msg_out('***                                                          ***')
 call msg_out('***  This software is copyright (c) 2003-2011 by             ***')
-call msg_out('***  Jonas Juselius,  University of Tromsø.                  ***')
+call msg_out('***  Jonas Juselius,  University of Tromso.                  ***')
 call msg_out('***                                                          ***')
 call msg_out('***  You are free to distribute this software under the      ***')
 call msg_out('***  terms of the GNU General Public License                 ***')
