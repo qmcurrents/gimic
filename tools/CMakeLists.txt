@@ -14,6 +14,10 @@ configure_file(qgimic.sh.in qgimic.sh)
 configure_file(quesys.sh.in quesys.sh) 
 configure_file(turbo2gimic.py.in turbo2gimic.py)
 
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/PyGimicTest.py.in
+    ${CMAKE_CURRENT_BINARY_DIR}/PyGimicTest.py @ONLY
+    )
+
 install(PROGRAMS 
     ${CMAKE_CURRENT_BINARY_DIR}/MOL2mol.sh
     ${CMAKE_CURRENT_BINARY_DIR}/qgimic.sh

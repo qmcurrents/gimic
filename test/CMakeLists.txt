@@ -11,10 +11,6 @@ configure_file(${CMAKE_SOURCE_DIR}/src/gimic.in
 execute_process(COMMAND
     chmod 755 ${CMAKE_CURRENT_BINARY_DIR}/gimic OUTPUT_QUIET)
 
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/PyGimicTest.py.in
-    ${CMAKE_CURRENT_BINARY_DIR}/PyGimicTest.py @ONLY
-    )
-
 foreach(_name
     benzene/integration
     benzene/bond-integration
