@@ -36,14 +36,10 @@ execute_process(
     OUTPUT_QUIET
     )
 
-# Add tests
-add_test(NAME Vectors
-    COMMAND ${CMAKE_CURRENT_BINARY_DIR}/test.py vectors
-    )
-
 foreach(_name
     benzene/integration
     benzene/bond-integration
+    benzene/vectors
     benzene/2d
     benzene/3d
     c4h4/integration

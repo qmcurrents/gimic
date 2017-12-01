@@ -1,0 +1,29 @@
+# NEW INPUT
+
+calc=cdens          # cdens, integral, edens, divj
+title=""
+basis="MOL"
+xdens="XDENS"
+debug=1           # debug print level
+openshell=false 
+magnet_axis=-z #[-] i,j,k || x,y,z -> align magnet along axis
+
+# grid type can be: base/std, bond or file (see examples below)
+Grid(base) {    
+    type=even                   # even or gauss 
+    origin=[-8.0, -8.0, -2.0]   # origin of grid
+    ivec=[1.0, 0.0, 0.0]        # basis vector i
+    jvec=[ 0.0, 1.0, 0.0]       # basis vector j ( k = i x j )
+    lengths=[16.0, 16.0, 4.0]   # lenthts of (i,j,k)
+    grid_points=[10,10,10]       # number of gridpoints on grid (i,j,k)
+    rotation=[0.0,0.0,0.0]      # Rotation of (i,j,k) -> (i',j',k') in degrees
+}
+
+Advanced {
+    spherical=off     # don't touch, unless you REALLY know what you are doing
+    diamag=on           # turn on/off diamagnetic contributions
+    paramag=on          # turn on/off paramagnetic contributions
+    GIAO=on             # turn on/off GIAOs. Don't change unless you know why.
+    screening=on        # use screening to speed up 
+    screening_thrs=1.e-8   # Screening threshold
+}
