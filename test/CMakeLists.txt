@@ -11,42 +11,14 @@ configure_file(${CMAKE_SOURCE_DIR}/src/gimic.in
 execute_process(COMMAND
     chmod 755 ${CMAKE_CURRENT_BINARY_DIR}/gimic OUTPUT_QUIET)
 
-# Configure input
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/vectors.inp.in
-    ${CMAKE_CURRENT_BINARY_DIR}/vectors.inp @ONLY
-    )
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/bondint.inp.in
-    ${CMAKE_CURRENT_BINARY_DIR}/bondint.inp @ONLY
-    )
-
-# Configure script
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/test.py.in
-    ${CMAKE_CURRENT_BINARY_DIR}/test.py @ONLY
-    )
-execute_process(
-    COMMAND chmod 755 ${CMAKE_CURRENT_BINARY_DIR}/test.py
-    OUTPUT_QUIET
-    )
-
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/PyGimicTest.py.in
     ${CMAKE_CURRENT_BINARY_DIR}/PyGimicTest.py @ONLY
-    )
-execute_process(
-    COMMAND chmod 755 ${CMAKE_CURRENT_BINARY_DIR}/test.py
-    OUTPUT_QUIET
-    )
-
-# Add tests
-add_test(NAME Vectors
-    COMMAND ${CMAKE_CURRENT_BINARY_DIR}/test.py vectors
-    )
-
-add_test(NAME BondIntegral
-    COMMAND ${CMAKE_CURRENT_BINARY_DIR}/test.py bondint
     )
 
 foreach(_name
     benzene/integration
+    benzene/bond-integration
+    benzene/vectors
     benzene/2d
     benzene/3d
     c4h4/integration
