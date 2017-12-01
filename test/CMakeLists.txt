@@ -60,9 +60,10 @@ foreach(_name
     )
     add_test(
         NAME ${_name}
-        COMMAND ${PROJECT_SOURCE_DIR}/test/${_name}/test
+        COMMAND ./test
                 --binary-dir=${PROJECT_BINARY_DIR}/bin
                 --work-dir=${PROJECT_BINARY_DIR}/test/${_name}
                 --verbose
+        WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/test/${_name}
         )
 endforeach()
