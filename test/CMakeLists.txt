@@ -41,12 +41,9 @@ add_test(NAME Vectors
     COMMAND ${CMAKE_CURRENT_BINARY_DIR}/test.py vectors
     )
 
-add_test(NAME BondIntegral
-    COMMAND ${CMAKE_CURRENT_BINARY_DIR}/test.py bondint
-    )
-
 foreach(_name
     benzene/integration
+    benzene/bond-integration
     benzene/2d
     benzene/3d
     c4h4/integration
