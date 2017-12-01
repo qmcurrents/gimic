@@ -1,7 +1,7 @@
 !
 ! Calulate the electronic density in a point.
 ! Coded by Jonas Juselius <jonas@iki.fi> 2003 & 2011
-! 
+!
 
 module edens_class
     use globals_module
@@ -11,10 +11,10 @@ module edens_class
     use dens_class
     use teletype_module
     implicit none
-    
+
     public new_edens, del_edens, edens_t
     public edens
-    
+
     type edens_t
         real(DP), dimension(:), pointer :: tmp
         real(DP), dimension(:,:), pointer :: aodens

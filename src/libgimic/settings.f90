@@ -3,8 +3,8 @@
 !
 module settings_module
     use kinds_module
-    implicit none 
-    
+    implicit none
+
     integer(I4) :: debug_level=0
 
     type settings_t

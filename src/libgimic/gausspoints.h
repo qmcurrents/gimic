@@ -7,7 +7,7 @@
 extern "C" {
 #endif
 
-void gimic_get_gauss_points(double *, double *, int *, int *, 
+void gimic_get_gauss_points(double *, double *, int *, int *,
         double *, double *);
 void mkgausspoints(double *, double *, int *, int *, double *, double *);
 

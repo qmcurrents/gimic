@@ -21,9 +21,9 @@ class Element:
 		self.crystal  = l[12]
 		self.cpera    = float(l[13])
 		self.conf     = l[14]
-	
+
 	def __repr__(self):
-		return "%s (%s): {%s}, Z=%s, m=%s" % (self.name, self.symbol, 
+		return "%s (%s): {%s}, Z=%s, m=%s" % (self.name, self.symbol,
 		self.conf, self.number, self.mass)
 
 PeriodicTable={

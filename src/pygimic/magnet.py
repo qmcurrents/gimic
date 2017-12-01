@@ -22,7 +22,7 @@ class Magnet:
     def set_orthogonal(self, p = True):
         self.isortho = p
         self._check_field_direction()
-    
+
     def is_orthogonal():
         return self.isortho
 
@@ -67,9 +67,9 @@ class Magnet:
         x = np.dot(kvec, self.mag)
         if x > 0.0:
             self.mag *= -1.0
-            print 'Left handed coordinate system reversing magnetic field' 
+            print 'Left handed coordinate system reversing magnetic field'
         if abs(x) > 1.0e-12 and abs(x)-1.0 > 1.0e-12:
-            print 'Warning! Magnetic field not orthogonal to the grid!' 
+            print 'Warning! Magnetic field not orthogonal to the grid!'
 
 
 if __name__ == '__main__':

@@ -22,9 +22,9 @@ module divj_field_class
     end type
 
     public divj_field, divj_direct_plt, new_divj_field, del_divj_field
-    public divj_plot, divj_field_t 
+    public divj_plot, divj_field_t
     private
-    
+
     real(DP), dimension(5), parameter :: wgt=(/2.d0,-16.d0,0.d0,16.d0,-2.d0/)
     real(DP), parameter :: step=1.d-3
     real(DP), parameter :: hx=1.d0/(24.d0*step)
@@ -56,7 +56,7 @@ contains
     subroutine divj_plot(this, gopen_file)
         type(divj_field_t), intent(inout) :: this
         character(*), intent(in) :: gopen_file
-        
+
         integer(I4) :: i,j,p1,p2,p3
         real(DP) :: amax
         real(DP), dimension(3) :: rr
@@ -75,7 +75,7 @@ contains
                 write(DJPFD, '(4f19.8)') rr, buf(i,j,1)
                 if (abs(buf(i,j,1)) > amax) amax=abs(buf(i,j,1))
             end do
-            write(DJPFD, *) 
+            write(DJPFD, *)
         end do
         close(DJPFD)
         write(str_g, '(a,e19.12)') 'Max divergence:', amax
@@ -89,8 +89,8 @@ contains
         !type(jfield_t) :: jf
         integer(I4) :: i, j, k, p1, p2, p3
         real(DP) :: div, amax
-        real(DP), dimension(3) :: rr 
-        
+        real(DP), dimension(3) :: rr
+
         if (settings%is_mpirun) then
             call msg_error('divj_direct_plt(): does not work in parallel')
             stop
@@ -99,7 +99,7 @@ contains
         !jf%grid=>this%grid
         !call jfield_eta(jf, 12.d0)
         call get_grid_size(this%grid, p1, p2, p3)
-    
+
         open(DJPFD, file='DIVJPLT')
         amax=D0
         do k=1,p3
@@ -110,7 +110,7 @@ contains
                     write(DJPFD, '(4f19.8)') rr, div
                     if (abs(div) > amax) amax=abs(div)
                 end do
-                write(DJPFD, *) 
+                write(DJPFD, *)
             end do
         end do
         write(str_g, '(a,e19.12)')'Max divergence:', amax

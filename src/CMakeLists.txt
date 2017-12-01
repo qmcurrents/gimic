@@ -3,7 +3,7 @@
 if(DEFINED ENV{TRAVIS_TEST})
     include_directories(/home/travis/virtualenv/python2.7.9/lib/python2.7/site-packages/numpy/core/include/)
 endif()
-  
+
 include_directories(${CMAKE_BINARY_DIR})
 include(ExternalProject)
 add_subdirectory(libgimic)
