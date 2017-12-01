@@ -48,9 +48,9 @@ class GimicDriver:
         print "=========="
         print self.grid
         self.write_grid_xyz()
-        
+
         self.init_magnet()
-        b = tuple(self.magnet.get_magnet()) 
+        b = tuple(self.magnet.get_magnet())
         self.gimic.set_property('magnet', b)
 
     def run(self):
@@ -61,9 +61,9 @@ class GimicDriver:
         if calc == 'cdens':
             j = CurrentField(self.grid, self.gimic)
             p = MatPlot(j)
-            print "Writing vector plot in 'vectors.pdf'" 
+            print "Writing vector plot in 'vectors.pdf'"
             p.vector_plot('vectors.pdf')
-            print "Writing stream plot in 'stream.pdf'" 
+            print "Writing stream plot in 'stream.pdf'"
             p.stream_plot('stream.pdf')
         elif calc == 'rho':
             f = ScalarField(self.grid)
@@ -96,14 +96,14 @@ class GimicDriver:
         width = map(float, sect.getkw('width'))
         fixpoint = int(sect.getkw('fixpoint')[0])
         radius = map(float, sect.getkw('radius'))
-        
+
         atom1 = self.mol[bond[0] - 1]
         atom2 = self.mol[bond[1] - 1]
         fixpoint = self.mol[fixpoint - 1]
-        
-        self.grid = BondGrid(bond=(atom1, atom2), fixpoint=fixpoint, 
+
+        self.grid = BondGrid(bond=(atom1, atom2), fixpoint=fixpoint,
             npts=npts, distance=distance,
-            height=height, width=width, 
+            height=height, width=width,
             distribution=distr, radius=None)
 
     def init_grid(self):
@@ -126,7 +126,7 @@ class GimicDriver:
         basis[:, 1] = jvec
         basis[:, 2] = kvec
 
-        self.grid = Grid(l=l, origin=origin, npts=npts, basis=basis, 
+        self.grid = Grid(l=l, origin=origin, npts=npts, basis=basis,
                 distribution=distr)
 
     def init_magnet(self):

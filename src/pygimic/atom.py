@@ -5,15 +5,15 @@ import atomic_units as au
 from elements import Element, PeriodicTable
 
 class Atom:
-    _cfact={'au2m' : au.au2m, 'au2nm' : au.au2nm, 
-            'au2a' : au.au2a, 'au2pm' : au.au2pm, 
+    _cfact={'au2m' : au.au2m, 'au2nm' : au.au2nm,
+            'au2a' : au.au2a, 'au2pm' : au.au2pm,
             'None' : 1, 'none' : 1, 'a2au' : au.a2au, 'nm2au' : au.nm2au,
             'pm2au' : au.pm2au}
     coord=(0,0,0)
     conv=_cfact['None']
 
     def __init__(self, coord=(0,0,0), sym='None'):
-        self.coord=np.array(coord) 
+        self.coord=np.array(coord)
         self._setelement(sym)
 
     def __add__(self, other):
@@ -23,7 +23,7 @@ class Atom:
         return Atom(self.coord - other.coord)
 
     def __str__(self):
-        s = self.element.symbol 
+        s = self.element.symbol
         for i in range(3):
             s += ' ' + str(self.coord[i])
         return s

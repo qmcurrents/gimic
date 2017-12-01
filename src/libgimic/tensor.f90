@@ -2,13 +2,13 @@
 module tensor_module
     use kinds_module
     implicit none
-    
+
     interface operator(.tp.)
-        module procedure d_tprod 
+        module procedure d_tprod
     end interface
-    
+
     interface operator(.tp.)
-        module procedure i_tprod 
+        module procedure i_tprod
     end interface
 
     interface cross_product
@@ -18,7 +18,7 @@ contains
     function d_tprod(A,B) result(C)
         real(DP), dimension(:), intent(in) :: A, B
         real(DP), dimension(size(A),size(B)) :: C
-        
+
         integer(I4) :: i, sz
         sz=size(A)
         do i=1,sz
@@ -29,7 +29,7 @@ contains
     function i_tprod(A,B) result(C)
         integer(I4), dimension(:), intent(in) :: A, B
         integer(I4), dimension(size(A),size(B)) :: C
-        
+
         integer(I4) :: i, sz
         sz=size(A)
         do i=1,sz

@@ -4,7 +4,7 @@ module factorial_module
     implicit none
     public fact, fact2, binom
     contains
-    
+
     function fact(n) result(m)
         integer(I4), intent(in) :: n
         integer(I4) :: i, m
@@ -18,12 +18,12 @@ module factorial_module
             m=1
         endif
     end function
-    
+
     subroutine fact2(n, m)
         integer(I4), intent(inout) :: n
         integer(I4), intent(in) :: m
         integer(I4) :: i
-        
+
         if (n > 0 ) then
             do i=n-1, m, -1
                 n=n*i
@@ -36,7 +36,7 @@ module factorial_module
     function binom(a, b) result(c)
         integer(I4), intent(in) :: a, b
         integer(I8) :: c
-        
+
         c=fact(a)/(fact(b)*fact(a-b))
     end function
 

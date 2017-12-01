@@ -58,7 +58,7 @@ module globals_module
 
     real(DP), parameter :: D0=0.0D0,D1=1.0D0,D2=2.0D0,D4=4.0D0,D5=5.0D0
     real(DP), parameter :: DP25=0.25D0, DP50=0.50D0, DP75=0.75D0
-    real(DP), parameter :: DP33=0.3333333D0 
+    real(DP), parameter :: DP33=0.3333333D0
     real(DP), dimension(3), parameter :: NILL_VECTOR=(/0.d0, 0.d0, 0.d0/)
 
 
@@ -308,7 +308,7 @@ contains
     function au2si(au) result(si)
         real(DP), intent(in) :: au
         real(DP) :: si
-        
+
         real(DP) :: aulength, auspeedoflight, speedoflight, aucharge, hbar
         real(DP) :: autime, autesla, audjdb
 
@@ -328,7 +328,7 @@ contains
 !        write(6,*) autime,' au time in seconds'
 !        write(6,*) autesla,' au magnetic field in tesla'
 !        write(6,*) audjdb*1.D+09,' au induced current in nanoampere/tesla'
-    end function 
+    end function
 
 
 end module

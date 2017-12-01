@@ -8,7 +8,7 @@ import math
 from copy import deepcopy
 from atom import Atom
 from gimic_exceptions import NotImplemented
-import gengauss 
+import gengauss
 
 class GridAxis:
     def __init__(self):
@@ -95,7 +95,7 @@ class GaussLegendreAxis(GridAxis):
             self.weights = np.ones(1)
         else:
             gengauss.gausspoints(origin, end, order, self.points, self.weights)
-            self.points = self.points 
+            self.points = self.points
 
 class GridIterator:
     def __init__(self):
@@ -164,11 +164,11 @@ class GridIterator:
 
 
 class Grid(GridIterator):
-    def __init__(self, l, 
+    def __init__(self, l,
             npts=None,
             step=None,
-            basis=None, 
-            origin=(0.0, 0.0, 0.0), 
+            basis=None,
+            origin=(0.0, 0.0, 0.0),
             distribution = 'even'):
         GridIterator.__init__(self)
         if basis is not None:
@@ -201,7 +201,7 @@ class Grid(GridIterator):
             if distribution == 'even':
                 self.axes.append(EvenAxis(self.origin[i], end, npts[i]))
             elif distribution == 'gauss':
-                self.axes.append(GaussLegendreAxis(self.origin[i], 
+                self.axes.append(GaussLegendreAxis(self.origin[i],
                     end, npts[i]))
             else:
                 raise ValueError('Invalid grid distribution')
@@ -247,7 +247,7 @@ class Grid(GridIterator):
         self.bond_ortho = self.basis[:, 2]
         if ortho:
             self.orthogonalize_basis()
-    
+
     def orthogonalize_basis(self):
         '''Orthogonalize basis vecotrs. Returns True if the basis was
         orthogonal, and false otherwise.'''
@@ -339,16 +339,16 @@ class Grid(GridIterator):
         if self.npts[2] > 1:
             return True
         return False
-    
+
 
 class BondGrid(Grid):
-    def __init__(self, 
-            bond, 
-            height, 
-            width, 
+    def __init__(self,
+            bond,
+            height,
+            width,
             npts,
             fixpoint=None,
-            distance=None, 
+            distance=None,
             distribution='gauss',
             radius=None):
         GridIterator.__init__(self)
@@ -360,7 +360,7 @@ class BondGrid(Grid):
         if fixpoint is None:
             fixpoint = np.zeros(3)
         else:
-            fixpoint = fixpoint.get_coord() 
+            fixpoint = fixpoint.get_coord()
         self.l[0] = sum(height)
         self.l[1] = sum(width)
         self.l[2] = 0.0
@@ -379,11 +379,11 @@ class BondGrid(Grid):
         if np.linalg.norm(self.bond_ortho) < 10.0e-6:
             raise RuntimeError('Basis vectors are linearly dependent!')
         self.bond_ortho = self._norm(self.bond_ortho)
-        
+
         v3 = self._norm(v2 - v1)
         v1 = deepcopy(-self.bond_ortho)
         v2 = self._norm(np.cross(v3, v1))
-        oo = c1 + distance * v3 
+        oo = c1 + distance * v3
         self.origin = oo - width[1] * v2 - height[1] * v1
         self.center = oo
 

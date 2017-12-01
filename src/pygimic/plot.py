@@ -58,7 +58,7 @@ class MatPlot(BasePlot):
         fig = plt.figure()
 #        ax = fig.gca(projection='2d')
         X = self.grid.get_axis()[0].get_points()
-        Y = self.grid.get_axis()[1].get_points() 
+        Y = self.grid.get_axis()[1].get_points()
         X, Y = np.meshgrid(X, Y)
         Z = self.field.get_field(k)
         levels = np.arange(0, 100, 5.0)
@@ -80,7 +80,7 @@ class MatPlot(BasePlot):
         fig = plt.figure()
         ax = fig.gca(projection='3d')
         X = self.grid.get_axis()[0].get_points()
-        Y = self.grid.get_axis()[1].get_points() 
+        Y = self.grid.get_axis()[1].get_points()
         X, Y = np.meshgrid(X, Y)
         Z = self.field.get_field(k)
         surf = ax.plot_surface(X, Y, Z, rstride=1, cstride=1, cmap=cm.jet,
@@ -144,12 +144,12 @@ if __name__ == '__main__':
 
     def sfunc(r):
         global s
-        s += 1.0 
+        s += 1.0
         return s
 
     def vfunc(r):
         return math.cos(r[0]), math.sin(r[0]), 0.0
-      
+
 
     grd = Grid(l=(6, 6, 0),
             origin=(-3.0, -3.0, 0.0),
