@@ -1,4 +1,4 @@
-! This module calulates the current field by looping over gridpoints and 
+! This module calulates the current field by looping over gridpoints and
 ! calling the appropriate routines in jtensor_class
 !
 ! Ok, this is really a mess...
@@ -52,7 +52,7 @@ contains
 
     subroutine del_jfield(this)
         type(jfield_t), intent(inout) :: this
-        
+
         this%b=0.d0
         deallocate(this%tens)
         deallocate(this%vec)
@@ -112,7 +112,7 @@ contains
         !$OMP PARALLEL PRIVATE(jt,rr,n,i,j,k) &
         !$OMP SHARED(mol,xdens,spincase,tens,lo,hi)
         call new_jtensor(jt, mol, xdens)
-        !$OMP DO SCHEDULE(STATIC) 
+        !$OMP DO SCHEDULE(STATIC)
         do n=lo,hi
             call get_grid_index(this%grid, n, i, j, k)
             rr = gridpoint(this%grid, i, j, k)
@@ -130,8 +130,8 @@ contains
                 deallocate(tens)
             end if
         end if
-    end subroutine 
-    
+    end subroutine
+
     subroutine calc_jvectors(this, mol, xdens, spin, z)
         type(jfield_t) :: this
         type(molecule_t) :: mol
@@ -162,7 +162,7 @@ contains
     subroutine compute_jvectors(this)
         type(jfield_t) :: this
 
-        integer(I4) :: k 
+        integer(I4) :: k
         integer(I4), dimension(2) :: dims
         dims = shape(this%vec)
         !$OMP PARALLEL DO PRIVATE(k) SHARED(this,dims)
@@ -173,7 +173,7 @@ contains
     end subroutine
 
 ! Make a rough estimate of how long the calculation will take
-! (using one core) 
+! (using one core)
     subroutine jfield_eta(this, mol, xdens, fac)
         type(jfield_t) :: this
         type(molecule_t) :: mol
@@ -189,9 +189,9 @@ contains
         real(DP), dimension(3) :: bar=(/D1,D1,D1/)
         real(DP), dimension(3) :: foobar
         real(DP), parameter :: SC=0.25d0
-        
+
         call get_grid_size(this%grid, p1, p2, p3)
-        
+
         call new_jtensor(jt, mol, xdens)
         call etime(times, tim1)
         tim1=times(1)
@@ -202,14 +202,14 @@ contains
         call etime(times, tim2)
         tim2=times(1)
         call del_jtensor(jt)
-        
+
         delta_t=tim2-tim1
         if ( present(fac) ) delta_t=delta_t*fac
         write(str_g, '(a,f9.2,a)') 'Estimated CPU time for single core &
             &calculation: ', delta_t*real(p1*p2*p3)/100.d0, ' sec'
         call msg_info(str_g)
         call nl
-    end subroutine	
+    end subroutine
 
     function open_plot(fname) result(fd)
         character(*), intent(in) :: fname
@@ -225,7 +225,7 @@ contains
             stop 1
         end if
         open(fd,file=trim(fname),status='unknown')
-        return 
+        return
     end function
 
     subroutine jvector_plots(this,mol,tag)
@@ -245,7 +245,7 @@ contains
         real(DP), dimension(:,:), pointer :: jtens
         real(DP), dimension(:,:,:,:), allocatable :: jval
         real(DP) :: val
-        real(DP) :: bound, r 
+        real(DP) :: bound, r
 
         if (mpi_rank > 0) return
 
@@ -262,7 +262,7 @@ contains
             jtens=>this%tens
         end if
 
-        ! print out magnetic field        
+        ! print out magnetic field
         write(*,*) "magnetic field"
         write(*,*) this%b
         write(*,*) ""
@@ -273,9 +273,9 @@ contains
         bound=1.d+10
         bound=this%grid%radius
         circle_log = .false.
-        if (grid_is_3d(this%grid)) then 
+        if (grid_is_3d(this%grid)) then
             circle_log = .false.
-        else 
+        else
           if (this%grid%radius.gt.0.1d0) then
             circle_log = .true.
           end if
@@ -293,19 +293,19 @@ contains
                     rr=gridpoint(this%grid, i,j,k)*AU2A
                     if (circle_log) then
                        ! for radius option
-                       r = sqrt(sum((rr-center)**2)) 
+                       r = sqrt(sum((rr-center)**2))
                        if (r > bound) then
                            v = 0.0d0
                        else
                            ! Vincent correction
                            ! v=jv(:,i+(j-1)*p1+(k-1)*p1*p2)*AU2A
-                           v = jv(:,i+(j-1)*p1+(k-1)*p1*p2)  
+                           v = jv(:,i+(j-1)*p1+(k-1)*p1*p2)
                            ! end corr
                        end if
                     else
                         ! Vincent correction
                         ! v=jv(:,i+(j-1)*p1+(k-1)*p1*p2)*AU2A
-                        v = jv(:,i+(j-1)*p1+(k-1)*p1*p2) 
+                        v = jv(:,i+(j-1)*p1+(k-1)*p1*p2)
                         ! end corr
                     end if
                     ! collect jv vec information to put it on vti file
@@ -332,13 +332,13 @@ contains
           call closefd(fd3)
         end if
         ! put jvec information on vti file
-        call write_vtk_vector_imagedata("jvec.vti", this%grid, jval) 
+        call write_vtk_vector_imagedata("jvec.vti", this%grid, jval)
         deallocate(jval)
 
         ! case 3D Grid
-        if (grid_is_3d(this%grid)) then 
+        if (grid_is_3d(this%grid)) then
             if (settings%acid) then
-              ! add here ACID plot stuff ! 
+              ! add here ACID plot stuff !
               call acid_cube_plot(this)
             end if
             if (present(tag)) then
@@ -357,7 +357,7 @@ contains
         integer(I4) :: i, j, k, l
         real(DP), dimension(3) :: qmin, qmax
         real(DP), dimension(3) :: norm, step, mag, v, rr
-        real(DP) :: maxi, mini, sgn 
+        real(DP) :: maxi, mini, sgn
         integer(I4), dimension(3) :: npts
         real(DP), dimension(:,:), pointer :: buf
         real(DP), dimension(:,:,:), allocatable :: val
@@ -397,7 +397,7 @@ contains
     end subroutine
 
     subroutine jmod2_vtkplot(this)
-    ! based on jmod_vtkplot 
+    ! based on jmod_vtkplot
     ! purpose: write all information on one file
         use vtkplot_module
         type(jfield_t) :: this
@@ -406,7 +406,7 @@ contains
         integer(I4) :: i, j, k, l
         real(DP), dimension(3) :: qmin, qmax
         real(DP), dimension(3) :: norm, step, mag, v, rr
-        real(DP) :: maxi, mini, sgn 
+        real(DP) :: maxi, mini, sgn
         integer(I4), dimension(3) :: npts
         real(DP), dimension(:,:), pointer :: buf
         real(DP), dimension(:,:,:), allocatable :: val
@@ -424,7 +424,7 @@ contains
 
 !        step=(qmax-qmin)/(npts-1) ! In a 2D plot qmin(3)-qmax(3) = 0 -> dividing it by npts(3) gives a NaN
         do i=1,3
-           step(i) = qmax(i) - qmin(i)    
+           step(i) = qmax(i) - qmin(i)
            if ( step(i) > 1E-8 ) then    ! floating point numbers cannot be compared as ( step(i) == 0.0 )
                step(i) = step(i) / ( npts(i) - 1)  ! if ( step(i) != 0 ) divide, else leave it 0
            end if
@@ -442,7 +442,7 @@ contains
         do k=1,p3
             do j=1,p2
                 do i=1,p1
-                    v = buf(:,i+(j-1)*p1+(k-1)*p1*p2) 
+                    v = buf(:,i+(j-1)*p1+(k-1)*p1*p2)
                     rr=gridpoint(this%grid,i,j,k)
                     val(i,j,k)=(sqrt(sum(v**2)))
                     rr=rr-dot_product(mag,rr)*mag
@@ -466,7 +466,7 @@ contains
         integer(I4) :: i, j, k, l
         real(DP), dimension(3) :: qmin, qmax
         real(DP), dimension(3) :: norm, step, mag, v, rr
-        real(DP) :: maxi, mini, val, sgn 
+        real(DP) :: maxi, mini, val, sgn
         integer(I4), dimension(3) :: npts
         real(DP), dimension(:,:), pointer :: buf
 
@@ -484,7 +484,7 @@ contains
 
 !        step=(qmax-qmin)/(npts-1) ! In a 2D plot qmin(3)-qmax(3) = 0 -> dividing it by npts(3) gives a NaN
         do i=1,3
-           step(i) = qmax(i) - qmin(i)    
+           step(i) = qmax(i) - qmin(i)
            if ( step(i) > 1E-8 ) then    ! floating point numbers cannot be compared as ( step(i) == 0.0 )
                step(i) = step(i) / ( npts(i) - 1)  ! if ( step(i) != 0 ) divide, else leave it 0
            end if
@@ -508,7 +508,7 @@ contains
         do i=1,p1
             do j=1,p2
                 do k=1,p3
-                    v=buf(:,i+(j-1)*p1+(k-1)*p1*p2) 
+                    v=buf(:,i+(j-1)*p1+(k-1)*p1*p2)
                     rr=gridpoint(this%grid,i,j,k)
                     val=(sqrt(sum(v**2)))
                     rr=rr-dot_product(mag,rr)*mag
@@ -516,11 +516,11 @@ contains
                     sgn=dot_product(norm,v)
                     if (val > maxi) maxi=val
                     if (val < mini) mini=val
-                    if (fd1 /= 0) then 
+                    if (fd1 /= 0) then
                         write(fd1,'(f12.6)',advance='no') val
                         if (mod(l,6) == 5) write(fd1,*)
                     end if
-                    if (fd2 /= 0) then 
+                    if (fd2 /= 0) then
                         if (sgn >= 0.d0 ) then
                             write(fd2,'(f12.6)',advance='no') val
                         else
@@ -555,7 +555,7 @@ contains
 
         open(fd,file=trim(fname),form='formatted',status='unknown')
         write(fd,*) 'Gaussian cube data, generated by genpot'
-        write(fd,*) 
+        write(fd,*)
         write(fd, '(i5,3f12.6)') 0, origin
         write(fd, '(i5,3f12.6)') npts(1), step(1), 0.d0, 0.d0
         write(fd, '(i5,3f12.6)') npts(2), 0.d0, step(2), 0.d0
@@ -569,7 +569,7 @@ contains
         if (fd == 0) return
 
         write(fd, '(6f11.7)')  rr, v
-    end subroutine	
+    end subroutine
 
     subroutine wrt_njvec(rr,v,fd)
         real(DP), dimension(:), intent(in) :: rr, v
@@ -582,10 +582,10 @@ contains
         nfac=sqrt(sum(v(:)**2))
         if (nfac < 1.d-15) then
             write(fd, '(6f11.7)')  rr, 0.d0, 0.d0, 0.d0
-        else 
+        else
             write(fd, '(6f11.7)')  rr, v/nfac
         end if
-    end subroutine	
+    end subroutine
 
     subroutine wrt_jproj(rr,v,grid,fd)
         real(DP), dimension(:), intent(in) :: rr, v
@@ -600,7 +600,7 @@ contains
 
         jprj=dot_product(norm,v)
         write(fd, '(3e19.12)') rr, jprj
-    end subroutine	
+    end subroutine
 
     subroutine wrt_jmod(rr,v,fd)
         real(DP), dimension(:), intent(in) :: rr, v
@@ -612,17 +612,17 @@ contains
 
         jmod=sqrt(sum(v**2))
         write(fd, '(6f11.7)')  rr, jmod
-    end subroutine	
+    end subroutine
 
     subroutine wrt_acid(rr,dT2,fd)
-        real(DP), dimension(:), intent(in) :: rr 
+        real(DP), dimension(:), intent(in) :: rr
         real(DP), intent(in) :: dT2
         integer(I4), intent(in) :: fd
 
         if (fd == 0) return
 
         write(fd, '(6f11.7)')  rr, au2si(dT2)
-    end subroutine	
+    end subroutine
 
     subroutine print_jt(rr, jt)
         real(DP), dimension(3), intent(in) :: rr
@@ -638,12 +638,12 @@ contains
     end subroutine
 
     subroutine acid_cube_plot(this)
-    ! this routine is based on jmod_cube_plot() 
+    ! this routine is based on jmod_cube_plot()
         type(jfield_t), intent(inout) :: this
         integer(I4), dimension(3) :: npts
         integer(I4) :: fd1, i, j, k, l, m, idx
         real(DP), dimension(:,:), pointer :: jtens
-        real(DP), dimension(3) :: qmin, qmax, step, r 
+        real(DP), dimension(3) :: qmin, qmax, step, r
         real(DP) :: val, maxi, mini
         ! create vti file
         call acid_vtkplot(this)
@@ -654,7 +654,7 @@ contains
         qmax = gridpoint(this%grid, npts(1), npts(2), npts(3))
 !        step=(qmax-qmin)/(npts-1) ! In a 2D plot qmin(3)-qmax(3) = 0 -> dividing it by npts(3) gives a NaN
         do i=1,3
-           step(i) = qmax(i) - qmin(i)    
+           step(i) = qmax(i) - qmin(i)
            if ( step(i) > 1E-8 ) then    ! floating point numbers cannot be compared as ( step(i) == 0.0 )
                step(i) = step(i) / ( npts(i) - 1)  ! if ( step(i) != 0 ) divide, else leave it 0
            end if
@@ -669,18 +669,18 @@ contains
         mini = 0.0d0
         l = 0
         m = 0
-        idx = 0 
+        idx = 0
         do i = 1, npts(1)
            do j = 1, npts(2)
                do k = 1, npts(3)
                    m = m + 1
                    r = gridpoint(this%grid, i, j, k)
                    ! maybe better to call ctens here ?? check code !
-                   ! which index for jtens? --> copy from cube plot file 
-                   idx = i+(j-1)*npts(1) + (k-1)*npts(1)*npts(2) 
-                   val = get_acid(r, jtens(:,idx))  
-                   if (val > maxi) maxi = val 
-                   if (val > mini) mini = val 
+                   ! which index for jtens? --> copy from cube plot file
+                   idx = i+(j-1)*npts(1) + (k-1)*npts(1)*npts(2)
+                   val = get_acid(r, jtens(:,idx))
+                   if (val > maxi) maxi = val
+                   if (val > mini) mini = val
                    if (fd1 /= 0) then
                        write(fd1,'(f12.6)',advance='no') val
                        if (mod(l,6) == 5) write(fd1,*)
@@ -704,7 +704,7 @@ contains
         real(DP), dimension(:,:), pointer :: jtens
         real(DP), dimension(3) :: qmin, qmax
         real(DP), dimension(3) :: norm, step, mag, v, rr
-        real(DP) :: maxi, mini, sgn 
+        real(DP) :: maxi, mini, sgn
         integer(I4), dimension(3) :: npts
         !real(DP), dimension(:,:), pointer :: buf
         real(DP), dimension(:,:,:), allocatable :: val
@@ -721,7 +721,7 @@ contains
 
 !        step=(qmax-qmin)/(npts-1) ! In a 2D plot qmin(3)-qmax(3) = 0 -> dividing it by npts(3) gives a NaN
         do i=1,3
-           step(i) = qmax(i) - qmin(i)    
+           step(i) = qmax(i) - qmin(i)
            if ( step(i) > 1E-8 ) then    ! floating point numbers cannot be compared as ( step(i) == 0.0 )
                step(i) = step(i) / ( npts(i) - 1)  ! if ( step(i) != 0 ) divide, else leave it 0
            end if
@@ -734,7 +734,7 @@ contains
         maxi=0.d0
         mini=0.d0
         l=0
-        idx = 0 
+        idx = 0
         !do i=1,p1
         !    do j=1,p2
         !        do k=1,p3
@@ -743,8 +743,8 @@ contains
                 do i=1,p1
                     !v=buf(:,i+(j-1)*p1+(k-1)*p1*p2)
                     rr=gridpoint(this%grid,i,j,k)
-                    idx = i+(j-1)*p1 + (k-1)*p1*p2 
-                    val(i,j,k)= get_acid(rr, jtens(:,idx))  
+                    idx = i+(j-1)*p1 + (k-1)*p1*p2
+                    val(i,j,k)= get_acid(rr, jtens(:,idx))
                 end do
             end do
         end do

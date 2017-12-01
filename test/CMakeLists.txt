@@ -1,12 +1,5 @@
 include_directories (${PROJECT_SOURCE_DIR}/src)
 
-if (MPI_FOUND)
-    set(MPI_NUMPROC 3)
-    set(MPIEXEC_PREFLAGS "")
-    set (MPIRUN ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${MPI_NUMPROC}
-        ${MPIEXEC_PREFLAGS})
-endif()
-
 # Configure driver
 set (GIMIC_EXECUTABLE ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/gimic.bin)
 set (LIBDIR ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})

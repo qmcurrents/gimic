@@ -84,7 +84,7 @@ class VectorField(Field):
             r = self.grid.gridpoint((i, j, k))
             w = self.grid.gridweight((i, j, k))
             if abs(w) > 0.0:
-                v = func(r) 
+                v = func(r)
             else:
                 v = np.zeros(self.dim)
             self.field[0][i, j, k] = v[0]
@@ -115,17 +115,17 @@ if __name__ == '__main__':
 
     def stest(r):
         global s
-        s += 1.0 
+        s += 1.0
         return s
 
     def vtest(r):
         global v
-        v += 1.0 
+        v += 1.0
         return v
 
     def ttest(r):
         global t
-        t += 1.0 
+        t += 1.0
         return t
 
     grid = Grid((2.0, 2.0, 2.0), npts=4)

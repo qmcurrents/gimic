@@ -87,9 +87,9 @@ def streamplot(x, y, u, v, density=1, linewidth=1,
     else:
         assert len(density) > 0
         NBX = int(30*density[0])
-        NBY = int(30*density[1])            
+        NBY = int(30*density[1])
     blank = numpy.zeros((NBY,NBX))
-    
+
     ## Constants for conversion between grid-index space and
     ## blank-index space
     bx_spacing = NGX/float(NBX-1)
@@ -124,7 +124,7 @@ def streamplot(x, y, u, v, density=1, linewidth=1,
         ## This function does RK4 forward and back trajectories from
         ## the initial conditions, with the odd 'blank array'
         ## termination conditions. TODO tidy the integration loops.
-        
+
         def f(xi, yi):
             dt_ds = 1./value_at(speed, xi, yi)
             ui = value_at(u, xi, yi)
@@ -184,7 +184,7 @@ def streamplot(x, y, u, v, density=1, linewidth=1,
                 if stotal > 2:
                     break
             return stotal, xf_traj, yf_traj
-        
+
         ## Alternative Integrator function
 
         ## RK45 does not really help in it's current state. The
@@ -192,7 +192,7 @@ def streamplot(x, y, u, v, density=1, linewidth=1,
         ## regions of high curvature and thus fairly ugly. Maybe a
         ## curvature based cap on the maximum ds permitted is the way
         ## forward.
-    
+
         def rk45(x0, y0, f):
             maxerror = 0.001
             maxds = 0.03
@@ -220,7 +220,7 @@ def streamplot(x, y, u, v, density=1, linewidth=1,
                                  yi + 439./216*ds*k1y - 8*ds*k2y + 3680./513*ds*k3y - 845./4104*ds*k4y)
                     k6x, k6y = f(xi - 8./27*ds*k1x + 2*ds*k2x - 3544./2565*ds*k3x + 1859./4104*ds*k4x - 11./40*ds*k5x,
                                  yi - 8./27*ds*k1y + 2*ds*k2y - 3544./2565*ds*k3y + 1859./4104*ds*k4y - 11./40*ds*k5y)
-                    
+
                 except IndexError:
                     # Out of the domain on one of the intermediate steps
                     break
@@ -269,7 +269,7 @@ def streamplot(x, y, u, v, density=1, linewidth=1,
             integrator = rk4
         elif INTEGRATOR == 'RK45':
             integrator = rk45
-        
+
         sf, xf_traj, yf_traj = integrator(x0, y0, f)
         sb, xb_traj, yb_traj = integrator(x0, y0, g)
         stotal = sf + sb
@@ -309,7 +309,7 @@ def streamplot(x, y, u, v, density=1, linewidth=1,
     ## PLOTTING HERE.
     #pylab.pcolormesh(numpy.linspace(x.min(), x.max(), NBX+1),
     #                 numpy.linspace(y.min(), y.max(), NBY+1), blank)
-    
+
     # Load up the defaults - needed to get the color right.
     if type(color) == numpy.ndarray:
         if vmin == None: vmin = color.min()
@@ -317,7 +317,7 @@ def streamplot(x, y, u, v, density=1, linewidth=1,
         if norm == None: norm = matplotlib.colors.normalize
         if cmap == None: cmap = matplotlib.cm.get_cmap(
             matplotlib.rcParams['image.cmap'])
-    
+
     for t in trajectories:
         # Finally apply the rescale to adjust back to user-coords from
         # grid-index coordinates.
@@ -326,7 +326,7 @@ def streamplot(x, y, u, v, density=1, linewidth=1,
 
         tgx = numpy.array(t[0])
         tgy = numpy.array(t[1])
-        
+
         points = numpy.array([tx, ty]).T.reshape(-1,1,2)
         segments = numpy.concatenate([points[:-1], points[1:]], axis=1)
 
@@ -337,19 +337,19 @@ def streamplot(x, y, u, v, density=1, linewidth=1,
         else:
             args['linewidth'] = linewidth
             arrowlinewidth = linewidth
-            
-        if type(color) == numpy.ndarray:            
+
+        if type(color) == numpy.ndarray:
             args['color'] = cmap(norm(vmin=vmin,vmax=vmax)
                                  (value_at(color, tgx, tgy)[:-1]))
             arrowcolor = args['color'][len(tgx)/2]
         else:
             args['color'] = color
             arrowcolor = color
-        
+
         lc = matplotlib.collections.LineCollection\
              (segments, **args)
         pylab.gca().add_collection(lc)
-            
+
         ## Add arrows half way along each trajectory.
         n = len(tx)/2
         p = mpp.FancyArrowPatch((tx[n],ty[n]), (tx[n+1],ty[n+1]),
@@ -358,7 +358,7 @@ def streamplot(x, y, u, v, density=1, linewidth=1,
         pylab.gca().add_patch(p)
 
     pylab.xlim(x.min(), x.max())
-    pylab.ylim(y.min(), y.max())    
+    pylab.ylim(y.min(), y.max())
     return
 
 def test():

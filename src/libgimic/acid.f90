@@ -1,6 +1,6 @@
 module acid_module
      ! H. Fliegl, University of Oslo (2013)
-     use globals_module    
+     use globals_module
      use teletype_module
      use tensor_module
      !use grid_class
@@ -17,7 +17,7 @@ contains
      ! T = t_yx t_yy t_yz   2 5 8
      !     t_zx t_zy t_zz   3 6 9
      !
-     ! Delta T^2 = 
+     ! Delta T^2 =
      !   1/3 [ (t_xx - tyy)^2 + (t_yy - t_zz)^2 + (t_zz - t_xx)^2 ]
      ! + 1/2 [ (t_xy + t_yx)^2 + (t_xz + t_zx)^2 + (t_yz + t_zy)^2 ]
      !
@@ -37,7 +37,7 @@ contains
      xzpzx = (tens(7) + tens(3))*(tens(7) + tens(3))
      yzpzy = (tens(8) + tens(6))*(tens(8) + tens(6))
 
-     tmp = DP33*(xxmyy + yymzz + zzmxx) + DP50*(xypyx + xzpzx + yzpzy)  
+     tmp = DP33*(xxmyy + yymzz + zzmxx) + DP50*(xypyx + xzpzx + yzpzy)
      ! conversion into SI units nA/T --> done later
      ! dT2 = au2si(tmp)
      dT2 = tmp

@@ -32,7 +32,7 @@ if __name__ == '__main__':
         return math.sin(r[0] + r[1] + r[2])
 
     q = FieldQuadrature()
-    grid = Grid(l=(20.0, 20.0, 20.0), origin=(-10.0, -15.0, -15.0), npts=50, 
+    grid = Grid(l=(20.0, 20.0, 20.0), origin=(-10.0, -15.0, -15.0), npts=50,
             distribution='gauss')
 #    print grid.get_points(0)
     f = ScalarField(grid)
@@ -40,13 +40,13 @@ if __name__ == '__main__':
     x = q.integrate(f)
     print 'int(exp(-r^2) = ', x, math.sqrt(math.pi)**3
 
-    grid = Grid(l=(2.0*math.pi, 0, 0), origin=(-math.pi, 0, 0), npts=40, 
+    grid = Grid(l=(2.0*math.pi, 0, 0), origin=(-math.pi, 0, 0), npts=40,
             distribution='gauss')
 #    print grid.get_points(0)
     f = ScalarField(grid)
     f.calc(fsin)
     x = q.integrate(f)
-    print 'int(sin(r)) =', x 
+    print 'int(sin(r)) =', x
 
 
 

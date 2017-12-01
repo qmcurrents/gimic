@@ -1,5 +1,5 @@
 
-add_executable(gimic.bin 
+add_executable(gimic.bin
     gimic.F90
     getkw.f90
     integral.f90
@@ -16,7 +16,7 @@ target_link_libraries(gimic.bin gimic2)
 
 configure_file(gimic.py.in gimic.py)
 
-install(FILES __init__.py ${CMAKE_CURRENT_BINARY_DIR}/gimic.py getkw.py 
+install(FILES __init__.py ${CMAKE_CURRENT_BINARY_DIR}/gimic.py getkw.py
     DESTINATION ${PYTHON_SITE_INSTALL_DIR}/fgimic
     )
 
@@ -28,7 +28,7 @@ if (ENABLE_CFOUR)
     find_package(CFour)
     if (CFOUR_FOUND)
         link_directories(${CFOUR_LIBRARY_DIR})
-        add_executable(xcpdens 
+        add_executable(xcpdens
             xcpdens.F90
             )
         target_link_libraries(xcpdens libr)

@@ -7,6 +7,6 @@ module kinds_module
     integer, parameter :: I2 = 2
     integer, parameter :: I4 = 4
     integer, parameter :: I8 = 8
-end module 
+end module
 
 ! vim:et:sw=4:ts=4

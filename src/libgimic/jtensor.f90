@@ -1,8 +1,8 @@
 !
 ! This is the actual work horse, calculates the current tensor
-! for a particular spin case. The cost of calling jtensor twice is 
+! for a particular spin case. The cost of calling jtensor twice is
 ! very small, since no exponentials have to be calculated.
-! 
+!
 module jtensor_class
     use globals_module
     use settings_module
@@ -13,7 +13,7 @@ module jtensor_class
     implicit none
 
 !    intrinsic dtime
-    
+
     type jtensor_t
         private
         type(molecule_t), pointer :: mol
@@ -30,7 +30,7 @@ module jtensor_class
     public new_jtensor, del_jtensor, jtensor, jtensor2, get_jvector
     public ctensor, ctensor2, jvector
     public jtensor_t
-    
+
     private
     integer(I4), parameter :: NOTIFICATION=1000
 
@@ -41,9 +41,9 @@ contains
         type(molecule_t), target :: mol
         type(dens_t), target :: xdens
         integer(I4) ::  ncgto
-        
+
         ncgto=get_ncgto(mol)
-        
+
 !        call new_dens(ddens)
         this%mol=>mol
         this%xdens=>xdens
@@ -202,7 +202,7 @@ contains
         real(DP), dimension(:), intent(in) :: pj, dj
         real(DP), dimension(:), intent(in) :: bb
         real(DP), dimension(:), intent(out) :: jv
-        
+
         jv=matmul(reshape(pj+dj,(/3,3/)), bb)
     end subroutine
 
@@ -217,19 +217,19 @@ contains
         real(DP), dimension(3) :: dpd  ! diamagnetic probability density
         real(DP) :: diapam
 
-        call get_dens(this%xdens, this%aodens, spin)  
+        call get_dens(this%xdens, this%aodens, spin)
         this%denbf=matmul(this%bfvec, this%aodens)
 
         k=1
         diapam=dot_product(this%denbf, this%bfvec)
         do i=1,3! dB <x,y,z>
             ! get perturbed densities: x,y,z
-            call get_pdens(this%xdens, i, this%pdens,spin) 
+            call get_pdens(this%xdens, i, this%pdens,spin)
             this%pdbf=matmul(this%bfvec, this%pdens)
             this%dendb=matmul(this%dbvec(:,i), this%aodens)
             dpd(i)=diapam*this%rho(i) ! diamag. contr. to J
             do j=1,3 !dm <x,y,z>
-                prsp1=-dot_product(this%dendb, this%drvec(:,j))    ! (-i)**2=-1 
+                prsp1=-dot_product(this%dendb, this%drvec(:,j))    ! (-i)**2=-1
                 prsp2=dot_product(this%denbf, this%d2fvec(:,k))
                 ppd=dot_product(this%pdbf, this%drvec(:,j))
                 ctp(j,i)=ZETA*ppd
@@ -265,20 +265,20 @@ contains
         real(DP), dimension(3) :: dpd  ! diamagnetic probability density
         real(DP) :: diapam
 
-        call get_dens(this%xdens, this%aodens, spin)  
-        
+        call get_dens(this%xdens, this%aodens, spin)
+
         this%denbf=matmul(this%bfvec, this%aodens)
 
         k=1
         diapam=dot_product(this%denbf, this%bfvec)
         do b=1,3! dB <x,y,z>
             ! get perturbed densities: x,y,z
-            call get_pdens(this%xdens, b, this%pdens, spin) 
+            call get_pdens(this%xdens, b, this%pdens, spin)
             this%pdbf=matmul(this%bfvec, this%pdens)
             this%dendb=matmul(this%dbvec(:,b), this%aodens)
             dpd(b)=diapam*this%rho(b) ! diamag. contr. to J
             do m=1,3 !dm <x,y,z>
-                prsp1=-dot_product(this%dendb, this%drvec(:,m))    ! (-i)**2=-1 
+                prsp1=-dot_product(this%dendb, this%drvec(:,m))    ! (-i)**2=-1
                 prsp2=dot_product(this%denbf, this%d2fvec(:,k))
                 ppd=dot_product(this%pdbf, this%drvec(:,m))
                 ct(m,b)=ZETA*ppd
@@ -300,7 +300,7 @@ contains
         end if
         ! annihilate diamagnetic  contribution
         if (.not.settings%use_diamag) then
-            dpd=D0    
+            dpd=D0
             bert_is_evil=.true.
         end if
 
@@ -325,7 +325,7 @@ contains
 !        call mkdbop(this%dop, r, this%dbop)
 !        call dfdb(this%dbt, r, this%bfvec, this%dbop, this%dbvec)
 !        call d2fdrdb(this%d2f, r, this%bfvec, this%drvec, this%dbop, this%d2fvec)
-!        
+!
 !        print *, 'bfvec'
 !        print *, repeat('-', 70)
 !        print *, this%bfvec
@@ -377,7 +377,7 @@ contains
 !44 format('pz',3f15.10)
 !45 format('===        x             y               z')
 !    end subroutine
-    
+
 end module
 
 ! vim:et:sw=4:ts=4

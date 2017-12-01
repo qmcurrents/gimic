@@ -13,7 +13,7 @@ module divj_module
 
     public divj
     private
-    
+
     real(DP), dimension(5), parameter :: wgt=(/2.d0,-16.d0,0.d0,16.d0,-2.d0/)
     real(DP), parameter :: step=1.d-3
     real(DP), parameter :: hx=1.d0/(24.d0*step)
@@ -24,7 +24,7 @@ contains
     function divj(rr, magnet) result(div)
         real(DP), dimension(3), intent(in) :: rr, magnet
         real(DP) :: div
-         
+
         stop 'Out of order: divj() is broken.'
         div = divergence(rr, magnet)
     end function

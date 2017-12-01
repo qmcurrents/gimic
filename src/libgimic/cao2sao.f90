@@ -1,10 +1,10 @@
 !
-! Set up the projection operators for transforming from cartesian to 
+! Set up the projection operators for transforming from cartesian to
 ! spherical angular basis as described in "Molecular Electronic-Structure
 ! Theory" by Helgaker et al. [Section 9.1.2].
 !
-! Well... This scheme does not work well with aces2, so the projection 
-! operators are set up statically by copy 'n paste from the aces2 sources. 
+! Well... This scheme does not work well with aces2, so the projection
+! operators are set up statically by copy 'n paste from the aces2 sources.
 ! Sigh.
 !
 
@@ -15,7 +15,7 @@ module cao2sao_class
     use factorial_module
     use basis_class
     implicit none
-    
+
     public new_c2sop, del_c2sop, cao2sao
     private
 
@@ -35,7 +35,7 @@ module cao2sao_class
 contains
     subroutine setup_c2soper()
         integer(I4) :: l, i,j
-        
+
         ! Ordering of spherical harmonics in aces2
         ! (the ordering is... random!!?)
         if (is_turbomole) then ! these are NOT right!!!
@@ -53,7 +53,7 @@ contains
             sphmap(4,-4:4)= (/7,5,2,9,1,3,6,8,4/)
             sphmap(5,-5:5)= (/1,1,1,1,1,1,1,1,1,1,1/) !fake
         end if
-        
+
         c2s_oper(0)%po=>sproj
         c2s_oper(1)%po=>pproj
         c2s_oper(2)%po=>dproj
@@ -69,7 +69,7 @@ contains
     subroutine new_c2sop(c2s, mol)
         type(cao2sao_t), target :: c2s
         type(molecule_t) :: mol
-        
+
         integer(I4) :: nc, ncc, i,j
         integer(I4) :: natoms, nctr, ncomp, nccomp, idx, cidx
         type(atom_t), pointer :: atom
@@ -78,7 +78,7 @@ contains
 
         call msg_note('Setting up CAO to SAO projection operators')
         call setup_c2soper
-        
+
         natoms=get_natoms(mol)
         nc=get_ncgto(mol)
         ncc=get_nccgto(mol)
@@ -91,7 +91,7 @@ contains
             call get_atom(mol,i,atom)
             call get_basis(atom, basis)
             nctr=get_nctr(basis)
-            do j=1,nctr 
+            do j=1,nctr
                 call get_contraction(atom, j, ctr)
                 ncomp=get_ncomp(ctr)
                 nccomp=get_nccomp(ctr)
@@ -124,7 +124,7 @@ contains
     ! Calculate the normalization factor for SGTO_lm
     function nslm(l,m) result(q)
         integer(I4), intent(in) :: l, m
-        
+
         real(DP) :: q, fac
 
         q=1.d0/(2.d0**am)
@@ -139,7 +139,7 @@ contains
     ! Calculate the normalization factor for SGTO_lm
     function nslm2(l,m) result(q)
         integer(I4), intent(in) :: l, m
-        
+
         real(DP) :: q, fac
 
         q=1.d0/(2.d0**am)
@@ -168,7 +168,7 @@ contains
         q=q*dble(iq)
     end function
 
-    ! Construct the projection operator for basis functions with 
+    ! Construct the projection operator for basis functions with
     ! quantum number l.
     ! This routine has a bug...
     subroutine mkc2sop(l, xop)
@@ -202,12 +202,12 @@ contains
             end do
         end do
         call renorm(xop)
-        
+
     end subroutine
 
     ! Renormalize expansion coefficients to integers.
     ! First find the smallest expansion coefficient, and divide.
-    ! The trick is then to find the smallest integer multiplicator that 
+    ! The trick is then to find the smallest integer multiplicator that
     ! makes all expansion coefficients integer.
     subroutine renorm(xop)
         real(DP), dimension(:,:), intent(inout) :: xop
@@ -249,7 +249,7 @@ contains
         real(DP), dimension(:,:), intent(inout) :: xop
 
         integer(I4) :: i, j
-        
+
         do i=1,size(xop,1)
             do j=1,size(xop,2)
                 write(*, '(i4)', advance='no') xop(i,j)

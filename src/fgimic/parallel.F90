@@ -40,7 +40,7 @@ contains
             settings%is_mpirun = .true.
         end if
     end function
-        
+
     subroutine stop_mpi()
 #ifdef HAVE_MPI
         call mpi_finalize(ierr)
@@ -67,11 +67,11 @@ contains
         integer(I4), intent(in) :: npts
         integer(I4), intent(out) :: lo, hi
 
-        integer(I4) :: nPerHost, nLeftOver 
+        integer(I4) :: nPerHost, nLeftOver
 
         if (mpi_world_size == 1) then
             lo=1
-            hi=npts 
+            hi=npts
             return
         end if
 #ifdef HAVE_MPI

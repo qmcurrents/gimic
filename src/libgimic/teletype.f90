@@ -6,7 +6,7 @@ module teletype_module
     integer(I4), parameter :: STDERR=0
     integer(I4), parameter :: DEVNULL=-1
 
-    character(160) :: str_g 
+    character(160) :: str_g
     private ttunit, level, TTBUFSZ
 
     integer(SP), parameter :: TTBUFSZ=8096
@@ -28,9 +28,9 @@ contains
         character(*), intent(in) :: str
 
         if (ttunit == DEVNULL) return
-        
+
         write(ttunit, 100) trim(str)
-100 format(1x,a)	
+100 format(1x,a)
     end subroutine
 
     subroutine msg_note(str)
@@ -39,16 +39,16 @@ contains
         if (ttunit == DEVNULL) return
 
         write(ttunit, 100) ' *** ', trim(str)
-100 format(a,a)	
+100 format(a,a)
     end subroutine
-    
+
     subroutine msg_info(str)
         character(*), intent(in) :: str
 
         if (ttunit == DEVNULL) return
 
         write(ttunit, 100) ' INFO: ', trim(str)
-100 format(a,a)	
+100 format(a,a)
     end subroutine
 
     subroutine msg_warn(str)
@@ -57,7 +57,7 @@ contains
         if (ttunit == DEVNULL) return
 
         write(ttunit, 100) ' WARNING: ', trim(str)
-100 format(a,a)	
+100 format(a,a)
     end subroutine
 
     subroutine msg_debug(str, l)
@@ -68,7 +68,7 @@ contains
         if (l > level) return
 
         write(STDOUT, 100) ' DEBUG: ', trim(str)
-100 format(a,a)	
+100 format(a,a)
     end subroutine
 
     subroutine msg_error(str)
@@ -76,7 +76,7 @@ contains
 
         write(STDERR, 102) '<<< ERROR: ', trim(str), ' >>>'
 
-102 format(a,a,a)	
+102 format(a,a,a)
     end subroutine
 
     subroutine msg_critical(str)
@@ -88,15 +88,15 @@ contains
         write(STDERR, 100) ' <'
         write(STDERR, 101) repeat('>', 70)
 
-100 format(a)	
-101 format(1x,a)	
-102 format(a,a)	
+100 format(a)
+101 format(1x,a)
+102 format(a,a)
     end subroutine
 
     subroutine nl
         if (ttunit == DEVNULL) return
 
-        write(ttunit, *) 
+        write(ttunit, *)
     end subroutine
 
     subroutine set_teletype_unit(u)
@@ -107,17 +107,17 @@ contains
     subroutine get_teletype_unit(u)
         integer(I4), intent(out) :: u
         u=ttunit
-    end subroutine 
+    end subroutine
 
     subroutine set_debug_level(l)
         integer(I4), intent(in) :: l
         level=l
-    end subroutine 
+    end subroutine
 
     subroutine get_debug_level(l)
         integer(I4), intent(out) :: l
         l=level
-    end subroutine 
+    end subroutine
 
     subroutine disable_stdout()
         logical :: o_p
@@ -137,7 +137,7 @@ contains
             ttunit=NONSTDOUT
         end if
     end subroutine
-    
+
     subroutine enable_stdout()
         logical :: o_p
 
