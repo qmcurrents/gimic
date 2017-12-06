@@ -4,6 +4,9 @@ foreach(_name
     benzene/vectors
     benzene/2d
     benzene/3d
+    benzene/keyword-magnet
+    benzene/3d-keyword-magnet
+    benzene/2d-keyword-magnet
     c4h4/integration
     )
     add_test(

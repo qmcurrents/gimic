@@ -1,0 +1,63 @@
+
+ ****************************************************************
+ ***                                                          ***
+ ***           GIMIC 2.1.4 (5d765ed)                          ***
+ ***              Written by Jonas Juselius                   ***
+ ***                                                          ***
+ ***  This software is copyright (c) 2003-2011 by             ***
+ ***  Jonas Juselius,  University of Tromso.                  ***
+ ***                                                          ***
+ ***  You are free to distribute this software under the      ***
+ ***  terms of the GNU General Public License                 ***
+ ***                                                          ***
+ ***  A Pretty Advanced 'Hello World!' Program                ***
+ ****************************************************************
+
+ Wed Dec  6 16:20:43 2017
+  TITLE:
+
+ INFO: Detected TURBOMOLE input
+
+ Number of atoms =  12
+
+ Normalizing basis
+
+   Total number of primitive  GTO's  354
+   Total number of contracted GTO's  252
+
+ *** Calculating screening coefficients
+ INFO: Screening threshold:   0.1000E-07
+
+ INFO: Reordering densities [TURBOMOLE]
+ Grid mode = base
+   Number of grid points <v1,v2>:   30   30   30
+   Total number of grid points  :     27000
+
+ *** Grid plot in grid.xyz
+    Magnetic field <x,y,z> =   0.00000   0.00000  -1.00000
+
+ INFO: Closed-shell calculation
+
+ Calculating current density
+ *****************************************
+ INFO: Estimated CPU time for single core calculation:     34.28 sec
+
+ magnetic field
+   0.0000000000000000        0.0000000000000000       -1.0000000000000000     
+ 
+ ACID: maxi, mini  0.15857762074113654       0.15857762074113654     
+ maxi, mini:  0.13201047631460980        0.0000000000000000     
+ *** Deallocated grid data
+ INFO: Deallocated basis set and atom data
+
+ ----------------------------------------------------------------------
+    wall time:    35.13sec
+         user:    35.10sec
+          sys:     0.03sec
+ ----------------------------------------------------------------------
+ Wed Dec  6 16:21:18 2017
+ Hello World! (tm)
+
+ done.
+
+This is F-GIMIC.
