@@ -8,6 +8,7 @@ foreach(_name
     benzene/3d-keyword-magnet
     benzene/2d-keyword-magnet
     benzene/keyword-spacing
+    benzene/keyword-rotation
     c4h4/integration
     )
     add_test(
