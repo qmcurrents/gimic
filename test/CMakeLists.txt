@@ -7,6 +7,7 @@ foreach(_name
     benzene/keyword-magnet
     benzene/3d-keyword-magnet
     benzene/2d-keyword-magnet
+    benzene/keyword-spacing
     c4h4/integration
     )
     add_test(
