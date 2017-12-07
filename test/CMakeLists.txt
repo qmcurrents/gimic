@@ -10,6 +10,7 @@ foreach(_name
     benzene/keyword-spacing
     benzene/keyword-rotation
     benzene/keyword-radius
+    benzene/int-grid-bond-even
     c4h4/integration
     )
     add_test(
