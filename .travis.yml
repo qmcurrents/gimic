@@ -25,9 +25,9 @@ install:
 script:
   - ./setup
   - cd build
-  - make
+  - make -j2
   - make install
-  - make test
+  - ctest -j2
 
 notifications:
   email: false
