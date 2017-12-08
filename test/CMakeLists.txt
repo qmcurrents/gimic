@@ -12,6 +12,7 @@ foreach(_name
     benzene/keyword-radius
     benzene/int-grid-bond-even
     c4h4/integration
+    c4h4/read-grid
     )
     add_test(
         NAME ${_name}
