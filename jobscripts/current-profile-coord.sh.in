@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Function definitions:
+source @SCRIPTS_DIR@/jobscripts/functions-def
+
 function validateInput() {
 # usage: validateInput variable $variable 
     local __inputVar=$1
@@ -13,8 +16,6 @@ function validateInput() {
     eval $__inputVar="'$__inputValue'"
 }
 
-function centroid() { atoms="$@"; for i in $atoms; do awk -v i=$i '{ if (NR == i+1) print $0 }' coord; done | awk '{ x+=$1; y+=$2; z+=$3; n++} END{ print x/n, y/n, z/n; }'; }
-function dist() { awk -v a1="$1" -v a2="$2" '{ if (NR == a1+1) { x+=$1;y+=$2;z+=$3;}; if (NR == a2+1) {x-=$1;y-=$2;z-=$3} } END{ dist=sqrt(x*x+y*y+z*z); print dist, dist*0.5; }' coord ; }
 
 function checkPreviousCalc() {
     local __resultVar=$1
@@ -39,67 +40,6 @@ function checkPreviousCalc() {
     fi
 
     eval $__resultVar="'$__sedVar'"
-}
-
-function userInp()
-{
-    local __resultVar=$1
-    local __varValue="$2"
-    local localResult="$2"
-    printf "\nPress [a] to enter atomic indices or press [v] to enter the desired value\n"
-    read accept
-    if [ ! -z $accept ] && [ $accept == "a" ]
-    then
-        printf "\nEnter the indices of the selected atoms to calculate their midpoint and then press enter.\n\n" 
-     atoms=0; read atoms
-     validateInput atoms  "$atoms"
-     CENTROID=$(centroid $atoms)
-     Cx=$( echo $CENTROID | awk '{print $1} ' )
-     Cy=$( echo $CENTROID | awk '{print $2} ' )
-     Cz=$( echo $CENTROID | awk '{print $3} ' )
-     #echo "Centroid:"; printf "("$Cx"; "$Cy"; "$Cz")\n"
-     __varValue=$( awk -v Cx=$Cx -v Cy=$Cy -v Cz=$Cz -v Bx=$Bx -v By=$By -v Bz=$Bz BEGIN'{dist=sqrt( (Bx-Cx)*(Bx-Cx) + (By-Cy)*(By-Cy) + (Bz-Cz)*(Bz-Cz) ); print dist}' )
-     
-     printf  "\nDo you accept $__resultVar=$__varValue bohr?\nPress [n] to change\n"
-     read accept;
-     if [ ! -z $accept ] && [ $accept == "n" ]
-     then
-         printf "$__resultVar="; 
-	 read __varValue
-	 validateInput __varValue  $__varValue
-
-     fi # if centroid calculation not accepted 
-     elif [ ! -z $accept ] && [ $accept == "v" ]
-     then
-         printf "$__resultVar="; 
-	 read __varValue
-	 validateInput __varValue  $__varValue
-         printf  "\nDo you accept $__resultVar=$__varValue bohr?\nPress [n] to change\n"
-     read accept;
-     if [ ! -z $accept ] && [ $accept == "n" ]
-     then
-         printf $__resultVar=$__varValue
-     fi
-fi # end if accept out = 10
-
-eval $__resultVar="'$__varValue'"
-}
-
-function valueInp()
-{
-    local __resultVar=$1
-    local __varValue="$2"
-
-    printf  "\nDo you accept $__resultVar=$__varValue bohr?\nPress [n] to change\n"
-    read accept;
-    if [ ! -z $accept ] && [ $accept == "n" ]
-    then
-	printf "$__resultVar="; 
-	read __varValue
-	validateInput __varValue  $__varValue
-    fi # if centroid calculation not accepted 
-
-    eval $__resultVar="'$__varValue'"
 }
 
 function calculateRot() {
@@ -247,33 +187,36 @@ dirname=current_profile_$ATOMS1.$ATOMS2
 # If we are not in the current_profile folder, check if it exists. If it did, just go there. If it did not, create it and copy the necessary files
 dir=$(pwd | grep "current_profile")
 #echo $dir
-if [ -z $dir ] # if the path does not contain "current_profile", $dir is empty, so the directory either does not exist, or we are not inside it
-then
-    #echo "Currently not in the directory current_profile"
-    if [ -d $dirname ] 
-    then
-	printf "\n\n*** Directory already exists.\n\nCalculation parameters:\n"
-	grep "bond=\|fixed=\|up=\|down=\|MF=" $dirname/gimic.int.coord
-	echo "Enter [y] to overwrite or any key to exit."; read accept
-	if [ -z $accept ] || [ ! $accept == "y" ]  # if the variable is empty or different from "y", exit 
-	then 
-	    exit
-	else
-	    rm -f $dirname/*out $dirname/*inp # Remove leftover input and output to avoid confusion
-	fi 
-checkPreviousCalc fixed $fixed
-else
-	if [ -e MOL ] && [ -e XDENS ] && [ -e coord ]
-	then
-	    mkdir $dirname
-	    cp coord $dirname/
-	    echo "Directory $dirname created."; echo
-	else
-	    echo "Please run the current profile analysis from a directory containing the files MOL, XDENS and coord"
-	    exit
-	fi # end if MOL, XDENS, coord exist
-    fi # end if current_profile_#.#
-fi # end if directory current_profile_#.# exists or we are inside it
+
+checkIfPreviousCalculationExists $dir
+
+# if [ -z $dir ] # if the path does not contain "current_profile", $dir is empty, so the directory either does not exist, or we are not inside it
+# then
+#     #echo "Currently not in the directory current_profile"
+#     if [ -d $dirname ] 
+#     then
+# 	printf "\n\n*** Directory already exists.\n\nCalculation parameters:\n"
+# 	grep "bond=\|fixed=\|up=\|down=\|MF=" $dirname/gimic.int.coord
+# 	echo "Enter [y] to overwrite or any key to exit."; read accept
+# 	if [ -z $accept ] || [ ! $accept == "y" ]  # if the variable is empty or different from "y", exit 
+# 	then 
+# 	    exit
+# 	else
+# 	    rm -f $dirname/*out $dirname/*inp # Remove leftover input and output to avoid confusion
+# 	fi 
+# checkPreviousCalc fixed $fixed
+# else
+# 	if [ -e MOL ] && [ -e XDENS ] && [ -e coord ]
+# 	then
+# 	    mkdir $dirname
+# 	    cp coord $dirname/
+# 	    echo "Directory $dirname created."; echo
+# 	else
+# 	    echo "Please run the current profile analysis from a directory containing the files MOL, XDENS and coord"
+# 	    exit
+# 	fi # end if MOL, XDENS, coord exist
+#     fi # end if current_profile_#.#
+# fi # end if directory current_profile_#.# exists or we are inside it
 
 # Calculate the coordinates of the line normal to the desired atoms
 coordStart=$(centroid $atom1)
@@ -316,19 +259,40 @@ if [ -f $dirname/calculation.dat ]
 then
     fixed=$( sed -n -e 's/^.*fixed=*//p' $dirname/calculation.dat | awk 'BEGIN { FS = "," } ; { print $2 }' )
 fi
-# If there was not a previous calculation, $fixed will be empty. Ask if it should be changed
-if [ ! -z $fixed ] 
-then
-    printf "\nThe previously selected fixed atom is $fixed.\nPress [n] to change\n"
-    read accept
-fi
-# If the $fixed is empty or the user wants to change it, ask to enter 
-if [[ ( -z $fixed ) || ( ! -z $accept  &&  "$accept" == "n" ) ]]
-    then 
-        printf "\nEnter the index of the fixed atom:\n"
-        read fixed
-	validateInput fixed $fixed
-fi
+# # If there was not a previous calculation, $fixed will be empty. Ask if it should be changed
+# if [ ! -z $fixed ] 
+# then
+#     printf "\nThe previously selected fixed atom is $fixed.\nPress [n] to change\n"
+#     read accept
+# fi
+# # If the $fixed is empty or the user wants to change it, ask to enter 
+# if [[ ( -z $fixed ) || ( ! -z $accept  &&  "$accept" == "n" ) ]]
+#     then 
+#         printf "\nEnter the index of the fixed atom:\n"
+#         read fixed
+# 	validateInput fixed $fixed
+# fi
+
+echo
+
+# Read the coordinates of atom1:
+A1z=$( centroid $atom1 | awk '{print $3}' )
+
+# Read the coordinates of atom2:
+A2x=$( centroid $atom2 | awk '{print $1}' )
+A2y=$( centroid $atom2 | awk '{print $2}' )
+A2z=$( centroid $atom2 | awk '{print $3}' )
+#A2x=$( awk -v atom2=$atom2 '{ if (NR==(atom2+1)) {print $1} }' coord  )
+#A2y=$( awk -v atom2=$atom2 '{ if (NR==(atom2+1)) {print $2} }' coord  )
+#A2z=$( awk -v atom2=$atom2 '{ if (NR==(atom2+1)) {print $3} }' coord  )
+
+Fx=$(calculateFixedCoord $A2x $A2y $A2z | awk '{print $1}')
+Fy=$(calculateFixedCoord $A2x $A2y $A2z | awk '{print $2}')
+#Fz=$( awk -v A1z=$A1z -v A2z=$A2z 'BEGIN{ print (A1z+A2z)*0.5 }')
+Fz=$( awk -v A1z=$A1z -v A2z=$A2z 'BEGIN{ print A2z }')
+
+echo "Fixed coordinate: ($Fx; $Fy; $Fz)"
+
 
 printf "\n\nSTARTING POINT OF THE INTEGRATION\n"
 userInp start $start
@@ -354,6 +318,7 @@ echo "MAGNETIC FIELD DIRECTION"
 MFx=0.0
 MFy=0.0
 MFz=-1.0
+
 
 echo "Do you accept the default MF orientation along the Z axis?"
 echo "Press [n] to calculate the direction automatically" # TODO: or [e] to enter manually"
@@ -471,10 +436,11 @@ printf "Integration plane split into $nsteps slices with width $delta bohr and g
 #fi
 
 
-string="s/@COORD1@/$COORD1/; s/@COORD2@/$COORD2/; s/@fixed@/$fixed/; s/@distance@/$distance/; s/@up@/$up/; s/@down@/$down/; s/@MF@/$MF/; s/@spacingX@/$spacingX/; s/@spacingY@/$spacingY/; s/@spacingZ@/$spacingZ/;  s/@rotation@/$rotation/; s/@FX@/$Fx/; s/@FY@/$Fy/; s/@FZ@/$Fz/ ; "
+#string="s/@COORD1@/$COORD1/; s/@COORD2@/$COORD2/; s/@fixed@/$fixed/; s/@distance@/$distance/; s/@up@/$up/; s/@down@/$down/; s/@MF@/$MF/; s/@spacingX@/$spacingX/; s/@spacingY@/$spacingY/; s/@spacingZ@/$spacingZ/;  s/@rotation@/$rotation/; s/@FX@/$Fx/; s/@FY@/$Fy/; s/@FZ@/$Fz/ ; "
+string="s/@COORD1@/$COORD1/; s/@COORD2@/$COORD2/; s/@distance@/$distance/; s/@up@/$up/; s/@down@/$down/; s/@spacingX@/$spacingX/; s/@spacingY@/$spacingY/; s/@spacingZ@/$spacingZ/;  s/@rotation@/$rotation/; s/@MFx@/$MFx/; s/@MFy@/$MFy/; s/@MFz@/$MFz/; s/@FX@/$Fx/; s/@FY@/$Fy/; s/@FZ@/$Fz/ ;"
 sed "$string" @SCRIPTS_DIR@/gimic.int.coord > $dirname/gimic.int.coord
 
-heading=\""atom1=$ATOMS1 atom2=$ATOMS2 fixed=$fixed delta=$delta \nspacing=[ $spacingX;$spacingY;$spacingZ] in=$start out=$out \nup=$up down=$down"\"
+#heading=\""atom1=$ATOMS1 atom2=$ATOMS2 fixed=$fixed delta=$delta \nspacing=[ $spacingX;$spacingY;$spacingZ] in=$start out=$out \nup=$up down=$down"\"
 
 echo $heading > ./$dirname/calculation.dat
 
@@ -531,14 +497,21 @@ if  [ ! -z $accept ] && [ $accept == "y" ]
 then
 (cd ./$dirname/ && gimic --dryrun gimic.0.inp | grep "grid points" )
 #    gimic --dryrun gimic.0.inp
-    mv ./$dirname/grid.xyz ./$dirname/grid.check.xyz
+    # take the first two coordinates of the int plane
+    cat ./$dirname/grid.xyz | head -n -3 > ./$dirname/grid.check.xyz
+
     last=$(ls ./$dirname/*inp | wc -l)
     last=$(( $last -1 ))
     (cd ./$dirname/ && gimic --dryrun gimic.$last.inp )
-    grep X ./$dirname/grid.xyz >> ./$dirname/grid.check.xyz
-    atomNum=$(head -n 1 ./$dirname/grid.xyz)
-    atomNum=$(( $atomNum + 4 ))
-    sed -i "1s/.*/$atomNum/" ./$dirname/grid.check.xyz
+
+    # take the coords of the end of the int plane
+    grep X ./$dirname/grid.xyz  | awk '{ if (NR <=2) {print $0} }' >> ./$dirname/grid.check.xyz
+    # copy the MF direction "Be" atom
+    grep Be ./$dirname/grid.xyz  >> ./$dirname/grid.check.xyz
+
+#    atomNum=$(head -n 1 ./$dirname/grid.xyz)
+#    atomNum=$(( $atomNum + 2 ))
+#    sed -i "1s/.*/$atomNum/" ./$dirname/grid.check.xyz
 
     echo
     echo "The file grid.check.xyz created at $wrkdir/grid.check.xyz"
