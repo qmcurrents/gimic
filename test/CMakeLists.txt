@@ -11,6 +11,7 @@ foreach(_name
     benzene/keyword-rotation
     benzene/keyword-radius
     benzene/int-grid-bond-even
+    benzene/giao-test   
     c4h4/integration
     )
     add_test(
