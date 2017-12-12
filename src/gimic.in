@@ -196,7 +196,7 @@ def check_grid(grid):
         required=('file',)
         ignore=('ivec', 'jvec', 'bond', 'fixpoint',
                 'origin', 'rotation',
-                'radius', 'lengths','distance', 'spacing', 'map')
+                'radius', 'lengths','distance', 'spacing')
         for i in required:
             if not check_opt(grid,i):
                 print(err % (i,arg))

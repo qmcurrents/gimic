@@ -13,6 +13,7 @@ foreach(_name
     benzene/int-grid-bond-even
     benzene/diamag-off
     c4h4/integration
+    c4h4/read-grid
     )
     add_test(
         NAME ${_name}
