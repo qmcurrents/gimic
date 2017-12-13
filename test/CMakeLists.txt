@@ -12,6 +12,8 @@ foreach(_name
     benzene/keyword-radius
     benzene/int-grid-bond-even
     benzene/diamag-off
+    benzene/paramag-off
+    benzene/giao-test   
     c4h4/integration
     c4h4/read-grid
     )

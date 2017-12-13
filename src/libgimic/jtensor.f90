@@ -266,7 +266,6 @@ contains
         real(DP) :: diapam
 
         call get_dens(this%xdens, this%aodens, spin)
-
         this%denbf=matmul(this%bfvec, this%aodens)
 
         k=1
@@ -275,17 +274,21 @@ contains
             ! get perturbed densities: x,y,z
             call get_pdens(this%xdens, b, this%pdens, spin)
             this%pdbf=matmul(this%bfvec, this%pdens)
-            this%dendb=matmul(this%dbvec(:,b), this%aodens)
+            if (settings%use_giao) then
+              this%dendb=matmul(this%dbvec(:,b), this%aodens)
+            end if
             dpd(b)=diapam*this%rho(b) ! diamag. contr. to J
             do m=1,3 !dm <x,y,z>
-                prsp1=-dot_product(this%dendb, this%drvec(:,m))    ! (-i)**2=-1
+              if (settings%use_giao) then
+                prsp1=-dot_product(this%dendb, this%drvec(:,m)) ! (-i)**2=-1
                 prsp2=dot_product(this%denbf, this%d2fvec(:,k))
-                ppd=dot_product(this%pdbf, this%drvec(:,m))
-                ct(m,b)=ZETA*ppd
-                if (settings%use_giao) ct(m,b)=ct(m,b)+ZETA*(prsp1+prsp2)
-!                print *, m,b
-!                print *, ppd, prsp1, prsp2
-                k=k+1
+              end if
+              ppd=dot_product(this%pdbf, this%drvec(:,m))
+              ct(m,b)=ZETA*ppd
+              if (settings%use_giao) ct(m,b)=ct(m,b)+ZETA*(prsp1+prsp2)
+!              print *, m,b
+!              print *, ppd, prsp1, prsp2
+              k=k+1
             end do
         end do
 
@@ -294,7 +297,7 @@ contains
 ! contributes to the diagonal.
 
         ! annihilate paramagnetic contribution
-        if (.not.settings%use_paramag)	then
+        if (.not.settings%use_paramag) then
             ct=D0
             bert_is_evil=.true.
         end if
