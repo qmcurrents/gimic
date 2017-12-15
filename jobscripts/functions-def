@@ -70,9 +70,12 @@ function valueInp()
 
 
 
-
 function checkIfPreviousCalculationExists() {
 dir="$@"
+
+# TODO: The check for MOL, etc needs to come before everything else
+# TODO: bug - if directory exists, it is not created again
+# TODO: if XDENS is missing, run turbo2gimic
 
 if [ -z $dir ] # if the path does not contain "current_profile", $dir is empty, so the directory either does not exist, or we are not inside it
 then
@@ -146,3 +149,41 @@ function calculateFixedCoord() {
 # echo $Fx, $Fy, $Fz
 # 
 #
+
+function planeSanityCheck() {
+# sanity check for the integration plane
+
+dirname="$@"
+
+echo "Do you want to create an xyz file showing the ends of the integration plane?"
+echo "Press [y] or any other key to skip"; read accept
+if  [ ! -z $accept ] && [ $accept == "y" ]
+then
+    echo "Running calculations..."
+    (cd ./$dirname/ && gimic --dryrun gimic.0.inp | grep "grid points" )
+#    gimic --dryrun gimic.0.inp
+    # take the first two coordinates of the int plane
+    cat ./$dirname/grid.xyz | head -n -3 > ./$dirname/grid.check.xyz
+
+    last=$(ls ./$dirname/*inp | wc -l)
+    last=$(( $last -1 ))
+    (cd ./$dirname/ && gimic --dryrun gimic.$last.inp > /dev/null)
+
+    # take the coords of the end of the int plane
+    grep X ./$dirname/grid.xyz  | awk '{ if (NR <=2) {print $0} }' >> ./$dirname/grid.check.xyz
+    # copy the MF direction "Be" atom
+    grep Be ./$dirname/grid.xyz  >> ./$dirname/grid.check.xyz
+
+#    atomNum=$(head -n 1 ./$dirname/grid.xyz)
+#    atomNum=$(( $atomNum + 2 ))
+#    sed -i "1s/.*/$atomNum/" ./$dirname/grid.check.xyz
+
+    echo
+    echo "The file grid.check.xyz created."
+    echo "You can now put this script to the background and inspect the molecule."
+    echo "Bring the script to foreground and press enter to continue the current profile."
+    read accept # just wait
+
+    echo "Current profile analysis resumed." 
+fi
+}
