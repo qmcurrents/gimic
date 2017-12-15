@@ -652,7 +652,7 @@ echo
 #echo DirName: $dirname 
 #echo Dir: $wrkdir
 
-@SCRIPTS_DIR@/crit_pts.sh $wrkdir    && cat $wrkdir/profile-points.out
+(cd $wrkdir && @SCRIPTS_DIR@/crit_pts.sh > profile-points.out )
 
 #######################################################################
 

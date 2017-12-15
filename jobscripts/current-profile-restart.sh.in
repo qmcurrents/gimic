@@ -1,0 +1,17 @@
+#!/bin/bash
+echo "Restart and continue the current profile calculation"
+
+wrkdir=$( pwd )
+dirname=$( echo ${wrkdir##*/} ) # removes everything before the backslash
+
+echo "Working directory:"; echo $wrkdir; echo
+
+echo "How many parallel tasks to execute?"
+read parallel
+
+# check if too many parallel tasks are called
+if [ $parallel -gt $nsteps ]
+then
+    $parallel=$($nsteps)
+fi
+sbatch --ntasks="$parallel" --job-name="$dirname" @SCRIPTS_DIR@/jobscript "$wrkdir" "$parallel"

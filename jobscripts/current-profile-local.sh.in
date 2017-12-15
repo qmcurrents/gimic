@@ -488,7 +488,7 @@ echo
 #######################################################################
 # Find the zeroes on the current profile plot
 
-@SCRIPTS_DIR@/crit_pts.sh $wrkdir
+(cd $wrkdir && @SCRIPTS_DIR@/crit_pts.sh > profile-points.out )
 
 cat $wrkdir/profile-points.out
 
