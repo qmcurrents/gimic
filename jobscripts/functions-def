@@ -67,43 +67,38 @@ function valueInp()
 }
 
 
-
+function checkIfInputExists() {
+    if [ ! -e MOL ] && [ ! -e XDENS ] && [ ! -e coord ] && [ ! -e coord.xyz ]
+    then
+	echo "Please run the bond integral calculation from a directory containing the files MOL, XDENS, coord and coord.xyz"
+        exit
+    fi
+}
 
 
 function checkIfPreviousCalculationExists() {
-dir="$@"
 
-# TODO: The check for MOL, etc needs to come before everything else
-# TODO: bug - if directory exists, it is not created again
 # TODO: if XDENS is missing, run turbo2gimic
 
-if [ -z $dir ] # if the path does not contain "current_profile", $dir is empty, so the directory either does not exist, or we are not inside it
-then
-    #echo "Currently not in the directory current_profile"
+    dirname="$@" # The name of the calculation directory, e.g. "current_profile_1.2"
+    
     if [ -d $dirname ] 
     then
-        printf "\nDirectory already exists.\nCalculation parameters:\n"
-        grep "bond=\|in=\|out=\|up=\|down=\|MF=" $dirname/gimic.inp
-        echo "Enter [y] to overwrite or any key to exit."; read accept
+	echo "Directory $dirname already exists"
+#        printf "\nDirectory already exists.\nCalculation parameters:\n"
+#        grep "bond=\|in=\|out=\|up=\|down=\|MF=" $dirname/gimic.inp
+        echo "Enter [y] to overwrite or any other key to exit."; read accept
         if [ -z $accept ] || [ ! $accept == "y" ]  # if the variable is empty or different from "y", exit 
         then 
-            exit
+    	exit
         else
-            rm -f $dirname/*out $dirname/*inp # Remove leftover input and output to avoid confusion
+    	rm -f $dirname/*out $dirname/*inp # Remove leftover input and output to avoid confusion
         fi
     else
-        if [ -e MOL ] && [ -e XDENS ] && [ -e coord ] && [ -e coord.xyz ]
-        then
-            mkdir $dirname
-            cp coord $dirname/
-            echo "Directory $dirname created."; echo
-        else
-            echo "Please run the bond integral calculation from a directory containing the files MOL, XDENS, coord and coord.xyz"
-            exit
-        fi # end if MOL, XDENS, coord exist
-    fi # end if current_profile_#.#
-fi # end if directory current_profile_#.# exists or we are inside it
-
+        mkdir $dirname
+        cp coord $dirname/
+        echo "Directory $dirname created."; echo
+    fi 
 }
 
 

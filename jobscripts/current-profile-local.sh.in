@@ -21,11 +21,7 @@ bond=$atom1","$atom2
 
 dirname=current_profile_$atom1.$atom2
 
-# # If we are not in the current_profile folder, check if it exists. If it did, just go there. If it did not, create it and copy the necessary files
- dir=$(pwd | grep "current_profile")
-#echo $dir
-
-checkIfPreviousCalculationExists $dir
+checkIfPreviousCalculationExists "$dirname"
 
 # if [ -z $dir ] # if the path does not contain "current_profile", $dir is empty, so the directory either does not exist, or we are not inside it
 # then
@@ -184,7 +180,7 @@ echo "Magnetic field vector coordinates: ($MFx; $MFy; $MFz)"
 
 string="s/@bond@/$bond/; s/@fixed@/$fixed/; s/@distance@/$distance/; s/@up@/$up/; s/@down@/$down/; s/@spacingX@/$spacingX/; s/@spacingY@/$spacingY/; s/@spacingZ@/$spacingZ/;  s/@rotation@/$rotation/; s/@MFx@/$MFx/; s/@MFy@/$MFy/; s/@MFz@/$MFz/; s/@FX@/$Fx/; s/@FY@/$Fy/; s/@FZ@/$Fz/ ;"
 #sedstring="s/@MINX@/${vert[0]}/; s/@MINY@/${vert[1]}/; s/@MINZ@/${vert[2]}/; s/@LX@/${vert[3]}/; s/@LY@/${vert[4]}/; s/@LZ@/${vert[5]}/; s/@MFx@/$MFx/; s/@MFy@/$MFy/; s/@MFz@/$MFz/;"
-sed "$string" @SCRIPTS_DIR@/gimic.Inp > $dirname/gimic.Inp
+sed "$string" @SCRIPTS_DIR@/gimic.Inp > ./$dirname/gimic.Inp
 
 #end=$( awk -v delta=$delta -v start=$start 'BEGIN{print delta-start}' ) 
 

@@ -3,15 +3,10 @@
 # Function definitions:
 source  @SCRIPTS_DIR@/functions-def
 
+checkIfInputExists
 
 printf "\nStarting current profile analysis\n"
 printf "\nUsing atomic units of length\n\n"
-
-if [ ! -e MOL ] || [ ! -e XDENS ] || [ ! -e coord ]
-then
-    echo "Please run the current profile analysis from a directory containing the files MOL, XDENS and coord"
-    exit
-fi # end if MOL, XDENS, coord exist
 
 echo "Define the bond perpendicular to which to integrate"; echo
 echo "Enter the indices of the atoms according to the coord file"
@@ -20,12 +15,9 @@ printf "Atom 2:  "; read atom2
 bond=$atom1","$atom2
 
 dirname=current_profile_$atom1.$atom2
+#echo $dirname
 
-# If we are not in the current_profile folder, check if it exists. If it did, just go there. If it did not, create it and copy the necessary files
-dir=$(pwd | grep "current_profile")
-#echo $dir
-
-checkIfPreviousCalculationExists $dir
+checkIfPreviousCalculationExists "$dirname"
 
 # if [ -z $dir ] # if the path does not contain "current_profile", $dir is empty, so the directory either does not exist, or we are not inside it
 # then
@@ -54,7 +46,6 @@ checkIfPreviousCalculationExists $dir
 # 	fi # end if MOL, XDENS, coord exist
 #     fi # end if current_profile_#.#
 # fi # end if directory current_profile_#.# exists or we are inside it
-
 
 echo "The default position of the integration plane is at the midpoint of the bond."
 distance=$( awk -v a1="$atom1" -v a2="$atom2" '{ if (NR == a1+1) { x+=$1;y+=$2;z+=$3;}; if (NR == a2+1) {x-=$1;y-=$2;z-=$3} } END{ dist=sqrt(x*x+y*y+z*z); print dist*0.5; }' coord ; )
@@ -104,8 +95,6 @@ Fy=$(calculateFixedCoord $A2x $A2y $A2z | awk '{print $2}')
 Fz=$( awk -v A1z=$A1z -v A2z=$A2z 'BEGIN{ print A2z }')
 
 echo "Fixed coordinate: ($Fx; $Fy; $Fz)"
-
-
 
 printf "\n\nSTARTING POINT OF THE INTEGRATION\n"
 userInp start $start
@@ -192,7 +181,8 @@ echo "Magnetic field vector coordinates: ($MFx; $MFy; $MFz)"
 
 string="s/@bond@/$bond/; s/@fixed@/$fixed/; s/@distance@/$distance/; s/@up@/$up/; s/@down@/$down/; s/@spacingX@/$spacingX/; s/@spacingY@/$spacingY/; s/@spacingZ@/$spacingZ/;  s/@rotation@/$rotation/; s/@MFx@/$MFx/; s/@MFy@/$MFy/; s/@MFz@/$MFz/; s/@FX@/$Fx/; s/@FY@/$Fy/; s/@FZ@/$Fz/ ;"
 #string="s/@bond@/$bond/; s/@fixed@/$fixed/; s/@distance@/$distance/; s/@up@/$up/; s/@down@/$down/; s/@MF@/$MF/; s/@spacingX@/$spacingX/; s/@spacingY@/$spacingY/; s/@spacingZ@/$spacingZ/;  s/@rotation@/$rotation/; "
-sed "$string" @SCRIPTS_DIR@/gimic.Inp > $dirname/gimic.Inp
+echo "./$dirname"
+sed "$string" @SCRIPTS_DIR@/gimic.Inp > ./$dirname/gimic.Inp
 
 #end=$( awk -v delta=$delta -v start=$start 'BEGIN{print delta-start}' ) 
 
@@ -229,7 +219,7 @@ then
     xend=$tmp
 fi
 string=" s/@start@/$xstart/; s/@end@/$xend/; s/@up@/$xup/; s/@down@/$xdown/"
-sed "$string" $dirname/gimic.Inp > $dirname/gimic.0.inp
+sed "$string" ./$dirname/gimic.Inp > ./$dirname/gimic.0.inp
 
 printf "\nPerforming a dry run...\n\n"
 (cd ./$dirname/ && gimic --dryrun gimic.0.inp | grep "grid points" )

@@ -90,14 +90,10 @@ awk '{
      print dist; }'
 };
 
+checkIfInputExists
+
 printf "\nStarting current profile analysis\n"
 printf "\nUsing atomic units of length\n\n"
-
-if [ ! -e MOL ] || [ ! -e XDENS ] || [ ! -e coord ]
-then
-    echo "Please run the current profile analysis from a directory containing the files MOL, XDENS and coord"
-    exit
-fi # end if MOL, XDENS, coord exist
 
 echo "Define the atoms which define the start and end point"; echo
 echo "Enter the indices of the atoms according to the coord file"
@@ -112,11 +108,7 @@ ATOMS2=$(echo $atom2 | sed 's/ /-/g')
 #ATOMS=$(echo $atom1.$atom2 | sed 's/ /-/g')
 dirname=current_profile_$ATOMS1.$ATOMS2
 
-# If we are not in the current_profile folder, check if it exists. If it did, just go there. If it did not, create it and copy the necessary files
-dir=$(pwd | grep "current_profile")
-#echo $dir
-
-checkIfPreviousCalculationExists $dir
+checkIfPreviousCalculationExists "$dirname"
 
 # if [ -z $dir ] # if the path does not contain "current_profile", $dir is empty, so the directory either does not exist, or we are not inside it
 # then
@@ -366,7 +358,7 @@ printf "Integration plane split into $nsteps slices with width $delta bohr and g
 
 #string="s/@COORD1@/$COORD1/; s/@COORD2@/$COORD2/; s/@fixed@/$fixed/; s/@distance@/$distance/; s/@up@/$up/; s/@down@/$down/; s/@MF@/$MF/; s/@spacingX@/$spacingX/; s/@spacingY@/$spacingY/; s/@spacingZ@/$spacingZ/;  s/@rotation@/$rotation/; s/@FX@/$Fx/; s/@FY@/$Fy/; s/@FZ@/$Fz/ ; "
 string="s/@COORD1@/$COORD1/; s/@COORD2@/$COORD2/; s/@distance@/$distance/; s/@up@/$up/; s/@down@/$down/; s/@spacingX@/$spacingX/; s/@spacingY@/$spacingY/; s/@spacingZ@/$spacingZ/;  s/@rotation@/$rotation/; s/@MFx@/$MFx/; s/@MFy@/$MFy/; s/@MFz@/$MFz/; s/@FX@/$Fx/; s/@FY@/$Fy/; s/@FZ@/$Fz/ ;"
-sed "$string" @SCRIPTS_DIR@/gimic.int.coord > $dirname/gimic.int.coord
+sed "$string" @SCRIPTS_DIR@/gimic.int.coord > ./$dirname/gimic.int.coord
 
 #heading=\""atom1=$ATOMS1 atom2=$ATOMS2 fixed=$fixed delta=$delta \nspacing=[ $spacingX;$spacingY;$spacingZ] in=$start out=$out \nup=$up down=$down"\"
 
