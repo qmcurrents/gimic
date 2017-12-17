@@ -3,79 +3,6 @@
 # Function definitions:
 source  @SCRIPTS_DIR@/functions-def
 
-function checkPreviousCalc() {
-    local __resultVar=$1
-    local __sedVar="$2"
-    # Check if there already is an input file
-    if [ -f $dirname/calculation.dat ] 
-    then
-	__sedVar=$( sed -n -e 's/^.*$__resultVar=*//p' $dirname/calculation.dat | awk '{print $1}')
-    fi
-    # If there was not a previous calculation, $fixed will be empty. Ask if it should be changed
-    if [ ! -z $__sedVar ] 
-    then
-	printf "\nThe previously selected $__resultVar atom is $__sedVar.\nPress [n] to change\n"
-	read accept
-    fi
-    # If the $fixed is empty or the user wants to change it, ask to enter 
-    if [[ ( -z $__sedVar ) || ( ! -z $accept  &&  "$accept" == "n" ) ]]
-    then 
-	printf "\nEnter the index of the $__resultVar atom:\n"
-	read __sedVar
-    fi
-
-    eval $__resultVar="'$__sedVar'"
-}
-
-
-function calculateRot() {
-awk -v a1=$atom1 -v a2=$atom2 -v a3=$atom3 '{
-    if (NR == a1+1)
-        { 
-        a1x = $1;
-        a1y = $2;
-        a1z = $3;
-    };
-    if (NR == a2+1)
-        { 
-            a2x = $1;
-            a2y = $2;
-            a2z = $3;
-        };
-    if (NR == a3+1)
-        { 
-            a3x = $1;
-                a3y = $2;
-                a3z = $3;
-            };
-    }
-
-    END {
-
-        bx = (a1x + a2x)/2;
-        by = (a1y + a2y)/2;
-        bz = (a1z + a2z)/2;
-
-        # Law of cosines: triangle formed between the centre of the bond, atom1 and atom3
-        sideA = sqrt( (a1x-bx)*(a1x-bx) + (a1y-by)*(a1y-by) + (a1z-bz)*(a1z-bz)  )
-        sideB = sqrt( (a3x-a1x)*(a3x-a1x) + (a3y-a1y)*(a3y-a1y) + (a3z-a1z)*(a3z-a1z)  )
-        sideC = sqrt( (a3x-bx)*(a3x-bx) + (a3y-by)*(a3y-by) + (a3z-bz)*(a3z-bz)  )
-
-        #print "Sides:", sideA, sideB, sideC;
-
-        cosBeta = ( sideA*sideA + sideC*sideC - sideB*sideB ) / ( 2*sideA*sideC);
-        # print cosBeta;
-
-        # awk does not support acos but acos = atan2(sqrt(1 - x * x))
-        beta = atan2(sqrt(1 - cosBeta*cosBeta), cosBeta);
-        # print "Beta =", beta;
-        betaDeg = beta*57.2957795;
-        # print "Beta =", betaDeg, "deg";
-        print -(90 - betaDeg);
-    }' coord
-
-}
-
 
 printf "\nStarting current profile analysis\n"
 printf "\nUsing atomic units of length\n\n"
@@ -143,10 +70,10 @@ Bz=$( echo $BOND | awk '{print $3} ' )
 #printf "("$Bx";"$By";"$Bz")\n"
 
 # Check if there already is an input file
-if [ -f $dirname/calculation.dat ] 
-then
-    fixed=$( sed -n -e 's/^.*fixed=*//p' $dirname/calculation.dat | awk 'BEGIN { FS = "," } ; { print $2 }' )
-fi
+#if [ -f $dirname/calculation.dat ] 
+#then
+#    fixed=$( sed -n -e 's/^.*fixed=*//p' $dirname/calculation.dat | awk 'BEGIN { FS = "," } ; { print $2 }' )
+#fi
 # # If there was not a previous calculation, $fixed will be empty. Ask if it should be changed
 # if [ ! -z $fixed ] 
 # then
