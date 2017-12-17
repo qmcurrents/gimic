@@ -1,7 +1,6 @@
 # NEW INPUT
 
 calc=integral        # cdens, integral, edens, divj
-dryrun=off        # don't actually calculate (good for tuning grids, etc.)
 title=""
 basis="../MOL"
 xdens="../XDENS"
@@ -9,7 +8,6 @@ debug=1           # debug print level
 openshell=false 
 #show_axis=true   # mark "up" axis in .xyz files
 #magnet_axis=@MF@ #[-] i,j,k || x,y,z -> align magnet along axis
-#magnet=[0.0, -1.0, 0.0]   # magnet vector
 magnet=[@MFx@, @MFy@, @MFz@]   # magnet vector
 #scale_vectors=1.0
 
