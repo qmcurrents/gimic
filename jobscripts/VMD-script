@@ -14,29 +14,25 @@
 # The resulting grid.xyz file can then be opened in VMD. 
 # To call the script, click Extensions from the main window and then select Tk Console.
 
-#   NOTE!
-#   Make sure that the IDs of the molecules start from 0 and are consecutive
-#   For example, if you opened one molecule, then one more but deleted it, and then opened a third one, the script will not work
-#   I hate it but at the moment I don't have the time to figure out how to fix it
+proc intplanes {} {
 
+set loadedMolecules [molinfo list]
 
-proc intplanes {nmol} {
-
-for {set molid 0} { $molid < $nmol} {incr molid} {
+foreach molid $loadedMolecules {
 
     mol showrep $molid 0 off
     mol modselect 0 $molid "all not element X Be"
     set xel [atomselect $molid "element X"]
-        set coords [$xel get index]
+    set coords [$xel get index]
 
-        for {set i 0} {$i < 4} {incr i} {
-            lassign $coords i1 i2 i3 i4
+    for {set i 0} {$i < 4} {incr i} {
+         lassign $coords i1 i2 i3 i4
         }
 
     set c1 [atomselect $molid "index $i1"]
-        set c2 [atomselect $molid "index $i2"]
-        set c3 [atomselect $molid "index $i3"]
-        set c4 [atomselect $molid "index $i4"]
+    set c2 [atomselect $molid "index $i2"]
+    set c3 [atomselect $molid "index $i3"]
+    set c4 [atomselect $molid "index $i4"]
 
         lassign [$c1 get {x y z}] pos1
         lassign [$c2 get {x y z}] pos2
@@ -49,14 +45,21 @@ for {set molid 0} { $molid < $nmol} {incr molid} {
         draw line $pos3 $pos4 width $LINEWIDTH
         draw line $pos1 $pos3 width $LINEWIDTH
         draw line $pos2 $pos4 width $LINEWIDTH
-
+		
+		set posHalf1 [ vecscale 0.5 [ vecadd $pos1 $pos2 ] ]
+		set posHalf2 [ vecscale 0.5 [ vecadd $pos3 $pos4 ] ]
+		
+		set LINEWIDTH 3 
+		draw line $posHalf1 $posHalf2 width $LINEWIDTH
 }
 
 # CPK: sphere_scale then bond_radius then sphere_resolution then bond_resolution
 mol representation CPK 0.600000 0.300000 50.000000 50.000000
 mol color Element
 mol material Opaque
-mol addrep 0
-mol modselect 1 0 "all not element X Be"
+mol addrep $molid
+mol modselect 1 $molid "all not element X Be"
 }
+
+
 
