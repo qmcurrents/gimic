@@ -27,8 +27,8 @@ module jtensor_class
         real(DP), dimension(:,:), pointer :: aodens, pdens
     end type
 
-    public new_jtensor, del_jtensor, jtensor, jtensor2, get_jvector
-    public ctensor, ctensor2, jvector
+    public new_jtensor, del_jtensor, jtensor, get_jvector
+    public ctensor, jvector
     public jtensor_t
 
     private
@@ -103,47 +103,6 @@ contains
         end select
     end subroutine
 
-    subroutine ctensor2(this, r, pj, dj, op)
-        type(jtensor_t) :: this
-        real(DP), dimension(3), intent(in) :: r
-        real(DP), dimension(9), intent(inout) :: pj, dj
-        character(*) :: op
-
-        real(DP), dimension(9) :: pj1, pj2, dj1, dj2
-
-        select case (op)
-            case ('alpha')
-                call jtensor2(this, r, pj, dj, spin_a)
-            case ('beta')
-                if (settings%is_uhf) then
-                    call jtensor2(this, r, pj, dj, spin_b)
-                else
-                    call msg_error('ctensor(): &
-                    &beta current requested, but not open-shell system!')
-                    stop
-                end if
-            case ('total')
-                if (settings%is_uhf) then
-                    call jtensor2(this, r, pj1, dj1, spin_a)
-                    call jtensor2(this, r, pj2, dj2, spin_b)
-                    pj=pj1+pj2
-                    dj=dj1+dj2
-                else
-                    call jtensor2(this, r, pj, dj, spin_a)
-                end if
-            case ('spindens')
-                if (.not.settings%is_uhf) then
-                    call msg_error('ctensor(): &
-                    &spindens requested, but not open-shell system!')
-                    stop
-                end if
-                call jtensor2(this, r, pj1, dj1, spin_a)
-                call jtensor2(this, r, pj2, dj2, spin_b)
-                pj=pj1-dj1
-                dj=pj2-dj2
-        end select
-    end subroutine
-
     subroutine jtensor(this, r, j, spin)
         type(jtensor_t) :: this
         real(DP), dimension(:), intent(in) :: r
@@ -164,28 +123,6 @@ contains
         call contract(this, j, spin)
     end subroutine
 
-    subroutine jtensor2(this, r, pj, dj, spin)
-        type(jtensor_t) :: this
-        real(DP), dimension(3), intent(in) :: r
-        real(DP), dimension(9), intent(inout) :: pj, dj
-        integer(I4) :: spin
-
-!        real(DP), dimension(:,:), pointer :: dbop
-        integer(I4) :: i, b
-        integer(I4), save :: notify=1
-
-        this%rho=DP50*r ! needed for diamag. contr.
-        if (settings%use_giao) then
-            call calc_basis(this%basv, r, this%bfvec, this%drvec, &
-            this%dbvec, this%d2fvec)
-        else
-            call calc_basis(this%basv, r, this%bfvec, this%drvec)
-        end if
-
-        call contract2(this, pj, dj, spin)
-
-    end subroutine
-
     subroutine jvector(this, r, bb, jv, op)
         type(jtensor_t) :: this
         real(DP), dimension(3), intent(in) :: r
@@ -204,51 +141,6 @@ contains
         real(DP), dimension(:), intent(out) :: jv
 
         jv=matmul(reshape(pj+dj,(/3,3/)), bb)
-    end subroutine
-
-    subroutine contract2(this, ctp, ctd, spin)
-        type(jtensor_t) :: this
-        real(DP), dimension(3,3), intent(out) :: ctp, ctd
-        integer(I4), intent(in) :: spin
-
-        integer(I4) :: i, j, k, ii,jj
-        real(DP) :: prsp1, prsp2       ! paramagnetic wavefunction response
-        real(DP) :: ppd                ! paramagnetic probability density
-        real(DP), dimension(3) :: dpd  ! diamagnetic probability density
-        real(DP) :: diapam
-
-        call get_dens(this%xdens, this%aodens, spin)
-        this%denbf=matmul(this%bfvec, this%aodens)
-
-        k=1
-        diapam=dot_product(this%denbf, this%bfvec)
-        do i=1,3! dB <x,y,z>
-            ! get perturbed densities: x,y,z
-            call get_pdens(this%xdens, i, this%pdens,spin)
-            this%pdbf=matmul(this%bfvec, this%pdens)
-            this%dendb=matmul(this%dbvec(:,i), this%aodens)
-            dpd(i)=diapam*this%rho(i) ! diamag. contr. to J
-            do j=1,3 !dm <x,y,z>
-                prsp1=-dot_product(this%dendb, this%drvec(:,j))    ! (-i)**2=-1
-                prsp2=dot_product(this%denbf, this%d2fvec(:,k))
-                ppd=dot_product(this%pdbf, this%drvec(:,j))
-                ctp(j,i)=ZETA*ppd
-                if (settings%use_giao) ctp(j,i)=ctp(j,i)+ZETA*(prsp1+prsp2)
-                k=k+1
-            end do
-        end do
-
-! Calculate the total J tensor. The diamagnetic pobability density only
-! contributes to the diagonal.
-
-        ctd(1,1)=D0; ctd(2,2)=D0; ctd(3,3)=D0;
-        ctd(1,2)=dpd(3)
-        ctd(1,3)=-1.d0*dpd(2)
-        ctd(2,1)=-1.d0*dpd(3)
-        ctd(2,3)=dpd(1)
-        ctd(3,1)=dpd(2)
-        ctd(3,2)=-1.d0*dpd(1)
-
     end subroutine
 
 !

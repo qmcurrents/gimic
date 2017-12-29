@@ -59,35 +59,6 @@ contains
         div=djx+djy+djz
     end function
 
-    function divergence2(rr, bb) result(div)
-        real(DP), dimension(3), intent(in) :: rr, bb
-        real(DP) :: div
-
-        type(jtensor_t) :: jt
-        integer(I4) :: q
-        real(DP), dimension(9) :: jtxp, jtyp, jtzp
-        real(DP), dimension(9) :: jtxd, jtyd, jtzd
-        real(DP) :: djx,djy,djz
-        real(DP), dimension(5) :: jx,jy,jz
-        real(DP), dimension(3) :: tvec
-
-        jx=D0; jy=D0; jz=D0
-        do q=-2,2
-            call ctensor2(jt, rr+(/step*real(q),D0,D0/), jtxp,jtxd, 'total')
-            call ctensor2(jt, rr+(/D0,step*real(q),D0/), jtyp,jtyd, 'total')
-            call ctensor2(jt, rr+(/D0,D0,step*real(q)/), jtzp,jtzd, 'total')
-            call get_jvector(jtxp, jtxd, bb, tvec)
-            jx(q+3)=tvec(1)
-            call get_jvector(jtyp, jtyd, bb, tvec)
-            jy(q+3)=tvec(2)
-            call get_jvector(jtzp, jtzd, bb, tvec)
-            jz(q+3)=tvec(3)
-        end do
-        djx=hx*sum(wgt*jx)
-        djy=hy*sum(wgt*jy)
-        djz=hz*sum(wgt*jz)
-        div=djx+djy+djz
-    end function
 end module
 
 ! vim:et:sw=4:ts=4
