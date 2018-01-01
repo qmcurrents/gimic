@@ -1,4 +1,3 @@
-
 # This jobscript takes three arguments: 
 # $1 is the working directory for the calculation
 # $2 is the number of tasks to execute at the same time
@@ -115,8 +114,7 @@ echo
 #######################################################################
 # Find the zeroes on the current profile plot
 
-#@SCRIPTS_DIR@/crit_pts.sh > $wrkdir/profile-points.out
-(cd $wrkdir && @SCRIPTS_DIR@/crit_pts.sh > profile-points.out )
+@SCRIPTS_DIR@/crit_pts.sh > $wrkdir/profile-points.out
 
 cat $wrkdir/profile-points.out
 
