@@ -150,10 +150,10 @@ echo "Press [n] to calculate the direction automatically" # TODO: or [e] to ente
 read accept;
 if [ ! -z $accept ] && [ $accept == "n" ]
 then
-   maximise_projection coord.xyz > $dirname/field.dat
-   MFx=$( cat $dirname/field.dat | sed -e 's#{#_#g; s#}#_#g; s#,#_#g' | awk -F [_] '{ {print -$2} }')
-   MFy=$( cat $dirname/field.dat | sed -e 's#{#_#g; s#}#_#g; s#,#_#g' | awk -F [_] '{ {print -$3} }')
-   MFz=$( cat $dirname/field.dat | sed -e 's#{#_#g; s#}#_#g; s#,#_#g' | awk -F [_] '{ {print -$4} }')
+    maximise_projection coord.xyz > $dirname/field.dat
+    MFx=$( cat $dirname/field.dat | sed -e 's#{#_#g; s#}#_#g; s#,#_#g' | awk -F [_] '{ {print -$2} }')
+    MFy=$( cat $dirname/field.dat | sed -e 's#{#_#g; s#}#_#g; s#,#_#g' | awk -F [_] '{ {print -$3} }')
+    MFz=$( cat $dirname/field.dat | sed -e 's#{#_#g; s#}#_#g; s#,#_#g' | awk -F [_] '{ {print -$4} }')
 fi
 
 echo "Magnetic field vector coordinates: ($MFx; $MFy; $MFz)"
@@ -187,23 +187,32 @@ sed "$string" @SCRIPTS_DIR@/gimic.Inp > ./$dirname/gimic.Inp
 #echo "Enter title:"
 #read heading
 #heading=\"$heading"\n bond=["$bond"], fixed="$fixed", in="$start", out="$out", delta="$delta", up="$up", down="$down\"
-heading=\""bond=[$bond] fixed=$fixed delta=$delta \nspacing=[ $spacingX;$spacingY;$spacingZ] in=$start out=$out \nup=$up down=$down"\"
+#heading=\""bond=[$bond] fixed=$fixed delta=$delta \nspacing=[ $spacingX;$spacingY;$spacingZ] in=$start out=$out \nup=$up down=$down"\"
 
-echo $heading > ./$dirname/calculation.dat
-echo atom1=$atom1 atom2=$atom2 >> ./$dirname/calculation.dat
+cat /dev/null > ./$dirname/calculation.dat
+#echo bond=[$bond] > ./$dirname/calculation.dat
+echo atom1=$atom1  >> ./$dirname/calculation.dat
+echo atom2=$atom2 >> ./$dirname/calculation.dat
+echo fixed point: Fx=$Fx, Fy=$Fy, Fz=$Fz  >> ./$dirname/calculation.dat
+echo magnetic field: Mx=$Mx, My=$My, Mz=$Mz  >> ./$dirname/calculation.dat
+echo distance=$distance >> ./$dirname/calculation.dat
+echo in=$start out=$out up=$up down=$down  >> ./$dirname/calculation.dat
+echo delta=$delta \nspacing=[ $spacingX ; $spacingY ; $spacingZ ]  >> ./$dirname/calculation.dat
+
 
 ################################################################################
 
 #printf "\nnsteps="$nsteps", delta="$delta", spacing="$spacing", in="$start", out="$out", up="$up", down="$down", bond=["$bond"], fixed="$fixed"\n"
 printf "\n\n*****************************************************************************\n\nSUMMARY\n\n"
 printf "Bond: ["$bond"]\n"
-printf "Fixed atom: $fixed\n"
+printf "Fixed coordinate: ( $Fx; $Fy; $Fz )\n"
 echo "Integration plane coordinates"
 printf "in = $start  out = $out  up = $up  down = $down \n"
 printf "Split into $nsteps slices with width $delta and grid spacing [$spacingX; $spacingY; $spacingZ] \n"
-printf "Magnetic field direction: $MF \n\n"
+printf "Magnetic field direction: ( $MFx; $MFy; $MFz ) \n\n"
 
 printf "\n*****************************************************************************\n\n"
+
 
 xstart=$( awk -v delta=$delta -v start=$start 'BEGIN{printf "%.3f\n", -start }' )  # start is a negative number 
 xend=$( awk -v delta=$delta -v xstart=$xstart 'BEGIN{ printf "%.3f\n", xstart+delta }' ) 
