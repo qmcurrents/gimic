@@ -68,7 +68,7 @@ function valueInp()
 
 
 function checkIfInputExists() {
-    if [ ! -e MOL ] && [ ! -e XDENS ] && [ ! -e coord ] && [ ! -e coord.xyz ]
+    if [ ! -e MOL ] || [ ! -e XDENS ] || [ ! -e coord ] || [ ! -e coord.xyz ]
     then
 	echo "Please run the bond integral calculation from a directory containing the files MOL, XDENS, coord and coord.xyz"
         exit
@@ -115,7 +115,7 @@ function calculateFixedCoord() {
 
 #    echo "func arg: " "$@"
     awk -v A2x="$1" -v A2y="$2" -v A2z="$3" 'BEGIN{ 
-    rotAngleDeg=18; 
+    rotAngleDeg=1 ; 
     rotAngleRad=0.0174532925*rotAngleDeg;
     Cos=cos(rotAngleRad);
     Sin=sin(rotAngleRad);
