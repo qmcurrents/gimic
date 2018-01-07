@@ -14,6 +14,9 @@ add_executable(gimic.bin
     )
 target_link_libraries(gimic.bin gimic2)
 
+# without this line, linking with Intel stack fails
+set_target_properties(gimic.bin PROPERTIES LINKER_LANGUAGE Fortran)
+
 configure_file(gimic.py.in gimic.py)
 
 install(FILES __init__.py ${CMAKE_CURRENT_BINARY_DIR}/gimic.py getkw.py
