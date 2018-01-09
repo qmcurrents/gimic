@@ -155,7 +155,7 @@ echo "Press [y] or any other key to skip"; read accept
 if  [ ! -z $accept ] && [ $accept == "y" ]
 then
     echo "Running calculations..."
-    (cd ./$dirname/ && gimic --dryrun gimic.0.inp | grep "grid points" )
+    (cd ./$dirname/ && gimic --dryrun gimic.0.inp  > /dev/null )
 #    gimic --dryrun gimic.0.inp
     # take the first two coordinates of the int plane
     cat ./$dirname/grid.xyz | head -n -3 > ./$dirname/grid.check.xyz

@@ -95,6 +95,7 @@ Fy=$(calculateFixedCoord $A2x $A2y $A2z | awk '{print $2}')
 Fz=$( awk -v A1z=$A1z -v A2z=$A2z 'BEGIN{ print A2z }')
 
 echo "Fixed coordinate: ($Fx; $Fy; $Fz)"
+echo DEBUG z coords: $A1z, $A2z, $Fz
 
 printf "\n\nSTARTING POINT OF THE INTEGRATION\n"
 userInp start $start
@@ -201,7 +202,7 @@ echo magnetic field: Mx=$Mx, My=$My, Mz=$Mz  >> ./$dirname/calculation.dat
 echo distance=$distance >> ./$dirname/calculation.dat
 echo in=$start out=$out up=$up down=$down  >> ./$dirname/calculation.dat
 echo delta=$delta >> ./$dirname/calculation.dat
-echo spacing=( $spacingX ; $spacingY ; $spacingZ )  >> ./$dirname/calculation.dat
+printf "spacing=[ $spacingX ; $spacingY ; $spacingZ ]\n"  >> ./$dirname/calculation.dat
 
 ################################################################################
 
