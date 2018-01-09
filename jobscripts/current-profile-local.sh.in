@@ -158,27 +158,29 @@ fi
 
 echo "Magnetic field vector coordinates: ($MFx; $MFy; $MFz)"
 
+echo "ROTATION OF THE PLANE"
 
-#rotation=0.0
-#printf  "\nRotation from the normal to the bond at the bond centre: $rotation degrees. Do you accept?\nPress [n] to modify\n"
-#read accept;
-#if [ ! -z $accept ] && [ $accept == "n" ]
-#then
-#    printf "Enter the index of the atom, which the plane has to go through: "
-#    read atom3;
-#    rotation=$(calculateRot);
-#    
-#    printf "Do you accept rotation to $rotation degrees?\nPress [n] to modify\n"
-#    read accept;
-#    if [ ! -z $accept ] && [ $accept == "n" ]
-#    then
-#        printf "rotation="; read rotation
-#    fi  
-#fi
+# rotation is done with respect to in=0, up=0
+rotX=0.0
+rotY=0.0
+rotZ=0.0
+
+echo "Do you want to rotate the integration plane?"
+echo "Press [n] enter rotation angles" 
+
+read accept;
+if [ ! -z $accept ] && [ $accept == "n" ]
+then
+    
+fi
+
+valueInp rotX $rotX 
+valueInp rotY $rotY
+valueInp rotZ $rotZ
 
 
+string="s/@bond@/$bond/; s/@fixed@/$fixed/; s/@distance@/$distance/; s/@up@/$up/; s/@down@/$down/; s/@spacingX@/$spacingX/; s/@spacingY@/$spacingY/; s/@spacingZ@/$spacingZ/;  s/@rotX@/$rotX/;  s/@rotY@/$rotY/;  s/@rotZ@/$rotZ/; s/@MFx@/$MFx/; s/@MFy@/$MFy/; s/@MFz@/$MFz/; s/@FX@/$Fx/; s/@FY@/$Fy/; s/@FZ@/$Fz/ ;"
 
-string="s/@bond@/$bond/; s/@fixed@/$fixed/; s/@distance@/$distance/; s/@up@/$up/; s/@down@/$down/; s/@spacingX@/$spacingX/; s/@spacingY@/$spacingY/; s/@spacingZ@/$spacingZ/;  s/@rotation@/$rotation/; s/@MFx@/$MFx/; s/@MFy@/$MFy/; s/@MFz@/$MFz/; s/@FX@/$Fx/; s/@FY@/$Fy/; s/@FZ@/$Fz/ ;"
 #sedstring="s/@MINX@/${vert[0]}/; s/@MINY@/${vert[1]}/; s/@MINZ@/${vert[2]}/; s/@LX@/${vert[3]}/; s/@LY@/${vert[4]}/; s/@LZ@/${vert[5]}/; s/@MFx@/$MFx/; s/@MFy@/$MFy/; s/@MFz@/$MFz/;"
 sed "$string" @SCRIPTS_DIR@/gimic.Inp > ./$dirname/gimic.Inp
 
