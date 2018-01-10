@@ -108,6 +108,7 @@ def parse_keywords(args):
     grid.add_kw("fixcoord", 'DBL_ARRAY', 3)
     grid.add_kw("distance", 'DBL', 1)
     grid.add_kw("rotation", 'DBL_ARRAY', (0.0,0.0,0.0))
+    grid.add_kw("rotation_origin", 'DBL_ARRAY', (0.0,0.0,0.0))
     grid.add_kw("spacing", 'DBL_ARRAY', 3)
     grid.add_kw("height", 'DBL_ARRAY', 2)
     grid.add_kw("width", 'DBL_ARRAY', 2)
@@ -195,7 +196,7 @@ def check_grid(grid):
     elif arg == 'file':
         required=('file',)
         ignore=('ivec', 'jvec', 'bond', 'fixpoint',
-                'origin', 'rotation',
+                'origin', 'rotation', 'rotation_origin', 
                 'radius', 'lengths','distance', 'spacing')
         for i in required:
             if not check_opt(grid,i):

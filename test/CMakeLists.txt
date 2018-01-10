@@ -9,6 +9,7 @@ foreach(_name
     benzene/2d-keyword-magnet
     benzene/keyword-spacing
     benzene/keyword-rotation
+    benzene/keyword-rotation_origin
     benzene/keyword-radius
     benzene/int-grid-bond-even
     benzene/diamag-off
