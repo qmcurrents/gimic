@@ -21,7 +21,7 @@ echo $dirname
 dir=$(pwd | grep "bond_int")
 #echo $dir
 
-checkIfPreviousCalculationExists $dir
+checkIfPreviousCalculationExists $dirname
 
 # Calculate the distance between the atoms
 echo "Define where between the two atoms the integration plane passes"
@@ -98,6 +98,29 @@ then
 fi
 
 echo "Magnetic field vector coordinates: ($MFx; $MFy; $MFz)"
+echo
+
+echo "ROTATION OF THE PLANE"
+
+# rotation is done with respect to in=0, up=0
+rotX=0.0
+rotY=0.0
+rotZ=0.0
+
+echo "Do you want to rotate the integration plane?"
+echo "Press [y] enter rotation angles" 
+
+read accept;
+if [ ! -z $accept ] && [ $accept == "y" ]
+then
+    valueInp rotX $rotX 
+    valueInp rotY $rotY
+    valueInp rotZ $rotZ
+
+    echo "Rotation angles: ($rotX, $rotY, $rotZ)"
+fi
+
+
 
 # fixed point (Ax, Ay and Az are the coords of the bond atoms 1 and 2)
 Fx=$(calculateFixedCoord $A2x $A2y $A2z | awk '{print $1}')
@@ -109,12 +132,8 @@ Fy=$(calculateFixedCoord $A2x $A2y $A2z | awk '{print $2}')
 # vector OA and OF defined with the coords of atom1 and the fixed point
 # vector AF.MF = 0
 Fz=$( awk -v Ax=$A1x -v Fx=$Fx -v Ay=$A1y -v Fy=$Fy -v Az=$A1z -v mx=$MFx -v my=$MFy -v mz=$MFz 'BEGIN{ print( ( (mx*(Fx-Ax) + my*(Fy-Ay)) / mz) + Az )}')
-
+echo
 echo "Fixed coordinate: ($Fx; $Fy; $Fz)"
-
-
-
-
 
 
 spacingX=0.02
@@ -132,7 +151,7 @@ then
 fi
 
 
-string="s/@bond@/$bond/; s/@fixed@/$fixed/; s/@distance@/$distance/; s/@up@/$up/; s/@down@/$down/; s/@start@/$start/; s/@end@/$out/; s/@FX@/$Fx/; s/@FY@/$Fy/; s/@FZ@/$Fz/; s/@MFx@/$MFx/; s/@MFy@/$MFy/; s/@MFz@/$MFz/; s/@spacingX@/$spacingX/; s/@spacingY@/$spacingY/; s/@spacingZ@/$spacingZ/; "
+string="s/@bond@/$bond/; s/@fixed@/$fixed/; s/@distance@/$distance/; s/@up@/$up/; s/@down@/$down/; s/@start@/$start/; s/@end@/$out/; s/@FX@/$Fx/; s/@FY@/$Fy/; s/@FZ@/$Fz/; s/@MFx@/$MFx/; s/@MFy@/$MFy/; s/@MFz@/$MFz/; s/@spacingX@/$spacingX/; s/@spacingY@/$spacingY/; s/@spacingZ@/$spacingZ/; s/@rotX@/$rotX/;  s/@rotY@/$rotY/;  s/@rotZ@/$rotZ/; "
 sed "$string" @SCRIPTS_DIR@/gimic.Inp > ./$dirname/gimic.inp
 
 printf "Performing dryrun...\n\n"
