@@ -27,7 +27,7 @@ Grid(bond) {                    # define grid orthogonal to a bond
 #     down=@down@
      height=[@down@,@up@]
      width=[@start@,@end@]
-#     rotation=[0.0,0.0,@rotation@]      # Rotation of (i,j,k) -> (i',j',k') degrees
+     rotation=[@rotX@,@rotY@,@rotZ@]      # Rotation of (i,j,k) -> (i',j',k') degrees
 }
 Advanced {
     lip_order=5      # order of Lagrange Interpolating Polynominals to use
