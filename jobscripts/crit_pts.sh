@@ -179,7 +179,7 @@ awk '{
 };
 
 function Delta() {
-        awk '{ if (NR == 2) { delta=$1; print delta } }' current_profile.dat
+        awk '{ if (NR == 2) { delta=$1; print delta } }' $wrkdir/current_profile.dat
     };  
 
 function angle() 
@@ -205,9 +205,9 @@ fi
 dirname=${wrkdir##*/} # pick the name of the current directory only
 
 
-#echo Working directory: $wrkdir
+echo Working directory: $wrkdir
 #echo Dirname: $dirname
-#echo
+echo
 # create empty files for the output
 cat /dev/null > $wrkdir/profile-points.out
 cat /dev/null > $wrkdir/profile-points-paraview.dat
@@ -292,7 +292,7 @@ cat $wrkdir/profile-points.out
 echo
 
 
-printf "\nOUTPUT RELATED TO PARAVIEW\n"
+printf "\nOUTPUT RELATED TO PARAVIEW\n\n"
 echo "Origin of the clipping plane:"
 
 # Calculate the centre of the bond
@@ -307,7 +307,7 @@ printf "\n# Clipping plane origin:\n# " >> $wrkdir/profile-points-paraview.dat
 echo "(" $( centroid $atom1 $atom2 ) ")" >> $wrkdir/profile-points-paraview.dat
 
 # find the normal to the clipping plane in Paraview:
-echo "Normal to the clipping plane:"
+echo; echo "Normal to the clipping plane:"
 echo $x0 $x1 | normalPlane 1
 echo
 
