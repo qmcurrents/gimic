@@ -23,13 +23,13 @@ gnuplot << EOF
 #green: rgb 0,178,0  #00B200
 
 # diatropic (green)
-set style line 1 lt 1 lw 10 lc rgb "#007F00" 
+set style line 1 lt 1 lw 6 lc rgb "#007F00" 
 # paratropic (blue)
-set style line 2 lt 3 lw 10 lc rgb "#1E46FF"
+set style line 2 lt 3 lw 6  lc rgb "#1E46FF"
 # vertical lines (cyan)
-set style line 3 lt 1 lw 4 lc rgb "#00DCFF"
+set style line 3 lt 1 lw 2 lc rgb "#00DCFF"
 # vertical zero line
-set style line 4 lt 1 lw 10 lc rgb "#000000" 
+set style line 4 lt 1 lw 6  lc rgb "#000000" 
 
 set format x "%5.2f"
 set format y "%5.2f"
@@ -71,12 +71,12 @@ if ( ${offsets[2]}!=0) set arrow from (${offsets[2]}), graph 0 to (${offsets[2]}
 #set arrow from xin,graph(0,0) to xin,graph(1,1) nohead ls 3
 
 #set output "current-profile.eps"
-#plot "current_profile.dat" u ($1-offset):2 w l lw 10 notitle
+#plot "current_profile.dat" u ($1-offset):(\$2/$delta) w l lw 10 notitle
 
 set output "current_profile_$atom1_idx.$atom2_idx-dia-para.eps"
-plot "current_profile.dat" u (\$1-${offsets[0]}):3 w l ls 1 title "Diatropic", "current_profile.dat" u (\$1-${offsets[0]}):4 w l ls 2 title "Paratropic"
+plot "current_profile.dat" u (\$1-${offsets[0]}):(\$3/$delta) w l ls 1 title "Diatropic", "current_profile.dat" u (\$1-${offsets[0]}):(\$4/$delta) w l ls 2 title "Paratropic"
 # for the weird bond 23.9 in BNBN when the x axis starts at x>0: 
-#plot "current_profile.dat" u (\$1+${offsets[0]}):3 w l ls 1 title "Diatropic", "current_profile.dat" u (\$1+${offsets[0]}):4 w l ls 2 title "Paratropic"
+#plot "current_profile.dat" u (\$1+${offsets[0]}):(\$3/$delta) w l ls 1 title "Diatropic", "current_profile.dat" u (\$1+${offsets[0]}):(\$4/$delta)  w l ls 2 title "Paratropic"
 
 EOF
 
@@ -209,6 +209,11 @@ offsetBefore=$( awk -v dist=$distance -v start=$start 'BEGIN{print dist-start}' 
 }
 
 
+
+
+#############################################################################################################################
+
+
 # initialization
 customRange=0;
 
@@ -217,10 +222,16 @@ offsets[0]=0
 offsets[1]=0
 offsets[2]=0
 
+# the width of each slice:
+delta=$(sed -n -e 's/^.*delta=*//p' calculation.dat  | awk '{print $1}')
+echo delta=$delta
+
 echo
 startCentroid;
 echo $atoms
-echo "Vertical axis atoms=($atoms)" >> calculation.dat
+printf "\nVertical axis atoms=($atoms)\n\n" >> calculation.dat
+
+## TODO: replace instead of appending 
 
 bondCentroid;
 calculateOffset;

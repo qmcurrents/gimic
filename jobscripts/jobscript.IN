@@ -86,8 +86,6 @@ rm -f $wrkdir/paratropic.dat $wrkdir/diatropic.dat $wrkdir/current.dat
 
 printf "\nData saved in current_profile.dat\n\n"
 
-width=$(sed -n -e 's/^.*delta=*//p' $wrkdir/calculation.dat  | awk '{print $1}')
-
 gnuplot << EOF                                                                                   
 
 set format x "%5.2f"
