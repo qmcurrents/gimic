@@ -3,34 +3,21 @@
 Testing
 =======
 
-The new version of the Gimic test script runs tests for two molecules - benzene
-and cyclobutadiene. The script is executed at the test directory by giving the
-directory where the binary is located. On my laptop this is::
+The testing procedure of the code is simplified using the **runtest** library written by Radovan Bast. 
 
-  ~/Shared/PhD/gimic/test/gimic-test.sh /home/suzanka/Shared/PhD/gimic-fork/bin
+Make sure that you have it installed for the appropriate Python or virtual environment::
 
-The script executes the calculations in the directories ./benzene/int/ and
-./C4H4/int/ for the provided gimic.inp file and writes to gimic.test.out. Then
-the values for the diatropic paratropic, and the total currents are extracted
-from the output file and compared to the corresponding value obtained with
-master version of Gimic that are provided in the file gimic.out. When the
-difference between these results is less than 1e-5, the script considers it a
-success and prints 0; else it prints 1. The outcome of all tests are summed and
-at the end printed on stdout.
+$ pip install git+https://github.com/bast/runtest.git@master
+ 
 
-In order to test it on another molecule it is necessary to create a directory
-./your-molecule/int/ and provide the file gimic.out from a calculation from the
-master version to use as reference. The name your-molecule should be added to
-the list of molecules at the end of the script::
+When compilation has completed, call ``make test`` from the ``build`` directory. 
 
-  molecules="benzene C4H4 your-molecule"
 
-The script will loop over them and give the final test result.
+Adding new tests
+-----------------
 
-If you want to see more detailed results from the tests - such as the values
-that were calculated and see which test(s) failed, type -v as the SECOND
-command-line argument::
+Adding new tests can be done in the ``test`` directory. The provided tests can serve as example. The definition of what are tested variables is done in the ``.test`` executable. Remember to add the name of your new test in the ``test/CMakeLists.txt`` file. In case of doubts, read the documentation_ of ``runtest``.
 
-  ~/Shared/PhD/gimic/test/gimic-test.sh /home/suzanka/Shared/PhD/gimic-fork/bin -v
+.. _documentation: http://runtest.readthedocs.io/en/latest/
 
-Good luck!
+
