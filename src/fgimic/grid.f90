@@ -57,6 +57,10 @@ contains
         integer(I4), dimension(3) :: ngp
         integer(I4) :: i, j
 
+        real(DP) :: out_length, down_length
+        real(DP), dimension(3) :: ref
+        real(DP), dimension(2) :: hgt,wdt
+
         input=>inp
 
         this%step=1.d0
@@ -88,7 +92,25 @@ contains
         ! rotate basis vectors if needed
         if (keyword_is_set(input, 'Grid.rotation')) then
             call getkw(input, 'Grid.rotation', angle)
-            call rotate(this, angle)
+            ! recalculate the rotation reference
+
+            if (keyword_is_set(input, 'Grid.rotation_origin')) then
+                call getkw(input, 'Grid.rotation_origin', ref)
+            else
+                !            call getkw(input, 'Grid.out', out_length) 
+                !            call getkw(input, 'Grid.down', down_length)
+                if (keyword_is_set(input, 'Grid.height')) then
+                    call getkw(input, 'Grid.height', hgt)
+                    call getkw(input, 'Grid.width', wdt)
+                    down_length=hgt(2)
+                    out_length=wdt(2)
+                else
+                    call getkw(input, 'Grid.out', out_length)
+                    call getkw(input, 'Grid.down', down_length)
+                end if
+                ref = this%origin + out_length*this%basv(:,2) + down_length*this%basv(:,1)
+            end if
+            call rotate(this, angle, ref)
         end if
 
         ! calculate distibution of grid points
@@ -305,7 +327,7 @@ contains
         end do
 
         if (flag) then
-            write(str_g, '(a,3i5)') &
+            write(str_g, '(a,3i5)'), &
             'Adjusted number of grid points for quadrature: ', this%npts
             call msg_info(str_g)
         end if
@@ -672,9 +694,10 @@ contains
     end function
 
     ! rotate basis vectors (prior to grid setup)
-    subroutine rotate(this, angle)
+    subroutine rotate(this, angle, reference)
         type(grid_t) :: this
         real(DP), dimension(3), intent(in) :: angle
+        real(DP), dimension(3), intent(in) :: reference
 
         real(DP) :: x
         real(DP), dimension(3) :: rad
@@ -698,8 +721,8 @@ contains
         !jj rot(2,1)=-sin(x)
 
         !ol begin
-        rot(1,2)=-sin(x)
-    rot(2,1)=sin(x)
+        rot(1,2)=sin(x)
+        rot(2,1)=-sin(x)
         !ol end
 
 ! y-mat
@@ -711,8 +734,8 @@ contains
         !jj euler(3,1)=sin(x)
 
         !ol begin
-        euler(1,3)=sin(x)
-        euler(3,1)=-sin(x)
+        euler(1,3)=-sin(x)
+        euler(3,1)=sin(x)
         !ol end
 
         euler=matmul(euler,rot)
@@ -730,16 +753,20 @@ contains
         rot(1,1)=1.d0
         rot(2,2)=cos(x)
         rot(3,3)=cos(x)
-        rot(2,3)=-sin(x)
-        rot(3,2)=sin(x)
+        rot(2,3)=sin(x)
+        rot(3,2)=-sin(x)
         !ol end
 
 
         euler=matmul(rot,euler)
 
+        this%origin=this%origin-reference
+
         this%basv=matmul(euler,this%basv)
         this%origin=matmul(euler,this%origin)
-    end subroutine
+ 
+        this%origin=this%origin+reference
+   end subroutine
 
     subroutine get_basv3(this, i, j, k)
         type(grid_t) :: this
