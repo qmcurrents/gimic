@@ -8,9 +8,10 @@ GIMIC: gauge-including magnetically induced currents
 
    intro.rst
    installation.rst
+   testing.rst
+   development.rst
    usage.rst
    input.rst
    grids.rst
    output.rst
-   testing.rst
    visualization.rst
