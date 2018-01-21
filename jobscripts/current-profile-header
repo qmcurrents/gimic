@@ -266,28 +266,3 @@ echo "done"
 planeSanityCheck $dirname
 
 
-# Submit the calculation
-
-wrkdir=$(pwd)
-wrkdir=$(echo $wrkdir/$dirname)
-echo "Working directory:"; echo $wrkdir; echo
-
-#echo "Running Gimic calculations..."
-
-filenum=$(ls $wrkdir/*inp | wc -l)
-#filenum=$(echo $nsteps)
-
-parallel=4
-
-echo "How many parallel tasks to execute?"
-read parallel
-
-# check if too many parallel tasks are called
-if [ $parallel -gt $nsteps ]
-then
-    $parallel=$($nsteps)
-fi
-
-sbatch --ntasks="$parallel" --job-name="$dirname" @SCRIPTS_DIR@/jobscript "$wrkdir" "$parallel" 
-echo
-
