@@ -188,12 +188,13 @@ cat /dev/null > ./$dirname/calculation.dat
 #echo bond=[$bond] > ./$dirname/calculation.dat
 echo atom1=$atom1  >> ./$dirname/calculation.dat
 echo atom2=$atom2 >> ./$dirname/calculation.dat
-echo fixed point: Fx=$Fx, Fy=$Fy, Fz=$Fz  >> ./$dirname/calculation.dat
-echo magnetic field: MFx=$MFx, MFy=$MFy, MFz=$MFz  >> ./$dirname/calculation.dat
 echo distance=$distance >> ./$dirname/calculation.dat
 echo in=$start out=$out up=$up down=$down  >> ./$dirname/calculation.dat
+echo fixed point: Fx=$Fx, Fy=$Fy, Fz=$Fz  >> ./$dirname/calculation.dat
 echo delta=$delta >> ./$dirname/calculation.dat
-printf "spacing=[ $spacingX ; $spacingY ; $spacingZ ]\n\n"  >> ./$dirname/calculation.dat
+echo spacing: spacingX=$spacingX, spacingY=$spacingY, spacingZ=$spacingZ  >> ./$dirname/calculation.dat
+echo magnetic field: MFx=$MFx, MFy=$MFy, MFz=$MFz  >> ./$dirname/calculation.dat
+echo rotation angles: rotX=$rotX, rotY=$rotY, rotZ=$rotZ >> ./$dirname/calculation.dat
 
 ################################################################################
 
@@ -205,6 +206,8 @@ printf "in = $start  out = $out  up = $up  down = $down \n"
 printf "Split into $nsteps slices with width $delta and grid spacing [$spacingX; $spacingY; $spacingZ] \n"
 printf "Fixed coordinate: ( $Fx; $Fy; $Fz )\n"
 printf "Magnetic field direction: ( $MFx; $MFy; $MFz ) \n\n"
+printf "Rotation angles: ( $rotX; $rotY; $rotZ ) \n\n"
+
 printf "\n*****************************************************************************\n\n"
 
 
