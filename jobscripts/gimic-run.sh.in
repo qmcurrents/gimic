@@ -2,49 +2,16 @@
 
 # Function definitions:
 source @SCRIPTS_DIR@/functions-def
-# Usage:
-# centroid $atomic_indices_according_to_the_coord_file
-# dista $index_of_atom1 $index_of_atom2
 
-echo
-echo "Bond between the atoms:"
-read atom1; read atom2
-bond=$atom1","$atom2
+checkIfInputExists
 
-echo "Enter the suffix for the directory name"
-read suffix
-suffix=$(printf _$suffix)
-dirname=bond_int_$atom1.$atom2$suffix
-echo $dirname
+printf "\nPREPARING CURRENT DENSITY INTEGRATION\n"
+printf "\nUsing atomic units of length\n\n"
 
-# If we are not in the current_profile folder, check if it exists. If it did, just go there. If it did not, create it and copy the necessary files
-dir=$(pwd | grep "bond_int")
-#echo $dir
-
-checkIfPreviousCalculationExists $dirname
-
-# Calculate the distance between the atoms
-echo "Define where between the two atoms the integration plane passes"
-echo "Default: through the midpoint"
-#echo dista $atom1 $atom2
-#echo $(dista $atom1 $atom2)
-
-distance=$( dista $atom1 $atom2 )
-echo distance=$distance
-
-valueInp distance $distance
-
-
-# Coordinates of the centre of the bond:
-BOND=$(centroid $atom1 $atom2)
-Bx=$( echo $BOND | awk '{print $1} ' )
-By=$( echo $BOND | awk '{print $2} ' )
-Bz=$( echo $BOND | awk '{print $3} ' )
-
-# echo "Bond centre coordinates:"
-# printf "("$Bx"; "$By"; "$Bz")\n"
-
-echo
+echo "Define the bond perpendicular to which to integrate"; echo
+echo "Enter the indices of the atoms according to the coord file"
+printf "Atom 1:  "; read atom1; 
+printf "Atom 2:  "; read atom2
 
 # Read the coordinates of atom1:
 A1x=$( awk -v atom1=$atom1 '{ if (NR==(atom1+1)) {print $1} }' coord  )
@@ -55,14 +22,30 @@ A1z=$( awk -v atom1=$atom1 '{ if (NR==(atom1+1)) {print $3} }' coord  )
 A2x=$( awk -v atom2=$atom2 '{ if (NR==(atom2+1)) {print $1} }' coord  )
 A2y=$( awk -v atom2=$atom2 '{ if (NR==(atom2+1)) {print $2} }' coord  )
 A2z=$( awk -v atom2=$atom2 '{ if (NR==(atom2+1)) {print $3} }' coord  )
+echo "Enter the suffix for the directory name"
+read suffix
+suffix=$(printf _$suffix)
+dirname=bond_int_$atom1.$atom2$suffix
+#echo $dirname
 
-# Fx=$(calculateFixedCoord $A2x $A2y $A2z | awk '{print $1}')
-# Fy=$(calculateFixedCoord $A2x $A2y $A2z | awk '{print $2}')
-# #Fz=$( awk -v A1z=$A1z -v A2z=$A2z 'BEGIN{ print (A1z+A2z)*0.5 }')
-# Fz=$( awk -v A1z=$A1z -v A2z=$A2z 'BEGIN{ print A2z }')
-# 
-# echo "Fixed coordinate: ($Fx; $Fy; $Fz)"
-# 
+checkIfPreviousCalculationExists $dirname
+
+# Calculate the distance between the atoms
+echo "Define where between the two atoms the integration plane passes"
+echo "Default: through the midpoint"
+distance=$( halfDistance $atom1 $atom2 )
+valueInp distance $distance
+
+# Coordinates of the centre of the bond:
+bond=$atom1","$atom2
+BOND=$(centroid $atom1 $atom2)
+Bx=$( echo $BOND | awk '{print $1} ' )
+By=$( echo $BOND | awk '{print $2} ' )
+Bz=$( echo $BOND | awk '{print $3} ' )
+
+#echo "Bond centre coordinates:"
+#printf "("$Bx";"$By";"$Bz")\n"
+#echo
 
 printf "\n\nSTARTING POINT OF THE INTEGRATION\n"
 userInp start $start
@@ -80,7 +63,7 @@ down=-10
 valueInp up $up 
 valueInp down $down
 
-echo "MAGNETIC FIELD DIRECTION"
+printf "\nMAGNETIC FIELD DIRECTION\n\n"
 
 # default along the Z axis
 MFx=0.0
@@ -102,29 +85,7 @@ fi
 echo "Magnetic field vector coordinates: ($MFx; $MFy; $MFz)"
 echo
 
-echo "ROTATION OF THE PLANE"
-
-# rotation is done with respect to in=0, up=0
-rotX=0.0
-rotY=0.0
-rotZ=0.0
-
-echo "Do you want to rotate the integration plane?"
-echo "Press [y] enter rotation angles" 
-
-read accept;
-if [ ! -z $accept ] && [ $accept == "y" ]
-then
-    valueInp rotX $rotX 
-    valueInp rotY $rotY
-    valueInp rotZ $rotZ
-
-    echo "Rotation angles: ($rotX, $rotY, $rotZ)"
-fi
-
-
-
-echo "FIXED POINT"
+printf "\nFIXED COORDINATE\n"
 
 # fixed point (Ax, Ay and Az are the coords of the bond atoms 1 and 2)
 Fx=$(calculateFixedCoord $A2x $A2y $A2z | awk '{print $1}')
@@ -152,6 +113,43 @@ then
     echo "Fixed coordinate: ($Fx, $Fy, $Fz)"
 fi
 
+
+printf "\nROTATION OF THE PLANE\n\n"
+
+# rotation is done with respect to the midpoint of the bond unless a rotation origin is specified
+rotX=0.0
+rotY=0.0
+rotZ=0.0
+
+rotationOriginEnabled=n
+origX=0.0
+origY=0.0
+origZ=0.0
+
+echo "Do you want to rotate the integration plane?"
+echo "Press [y] enter rotation angles and origin" 
+
+read accept;
+if [ ! -z $accept ] && [ $accept == "y" ]
+then
+    valueInp rotX $rotX 
+    valueInp rotY $rotY
+    valueInp rotZ $rotZ
+
+    echo "Rotation angles: ($rotX, $rotY, $rotZ)"
+
+    printf "\nDo you accept the rotation origin to be at the bond midpoint?\n"
+    echo "Press [n] to enter Cartesian coordinates." 
+
+    read accept;
+    if [ ! -z $accept ] && [ $accept == "n" ]
+    then
+	rotationOriginEnabled=y
+	valueInp origX $origX 
+	valueInp origY $origY
+	valueInp origZ $origZ
+    fi
+fi
 
 
 

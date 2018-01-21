@@ -28,7 +28,9 @@ dirname=current_profile_$atom1.$atom2
 
 checkIfPreviousCalculationExists "$dirname"
 
-echo "The default position of the integration plane is at the midpoint of the bond."
+# Calculate the distance between the atoms
+echo "Define where between the two atoms the integration plane passes"
+echo "Default: through the midpoint"
 distance=$( halfDistance $atom1 $atom2 )
 valueInp distance $distance
 
