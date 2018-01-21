@@ -2,9 +2,9 @@
 
 function centroid() { atoms="$@"; for i in $atoms; do awk -v i=$i '{ if (NR == i+1) print $0 }' coord; done | awk '{ x+=$1; y+=$2; z+=$3; n++} END{ print x/n, y/n, z/n; }'; }
 
-function dista() { awk -v a1="$1" -v a2="$2" '{ if (NR == a1+1) { x+=$1;y+=$2;z+=$3;}; if (NR == a2+1) {x-=$1;y-=$2;z-=$3} } END{ dist=sqrt(x*x+y*y+z*z); print dist*0.5; }' coord ; }
+function halfDistance() { awk -v a1="$1" -v a2="$2" '{ if (NR == a1+1) { x+=$1;y+=$2;z+=$3;}; if (NR == a2+1) {x-=$1;y-=$2;z-=$3} } END{ dist=sqrt(x*x+y*y+z*z); print dist*0.5; }' coord ; }
 
-
+function calcDistance() { awk -v a1="$1" -v a2="$2" '{ if (NR == a1+1) { x+=$1;y+=$2;z+=$3;}; if (NR == a2+1) {x-=$1;y-=$2;z-=$3} } END{ dist=sqrt(x*x+y*y+z*z); print dist; }' coord ; }
 
 
 
@@ -113,9 +113,16 @@ function calculateFixedCoord() {
     #  | cos(theta) -sin(theta) |
     #  | sin(theta)  cos(theta) |
 
+    # The choice of a rotation angle was arbitrary
+
+    # usage:
+    # Fx=$(calculateFixedCoord $A2x $A2y $A2z | awk '{print $1}')
+    # Fy=$(calculateFixedCoord $A2x $A2y $A2z | awk '{print $2}')
+
+
 #    echo "func arg: " "$@"
     awk -v A2x="$1" -v A2y="$2" -v A2z="$3" 'BEGIN{ 
-    rotAngleDeg=1 ; 
+    rotAngleDeg=10 ; 
     rotAngleRad=0.0174532925*rotAngleDeg;
     Cos=cos(rotAngleRad);
     Sin=sin(rotAngleRad);
@@ -124,26 +131,19 @@ function calculateFixedCoord() {
     }'
 }
 
-######################################
-#    calculateFixedCoord usage:      #
-######################################
-#
-# A1x=-10.15871309816185
-# A1y=2.47884829569131
-# A1z=-1.34442794651523
-# 
-# A2x=10.15871309831748
-# A2y=-2.47884829549691
-# A2z=-1.34442794652724
-# 
-# Fx=$(calculateFixedCoord $A2x $A2y $A2z | awk '{print $1}')
-# Fy=$(calculateFixedCoord $A2x $A2y $A2z | awk '{print $2}')
-# Fz=$( awk -v A1z=$A1z -v A2z=$A2z 'BEGIN{ print (A1z+A2z)*0.5 }')
-# 
-# 
-# echo $Fx, $Fy, $Fz
-# 
-#
+
+function dotProduct() {
+    #
+    awk -v A1x="$1" -v A1y="$2" -v A1z="$3" -v A2x="$4" -v A2y="$5" -v A2z="$6" 'BEGIN{ 
+        dot = A1x*A2x + A1y*A2y + A1z*A2z;
+	print dot;
+    }'
+}
+
+
+
+
+
 
 function planeSanityCheck() {
 # sanity check for the integration plane

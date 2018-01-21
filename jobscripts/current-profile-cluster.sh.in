@@ -5,81 +5,13 @@ source  @SCRIPTS_DIR@/functions-def
 
 checkIfInputExists
 
-printf "\nStarting current profile analysis\n"
+printf "\nSTARTING CURRENT PROFILE ANALYSIS\n"
 printf "\nUsing atomic units of length\n\n"
 
 echo "Define the bond perpendicular to which to integrate"; echo
 echo "Enter the indices of the atoms according to the coord file"
 printf "Atom 1:  "; read atom1; 
 printf "Atom 2:  "; read atom2
-bond=$atom1","$atom2
-
-dirname=current_profile_$atom1.$atom2
-#echo $dirname
-
-checkIfPreviousCalculationExists "$dirname"
-
-# if [ -z $dir ] # if the path does not contain "current_profile", $dir is empty, so the directory either does not exist, or we are not inside it
-# then
-#     #echo "Currently not in the directory current_profile"
-#     if [ -d $dirname ] 
-#     then
-# 	printf "\n\n*** Directory already exists.\n\nCalculation parameters:\n"
-# 	grep "bond=\|fixed=\|up=\|down=\|MF=" $dirname/gimic.Inp
-# 	echo "Enter [y] to overwrite or any key to exit."; read accept
-# 	if [ -z $accept ] || [ ! $accept == "y" ]  # if the variable is empty or different from "y", exit 
-# 	then 
-# 	    exit
-# 	else
-# 	    rm -f $dirname/*out $dirname/*inp # Remove leftover input and output to avoid confusion
-# 	fi 
-# checkPreviousCalc fixed $fixed
-# else
-# 	if [ -e MOL ] && [ -e XDENS ] && [ -e coord ]
-# 	then
-# 	    mkdir $dirname
-# 	    cp coord $dirname/
-# 	    echo "Directory $dirname created."; echo
-# 	else
-# 	    echo "Please run the current profile analysis from a directory containing the files MOL, XDENS and coord"
-# 	    exit
-# 	fi # end if MOL, XDENS, coord exist
-#     fi # end if current_profile_#.#
-# fi # end if directory current_profile_#.# exists or we are inside it
-
-echo "The default position of the integration plane is at the midpoint of the bond."
-distance=$( awk -v a1="$atom1" -v a2="$atom2" '{ if (NR == a1+1) { x+=$1;y+=$2;z+=$3;}; if (NR == a2+1) {x-=$1;y-=$2;z-=$3} } END{ dist=sqrt(x*x+y*y+z*z); print dist*0.5; }' coord ; )
-valueInp distance $distance
-
-# Coordinates of the centre:
-BOND=$(centroid $atom1 $atom2)
-Bx=$( echo $BOND | awk '{print $1} ' )
-By=$( echo $BOND | awk '{print $2} ' )
-Bz=$( echo $BOND | awk '{print $3} ' )
-
-#echo "Bond centre coordinates:"
-#printf "("$Bx";"$By";"$Bz")\n"
-
-# Check if there already is an input file
-#if [ -f $dirname/calculation.dat ] 
-#then
-#    fixed=$( sed -n -e 's/^.*fixed=*//p' $dirname/calculation.dat | awk 'BEGIN { FS = "," } ; { print $2 }' )
-#fi
-# # If there was not a previous calculation, $fixed will be empty. Ask if it should be changed
-# if [ ! -z $fixed ] 
-# then
-#     printf "\nThe previously selected fixed atom is $fixed.\nPress [n] to change\n"
-#     read accept
-# fi
-# # If the $fixed is empty or the user wants to change it, ask to enter 
-# if [[ ( -z $fixed ) || ( ! -z $accept  &&  "$accept" == "n" ) ]]
-#     then 
-#         printf "\nEnter the index of the fixed atom:\n"
-#         read fixed
-# fi
-
-
-echo
 
 # Read the coordinates of atom1:
 A1x=$( awk -v atom1=$atom1 '{ if (NR==(atom1+1)) {print $1} }' coord  )
@@ -91,13 +23,33 @@ A2x=$( awk -v atom2=$atom2 '{ if (NR==(atom2+1)) {print $1} }' coord  )
 A2y=$( awk -v atom2=$atom2 '{ if (NR==(atom2+1)) {print $2} }' coord  )
 A2z=$( awk -v atom2=$atom2 '{ if (NR==(atom2+1)) {print $3} }' coord  )
 
+dirname=current_profile_$atom1.$atom2
+#echo $dirname
+
+checkIfPreviousCalculationExists "$dirname"
+
+echo "The default position of the integration plane is at the midpoint of the bond."
+distance=$( halfDistance $atom1 $atom2 )
+valueInp distance $distance
+
+# Coordinates of the centre:
+bond=$atom1","$atom2
+BOND=$(centroid $atom1 $atom2)
+
+Bx=$( echo $BOND | awk '{print $1} ' )
+By=$( echo $BOND | awk '{print $2} ' )
+Bz=$( echo $BOND | awk '{print $3} ' )
+
+#echo "Bond centre coordinates:"
+#printf "("$Bx";"$By";"$Bz")\n"
+#echo
 
 printf "\n\nSTARTING POINT OF THE INTEGRATION\n"
 userInp start $start
 
 printf "\nEND POINT OF THE INTEGRATION\n"
 out=10
-printf "\nDo you accept out=$out bohr?"
+printf "\nDo you accept out=$out bohr?" # ask about the default value 
 userInp out $out
 
 printf "\n\nUPPER AND LOWER BOUNDS OF THE INTEGRATION\n"
@@ -112,6 +64,8 @@ valueInp delta $delta
 
 nsteps=$( awk -v start=$start -v out=$out -v delta=$delta 'BEGIN{if (start > 0) {start = -start}; nsteps=(out-start)/delta; if (nsteps > 0) {printf("%d",nsteps)} else {printf("%d",-nsteps);}; }'   )
 
+
+printf "\n\nGRID POINT SPACING\n"
 #Practice has shown that for delta=0.1, the spacing value should be 0.02 in order to have at least 9 Gaussian points per slice
 # If the delta is smaller than 0.1, recalculate:
 # spacingFactor=$( awk -v delta=$delta 'BEGIN{ printf("%.4f",delta/0.02) }' )    # how many times smaller the chosen delta value is
@@ -120,7 +74,6 @@ spacingX=$( awk -v delta=$delta 'BEGIN{ f=delta/0.02; printf("%.3f",1.00*f); }' 
 spacingY=$( awk -v delta=$delta 'BEGIN{ f=delta/0.02; printf("%.3f",0.01*f); }' )
 spacingZ=$( awk -v delta=$delta 'BEGIN{ f=delta/0.02; printf("%.3f",0.01*f); }' )
 
-printf "\n\nSPACING\n"
 printf  "\nDo you accept spacing=[$spacingX, $spacingY, $spacingZ]?\nPress [n] to change\n"
 read accept;
 if [ ! -z $accept ] && [ $accept == "n" ]
@@ -130,7 +83,8 @@ then
     printf "spacingZ="; read spacingZ
 fi
 
-echo "MAGNETIC FIELD DIRECTION"
+
+printf "\nMAGNETIC FIELD DIRECTION\n\n"
 
 # default along the Z axis
 MFx=0.0
@@ -153,7 +107,7 @@ echo "Magnetic field vector coordinates: ($MFx; $MFy; $MFz)"
 echo
 
 
-echo "FIXED POINT"
+printf "\nFIXED COORDINATE\n"
 
 # fixed point (Ax, Ay and Az are the coords of the bond atoms 1 and 2)
 Fx=$(calculateFixedCoord $A2x $A2y $A2z | awk '{print $1}')
@@ -182,15 +136,20 @@ then
 fi
 
 
-echo "ROTATION OF THE PLANE"
+printf "\nROTATION OF THE PLANE\n\n"
 
-# rotation is done with respect to in=0, up=0
+# rotation is done with respect to the midpoint of the bond unless a rotation origin is specified
 rotX=0.0
 rotY=0.0
 rotZ=0.0
 
+rotationOriginEnabled=n
+origX=0.0
+origY=0.0
+origZ=0.0
+
 echo "Do you want to rotate the integration plane?"
-echo "Press [y] enter rotation angles" 
+echo "Press [y] enter rotation angles and origin" 
 
 read accept;
 if [ ! -z $accept ] && [ $accept == "y" ]
@@ -200,14 +159,22 @@ then
     valueInp rotZ $rotZ
 
     echo "Rotation angles: ($rotX, $rotY, $rotZ)"
+
+    printf "\nDo you accept the rotation origin to be at the bond midpoint?\n"
+    echo "Press [n] to enter Cartesian coordinates." 
+
+    read accept;
+    if [ ! -z $accept ] && [ $accept == "n" ]
+    then
+	rotationOriginEnabled=y
+	valueInp origX $origX 
+	valueInp origY $origY
+	valueInp origZ $origZ
+    fi
 fi
 
 
-
-string="s/@bond@/$bond/; s/@fixed@/$fixed/; s/@distance@/$distance/; s/@up@/$up/; s/@down@/$down/; s/@spacingX@/$spacingX/; s/@spacingY@/$spacingY/; s/@spacingZ@/$spacingZ/;  s/@rotX@/$rotX/;  s/@rotY@/$rotY/;  s/@rotZ@/$rotZ/; s/@MFx@/$MFx/; s/@MFy@/$MFy/; s/@MFz@/$MFz/; s/@FX@/$Fx/; s/@FY@/$Fy/; s/@FZ@/$Fz/ ;"
-sed "$string" @SCRIPTS_DIR@/gimic.Inp > ./$dirname/gimic.Inp
-
-#end=$( awk -v delta=$delta -v start=$start 'BEGIN{print delta-start}' ) 
+# Sumarizing the selected input 
 
 #echo "Enter title:"
 #read heading
@@ -220,24 +187,36 @@ cat /dev/null > ./$dirname/calculation.dat
 echo atom1=$atom1  >> ./$dirname/calculation.dat
 echo atom2=$atom2 >> ./$dirname/calculation.dat
 echo fixed point: Fx=$Fx, Fy=$Fy, Fz=$Fz  >> ./$dirname/calculation.dat
-echo magnetic field: Mx=$Mx, My=$My, Mz=$Mz  >> ./$dirname/calculation.dat
+echo magnetic field: MFx=$MFx, MFy=$MFy, MFz=$MFz  >> ./$dirname/calculation.dat
 echo distance=$distance >> ./$dirname/calculation.dat
 echo in=$start out=$out up=$up down=$down  >> ./$dirname/calculation.dat
 echo delta=$delta >> ./$dirname/calculation.dat
-printf "spacing=[ $spacingX ; $spacingY ; $spacingZ ]\n"  >> ./$dirname/calculation.dat
+printf "spacing=[ $spacingX ; $spacingY ; $spacingZ ]\n\n"  >> ./$dirname/calculation.dat
 
 ################################################################################
 
 #printf "\nnsteps="$nsteps", delta="$delta", spacing="$spacing", in="$start", out="$out", up="$up", down="$down", bond=["$bond"], fixed="$fixed"\n"
 printf "\n\n*****************************************************************************\n\nSUMMARY\n\n"
 printf "Bond: ["$bond"]\n"
-printf "Fixed coordinate: ( $Fx; $Fy; $Fz )\n"
 echo "Integration plane coordinates"
 printf "in = $start  out = $out  up = $up  down = $down \n"
 printf "Split into $nsteps slices with width $delta and grid spacing [$spacingX; $spacingY; $spacingZ] \n"
+printf "Fixed coordinate: ( $Fx; $Fy; $Fz )\n"
 printf "Magnetic field direction: ( $MFx; $MFy; $MFz ) \n\n"
-
 printf "\n*****************************************************************************\n\n"
+
+
+# Preparing the input files
+
+string="s/@bond@/$bond/; s/@fixed@/$fixed/; s/@distance@/$distance/; s/@up@/$up/; s/@down@/$down/; s/@spacingX@/$spacingX/; s/@spacingY@/$spacingY/; s/@spacingZ@/$spacingZ/;  s/@rotX@/$rotX/;  s/@rotY@/$rotY/;  s/@rotZ@/$rotZ/; s/@origX@/$origX/; s/@origY@/$origY/; s/@origZ@/$origZ/; s/@MFx@/$MFx/; s/@MFy@/$MFy/; s/@MFz@/$MFz/; s/@FX@/$Fx/; s/@FY@/$Fy/; s/@FZ@/$Fz/ ;"
+sed "$string" @SCRIPTS_DIR@/gimic.Inp > ./$dirname/gimic.Inp
+
+# if the rotation_origin keyword is not defined in the input file, rotation is done around the bond midpoint
+if [ $rotationOriginEnabled == "y" ]
+then
+    sed -i '/rot/s/#rotation_origin/rotation_origin/' ./$dirname/gimic.Inp
+fi
+
 
 xstart=$( awk -v delta=$delta -v start=$start 'BEGIN{printf "%.3f\n", -start }' )  # start is a negative number 
 xend=$( awk -v delta=$delta -v xstart=$xstart 'BEGIN{ printf "%.3f\n", xstart+delta }' ) 

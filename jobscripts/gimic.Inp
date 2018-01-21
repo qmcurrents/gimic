@@ -8,7 +8,7 @@ debug=1           # debug print level
 openshell=false 
 #show_axis=true   # mark "up" axis in .xyz files
 #magnet_axis=@MF@ #[-] i,j,k || x,y,z -> align magnet along axis
-magnet=[@MFx@, @MFy@, @MFz@]   # magnet vector
+magnet=[ @MFx@, @MFy@, @MFz@ ]   # magnet vector
 #scale_vectors=1.0
 
 Grid(bond) {                    # define grid orthogonal to a bond 
@@ -17,18 +17,20 @@ Grid(bond) {                    # define grid orthogonal to a bond
 #     coord1=[@COORD1@]
 #     coord2=[@COORD2@]
 #     fixpoint=@fixed@
-     fixcoord=[@FX@, @FY@, @FZ@]
+     fixcoord=[ @FX@, @FY@, @FZ@ ]
      distance=@distance@               # place grid 'distance' between atoms
      gauss_order=9               # order for gauss quadrature
-     spacing=[@spacingX@,@spacingY@,@spacingZ@]
+     spacing=[ @spacingX@, @spacingY@, @spacingZ@ ]
 #     in=@start@
 #     out=@end@
 #     up=@up@
 #     down=@down@
      height=[@down@,@up@]
      width=[@start@,@end@]
-     rotation=[@rotX@,@rotY@,@rotZ@]      # Rotation of (i,j,k) -> (i',j',k') degrees
+     rotation=[ @rotX@, @rotY@, @rotZ@ ]      # Rotation of (i,j,k) -> (i',j',k') degrees
+     #rotation_origin=[ @origX@, @origY@, @origZ@ ]      
 }
+
 Advanced {
     lip_order=5      # order of Lagrange Interpolating Polynominals to use
     spherical=off     # don't touch, unless you REALLY know what you are doing
