@@ -51,7 +51,6 @@ checkIfPreviousCalculationExists "$dirname"
 #     fi # end if current_profile_#.#
 # fi # end if directory current_profile_#.# exists or we are inside it
 
-
 echo "The default position of the integration plane is at the midpoint of the bond."
 distance=$( awk -v a1="$atom1" -v a2="$atom2" '{ if (NR == a1+1) { x+=$1;y+=$2;z+=$3;}; if (NR == a2+1) {x-=$1;y-=$2;z-=$3} } END{ dist=sqrt(x*x+y*y+z*z); print dist*0.5; }' coord ; )
 valueInp distance $distance
@@ -87,6 +86,8 @@ Bz=$( echo $BOND | awk '{print $3} ' )
 echo
 
 # Read the coordinates of atom1:
+A1x=$( awk -v atom1=$atom1 '{ if (NR==(atom1+1)) {print $1} }' coord  )
+A1y=$( awk -v atom1=$atom1 '{ if (NR==(atom1+1)) {print $2} }' coord  )
 A1z=$( awk -v atom1=$atom1 '{ if (NR==(atom1+1)) {print $3} }' coord  )
 
 # Read the coordinates of atom2:
@@ -94,15 +95,10 @@ A2x=$( awk -v atom2=$atom2 '{ if (NR==(atom2+1)) {print $1} }' coord  )
 A2y=$( awk -v atom2=$atom2 '{ if (NR==(atom2+1)) {print $2} }' coord  )
 A2z=$( awk -v atom2=$atom2 '{ if (NR==(atom2+1)) {print $3} }' coord  )
 
-Fx=$(calculateFixedCoord $A2x $A2y $A2z | awk '{print $1}')
-Fy=$(calculateFixedCoord $A2x $A2y $A2z | awk '{print $2}')
-#Fz=$( awk -v A1z=$A1z -v A2z=$A2z 'BEGIN{ print (A1z+A2z)*0.5 }')
-Fz=$( awk -v A1z=$A1z -v A2z=$A2z 'BEGIN{ print A2z }')
-
-echo "Fixed coordinate: ($Fx; $Fy; $Fz)"
-
-
 printf "\n\nSTARTING POINT OF THE INTEGRATION\n"
+userInp start $start
+
+printf "\nEND POINT OF THE INTEGRATION\n"
 out=10
 printf "\nDo you accept out=$out bohr?"
 userInp out $out
@@ -150,14 +146,44 @@ echo "Press [n] to calculate the direction automatically" # TODO: or [e] to ente
 read accept;
 if [ ! -z $accept ] && [ $accept == "n" ]
 then
-    maximise_projection coord.xyz > $dirname/field.dat
-    MFx=$( cat $dirname/field.dat | sed -e 's#{#_#g; s#}#_#g; s#,#_#g' | awk -F [_] '{ {print -$2} }')
-    MFy=$( cat $dirname/field.dat | sed -e 's#{#_#g; s#}#_#g; s#,#_#g' | awk -F [_] '{ {print -$3} }')
-    MFz=$( cat $dirname/field.dat | sed -e 's#{#_#g; s#}#_#g; s#,#_#g' | awk -F [_] '{ {print -$4} }')
+   maximise_projection coord.xyz > $dirname/field.dat
+   MFx=$( cat $dirname/field.dat | sed -e 's#{#_#g; s#}#_#g; s#,#_#g' | awk -F [_] '{ {print -$2} }')
+   MFy=$( cat $dirname/field.dat | sed -e 's#{#_#g; s#}#_#g; s#,#_#g' | awk -F [_] '{ {print -$3} }')
+   MFz=$( cat $dirname/field.dat | sed -e 's#{#_#g; s#}#_#g; s#,#_#g' | awk -F [_] '{ {print -$4} }')
 fi
 
 echo "Magnetic field vector coordinates: ($MFx; $MFy; $MFz)"
 echo
+
+
+echo "FIXED POINT"
+
+# fixed point (Ax, Ay and Az are the coords of the bond atoms 1 and 2)
+Fx=$(calculateFixedCoord $A2x $A2y $A2z | awk '{print $1}')
+Fy=$(calculateFixedCoord $A2x $A2y $A2z | awk '{print $2}')
+#Fz=$( awk -v A1z=$A1z -v A2z=$A2z 'BEGIN{ print (A1z+A2z)*0.5 }')
+#Fz=$( awk -v A1z=$A1z -v A2z=$A2z 'BEGIN{ print A2z }')
+
+# use the coords of atom 1 and the MF vector
+# vector OA and OF defined with the coords of atom1 and the fixed point
+# vector AF.MF = 0
+Fz=$( awk -v Ax=$A1x -v Fx=$Fx -v Ay=$A1y -v Fy=$Fy -v Az=$A1z -v mx=$MFx -v my=$MFy -v mz=$MFz 'BEGIN{ print( ( (mx*(Fx-Ax) + my*(Fy-Ay)) / mz) + Az )}')
+echo
+echo "Fixed coordinate: ($Fx; $Fy; $Fz)"
+
+echo "Do you want to modify the coordinates of the fixed point?"
+echo "Press [y] enter Cartesian coordinates" 
+
+read accept;
+if [ ! -z $accept ] && [ $accept == "y" ]
+then
+    valueInp Fx $Fx
+    valueInp Fy $Fy
+    valueInp Fz $Fz
+
+    echo "Fixed coordinate: ($Fx, $Fy, $Fz)"
+fi
+
 
 echo "ROTATION OF THE PLANE"
 
@@ -182,8 +208,6 @@ fi
 
 
 string="s/@bond@/$bond/; s/@fixed@/$fixed/; s/@distance@/$distance/; s/@up@/$up/; s/@down@/$down/; s/@spacingX@/$spacingX/; s/@spacingY@/$spacingY/; s/@spacingZ@/$spacingZ/;  s/@rotX@/$rotX/;  s/@rotY@/$rotY/;  s/@rotZ@/$rotZ/; s/@MFx@/$MFx/; s/@MFy@/$MFy/; s/@MFz@/$MFz/; s/@FX@/$Fx/; s/@FY@/$Fy/; s/@FZ@/$Fz/ ;"
-
-#sedstring="s/@MINX@/${vert[0]}/; s/@MINY@/${vert[1]}/; s/@MINZ@/${vert[2]}/; s/@LX@/${vert[3]}/; s/@LY@/${vert[4]}/; s/@LZ@/${vert[5]}/; s/@MFx@/$MFx/; s/@MFy@/$MFy/; s/@MFz@/$MFz/;"
 sed "$string" @SCRIPTS_DIR@/gimic.Inp > ./$dirname/gimic.Inp
 
 #end=$( awk -v delta=$delta -v start=$start 'BEGIN{print delta-start}' ) 
@@ -204,7 +228,6 @@ echo in=$start out=$out up=$up down=$down  >> ./$dirname/calculation.dat
 echo delta=$delta >> ./$dirname/calculation.dat
 printf "spacing=[ $spacingX ; $spacingY ; $spacingZ ]\n"  >> ./$dirname/calculation.dat
 
-
 ################################################################################
 
 #printf "\nnsteps="$nsteps", delta="$delta", spacing="$spacing", in="$start", out="$out", up="$up", down="$down", bond=["$bond"], fixed="$fixed"\n"
@@ -218,7 +241,6 @@ printf "Magnetic field direction: ( $MFx; $MFy; $MFz ) \n\n"
 
 printf "\n*****************************************************************************\n\n"
 
-
 xstart=$( awk -v delta=$delta -v start=$start 'BEGIN{printf "%.3f\n", -start }' )  # start is a negative number 
 xend=$( awk -v delta=$delta -v xstart=$xstart 'BEGIN{ printf "%.3f\n", xstart+delta }' ) 
 #xend=$( awk -v delta=$delta -v start=$start 'BEGIN{ if (start < 0) {print start+delta} else {print start-delta}; }' ) 
@@ -231,7 +253,7 @@ then
     xend=$tmp
 fi
 string=" s/@start@/$xstart/; s/@end@/$xend/; s/@up@/$xup/; s/@down@/$xdown/"
-sed "$string" $dirname/gimic.Inp > $dirname/gimic.0.inp
+sed "$string" ./$dirname/gimic.Inp > ./$dirname/gimic.0.inp
 
 printf "\nPerforming a dry run...\n\n"
 (cd ./$dirname/ && gimic --dryrun gimic.0.inp | grep "grid points" )
@@ -264,38 +286,7 @@ echo "done"
 
 # sanity check for the integration plane
 
-echo "Do you want to create an xyz file showing the ends of the integration plane?"
-echo "Press [y] or any other key to skip"; read accept
-if  [ ! -z $accept ] && [ $accept == "y" ]
-then
-(cd ./$dirname/ && gimic --dryrun gimic.0.inp | grep "grid points" )
-#    gimic --dryrun gimic.0.inp
-    # take the first two coordinates of the int plane
-    cat ./$dirname/grid.xyz | head -n -3 > ./$dirname/grid.check.xyz
-
-    last=$(ls ./$dirname/*inp | wc -l)
-    last=$(( $last -1 ))
-    (cd ./$dirname/ && gimic --dryrun gimic.$last.inp )
-
-    # take the coords of the end of the int plane
-    grep X ./$dirname/grid.xyz  | awk '{ if (NR <=2) {print $0} }' >> ./$dirname/grid.check.xyz
-    # copy the MF direction "Be" atom
-    grep Be ./$dirname/grid.xyz  >> ./$dirname/grid.check.xyz
-
-#    atomNum=$(head -n 1 ./$dirname/grid.xyz)
-#    atomNum=$(( $atomNum + 2 ))
-#    sed -i "1s/.*/$atomNum/" ./$dirname/grid.check.xyz
-
-    echo
-    echo "The file grid.check.xyz created at $wrkdir/grid.check.xyz"
-    echo "You can now put this script to the background and inspect the molecule."
-    echo "Bring the script to foreground to run the calculation."
-    read accept # just wait
-
-    echo "Current profile analysis resumed." 
-fi
-
-
+planeSanityCheck $dirname
 
 
 

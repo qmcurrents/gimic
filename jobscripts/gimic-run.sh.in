@@ -47,6 +47,8 @@ Bz=$( echo $BOND | awk '{print $3} ' )
 echo
 
 # Read the coordinates of atom1:
+A1x=$( awk -v atom1=$atom1 '{ if (NR==(atom1+1)) {print $1} }' coord  )
+A1y=$( awk -v atom1=$atom1 '{ if (NR==(atom1+1)) {print $2} }' coord  )
 A1z=$( awk -v atom1=$atom1 '{ if (NR==(atom1+1)) {print $3} }' coord  )
 
 # Read the coordinates of atom2:
@@ -122,6 +124,8 @@ fi
 
 
 
+echo "FIXED POINT"
+
 # fixed point (Ax, Ay and Az are the coords of the bond atoms 1 and 2)
 Fx=$(calculateFixedCoord $A2x $A2y $A2z | awk '{print $1}')
 Fy=$(calculateFixedCoord $A2x $A2y $A2z | awk '{print $2}')
@@ -134,6 +138,22 @@ Fy=$(calculateFixedCoord $A2x $A2y $A2z | awk '{print $2}')
 Fz=$( awk -v Ax=$A1x -v Fx=$Fx -v Ay=$A1y -v Fy=$Fy -v Az=$A1z -v mx=$MFx -v my=$MFy -v mz=$MFz 'BEGIN{ print( ( (mx*(Fx-Ax) + my*(Fy-Ay)) / mz) + Az )}')
 echo
 echo "Fixed coordinate: ($Fx; $Fy; $Fz)"
+
+echo "Do you want to modify the coordinates of the fixed point?"
+echo "Press [y] enter Cartesian coordinates" 
+
+read accept;
+if [ ! -z $accept ] && [ $accept == "y" ]
+then
+    valueInp Fx $Fx
+    valueInp Fy $Fy
+    valueInp Fz $Fz
+
+    echo "Fixed coordinate: ($Fx, $Fy, $Fz)"
+fi
+
+
+
 
 
 spacingX=0.02
