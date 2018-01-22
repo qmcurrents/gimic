@@ -1,0 +1,389 @@
+#!/bin/bash
+
+
+function A2bohr() { for val in $@; do awk -v a=$val 'BEGIN{ bohr=1.88971616463207; print a*bohr; }'; done; };
+
+function bohr2A() { for val in $@; do awk -v a=$val 'BEGIN{ bohr=0.5291772490; print a*bohr; }'; done; };
+
+
+# Geometry related functions:
+
+function centroid() { 
+        atoms="$@"
+        for i in $atoms 
+        do
+            awk -v i=$i '{  
+                        if (NR == i+1) print $0 
+                        }' coord 
+        done | awk '{ 
+	             x+=$1; 
+		     y+=$2; 
+		     z+=$3; 
+		     n++
+		  } 
+		  END { 
+		     print x/n, y/n, z/n ; 
+		 }';
+}
+
+
+function halfDistance() { awk -v a1="$1" -v a2="$2" '{ if (NR == a1+1) { x+=$1;y+=$2;z+=$3;}; if (NR == a2+1) {x-=$1;y-=$2;z-=$3} } END{ dist=sqrt(x*x+y*y+z*z); print dist*0.5; }' coord ; }
+
+function calcDistance() { awk -v a1="$1" -v a2="$2" '{ if (NR == a1+1) { x+=$1;y+=$2;z+=$3;}; if (NR == a2+1) {x-=$1;y-=$2;z-=$3} } END{ dist=sqrt(x*x+y*y+z*z); print dist; }' coord ; }
+
+
+function point_dist() 
+{
+    # usage: echo $x0A $x1A | point_dist 
+awk '{
+     split($0,crd);
+     dx=crd[1]-crd[4]; 
+     dy=crd[2]-crd[5]; 
+     dz=crd[3]-crd[6]; 
+     dist=sqrt(dx*dx + dy*dy + dz*dz);
+     print dist; }'
+};
+
+
+function angle() 
+{
+    # usage: echo  $x0 $x1 | angle 
+    awk '{
+         split($0,crd); 
+	 dx=crd[1]-crd[4]; 
+	 dy=crd[2]-crd[5]; 
+	 dz=crd[3]-crd[6]; 
+
+	 alpha=atan2(dy, dx); print alpha;
+
+     }'
+ };
+
+
+###############################################################################
+
+# user-input handling functions
+
+
+function checkIfEmpty() {
+# usage: validateInput variable $variable 
+    local __inputVar=$1
+    local __inputValue="$2"
+    while [ -z "$__inputValue" ]
+    do
+        printf "*** Variable \"$__inputVar\" empty ***\nPlease restart the script.\n"
+	echo "If the error persists, file a bug report to maria.dimitrova@helsinki.fi or https://github.com/mariavd/gimic"; echo
+        exit;
+    done
+
+}
+
+function validateInput() {
+# usage: validateInput variable $variable 
+    local __inputVar=$1
+    local __inputValue="$2"
+    while [ -z "$__inputValue" ]
+    do
+        printf "*** Input missing ***\nPlease enter it\n"
+        read __inputValue
+	echo
+    done
+#    echo "Checked value: $__inputValue"
+    eval $__inputVar="'$__inputValue'"
+}
+
+
+function userInp()
+{
+    # handles entering the in and out values - asks for atom indices or manual value
+    # usage: userInp start $start 
+    local __resultVar=$1
+    local __varValue="$2"
+    local localResult="$2"
+    printf "\nPress [a] to enter atomic indices or press [v] to enter the desired value\n"
+    read accept
+    if [ ! -z $accept ] && [ $accept == "a" ]
+    then
+        printf "\nEnter the indices of the selected atoms to calculate their midpoint and then press enter.\n\n" 
+     atoms=0; read atoms
+     validateInput atoms $atoms
+
+     CENTROID=$(centroid $atoms)
+     Cx=$( echo $CENTROID | awk '{print $1} ' )
+     Cy=$( echo $CENTROID | awk '{print $2} ' )
+     Cz=$( echo $CENTROID | awk '{print $3} ' )
+     #echo "Centroid:"; printf "("$Cx"; "$Cy"; "$Cz")\n"
+
+     __varValue=$( awk -v Cx=$Cx -v Cy=$Cy -v Cz=$Cz -v Bx=$Bx -v By=$By -v Bz=$Bz BEGIN'{dist=sqrt( (Bx-Cx)*(Bx-Cx) + (By-Cy)*(By-Cy) + (Bz-Cz)*(Bz-Cz) ); print dist}' )
+     
+     printf  "\nDo you accept $__resultVar=$__varValue bohr?\nPress [n] to change\n"
+     read accept;
+     if [ ! -z $accept ] && [ $accept == "n" ]
+     then
+         printf "$__resultVar="; read __varValue
+	 validateInput __varValue $__varValue
+     fi # if centroid calculation not accepted 
+     elif [ ! -z $accept ] && [ $accept == "v" ]
+     then
+         printf "$__resultVar="; read __varValue
+	 validateInput __varValue $__varValue
+         printf  "\nDo you accept $__resultVar=$__varValue bohr?\nPress [n] to change\n"
+     read accept;
+     if [ ! -z $accept ] && [ $accept == "n" ]
+     then
+         printf "$__resultVar="; read __varValue
+	 validateInput __varValue $__varValue
+     fi
+fi 
+
+eval $__resultVar="'$__varValue'"
+}
+
+
+function valueInp()
+{
+    # handles input of any numerical or string variable
+    # valueInp variable $variable
+    local __resultVar=$1
+    local __varValue="$2"
+
+    printf  "\nDo you accept $__resultVar=$__varValue bohr?\nPress [n] to change\n"
+    read accept;
+    if [ ! -z $accept ] && [ $accept == "n" ]
+    then
+	printf "$__resultVar="; read __varValue
+	validateInput __varValue $__varValue
+    fi # if centroid calculation not accepted 
+
+    eval $__resultVar="'$__varValue'"
+}
+
+
+
+function checkIfInputExists() {
+    if [ ! -e MOL ] || [ ! -e XDENS ] || [ ! -e coord ] || [ ! -e coord.xyz ]
+    then
+	echo "Please run the bond integral calculation from a directory containing the files MOL, XDENS, coord and coord.xyz"
+        exit
+    fi
+}
+
+
+function checkIfPreviousCalculationExists() {
+
+# TODO: if XDENS is missing, run turbo2gimic
+
+    dirname="$@" # The name of the calculation directory, e.g. "current_profile_1.2"
+    
+    if [ -d $dirname ] 
+    then
+	echo "Directory $dirname already exists"
+#        printf "\nDirectory already exists.\nCalculation parameters:\n"
+#        grep "bond=\|in=\|out=\|up=\|down=\|MF=" $dirname/gimic.inp
+        echo "Enter [y] to overwrite or any other key to exit."; read accept
+        if [ -z $accept ] || [ ! $accept == "y" ]  # if the variable is empty or different from "y", exit 
+        then 
+    	exit
+        else
+    	rm -f $dirname/*out $dirname/*inp # Remove leftover input and output to avoid confusion
+        fi
+    else
+        mkdir $dirname
+        cp coord $dirname/
+        echo "Directory $dirname created."; echo
+    fi 
+}
+
+
+
+
+
+function calculateFixedCoord() {
+    # calculate the rotation matrix for 2D rotation with respect to the z axis such that the rotation will be counterclockwise
+    # multiply the vector originating at (0;0;A2z) and ending at the second atom with coords (A2x; A2y; A2z).
+
+    # Rotation matrix R(theta):
+    #  | cos(theta) -sin(theta) |
+    #  | sin(theta)  cos(theta) |
+
+    # The choice of a rotation angle was arbitrary
+
+    # usage:
+    # Fx=$(calculateFixedCoord $A2x $A2y $A2z | awk '{print $1}')
+    # Fy=$(calculateFixedCoord $A2x $A2y $A2z | awk '{print $2}')
+
+
+#    echo "func arg: " "$@"
+    awk -v A2x="$1" -v A2y="$2" -v A2z="$3" 'BEGIN{ 
+    rotAngleDeg=10 ; 
+    rotAngleRad=0.0174532925*rotAngleDeg;
+    Cos=cos(rotAngleRad);
+    Sin=sin(rotAngleRad);
+
+    print(Cos*A2x-Sin*A2y, Sin*A2x+Cos*A2y);
+    }'
+}
+
+
+function dotProduct() {
+    #
+    awk -v A1x="$1" -v A1y="$2" -v A1z="$3" -v A2x="$4" -v A2y="$5" -v A2z="$6" 'BEGIN{ 
+        dot = A1x*A2x + A1y*A2y + A1z*A2z;
+	print dot;
+    }'
+}
+
+
+
+
+
+
+function planeSanityCheck() {
+# sanity check for the integration plane
+
+dirname="$@"
+
+echo "Do you want to create an xyz file showing the ends of the integration plane?"
+echo "Press [y] or any other key to skip"; read accept
+if  [ ! -z $accept ] && [ $accept == "y" ]
+then
+    echo "Running calculations..."
+    (cd ./$dirname/ && gimic --dryrun gimic.0.inp  > /dev/null )
+#    gimic --dryrun gimic.0.inp
+    # take the first two coordinates of the int plane
+    cat ./$dirname/grid.xyz | head -n -3 > ./$dirname/grid.check.xyz
+
+    last=$(ls ./$dirname/*inp | wc -l)
+    last=$(( $last -1 ))
+    (cd ./$dirname/ && gimic --dryrun gimic.$last.inp > /dev/null)
+
+    # take the coords of the end of the int plane
+    grep X ./$dirname/grid.xyz  | awk '{ if (NR <=2) {print $0} }' >> ./$dirname/grid.check.xyz
+    # copy the MF direction "Be" atom
+    grep Be ./$dirname/grid.xyz  >> ./$dirname/grid.check.xyz
+
+#    atomNum=$(head -n 1 ./$dirname/grid.xyz)
+#    atomNum=$(( $atomNum + 2 ))
+#    sed -i "1s/.*/$atomNum/" ./$dirname/grid.check.xyz
+
+    echo
+    echo "The file grid.check.xyz created."
+    echo "You can now put this script to the background and inspect the molecule."
+    echo "Bring the script to foreground and press enter to continue the current profile."
+    read accept # just wait
+
+    echo "Current profile analysis resumed." 
+fi
+}
+
+
+function calculateRot() {
+awk -v a1=$atom1 -v a2=$atom2 -v a3=$atom3 '{
+    if (NR == a1+1)
+        { 
+        a1x = $1;
+        a1y = $2;
+        a1z = $3;
+    };
+    if (NR == a2+1)
+        { 
+            a2x = $1;
+            a2y = $2;
+            a2z = $3;
+        };
+    if (NR == a3+1)
+        { 
+            a3x = $1;
+                a3y = $2;
+                a3z = $3;
+            };
+    }
+
+    END {
+
+        bx = (a1x + a2x)/2;
+        by = (a1y + a2y)/2;
+        bz = (a1z + a2z)/2;
+
+        # Law of cosines: triangle formed between the centre of the bond, atom1 and atom3
+        sideA = sqrt( (a1x-bx)*(a1x-bx) + (a1y-by)*(a1y-by) + (a1z-bz)*(a1z-bz)  )
+        sideB = sqrt( (a3x-a1x)*(a3x-a1x) + (a3y-a1y)*(a3y-a1y) + (a3z-a1z)*(a3z-a1z)  )
+        sideC = sqrt( (a3x-bx)*(a3x-bx) + (a3y-by)*(a3y-by) + (a3z-bz)*(a3z-bz)  )
+
+        #print "Sides:", sideA, sideB, sideC;
+
+        cosBeta = ( sideA*sideA + sideC*sideC - sideB*sideB ) / ( 2*sideA*sideC);
+        # print cosBeta;
+
+        # awk does not support acos but acos = atan2(sqrt(1 - x * x))
+        beta = atan2(sqrt(1 - cosBeta*cosBeta), cosBeta);
+        # print "Beta =", beta;
+        betaDeg = beta*57.2957795;
+        # print "Beta =", betaDeg, "deg";
+        print -(90 - betaDeg);
+    }' coord
+
+}
+
+function checkPreviousCalc() {
+    local __resultVar=$1
+    local __sedVar="$2"
+    dirname="$3"
+    # Check if there already is an input file
+    if [ -f $dirname/calculation.dat ] 
+    then
+	__sedVar=$( sed -n -e 's/^.*$__resultVar=*//p' $dirname/calculation.dat | awk '{print $1}')
+    fi
+    # If there was not a previous calculation, $fixed will be empty. Ask if it should be changed
+    if [ ! -z $__sedVar ] 
+    then
+	printf "\nThe previously selected $__resultVar atom is $__sedVar.\nPress [n] to change\n"
+	read accept
+    fi
+    # If the $fixed is empty or the user wants to change it, ask to enter 
+    if [[ ( -z $__sedVar ) || ( ! -z $accept  &&  "$accept" == "n" ) ]]
+    then 
+	printf "\nEnter the index of the $__resultVar atom:\n"
+	read __sedVar
+	validateInput __sedVar $__sedVar
+    fi
+
+    eval $__resultVar="'$__sedVar'"
+}
+
+
+function normalPlane() 
+{
+# usage: 
+# echo $x0 $x1 1 | normalPlane
+# where the coordinates are in bohr
+    # take the coordinates of x0 and x1
+    # take a third point C that lies at (x0x, x0y, 1)
+    # define vector a: C -> x0; vector b: C -> x1;
+    # calculate their cross product to find the normal vector to the plane at point C
+
+    awk '{
+          split($0,crd);
+
+          cx = crd[1]; 
+          cy = crd[2]; 
+          cz = crd[7]; 
+
+          ax = cx - crd[1]; 
+          ay = cy - crd[2];
+          az = cz - crd[3];
+
+          bx = cx - crd[4]; 
+          by = cy - crd[5];
+          bz = cz - crd[6];
+
+          nx = -ay*bz + az*by ; 
+          ny = -az*bx + ax*bz ;
+          nz = -ax*by + ay*by ;
+
+          nmod=sqrt(nx*nx + ny*ny + nz*nz); 
+          print nx/nmod, ny/nmod, nz/nmod; 
+    }'
+};
+
+
