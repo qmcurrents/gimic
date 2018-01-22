@@ -1,0 +1,86 @@
+#!/bin/bash
+
+function checkIfEmpty() {
+# usage: validateInput variable $variable 
+    local __inputVar=$1
+    local __inputValue="$2"
+    while [ -z "$__inputValue" ]
+    do
+        printf "*** Variable \"$__inputVar\" empty ***\nPlease restart the script.\n"
+	echo "If the error persists, file a bug report to maria.dimitrova@helsinki.fi or https://github.com/mariavd/gimic"; echo
+        exit;
+    done
+
+}
+
+
+echo "Calculating the gradient..."
+
+wrkdir=$(pwd)
+filenum=$(ls *.inp | wc -l)
+
+cat /dev/null > $wrkdir/paratropic.dat #delete if it already exists
+cat /dev/null > $wrkdir/diatropic.dat
+cat /dev/null > $wrkdir/current.dat
+
+start=$( sed -n -e 's/^.*in=//p' $wrkdir/calculation.dat | awk '{print $1}')
+out=$( sed -n -e 's/^.*out=//p' $wrkdir/calculation.dat | awk '{print $1}')
+delta=$( sed -n -e 's/^.*delta=//p' $wrkdir/calculation.dat | awk '{print $1}')
+checkIfEmpty start $start
+checkIfEmpty out $out
+checkIfEmpty delta $delta
+
+for (( i=0; i<$filenum; i++ ))
+do
+    grep -A 2 "Induced current" $wrkdir/gimic.$i.out | awk -v wrkdir=$wrkdir '{ dia=sprintf("%s/diatropic.dat",wrkdir); para=sprintf("%s/paratropic.dat",wrkdir); if (NR == 2) printf("% f\n", $5) >> dia; else if (NR == 3) printf("% f\n", $5) >> para; }'
+    grep "Induced current (nA/T)" $wrkdir/gimic.$i.out | awk -v i=$i -v down=$down -v delta=$delta -v wrkdir=$wrkdir '{ out=sprintf("%s/current.dat",wrkdir); printf("%5.2f\t% f\n", i*delta,$5) >> out; }'
+done
+
+paste $wrkdir/current.dat $wrkdir/diatropic.dat $wrkdir/paratropic.dat > $wrkdir/current_profile.dat
+rm -f $wrkdir/paratropic.dat $wrkdir/diatropic.dat $wrkdir/current.dat
+
+printf "\nData saved in current_profile.dat\n\n"
+
+gnuplot << EOF                                                                                   
+
+# diatropic (green)
+set style line 1 lt 1 lw 5 lc rgb "#007F00" 
+# paratropic (blue)
+set style line 2 lt 3 lw 5 lc rgb "#1E46FF"
+# vertical lines (cyan)
+set style line 3 lt 1 lw 2 lc rgb "#00DCFF"
+# vertical zero line
+set style line 4 lt 1 lw 5 lc rgb "#000000" 
+
+set format x "%5.2f"
+set format y "%5.2f"
+unset label
+set xlabel "Distance [bohr]"
+set ylabel "dJ/dx [nA/T / bohr]"
+
+set terminal postscript eps enhanced color 'Helvetica' 22
+
+set output "$wrkdir/$dirname-current-profile.eps"
+set title $heading
+plot "$wrkdir/current_profile.dat" u 1:2 w l lc 0 lw 2 notitle
+set output "$wrkdir/$dirname-current-dia-para.eps"
+set title $heading
+plot "$wrkdir/current_profile.dat" u 1:3 w l ls 1 title "Diatropic", "$wrkdir/current_profile.dat" u 1:4 w l ls 2 title "Paratropic"
+
+EOF
+
+echo "Plots generated at "
+echo $wrkdir/$dirname-current-profile.eps
+echo $wrkdir/$dirname-current-dia-para.eps
+echo
+
+#######################################################################
+# Find the zeroes on the current profile plot
+
+@SCRIPTS_DIR@/crit_pts.sh $dirname > $wrkdir/profile-points.out
+
+cat $wrkdir/profile-points.out
+
+#######################################################################
+
+echo
