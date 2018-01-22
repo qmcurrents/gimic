@@ -11,7 +11,9 @@ printf "\nUsing atomic units of length\n\n"
 echo "Define the bond perpendicular to which to integrate"; echo
 echo "Enter the indices of the atoms according to the coord file"
 printf "Atom 1:  "; read atom1; 
+validateInput atom1 $atom1
 printf "Atom 2:  "; read atom2
+validateInput atom2 $atom2
 
 # Read the coordinates of atom1:
 A1x=$( awk -v atom1=$atom1 '{ if (NR==(atom1+1)) {print $1} }' coord  )
@@ -24,7 +26,6 @@ A2y=$( awk -v atom2=$atom2 '{ if (NR==(atom2+1)) {print $2} }' coord  )
 A2z=$( awk -v atom2=$atom2 '{ if (NR==(atom2+1)) {print $3} }' coord  )
 
 dirname=current_profile_$atom1.$atom2
-#echo $dirname
 
 checkIfPreviousCalculationExists "$dirname"
 
@@ -65,6 +66,7 @@ delta=0.02
 valueInp delta $delta
 
 nsteps=$( awk -v start=$start -v out=$out -v delta=$delta 'BEGIN{if (start > 0) {start = -start}; nsteps=(out-start)/delta; if (nsteps > 0) {printf("%d",nsteps)} else {printf("%d",-nsteps);}; }'   )
+checkIfEmpty nsteps $nsteps
 
 
 printf "\n\nGRID POINT SPACING\n"
@@ -80,9 +82,9 @@ printf  "\nDo you accept spacing=[$spacingX, $spacingY, $spacingZ]?\nPress [n] t
 read accept;
 if [ ! -z $accept ] && [ $accept == "n" ]
 then
-    printf "spacingX="; read spacingX
-    printf "spacingY="; read spacingY
-    printf "spacingZ="; read spacingZ
+    valueInp spacingX $spacingX
+    valueInp spacingY $spacingY
+    valueInp spacingZ $spacingZ
 fi
 
 
@@ -94,16 +96,28 @@ MFy=0.0
 MFz=-1.0
 
 echo "Do you accept the default MF orientation along the Z axis?"
-echo "Press [n] to calculate the direction automatically" # TODO: or [e] to enter manually"
+echo "Press [a] to calculate the direction automatically or [m] to enter manually"
 
 read accept;
-if [ ! -z $accept ] && [ $accept == "n" ]
+if [ ! -z $accept ] && [ $accept == "a" ]
 then
-   maximise_projection coord.xyz > $dirname/field.dat
-   MFx=$( cat $dirname/field.dat | sed -e 's#{#_#g; s#}#_#g; s#,#_#g' | awk -F [_] '{ {print -$2} }')
-   MFy=$( cat $dirname/field.dat | sed -e 's#{#_#g; s#}#_#g; s#,#_#g' | awk -F [_] '{ {print -$3} }')
-   MFz=$( cat $dirname/field.dat | sed -e 's#{#_#g; s#}#_#g; s#,#_#g' | awk -F [_] '{ {print -$4} }')
-fi
+    checkMaxProj=$(command -v maximise_projection)
+    if [ ! -e $checkMaxProj ]
+    then
+	echo "The program maximise_projection is not found. "
+    else
+	maximise_projection coord.xyz > $dirname/field.dat
+	MFx=$( cat $dirname/field.dat | sed -e 's#{#_#g; s#}#_#g; s#,#_#g' | awk -F [_] '{ {print -$2} }')
+	MFy=$( cat $dirname/field.dat | sed -e 's#{#_#g; s#}#_#g; s#,#_#g' | awk -F [_] '{ {print -$3} }')
+	MFz=$( cat $dirname/field.dat | sed -e 's#{#_#g; s#}#_#g; s#,#_#g' | awk -F [_] '{ {print -$4} }')
+    fi
+    if [ [ ! -z $accept ] && [ $accept == "m" ] ] || [ ! -e $checkMaxProj ]
+    then
+	echo "Please enter numeric values."
+	valueInp MFx $MFx
+	valueInp MFy $MFy
+	valueInp MFz $MFz
+    fi
 
 echo "Magnetic field vector coordinates: ($MFx; $MFy; $MFz)"
 echo
@@ -205,7 +219,7 @@ echo "Integration plane coordinates"
 printf "in = $start  out = $out  up = $up  down = $down \n"
 printf "Split into $nsteps slices with width $delta and grid spacing [$spacingX; $spacingY; $spacingZ] \n"
 printf "Fixed coordinate: ( $Fx; $Fy; $Fz )\n"
-printf "Magnetic field direction: ( $MFx; $MFy; $MFz ) \n\n"
+printf "Magnetic field direction: ( $MFx; $MFy; $MFz ) \n"
 printf "Rotation angles: ( $rotX; $rotY; $rotZ ) \n\n"
 
 printf "\n*****************************************************************************\n\n"
@@ -234,8 +248,13 @@ then
     xstart=$xend
     xend=$tmp
 fi
+
+checkIfEmpty xstart $xstart
+checkIfEmpty xend $xend
+
 string=" s/@start@/$xstart/; s/@end@/$xend/; s/@up@/$xup/; s/@down@/$xdown/"
 sed "$string" ./$dirname/gimic.Inp > ./$dirname/gimic.0.inp
+
 
 printf "\nPerforming a dry run...\n\n"
 (cd ./$dirname/ && gimic --dryrun gimic.0.inp | grep "grid points" )

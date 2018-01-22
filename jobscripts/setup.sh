@@ -12,19 +12,14 @@ fi
 
 
 
+
 # Prepare the base structure of the current profile script for a local machine:
 file1=current-profile-header
 file2=current-profile-local-submit
+file3=functions-def
 SCRIPT_OUT="current-profile-local.sh.in"
-if [ -e $SCRIPT_OUT ]
-then
-    AGE1=$(( $(date -r $file1 +%s) - $(date -r $SCRIPT_OUT +%s) ))
-    AGE2=$(( $(date -r $file2 +%s) - $(date -r $SCRIPT_OUT +%s) ))
-else
-    AGE1=1
-    AGE2=1
-fi
-if [ "$AGE1" -gt 0 ] || [ "$AGE2" -gt 0 ]
+
+if [ $SCRIPT_OUT -ot $file1 ] || [ $SCRIPT_OUT -ot $file2 ] || [ $SCRIPT_OUT -ot $file3 ]  # [ FILE1 -ot FILE2 ]  -> True if FILE1 is older than FILE2, or is FILE2 exists and FILE1 does not.
 then 
     cat current-profile-header > current-profile-local.sh.in
     cat current-profile-local-submit >> current-profile-local.sh.in
@@ -32,42 +27,27 @@ fi
 
 
 # Prepare the base structure  of the current profile script for cluster
+
 file1=current-profile-header
 file2=current-profile-cluster-submit
+file3=functions-def
 SCRIPT_OUT="current-profile-cluster.sh.in"
-if [ -e $SCRIPT_OUT ]
-then
-    AGE1=$(( $(date -r $file1 +%s) - $(date -r $SCRIPT_OUT +%s) ))
-    AGE2=$(( $(date -r $file2 +%s) - $(date -r $SCRIPT_OUT +%s) ))
-else
-    AGE1=1
-    AGE2=1
-fi
-if [ "$AGE1" -gt 0 ] || [ "$AGE2" -gt 0 ]
+
+if [ $SCRIPT_OUT -ot $file1 ] || [ $SCRIPT_OUT -ot $file2 ] || [ $SCRIPT_OUT -ot $file3 ]
 then 
     cat current-profile-header > current-profile-cluster.sh.in
     cat current-profile-cluster-submit >> current-profile-cluster.sh.in
 fi
 
 
-
-
-
-
 # Prepare the batch job scripts:
 
 file=jobscript.IN
-SCRIPT_OUT=$(echo ${file/.IN/} )
+SCRIPT_OUT=jobscript
 sedstring="s:@SCRIPTS_DIR@:$SCRIPTS_DIR:"
-if [ -e $SCRIPT_OUT ]
-then
-    AGE=$(( $(date -r $file +%s) - $(date -r $SCRIPT_OUT +%s) ))
-else
-    AGE=1
-fi
-if [ "$AGE" -gt 0 ] 
+if [ $SCRIPT_OUT -ot $file ] 
 then 
-    echo; echo "REMEMBER TO CHANGE THE BATCH SCRIPT jobscript TO SUIT YOUR CLUSTER"
+    echo; echo "REMEMBER TO CHANGE THE BATCH SCRIPT jobscript-header TO SUIT YOUR CLUSTER BEFORE SETUP"
     cat jobscript-header > $SCRIPT_OUT
     sed "$sedstring" $file >> $SCRIPT_OUT
     echo "Created script $SCRIPT_OUT."
@@ -81,13 +61,7 @@ for file in $SCRIPTS_IN
 do
     SCRIPT_OUT=$(echo ${file/.in/} )
     sedstring="s:@SCRIPTS_DIR@:$SCRIPTS_DIR:"
-    if [ -e $SCRIPT_OUT ]
-    then
-        AGE=$(( $(date -r $file +%s) - $(date -r $SCRIPT_OUT +%s) ))
-    else
-        AGE=1
-    fi
-    if [ "$AGE" -gt 0 ] 
+    if [ $SCRIPT_OUT -ot $file ] 
     then 
         sed "$sedstring" $file > $SCRIPT_OUT
         echo "Created script $SCRIPT_OUT."
