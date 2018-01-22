@@ -49,6 +49,10 @@ Bz=$( echo $BOND | awk '{print $3} ' )
 
 printf "\n\nSTARTING POINT OF THE INTEGRATION\n"
 userInp start $start
+while [ -z "$start" ]
+do 
+    userInp start $start
+done
 
 printf "\nEND POINT OF THE INTEGRATION\n"
 out=10
@@ -95,29 +99,31 @@ MFx=0.0
 MFy=0.0
 MFz=-1.0
 
-echo "Do you accept the default MF orientation along the Z axis?"
+echo "Do you accept the default MF orientation along the Z axis (0, 0, -1)?"
 echo "Press [a] to calculate the direction automatically or [m] to enter manually"
 
 read accept;
+checkMaxProj="installed"
 if [ ! -z $accept ] && [ $accept == "a" ]
 then
-    checkMaxProj=$(command -v maximise_projection)
-    if [ ! -e $checkMaxProj ]
+    checkMaxProj=$(command -v maximise_projection) #  command -> returns the path of the binary if it is found
+    if [ -e $checkMaxProj ]
     then
-	echo "The program maximise_projection is not found. "
+	echo "The program maximise_projection is not found. Switching to manual input of the magnetic field components."
     else
 	maximise_projection coord.xyz > $dirname/field.dat
 	MFx=$( cat $dirname/field.dat | sed -e 's#{#_#g; s#}#_#g; s#,#_#g' | awk -F [_] '{ {print -$2} }')
 	MFy=$( cat $dirname/field.dat | sed -e 's#{#_#g; s#}#_#g; s#,#_#g' | awk -F [_] '{ {print -$3} }')
 	MFz=$( cat $dirname/field.dat | sed -e 's#{#_#g; s#}#_#g; s#,#_#g' | awk -F [_] '{ {print -$4} }')
     fi
-    if [ [ ! -z $accept ] && [ $accept == "m" ] ] || [ ! -e $checkMaxProj ]
-    then
-	echo "Please enter numeric values."
-	valueInp MFx $MFx
-	valueInp MFy $MFy
-	valueInp MFz $MFz
-    fi
+fi
+if ( [ ! -z $accept ] && [ $accept == "m" ] ) || [ -e $checkMaxProj ]
+then
+    echo "Please enter numeric values."
+    valueInp MFx $MFx
+    valueInp MFy $MFy
+    valueInp MFz $MFz
+fi
 
 echo "Magnetic field vector coordinates: ($MFx; $MFy; $MFz)"
 echo

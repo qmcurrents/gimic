@@ -8,12 +8,12 @@ echo "Working directory:"; echo $wrkdir; echo
 #echo "Running Gimic calculations..."
 
 filenum=$(ls $wrkdir/*inp | wc -l)
-#filenum=$(echo $nsteps)
+checkIfEmpty filenum $filenum
 
 parallel=4
-
 echo "How many parallel tasks to execute?"
 read parallel
+checkIfEmpty parallel $parallel
 
 # check if too many parallel tasks are called
 if [ $parallel -gt $nsteps ]
@@ -21,6 +21,11 @@ then
     $parallel=$($nsteps)
 fi
 
-sbatch --ntasks="$parallel" --job-name="$dirname" @SCRIPTS_DIR@/jobscript "$wrkdir" "$parallel" 
+# job duration:
+echo "Enter the time limit for the execution of the batch job in hours"
+read duration
+checkIfEmpty duration $duration
+
+sbatch --ntasks="$parallel" --job-name="$dirname" --time=$duration:00:00 @SCRIPTS_DIR@/jobscript "$wrkdir" "$parallel" 
 echo
 

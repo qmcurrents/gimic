@@ -4,16 +4,18 @@
 wrkdir=$(pwd)
 wrkdir=$(echo $wrkdir/$dirname)
 echo "Working directory:"; echo $wrkdir; echo
+checkIfEmpty wrkdir $wrkdir
 
 echo "Running Gimic calculations..."
 
 filenum=$(ls $wrkdir/*inp | wc -l)
-#filenum=$(echo $nsteps)
+checkIfEmpty filenum $filenum
 
 parallel=4
 
 echo "How many parallel tasks to execute?"
 read parallel
+checkIfEmpty parallel $parallel
 
 # check if too many parallel tasks are called
 if [ $parallel -gt $nsteps ]
@@ -29,6 +31,9 @@ echo "Running $parallel out of $filenum GIMIC calculations at a time..."
 
 whole=$( awk -v filenum=$filenum -v parallel=$parallel 'BEGIN{printf "%d\n", filenum/parallel}'  )
 remain=$(awk -v whole=$whole -v filenum=$filenum -v parallel=$parallel 'BEGIN{printf "%d\n", (filenum-whole*parallel) }')
+
+checkIfEmpty whole $whole
+checkIfEmpty remain $remain
 
 completed=0
 
@@ -82,6 +87,9 @@ cat /dev/null > $wrkdir/current.dat
 out=$(grep out= $wrkdir/gimic.0.inp | grep -o -E '[0-9.]+')
 start=$(grep in= $wrkdir/gimic.0.inp | grep -o -E '[0-9.]+')
 delta=$( awk -v out=$out -v start=$start 'BEGIN{ value=out-start; delta=(value<0?-value:value); print delta }' )
+checkIfEmpty start $start
+checkIfEmpty out $out
+checkIfEmpty delta $delta
 
 for (( i=0; i<$filenum; i++ ))
 do

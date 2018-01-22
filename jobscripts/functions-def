@@ -1,5 +1,8 @@
 #!/bin/bash
 
+
+# Geometry related functions:
+
 function centroid() { atoms="$@"; for i in $atoms; do awk -v i=$i '{ if (NR == i+1) print $0 }' coord; done | awk '{ x+=$1; y+=$2; z+=$3; n++} END{ print x/n, y/n, z/n; }'; }
 
 function halfDistance() { awk -v a1="$1" -v a2="$2" '{ if (NR == a1+1) { x+=$1;y+=$2;z+=$3;}; if (NR == a2+1) {x-=$1;y-=$2;z-=$3} } END{ dist=sqrt(x*x+y*y+z*z); print dist*0.5; }' coord ; }
@@ -7,9 +10,43 @@ function halfDistance() { awk -v a1="$1" -v a2="$2" '{ if (NR == a1+1) { x+=$1;y
 function calcDistance() { awk -v a1="$1" -v a2="$2" '{ if (NR == a1+1) { x+=$1;y+=$2;z+=$3;}; if (NR == a2+1) {x-=$1;y-=$2;z-=$3} } END{ dist=sqrt(x*x+y*y+z*z); print dist; }' coord ; }
 
 
+###############################################################################
+
+# user-input handling functions
+
+
+function checkIfEmpty() {
+# usage: validateInput variable $variable 
+    local __inputVar=$1
+    local __inputValue="$2"
+    while [ -z "$__inputValue" ]
+    do
+        printf "*** Variable \"$__inputVar\" empty ***\nPlease restart the script.\n"
+	echo "If the error persists, file a bug report to maria.dimitrova@helsinki.fi or https://github.com/mariavd/gimic"; echo
+        exit;
+    done
+
+}
+
+function validateInput() {
+# usage: validateInput variable $variable 
+    local __inputVar=$1
+    local __inputValue="$2"
+    while [ -z "$__inputValue" ]
+    do
+        printf "*** Input missing ***\nPlease enter it\n"
+        read __inputValue
+	echo
+    done
+#    echo "Checked value: $__inputValue"
+    eval $__inputVar="'$__inputValue'"
+}
+
 
 function userInp()
 {
+    # handles entering the in and out values - asks for atom indices or manual value
+    # usage: userInp start $start 
     local __resultVar=$1
     local __varValue="$2"
     local localResult="$2"
@@ -19,11 +56,14 @@ function userInp()
     then
         printf "\nEnter the indices of the selected atoms to calculate their midpoint and then press enter.\n\n" 
      atoms=0; read atoms
+     validateInput atoms $atoms
+
      CENTROID=$(centroid $atoms)
      Cx=$( echo $CENTROID | awk '{print $1} ' )
      Cy=$( echo $CENTROID | awk '{print $2} ' )
      Cz=$( echo $CENTROID | awk '{print $3} ' )
      #echo "Centroid:"; printf "("$Cx"; "$Cy"; "$Cz")\n"
+
      __varValue=$( awk -v Cx=$Cx -v Cy=$Cy -v Cz=$Cz -v Bx=$Bx -v By=$By -v Bz=$Bz BEGIN'{dist=sqrt( (Bx-Cx)*(Bx-Cx) + (By-Cy)*(By-Cy) + (Bz-Cz)*(Bz-Cz) ); print dist}' )
      
      printf  "\nDo you accept $__resultVar=$__varValue bohr?\nPress [n] to change\n"
@@ -31,28 +71,29 @@ function userInp()
      if [ ! -z $accept ] && [ $accept == "n" ]
      then
          printf "$__resultVar="; read __varValue
+	 validateInput __varValue $__varValue
      fi # if centroid calculation not accepted 
      elif [ ! -z $accept ] && [ $accept == "v" ]
      then
          printf "$__resultVar="; read __varValue
+	 validateInput __varValue $__varValue
          printf  "\nDo you accept $__resultVar=$__varValue bohr?\nPress [n] to change\n"
      read accept;
      if [ ! -z $accept ] && [ $accept == "n" ]
      then
          printf "$__resultVar="; read __varValue
-         #printf $__resultVar=$__varValue
+	 validateInput __varValue $__varValue
      fi
-fi # end if accept out = 10
+fi 
 
 eval $__resultVar="'$__varValue'"
 }
 
 
-
-
-
 function valueInp()
 {
+    # handles input of any numerical or string variable
+    # valueInp variable $variable
     local __resultVar=$1
     local __varValue="$2"
 
@@ -61,10 +102,12 @@ function valueInp()
     if [ ! -z $accept ] && [ $accept == "n" ]
     then
 	printf "$__resultVar="; read __varValue
+	validateInput __varValue $__varValue
     fi # if centroid calculation not accepted 
 
     eval $__resultVar="'$__varValue'"
 }
+
 
 
 function checkIfInputExists() {
@@ -258,5 +301,50 @@ function checkPreviousCalc() {
     eval $__resultVar="'$__sedVar'"
 }
 
+
+function normalPlane() 
+{
+# usage: 
+# echo $x0 $x1 1 | normalPlane
+# where the coordinates are in bohr
+    # take the coordinates of x0 and x1
+    # take a third point C that lies at (x0x, x0y, 1)
+    # define vector a: C -> x0; vector b: C -> x1;
+    # calculate their cross product to find the normal vector to the plane at point C
+
+    awk '{
+          split($0,crd);
+
+          cx = crd[1]; 
+          cy = crd[2]; 
+          cz = crd[7]; 
+
+          ax = cx - crd[1]; 
+          ay = cy - crd[2];
+          az = cz - crd[3];
+
+          bx = cx - crd[4]; 
+          by = cy - crd[5];
+          bz = cz - crd[6];
+
+          nx = -ay*bz + az*by ; 
+          ny = -az*bx + ax*bz ;
+          nz = -ax*by + ay*by ;
+
+          nmod=sqrt(nx*nx + ny*ny + nz*nz); 
+          print nx/nmod, ny/nmod, nz/nmod; 
+    }'
+};
+
+function point_dist() 
+{
+awk '{
+     split($0,crd);
+     dx=crd[1]-crd[4]; 
+     dy=crd[2]-crd[5]; 
+     dz=crd[3]-crd[6]; 
+     dist=sqrt(dx*dx + dy*dy + dz*dz);
+     print dist; }'
+};
 
 
