@@ -17,6 +17,9 @@ function checkIfEmpty() {
 echo "Calculating the gradient..."
 
 wrkdir=$(pwd)
+dirname=$( echo ${wrkdir##*/} ) # removes everything before the backslash
+checkIfEmpty dirname $dirname
+
 filenum=$(ls *.inp | wc -l)
 
 cat /dev/null > $wrkdir/paratropic.dat #delete if it already exists
