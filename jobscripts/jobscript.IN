@@ -1,13 +1,12 @@
 # This jobscript takes three arguments: 
 # $1 is the working directory for the calculation
 # $2 is the number of tasks to execute at the same time
-# $3 is the time limit for execution
 #
-# check for their correct number:
-if [ ! $# == 3 ]; then
-  echo "Usage: $0 wrkdir ntasks duration"
-  exit
-fi
+ check for their correct number:
+# if [ ! $# == 2 ]; then
+#   echo "Usage: $0 wrkdir ntasks duration"
+#   exit
+# fi
 
 function checkIfEmpty() {
 # usage: validateInput variable $variable 

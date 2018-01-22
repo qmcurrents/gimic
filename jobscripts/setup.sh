@@ -69,4 +69,5 @@ do
     fi
 done
 
-
+echo; echo "Path to GIMIC:"
+echo 'export GIMIC_HOME='${SCRIPTS_DIR/%jobscripts}
