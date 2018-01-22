@@ -14,4 +14,5 @@ GIMIC: gauge-including magnetically induced currents
    input.rst
    grids.rst
    output.rst
+   scripts.rst
    visualization.rst
