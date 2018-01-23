@@ -1,0 +1,156 @@
+# This jobscript takes three arguments: 
+# $1 is the working directory for the calculation
+# $2 is the number of tasks to execute at the same time
+#
+ check for their correct number:
+# if [ ! $# == 2 ]; then
+#   echo "Usage: $0 wrkdir ntasks duration"
+#   exit
+# fi
+
+function checkIfEmpty() {
+# usage: validateInput variable $variable 
+    local __inputVar=$1
+    local __inputValue="$2"
+    while [ -z "$__inputValue" ]
+    do
+        printf "*** Variable \"$__inputVar\" empty ***\nPlease restart the script.\n"
+	echo "If the error persists, file a bug report to maria.dimitrova@helsinki.fi or https://github.com/mariavd/gimic"; echo
+        exit;
+    done
+
+}
+
+
+echo "SLURM_JOB_ID is" $SLURM_JOB_ID
+echo 
+echo "Current profile calculation"
+
+wrkdir=$( echo $1 )
+checkIfEmpty wrkdir $wrkdir
+
+dirname=$( echo ${wrkdir##*/} ) # removes everything before the backslash
+checkIfEmpty dirname $dirname
+
+#echo "Working directory:"; echo $wrkdir; echo
+
+filenum=$(ls $wrkdir/*inp | wc -l)
+checkIfEmpty filenum $filenum
+
+# clean up possible previous calculations
+rm -rf *out *dat *eps GIMIC.*
+
+parallel=$2
+checkIfEmpty parallel $parallel
+
+date
+echo "Running $parallel out of $filenum GIMIC calculations at a time..."
+
+whole=$( awk -v filenum=$filenum -v parallel=$parallel 'BEGIN{printf "%d\n", filenum/parallel}'  )
+remain=$(awk -v whole=$whole -v filenum=$filenum -v parallel=$parallel 'BEGIN{printf "%d\n", (filenum-whole*parallel) }')
+
+checkIfEmpty whole $whole
+checkIfEmpty remain $remain
+
+completed=0
+
+for ((i=0; i<$whole; i++)) 	
+do 
+    for ((j=0; j<$parallel; j++))
+    do  
+        index=$(($i+$j*$whole))
+        grepstring=""
+        if [ -f "$wrkdir/gimic.$index.out" ]
+        then
+            echo "The file $wrkdir/gimic.$index.out already exists."
+            grepstring=$(grep "wall" $wrkdir/gimic.$index.out)
+            echo "$grepstring"
+        fi
+
+        if [ -z "$grepstring" ]
+        then
+            cd $wrkdir && gimic gimic.$index.inp > $wrkdir/gimic.$index.out & 
+        fi
+    done 
+    wait
+    completed=$(( $completed+$parallel ))
+    date
+    echo "$completed of $filenum completed"; echo
+done
+
+if [[ "$remain" -gt 0 ]]; then
+    for ((i=0; i<$remain; i++))
+    do  
+        (cd $wrkdir && gimic $wrkdir/gimic.$(($parallel*$whole+$i)).inp >  $wrkdir/gimic.$(($parallel*$whole+$i)).out &) 
+    done
+fi
+echo "$filenum of $filenum completed"
+
+
+rm -rf GIMIC* 
+
+###################################################################################
+
+echo "Calculating the gradient..."
+
+cat /dev/null > $wrkdir/paratropic.dat #delete if it already exists
+cat /dev/null > $wrkdir/diatropic.dat
+cat /dev/null > $wrkdir/current.dat
+
+#out=$(grep out= $wrkdir/gimic.0.inp | grep -o -E '[0-9.]+')
+#start=$(grep in= $wrkdir/gimic.0.inp | grep -o -E '[0-9.]+')
+#delta=$( awk -v out=$out -v start=$start 'BEGIN{ value=out-start; delta=(value<0?-value:value); print delta }' )
+start=$( sed -n -e 's/^.*in=//p' calculation.dat | awk '{print $1}')
+out=$( sed -n -e 's/^.*out=//p' calculation.dat | awk '{print $1}')
+delta=$( sed -n -e 's/^.*delta=//p' calculation.dat | awk '{print $1}')
+checkIfEmpty start $start
+checkIfEmpty out $out
+checkIfEmpty delta $delta
+
+
+for (( i=0; i<$filenum; i++ ))
+do
+
+    grep -A 2 "Induced current" $wrkdir/gimic.$i.out | awk -v wrkdir=$wrkdir '{ dia=sprintf("%s/diatropic.dat",wrkdir); para=sprintf("%s/paratropic.dat",wrkdir); if (NR == 2) printf("% f\n", $5) >> dia; else if (NR == 3) printf("% f\n", $5) >> para; }'
+    grep "Induced current (nA/T)" $wrkdir/gimic.$i.out | awk -v i=$i -v start=$start -v delta=$delta -v wrkdir=$wrkdir '{ out=sprintf("%s/current.dat",wrkdir); printf("%5.2f\t% f\n", i*delta,$5) >> out; }'
+done
+
+paste $wrkdir/current.dat $wrkdir/diatropic.dat $wrkdir/paratropic.dat > $wrkdir/current_profile.dat
+rm -f $wrkdir/paratropic.dat $wrkdir/diatropic.dat $wrkdir/current.dat
+
+printf "\nData saved in current_profile.dat\n\n"
+
+gnuplot << EOF                                                                                   
+
+set format x "%5.2f"
+set format y "%5.2f"
+set format z "%5.2f"
+unset label
+set xlabel "Distance [bohr]"
+set ylabel "dJ/dx [nA/T / bohr]"
+
+set terminal postscript eps enhanced color 'Helvetica' 22
+
+set output "$wrkdir/$dirname-current-profile.eps"
+plot "$wrkdir/current_profile.dat" u 1:(\$2/$delta) w l lc 0 lw 2 notitle
+set output "$wrkdir/$dirname-current-dia-para.eps"
+plot "$wrkdir/current_profile.dat" u 1:(\$3/$delta) w l lc 3 lw 2 title "Diatropic", "$wrkdir/current_profile.dat" u 1:(\$4/$delta) w l lc 1 lw 2 title "Paratropic"
+EOF
+
+echo "Plots generated at "
+echo $wrkdir/$dirname-current-profile.eps
+echo $wrkdir/$dirname-current-dia-para.eps
+echo
+
+#######################################################################
+# Find the zeroes on the current profile plot
+
+@SCRIPTS_DIR@/crit_pts.sh $wrkdir 
+
+#######################################################################
+
+# print some info like used time, disk, reserved memory and actual used memory
+sacct -j $SLURM_JOB_ID --format=jobid,jobname,AllocNodes,AllocCPUs,CPUTime,MaxDiskRead,MaxDiskWrite
+#sacct -a --format=elapsed,maxdiskwrite,reqmem,maxrss  -j $SLURM_JOB_ID
+
+echo
