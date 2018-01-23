@@ -25,16 +25,16 @@ module integral_class
     public new_integral, del_integral, integral_t
     public integrate_tensor_field, integrate_current
     public integrate_modulus
-    
-    private 
-    
+
+    private
+
     character(8) :: spin='total'
     integer(I4) :: nlip
 contains
     subroutine new_integral(this, grid)
         type(integral_t) :: this
         type(grid_t), target :: grid
-        
+
         this%grid=>grid
     end subroutine
 
@@ -72,7 +72,7 @@ contains
                     stop
             end select
         end if
-        
+
         call get_grid_size(this%grid, p1, p2, p3)
         call get_magnet(this%grid, bb)
         !call jfield_eta(this%jf)
@@ -85,7 +85,7 @@ contains
             write(str_g, *) 'Integration bound set to radius ', bound
             call msg_out(str_g)
         end if
-        
+
         call grid_center(this%grid,center)
         call schedule(p2, lo, hi)
         if (mpi_rank == 0) then
@@ -99,7 +99,7 @@ contains
 !$OMP PRIVATE(jt,w,jp,tt,jvec) &
 !$OMP SHARED(xsum2,psum2,nsum2) &
 !$OMP SHARED(p1,p2,p3,this,center,spin,bb,normal,mol,xdens,lo,hi) &
-!$OMP REDUCTION(+:xsum3,psum3,nsum3) 
+!$OMP REDUCTION(+:xsum3,psum3,nsum3)
         call new_jtensor(jt, mol, xdens)
         do k=1,p3
             xsum2=0.d0
@@ -119,7 +119,7 @@ contains
                         w=0.d0
                         jp=0.d0
                     else
-                        w=get_weight(this%grid, i, 1) 
+                        w=get_weight(this%grid, i, 1)
                         jp=dot_product(normal,jvec)*w
                     end if
                     xsum=xsum+jp
@@ -135,7 +135,7 @@ contains
                 nsum2=nsum2+nsum*w
             end do
             !$OMP END DO
-            !$OMP MASTER 
+            !$OMP MASTER
             call collect_sum(xsum2, xsum)
             call collect_sum(psum2, psum)
             call collect_sum(nsum2, nsum)
@@ -143,7 +143,7 @@ contains
             xsum3=xsum3+xsum*w
             psum3=psum3+psum*w
             nsum3=nsum3+nsum*w
-            !$OMP END MASTER 
+            !$OMP END MASTER
         end do
         call del_jtensor(jt)
 !$OMP END PARALLEL
@@ -243,7 +243,7 @@ contains
                     if ( r > bound ) then
                         w=0.d0
                     else
-                        w=get_weight(this%grid, i, 1) 
+                        w=get_weight(this%grid, i, 1)
                         jp=dot_product(normal,jvec)
                         if (abs(jp) < 1.d-12) then ! prob. parallel component
                             sgn=0.d0
@@ -275,7 +275,7 @@ contains
             xsum3=xsum3+xsum*w
             psum3=psum3+psum*w
             nsum3=nsum3+nsum*w
-            !$OMP END MASTER 
+            !$OMP END MASTER
         end do
         call del_jtensor(jt)
 !$OMP END PARALLEL
@@ -309,7 +309,7 @@ contains
         real(DP), dimension(9) :: xsum
         real(DP), dimension(:,:), allocatable  :: jt1, jt2, jt3
         type(jtensor_t) :: jt
-        
+
         !call jfield_eta(this%jf)
         call get_grid_size(this%grid, p1, p2, p3)
 
@@ -348,7 +348,7 @@ contains
 
         xsum=0.d0
         do i=1,pts
-            w=get_weight(grid, i, axis) 
+            w=get_weight(grid, i, axis)
             xsum=xsum+jt(:,i)*w
         end do
     end function
@@ -356,7 +356,7 @@ contains
     function au2si(au) result(si)
         real(DP), intent(in) :: au
         real(DP) :: si
-        
+
         real(DP) :: aulength, auspeedoflight, speedoflight, aucharge, hbar
         real(DP) :: autime, autesla, audjdb
 
@@ -376,16 +376,16 @@ contains
 !        write(6,*) autime,' au time in seconds'
 !        write(6,*) autesla,' au magnetic field in tesla'
 !        write(6,*) audjdb*1.D+09,' au induced current in nanoampere/tesla'
-    end function 
+    end function
 
     subroutine print_tensor_int(xsum)
         real(DP), dimension(3,3) :: xsum
-        
+
         integer(I4) :: i
         print *, xsum(1,:)
         print *, xsum(2,:)
         print *, xsum(3,:)
-        
+
         call nl
         call msg_out(repeat('*', 70))
         write(str_g, '(a,3f13.6)') '   Induced current (au)    :', xsum(1,:)

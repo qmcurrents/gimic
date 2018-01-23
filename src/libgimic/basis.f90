@@ -12,17 +12,17 @@ module basis_class
     use settings_module
     use intgrl_module
     use gtodefs_module
-    implicit none 
+    implicit none
 
     public del_basis, new_basis, print_seg
     public get_natoms, get_ngto, get_ncgto, set_c2sop, get_c2sop
     public get_coord, get_symbol, get_basis, get_atom, get_nctr
     public get_contraction, get_ncomp, get_nccomp, get_nccgto
     public filter_screened, get_ctridx
-    
+
     interface get_ncgto
         module procedure get_ncgto_mol, get_ncgto_bas
-    end interface 
+    end interface
 
     private
 contains
@@ -40,7 +40,7 @@ contains
         call setup_gtos()
         this%natoms=natoms
         call calc_basdim(this)
-        
+
         call msg_out('Normalizing basis')
         call msg_out(repeat('=', 45))
         atoms=>this%atoms
@@ -85,7 +85,7 @@ contains
     end subroutine
 !
 ! Loop over ctr and set up screening thresholds
-! 
+!
     subroutine setup_screening(basis, thrs)
         type(basis_t), intent(inout) :: basis
         real(DP), intent(in) :: thrs
@@ -108,13 +108,13 @@ contains
             end do
             basis%thrs(i)=dist
         end do
-    end subroutine 
+    end subroutine
 
 !
 ! return an index vector with congtributing contractions after screening has
 ! been applied
 !
-    subroutine filter_screened(basis, r, idxv, n) 
+    subroutine filter_screened(basis, r, idxv, n)
         type(basis_t), intent(in) :: basis
         real(DP), dimension(3), intent(in) :: r
         integer(I4), dimension(:), intent(out) :: idxv
@@ -136,7 +136,7 @@ contains
 
 !
 ! Loop over ctr and normalize
-! 
+!
     subroutine normalize(basis)
         type(basis_t), intent(inout) :: basis
 
@@ -149,29 +149,29 @@ contains
         ' contractions'
         call msg_out(str_g)
         call nl
-    end subroutine 
-    
+    end subroutine
+
 
 ! Loop over contractions and normalize
-! 
+!
 ! This is how things supposedly work:
-! The cc:s are given for _normalized_ gaussians, so we first need to 
-! normalize the gaussians, and then normalize the contraction. The 
+! The cc:s are given for _normalized_ gaussians, so we first need to
+! normalize the gaussians, and then normalize the contraction. The
 ! normalized contraction is then stored as new cc:s for the primitives.
 !
 
     subroutine norm_ctr(ctr)
-        type(contraction_t), intent(inout) :: ctr 
-        
+        type(contraction_t), intent(inout) :: ctr
+
         integer(I4) :: l, m
         real(DP) :: n, t, e1, e2, c1, c2
         real(DP) :: j
-        
+
         j=D1*(ctr%l+1)
         n=D0
         do l=1,ctr%npf  ! loop over number of primitives
-            c1=ctr%cc(l)  
-            e1=ctr%xp(l) 
+            c1=ctr%cc(l)
+            e1=ctr%xp(l)
             do m=1,l
                 e2=ctr%xp(m)
                 c2=ctr%cc(m)
@@ -187,7 +187,7 @@ contains
             e1=ctr%xp(l)
             ctr%ncc(l)=c1*n*(D4*e1)**(DP50*j+DP25)*(DP50/PII)**DP75
         end do
-    end subroutine 
+    end subroutine
 
 !
 ! debug function
@@ -206,11 +206,11 @@ contains
         end do
 20		format(f20.10)
 21		format(f13.10,a,f13.10,a)
-    end subroutine 
+    end subroutine
 
 !
 ! set the global variables ngto and ncgto so that we know
-! how to dimension the basis function value vectors later. 
+! how to dimension the basis function value vectors later.
 !
     subroutine calc_basdim(this)
         type(molecule_t), intent(inout) :: this
@@ -258,7 +258,7 @@ contains
         integer(I4) :: i, j, k, npf, ncf
 
         abas=>atm%basis
-        
+
         call nl
         write(str_g, 88) '      Atom number', num, ' (', atm%symbol, ')'
         call msg_out(str_g)
@@ -271,7 +271,7 @@ contains
              shell_names(abas%lmax),')'
         call msg_out(str_g)
         call nl
-        
+
         k=1
         do i=1,abas%nshells
             npf=0
@@ -294,7 +294,7 @@ contains
 77		format(a,f8.4)
 88		format(a,i4,a,a2,a)
 99		format(a)
-    end subroutine 
+    end subroutine
 
 !
 ! basis destructor
@@ -304,8 +304,8 @@ contains
 
         type(contraction_t), pointer :: ctr
         integer(I4) :: j
-        
-        if ( associated(abas%ctr) ) then 
+
+        if ( associated(abas%ctr) ) then
             do j=1,abas%nctr
                 ctr=>abas%ctr(j)
                 if (associated(ctr%xp)) then
@@ -326,11 +326,11 @@ contains
             deallocate(abas%pos)
             nullify(abas%ctr)
         end if
-    end subroutine 
-    
+    end subroutine
+
 !
-! basis and atom list destructor 
-! 
+! basis and atom list destructor
+!
     subroutine del_basis(this)
         type(molecule_t), intent(inout) :: this
 
@@ -346,9 +346,9 @@ contains
         nullify(this%atoms)
         call msg_info('Deallocated basis set and atom data')
         call nl
-    end subroutine 
+    end subroutine
 
-! 
+!
 ! Access functions to get private data
 !
 
@@ -371,35 +371,35 @@ contains
         integer(I4) :: n
 
         n=mm%natoms
-    end function 
+    end function
 
     function get_ngto(mm) result(n)
         type(molecule_t) :: mm
         integer(I4) :: n
 
         n=mm%ncgto
-    end function 
-    
+    end function
+
     function get_ncgto_mol(mm) result(n)
         type(molecule_t) :: mm
         integer(I4) :: n
 
         n=mm%ncgto
-    end function 
+    end function
 
     function get_nccgto(mm) result(n)
         type(molecule_t) :: mm
         integer(I4) :: n
 
         n=mm%nccgto
-    end function 
+    end function
 
     function get_ncgto_bas(mm) result(n)
         type(basis_t) :: mm
         integer(I4) :: n
 
         n=mm%ncgto
-    end function 
+    end function
 
     subroutine get_atom(mm, i, a)
         type(molecule_t), intent(in) :: mm
@@ -443,21 +443,21 @@ contains
         integer(I4) :: n
 
         n=mm%ncomp
-    end function 
+    end function
 
     function get_nccomp(mm) result(n)
         type(contraction_t) :: mm
         integer(I4) :: n
 
         n=mm%nccomp
-    end function 
+    end function
 
     function get_nctr(mm) result(n)
         type(basis_t) :: mm
         integer(I4) :: n
 
         n=mm%nctr
-    end function 
+    end function
 
     function get_ctridx(bas, idx) result(ctridx)
         type(basis_t), intent(in) :: bas
@@ -469,7 +469,7 @@ contains
 
     ! integrate s-funcs for debugging purpouses...
 !	subroutine s_int(Ctr)
-!		type(contraction_t), intent(in) :: Ctr 
+!		type(contraction_t), intent(in) :: Ctr
 !
 !		real(DP) :: qq
 !		integer(I4) :: i,j
@@ -481,8 +481,8 @@ contains
 !			end do
 !		end do
 !		print *, 's type integral:', qq
-!		
-!	end subroutine 
+!
+!	end subroutine
 end module
 
 ! vim:et:sw=4:ts=4

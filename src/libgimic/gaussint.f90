@@ -6,11 +6,11 @@ module gaussint_module
 
     type gdata_t
         real(DP), dimension(:), pointer :: pts, wgt
-    end type 
+    end type
 
     public gdata_t, gaussl, lobatomy, legendrep, gaussgrid, gauscale
     public setup_gauss_data
-    
+
     private
     real(DP), parameter :: EPS=3.0d-12
     integer(I4), parameter :: NEWTON_MAX_ITER=10
@@ -41,7 +41,7 @@ contains
                 call legendrep1(z,n,lp,dlp)
                 z1=z
                 z=z1-lp/dlp
-                
+
                 if (abs(z-z1) <= EPS) then
                     exit
                 end if
@@ -49,10 +49,10 @@ contains
             if ( iter >= NEWTON_MAX_ITER ) then
                 stop '*** integration did not converge!'
             end if
-            
+
             pts(i)=xm-xl*z
             pts(n+1-i)=xm+xl*z
-            
+
             weight(i)=2.d0*xl/((1.d0-z**2)*dlp**2)
             weight(n+1-i)=weight(i)
         end do
@@ -86,18 +86,18 @@ contains
 
         do i=2,n-1
             ! Better inital guess needed, this one is for P not P'
-            z=cos(PII*(i-0.25)/(n+0.5)) 
+            z=cos(PII*(i-0.25)/(n+0.5))
             do iter=1,NEWTON_MAX_ITER
                 call legendrep2(z,n-1,lp,dlp,d2lp)
                 z1=z
                 z=z1-dlp/d2lp
-                ! damping... 
+                ! damping...
                 damp=0.5d0
                 do while (abs(z) > 1.d0)
                     z=z1-dlp/d2lp*damp
                     damp=damp**2
                 end do
-                
+
                 if (abs(z-z1) <= EPS) then
                     exit
                 end if
@@ -105,7 +105,7 @@ contains
             if ( iter >= NEWTON_MAX_ITER ) then
                 stop '*** lobatomy(): Newton step did not converge!'
             end if
-            
+
             pts(i)=xm-xl*z
             weight(i)=2.d0*xl/((n**2-n)*lp**2)
         end do
@@ -240,8 +240,8 @@ contains
         end if
 
         ! split range [a,b] into blocks for piecewise integration
-        nblock=(npts)/ngp 
-        ! lenght of one block 
+        nblock=(npts)/ngp
+        ! lenght of one block
         step=(b-a)/real(nblock)
 
         ! set up unscaled Lobato points and weights ( interval [-1,1])
@@ -264,7 +264,7 @@ contains
         deallocate(pts, wgt)
     end subroutine
 
-    subroutine setup_gauss_data(a, b, ngp, gdata, quadr) 
+    subroutine setup_gauss_data(a, b, ngp, gdata, quadr)
         real(DP), intent(in) :: a, b
         integer(I4), intent(in) :: ngp
         type(gdata_t), intent(inout) :: gdata
@@ -274,7 +274,7 @@ contains
         real(DP), dimension(:), allocatable :: tpts, twgt
         real(DP) :: xl, step
         logical :: lobato
-        
+
         npts=size(gdata%pts)
 
         if (npts == 1) then
@@ -290,7 +290,7 @@ contains
 
         ! split range [a,b] into blocks for piecewise integration
         nblock=npts/ngp
-        ! lenght of one block 
+        ! lenght of one block
         step=(b-a)/real(nblock)
         xl=step*0.5
 
@@ -306,7 +306,7 @@ contains
             case default
                 call msg_error('Invalid quadrature type: ' // quadr)
                 stop
-        end select 
+        end select
         foo=1
         do i=1,nblock
             gdata%pts(foo:foo+ngp-1)=tpts*xl+real(i-1)*step+xl
@@ -326,7 +326,7 @@ contains
     subroutine gauscale(a, b, s, t)
         real(DP), intent(in) :: a, b
         real(DP), intent(out) :: s, t
-        
+
         s=(b-a)*0.5d0
         t=(b+a)*0.5d0
     end subroutine
@@ -342,7 +342,7 @@ contains
 !        real(DP), parameter :: aexp=1.0d0
 !        type(lobo_t) :: lobby
 !        real(DP), dimension(2) :: qq
-!        
+!
 !        do np=23,23
 !            allocate(pts(np))
 !            allocate(weight(np))
@@ -425,10 +425,10 @@ contains
 !!            if (abs(pts(i)-qq(1)) > 1.d-10) print *, 'foo!'
 !!            if (abs(weight(i)-qq(2)) > 1.d-10) print *, 'bar!'
 !!        end do
-!!        
+!!
 !!        deallocate(pts, weight)
 !        !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!        
+!
 !        np=10
 !        ngrid=200+np-mod(200,np)
 !        allocate(pts(ngrid))
@@ -452,19 +452,19 @@ contains
 !        print *, '2D',ss
 !        deallocate(pts, weight)
 !        print *
-!        
+!
 !    contains
 !        function f(x) result(y)
 !            real(DP), intent(in) :: x
 !            real(DP) :: y
-!            
+!
 !            y=exp(-aexp*x**2)!-x**2+2.d0
 !        end function
 !
 !        function h(x,y) result(z)
 !            real(DP), intent(in) :: x, y
 !            real(DP) :: z
-!            
+!
 !            z=exp(-aexp*(x**2+y**2))
 !        end function
 !

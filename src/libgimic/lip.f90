@@ -12,10 +12,10 @@ module lip_module
         type(vector_t), dimension(MAX_LIP_N) :: grid
         type(vector_t), dimension(MAX_LIP_N) :: value
     end type
-    
+
     private
 contains
-    
+
     !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     !
     ! General N-point Lagrange Inperpolation Polynomial generator
@@ -48,7 +48,7 @@ contains
     !
     ! General N-point Lagrange Inperpolation Polynomial generator
     ! for vector valued functions
-    ! 
+    !
     !~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     function lip3n(x, g, z) result(f)
         real(DP), intent(in) :: x

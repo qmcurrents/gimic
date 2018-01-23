@@ -4,10 +4,10 @@
 #
 # getkw -- a simple input parser for Fortran 95
 #
-# Written by Jonas Juselius <jonas.juselius@chem.uit.no> 
+# Written by Jonas Juselius <jonas.juselius@chem.uit.no>
 # University of Tromsø, 2006
 #
-# TODO: 
+# TODO:
 #       o general cleanup
 #       o python interface
 #
@@ -116,7 +116,7 @@ class Section:
 		kw.set=set
 		self.kw[kw.name].append(kw)
 
-	def add_kw(self, name, typ, arg, req=False, multi=False, 
+	def add_kw(self, name, typ, arg, req=False, multi=False,
 			set=False, callback=None):
 		if not self.kw.has_key(name):
 			self.kw[name]=[]
@@ -173,7 +173,7 @@ class Section:
 
 	def status(self):
 		return self.set
-	
+
 	def set_status(self, set):
 		if set:
 			self.set=True
@@ -219,7 +219,7 @@ class Section:
 			sys.exit(1)
 		self.xvalidate_arg(templ.arg,path)
 		for i in self.kw:
-			j=templ.findkw(i) 
+			j=templ.findkw(i)
 			if j is None:
 				print '>>> Invalid keyword: %s ' % (path+dlm+i)
 				sys.exit(1)
@@ -230,7 +230,7 @@ class Section:
 			for k in self.kw[i]:
 				k.xvalidate(j,path)
 		for i in self.sect:
-			j=templ.findsect(i) 
+			j=templ.findsect(i)
 			if j is None:
 				print '>>> Invalid section: %s ' % (path+dlm+i)
 				sys.exit(1)
@@ -240,8 +240,8 @@ class Section:
 					sys.exit(1)
 			for k in self.sect[i]:
 				k.xvalidate(j,path)
-				
-		
+
+
 	def xvalidate_arg(self,templ,path):
 		kw=self.arg
 		if templ is not None:
@@ -276,7 +276,7 @@ class Section:
 			for j in i:
 				s=s+str(j)
 		return s
-		
+
 class Keyword:
 	yes=re.compile(r'(1|yes|true|on)$',re.I)
 	no=re.compile(r'(0|no|false|off)$',re.I)
@@ -289,12 +289,12 @@ class Keyword:
 		self.nargs=None
 		self.arg=[]
 		self.callback=callback
-		
+
 		if arg is None: # unlimited arg length
 			self.nargs=-1
 			arg=None
 		elif isinstance(arg,int): # number of elements in self.arg == arg
-			self.nargs=arg  
+			self.nargs=arg
 			arg=None
 		if isinstance(arg,tuple) or isinstance(arg,list):
 			self.nargs=len(arg)
@@ -303,7 +303,7 @@ class Keyword:
 
 	def __cmp__(self, other):
 		return cmp(self.name,other.name)
-	
+
 	def setkw(self, arg):
 		if isinstance(arg,tuple):
 			pass
@@ -316,7 +316,7 @@ class Keyword:
 			self.arg=[]
 			return
 
-		if self.nargs > 0: 
+		if self.nargs > 0:
 			if len(arg) != self.nargs:
 				print "keyword lenght mismatsh %s(%i): %i" % (self.name,
 						self.nargs, len(arg))
@@ -331,7 +331,7 @@ class Keyword:
 			print 'Invalid argument:', arg
 			sys.exit(1)
 		self.set=True
-	
+
 	def is_set(self):
 		return self.set
 
@@ -362,7 +362,7 @@ class Keyword:
 				print '>>> Invalid data length in: %s \n' % (path)
 				sys.exit(1)
 		return True
-				
+
 	def sanity(self):
 		if self.arg[0] == 'None':
 			return True
@@ -407,7 +407,7 @@ class Keyword:
 
 	def status(self):
 		return self.set
-	
+
 	def set_status(self, set):
 		if set:
 			self.set=True
@@ -444,13 +444,13 @@ class GetkwParser:
 			GetkwParser.bnf=self.getkw_bnf()
 		self.parseString=self.bnf.parseString
 #        GetkwParser.bnf.setDebug(True)
-	
+
 	def set_caseless(self, arg):
 		if arg is True:
 			self.caseless=True
 		else:
 			self.caseless=False
-	
+
 	def getkw(self, path):
 		pass
 
@@ -470,12 +470,12 @@ class GetkwParser:
 		if self.caseless:
 			name=name.lower()
 		k=Section(name)
-		self.cur.add_sect(k, set=True)  
+		self.cur.add_sect(k, set=True)
 		self.push_sect(k)
 
 		if arg is not None:
 			if self.templ is None:
-				argt=self.guess_type(arg) 
+				argt=self.guess_type(arg)
 			else:
 				argt=self.check_type(arg, self.path[-1].arg.type)
 			kw=Keyword(name, argt, arg)
@@ -496,11 +496,11 @@ class GetkwParser:
 		if self.caseless:
 			name=name.lower()
 		k=Section(name)
-		self.cur.add_sect(k, set=True)  
+		self.cur.add_sect(k, set=True)
 		self.push_sect(k)
 		if arg is not None:
 			if self.templ is None:
-				argt=self.guess_type(arg) 
+				argt=self.guess_type(arg)
 			else:
 				argt=self.check_vectype(arg, self.path[-1].arg.type)
 			kw=Keyword(name, argt, arg)
@@ -521,13 +521,13 @@ class GetkwParser:
 			self.path.append(x)
 
 	def pop_sect(self,s,l,t):
-		if self.templ is not None:  
+		if self.templ is not None:
 #            if self.path[-1].callback is not none:
 #                self.path[-1].callback(self.stack[-1])
 			del self.path[-1]
 		del self.stack[-1]
 		self.cur=self.stack[-1]
-	
+
 	def store_key(self,s,l,t):
 		q=t.asList()
 		self.strg=s
@@ -541,7 +541,7 @@ class GetkwParser:
 		else:
 			k=self.path[-1].findkw(name)
 			if k is None:
-				print "Unknown keyword '%s' line: %d" % (name, 
+				print "Unknown keyword '%s' line: %d" % (name,
 						lineno(self.loc,self.strg))
 				if strict:
 					sys.exit(1)
@@ -564,13 +564,13 @@ class GetkwParser:
 		else:
 			k=self.path[-1].findkw(name)
 			if k is None:
-				print "Unknown keyword '%s', line: %d" % (name, 
+				print "Unknown keyword '%s', line: %d" % (name,
 						lineno(self.loc,self.strg))
 				if strict:
 					sys.exit(1)
 				argt=None
 			else:
-				if k.nargs == -1: 
+				if k.nargs == -1:
 					pass
 				elif len(arg) != k.nargs:
 					print "Invalid number of elements for key '%s',\
@@ -672,7 +672,7 @@ line: %d" % ( name, lineno(self.loc,self.strg))
 		else:
 			type='STR'
 		return type
-	
+
 	def guess_type(self,arg):
 		if ival.match(arg):
 			return 'INT'
@@ -694,7 +694,7 @@ line: %d" % ( name, lineno(self.loc,self.strg))
 		end_data=Literal('$end').suppress()
 		prtable = alphanums+r'!$%&*+-./<>?@^_|~'
 
-	
+
 		# Helper definitions
 		kstr=Word(prtable) ^ quotedString.setParseAction(removeQuotes)
 		name = Word(alphas+"_",alphanums+"_")
@@ -711,10 +711,10 @@ line: %d" % ( name, lineno(self.loc,self.strg))
 		data=Combine(dmark+name)+SkipTo(end_data)+end_data
 		section=Forward()
 		sect_def=(sect | key_sect | vec_sect)
-		input=section | data | vector | keyword 
+		input=section | data | vector | keyword
 		section << sect_def+ZeroOrMore(input) + sect_end
 
-		# Parsing actions	
+		# Parsing actions
 		keyword.setParseAction(self.store_key)
 		vector.setParseAction(self.store_vector)
 		data.setParseAction(self.store_data)
@@ -728,7 +728,7 @@ line: %d" % ( name, lineno(self.loc,self.strg))
 		return bnf
 
 def parse_error(s,t,d,err):
-	print "Parse error, line %d: %s" %  ( lineno(err.loc,err.pstr), 
+	print "Parse error, line %d: %s" %  ( lineno(err.loc,err.pstr),
 			line(err.loc,err.pstr))
 	sys.exit(1)
 
@@ -748,16 +748,16 @@ if __name__ == '__main__':
 title = foo
 title2="fooo bar"
 
-perturbation (apa) { 
+perturbation (apa) {
 foo=[1, 2, 3,
-4,5, 6,7,8,9, 
-10] 
+4,5, 6,7,8,9,
+10]
 bar=22.0
 }
 
 dalron {
-	foo=1 
-	uar=22 
+	foo=1
+	uar=22
 }
 
 verbose=yes #(yes|true|on|1)
@@ -766,9 +766,9 @@ DAlron2 {
 	foo=1
 	bar=1
 
-	
+
 	vafan(3) {
-		foo=0 
+		foo=0
 	}
 
 	$COORD

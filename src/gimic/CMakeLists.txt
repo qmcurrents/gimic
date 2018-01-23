@@ -1,11 +1,11 @@
-add_executable(gimic.bin 
+add_executable(gimic.bin
     gimic.f90
-    integral.f90  
-    cubeplot.f90   
-    vtkplot.f90   
+    integral.f90
+    cubeplot.f90
+    vtkplot.f90
     magnet.f90
-    grid.f90	    
-    jfield.f90	  
+    grid.f90
+    jfield.f90
     divj_field.f90
     parallel.f90
     edens_field.f90
@@ -35,11 +35,11 @@ execute_process(COMMAND
     ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/gimic
     OUTPUT_QUIET)
 
-install(PROGRAMS ${CMAKE_CURRENT_SOURCE_DIR}/getkw.py 
+install(PROGRAMS ${CMAKE_CURRENT_SOURCE_DIR}/getkw.py
     DESTINATION ${PYTHON_INSTDIR}
     )
 
-install(PROGRAMS ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/gimic 
+install(PROGRAMS ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/gimic
     DESTINATION ${CMAKE_INSTALL_BINDIR}
     )
 
@@ -51,7 +51,7 @@ if (ENABLE_CFOUR)
     find_package(CFour)
     if (CFOUR_FOUND)
         link_directories(${CFOUR_LIBRARY_DIR})
-        add_executable(xcpdens 
+        add_executable(xcpdens
             xcpdens.f90
             )
         target_link_libraries(xcpdens libr)

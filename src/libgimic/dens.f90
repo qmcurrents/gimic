@@ -9,16 +9,16 @@ module dens_class
     public new_dens, read_dens, set_dens, set_pdens
     public get_dens, get_pdens, del_dens, dens_t
     public read_modens
-    
+
     type dens_t
         type(molecule_t), pointer :: mol
         real(DP), dimension(:,:,:), pointer :: da, db
         logical :: pdens_p=.true.
         integer(I4) :: spin
     end type
-    
+
     private
-    
+
     real(DP), dimension(:,:,:), pointer :: dens
 contains
     subroutine new_dens(this, mol, modens_p)
@@ -108,13 +108,13 @@ contains
         close(XDFD)
         return
 
-42      bert_is_evil=.true. 
-        call get_debug_level(b) 
+42      bert_is_evil=.true.
+        call get_debug_level(b)
         if (debug_level < 10) then
             call msg_critical('Density file not found!')
             stop
         end if
-            
+
         call msg_error('Density file not found, all densities set to 1')
         call nl
         dens=>this%da
@@ -134,11 +134,11 @@ contains
         else
             call msg_warn('del_dens(): not allocated!')
         end if
-        
+
         if (settings%is_uhf.and.associated(this%db)) then
             deallocate(this%db)
         end if
-        
+
     end subroutine
 
     subroutine get_dens(this,a, spin)
@@ -149,25 +149,25 @@ contains
         if (present(spin)) then
             if (spin == spin_b) then
                 a=>this%db(:,:,0)
-            else 
+            else
                 a=>this%da(:,:,0)
             end if
         else
             a=>this%da(:,:,0)
         end if
-    end subroutine  
+    end subroutine
 
     subroutine set_dens(this,a,spin)
         type(dens_t) :: this
         real(DP), dimension(:,:) :: a
         integer(I4), optional :: spin
-        
+
         dens=>this%da
         if (present(spin)) then
             if (spin == spin_b) dens=>this%db
         end if
         dens(:,:,0)=a
-    end subroutine  
+    end subroutine
 
     subroutine  get_pdens(this,b,a,spin)
         type(dens_t) :: this
@@ -178,13 +178,13 @@ contains
         if (present(spin)) then
             if (spin == spin_b) then
                 a=>this%db(:,:,b)
-            else 
+            else
                 a=>this%da(:,:,b)
             end if
         else
             a=>this%da(:,:,b)
         end if
-    end subroutine  
+    end subroutine
 
     subroutine  set_pdens(this,b,a,spin)
         type(dens_t) :: this
@@ -197,7 +197,7 @@ contains
             if (spin == spin_b) dens=>this%db
         end if
         dens(:,:,b)=a
-    end subroutine  
+    end subroutine
 
     subroutine reorder_dens(bofh, this)
         type(reorder_t) :: bofh
@@ -253,11 +253,11 @@ contains
 
         if (moran(1) < 1 .or. moran(2) < 1) then
             call msg_error('Invalid MO range!')
-            call exit(1) 
+            call exit(1)
         end if
         if (moran(1) > moran(2) ) then
             call msg_error('Invalid MO range!')
-            call exit(1) 
+            call exit(1)
         end if
 
         call nl
@@ -280,7 +280,7 @@ contains
         character(*), intent(in) :: dens_file
         character(*), intent(in) :: mofile
         integer(I4), dimension(2), optional :: morange
-        
+
         integer(4) :: n, i,j
         real(DP), dimension(:,:), allocatable :: mos
         type(reorder_t) :: bofh
@@ -296,13 +296,13 @@ contains
             call read_dens(this, dens_file)
         end if
         open(XDFD, file=trim(mofile), status='old', err=42)
-        read(XDFD, *) 
-        read(XDFD, *) 
-        read(XDFD, *) 
+        read(XDFD, *)
+        read(XDFD, *)
+        read(XDFD, *)
 
         n=get_ncgto(this%mol)
         allocate(mos(n,n))
-        
+
         do i=1,n
             read(XDFD, *)
             read(XDFD, '(4f20.2)') mos(:,i)
@@ -320,11 +320,11 @@ contains
         call turbo_reorder(bofh)
         call reorder_dens(bofh, this)
         call del_reorder(bofh)
-        
+
         deallocate(mos)
         return
 
-42      bert_is_evil=.true. 
+42      bert_is_evil=.true.
         if (debug_level < 10) then
             call msg_critical('MO file not found!')
             stop
@@ -332,6 +332,6 @@ contains
         call msg_error('MO file not found, densitiy set to 1.d0')
         dens(:,:,0)=1.d0
     end subroutine
-end module 
+end module
 
 ! vim:et:sw=4:ts=4
