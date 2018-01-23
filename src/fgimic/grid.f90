@@ -97,7 +97,7 @@ contains
             if (keyword_is_set(input, 'Grid.rotation_origin')) then
                 call getkw(input, 'Grid.rotation_origin', ref)
             else
-                !            call getkw(input, 'Grid.out', out_length) 
+                !            call getkw(input, 'Grid.out', out_length)
                 !            call getkw(input, 'Grid.down', down_length)
                 if (keyword_is_set(input, 'Grid.height')) then
                     call getkw(input, 'Grid.height', hgt)
@@ -764,7 +764,7 @@ contains
 
         this%basv=matmul(euler,this%basv)
         this%origin=matmul(euler,this%origin)
- 
+
         this%origin=this%origin+reference
    end subroutine
 
