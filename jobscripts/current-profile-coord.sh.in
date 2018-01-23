@@ -1,0 +1,579 @@
+#!/bin/bash
+
+# Function definitions:
+source @SCRIPTS_DIR@/jobscripts/functions-def
+
+function validateInput() {
+# usage: validateInput variable $variable 
+    local __inputVar=$1
+    local __inputValue="$2"
+    while [ -z "$__inputValue" ]
+    do
+        printf "Incorrect input. Please try again:\n"
+        read __inputValue
+    done
+    echo "Checked value: $__inputValue"
+    eval $__inputVar="'$__inputValue'"
+}
+
+
+
+function shiftNormal() 
+{
+# usage: 
+# echo $normalCoord $shiftCoord | shiftNormal
+# where the coordinates are in bohr
+    # take the coordinates of the normal vector
+    # translate the vector to be normal at the point shiftCoord
+
+    awk '{
+          split($0,crd);
+
+          nx = crd[1]; 
+          ny = crd[2];
+          nz = crd[3];
+
+          sx = crd[4]; 
+          sy = crd[5];
+          sz = crd[6];
+
+          tx = nx + sx ; 
+          ty = ny + sy ;
+          tz = nz + sz ;
+
+          print tx , ",", ty , ",", tz; 
+    }'
+};
+
+function normalPlane() 
+{
+# usage: 
+# echo $x0 $x1 1 | normalPlane
+# where the coordinates are in bohr
+    # take the coordinates of x0 and x1
+    # take a third point C that lies at (x0x, x0y, 1)
+    # define vector a: C -> x0; vector b: C -> x1;
+    # calculate their cross product to find the normal vector to the plane at point C
+
+    awk '{
+          split($0,crd);
+
+          cx = crd[1]; 
+          cy = crd[2]; 
+          cz = crd[7]; 
+
+          ax = cx - crd[1]; 
+          ay = cy - crd[2];
+          az = cz - crd[3];
+
+          bx = cx - crd[4]; 
+          by = cy - crd[5];
+          bz = cz - crd[6];
+
+          nx = -ay*bz + az*by ; 
+          ny = -az*bx + ax*bz ;
+          nz = -ax*by + ay*by ;
+
+          nmod=sqrt(nx*nx + ny*ny + nz*nz); 
+          print nx/nmod, ny/nmod, nz/nmod; 
+    }'
+};
+
+function point_dist() 
+{
+awk '{
+     split($0,crd);
+     dx=crd[1]-crd[4]; 
+     dy=crd[2]-crd[5]; 
+     dz=crd[3]-crd[6]; 
+     dist=sqrt(dx*dx + dy*dy + dz*dz);
+     print dist; }'
+};
+
+checkIfInputExists
+
+printf "\nStarting current profile analysis\n"
+printf "\nUsing atomic units of length\n\n"
+
+echo "Define the atoms which define the start and end point"; echo
+echo "Enter the indices of the atoms according to the coord file"
+printf "Atom 1:  "; read atom1; 
+validateInput  atom1  "$atom1"
+printf "Atom 2:  "; read atom2
+validateInput atom2 "$atom2"
+
+# create a directory for the calculation
+ATOMS1=$(echo $atom1 | sed 's/ /-/g')
+ATOMS2=$(echo $atom2 | sed 's/ /-/g')
+#ATOMS=$(echo $atom1.$atom2 | sed 's/ /-/g')
+dirname=current_profile_$ATOMS1.$ATOMS2
+
+checkIfPreviousCalculationExists "$dirname"
+
+# if [ -z $dir ] # if the path does not contain "current_profile", $dir is empty, so the directory either does not exist, or we are not inside it
+# then
+#     #echo "Currently not in the directory current_profile"
+#     if [ -d $dirname ] 
+#     then
+# 	printf "\n\n*** Directory already exists.\n\nCalculation parameters:\n"
+# 	grep "bond=\|fixed=\|up=\|down=\|MF=" $dirname/gimic.int.coord
+# 	echo "Enter [y] to overwrite or any key to exit."; read accept
+# 	if [ -z $accept ] || [ ! $accept == "y" ]  # if the variable is empty or different from "y", exit 
+# 	then 
+# 	    exit
+# 	else
+# 	    rm -f $dirname/*out $dirname/*inp # Remove leftover input and output to avoid confusion
+# 	fi 
+# checkPreviousCalc fixed $fixed
+# else
+# 	if [ -e MOL ] && [ -e XDENS ] && [ -e coord ]
+# 	then
+# 	    mkdir $dirname
+# 	    cp coord $dirname/
+# 	    echo "Directory $dirname created."; echo
+# 	else
+# 	    echo "Please run the current profile analysis from a directory containing the files MOL, XDENS and coord"
+# 	    exit
+# 	fi # end if MOL, XDENS, coord exist
+#     fi # end if current_profile_#.#
+# fi # end if directory current_profile_#.# exists or we are inside it
+
+# Calculate the coordinates of the line normal to the desired atoms
+coordStart=$(centroid $atom1)
+echo coordStart = $coordStart
+coordEnd=$(centroid $atom2)
+echo coordEnd = $coordEnd
+echo normalPlanes
+normalCoord=$(echo $coordStart $coordEnd 2 | normalPlane)
+echo $normalCoord
+
+# Shift the normal vector to start at the desired point, e.g. the starting point
+shiftCoord=$( centroid $atom1)
+echo shifted Normal plane:
+COORD1=$(echo $normalCoord $shiftCoord | shiftNormal)
+echo $COORD1
+echo
+normalCoord1=$(echo $coordStart $coordEnd -2 | normalPlane)
+shiftCoord1=$( centroid $atom1 )
+echo shifted Normal plane:
+COORD2=$(echo $normalCoord1 $shiftCoord1 | shiftNormal)
+echo $COORD2
+
+echo "The default position of the integration plane is at the midpoint of the bond."
+echo Distance between the two normal points:
+distance2=$(echo $normalCoord $normalCoord1 | point_dist)
+distance=$( awk -v dist2=$distance2 'BEGIN{ print dist2/2 }')
+valueInp distance $distance
+
+# Coordinates of the centre:
+BOND=$(centroid $atom1 $atom2)
+Bx=$( echo $BOND | awk '{print $1} ' )
+By=$( echo $BOND | awk '{print $2} ' )
+Bz=$( echo $BOND | awk '{print $3} ' )
+
+#echo "Bond centre coordinates:"
+#printf "("$Bx";"$By";"$Bz")\n"
+
+# Check if there already is an input file
+#if [ -f $dirname/calculation.dat ] 
+#then
+#    fixed=$( sed -n -e 's/^.*fixed=*//p' $dirname/calculation.dat | awk 'BEGIN { FS = "," } ; { print $2 }' )
+#fi
+# # If there was not a previous calculation, $fixed will be empty. Ask if it should be changed
+# if [ ! -z $fixed ] 
+# then
+#     printf "\nThe previously selected fixed atom is $fixed.\nPress [n] to change\n"
+#     read accept
+# fi
+# # If the $fixed is empty or the user wants to change it, ask to enter 
+# if [[ ( -z $fixed ) || ( ! -z $accept  &&  "$accept" == "n" ) ]]
+#     then 
+#         printf "\nEnter the index of the fixed atom:\n"
+#         read fixed
+# 	validateInput fixed $fixed
+# fi
+
+echo
+
+# Read the coordinates of atom1:
+A1z=$( centroid $atom1 | awk '{print $3}' )
+
+# Read the coordinates of atom2:
+A2x=$( centroid $atom2 | awk '{print $1}' )
+A2y=$( centroid $atom2 | awk '{print $2}' )
+A2z=$( centroid $atom2 | awk '{print $3}' )
+#A2x=$( awk -v atom2=$atom2 '{ if (NR==(atom2+1)) {print $1} }' coord  )
+#A2y=$( awk -v atom2=$atom2 '{ if (NR==(atom2+1)) {print $2} }' coord  )
+#A2z=$( awk -v atom2=$atom2 '{ if (NR==(atom2+1)) {print $3} }' coord  )
+
+Fx=$(calculateFixedCoord $A2x $A2y $A2z | awk '{print $1}')
+Fy=$(calculateFixedCoord $A2x $A2y $A2z | awk '{print $2}')
+#Fz=$( awk -v A1z=$A1z -v A2z=$A2z 'BEGIN{ print (A1z+A2z)*0.5 }')
+Fz=$( awk -v A1z=$A1z -v A2z=$A2z 'BEGIN{ print A2z }')
+
+echo "Fixed coordinate: ($Fx; $Fy; $Fz)"
+
+
+printf "\n\nSTARTING POINT OF THE INTEGRATION\n"
+userInp start $start
+
+printf "\nEND POINT OF THE INTEGRATION\n"
+out=10
+printf "\nDo you accept out=$out bohr?"
+userInp out $out
+
+printf "\n\nUPPER AND LOWER BOUNDS OF THE INTEGRATION\n"
+up=10
+down=-10
+valueInp up $up 
+valueInp down $down
+
+printf "\n\nWIDTH OF THE SLICES\n"
+delta=0.02
+valueInp delta $delta
+
+echo "MAGNETIC FIELD DIRECTION"
+
+# default along the Z axis
+MFx=0.0
+MFy=0.0
+MFz=-1.0
+
+
+echo "Do you accept the default MF orientation along the Z axis?"
+echo "Press [n] to calculate the direction automatically" # TODO: or [e] to enter manually"
+
+read accept;
+if [ ! -z $accept ] && [ $accept == "n" ]
+then
+   maximise_projection coord.xyz > $dirname/field.dat
+   MFx=$( cat $dirname/field.dat | sed -e 's#{#_#g; s#}#_#g; s#,#_#g' | awk -F [_] '{ {print -$2} }')
+   MFy=$( cat $dirname/field.dat | sed -e 's#{#_#g; s#}#_#g; s#,#_#g' | awk -F [_] '{ {print -$3} }')
+   MFz=$( cat $dirname/field.dat | sed -e 's#{#_#g; s#}#_#g; s#,#_#g' | awk -F [_] '{ {print -$4} }')
+fi
+
+echo "Magnetic field vector coordinates: ($MFx; $MFy; $MFz)"
+
+
+################################################################################
+
+printf "\n\n*****************************************************************************\n\nSUMMARY\n\n"
+printf "Bond: ["$bond"]\n"
+printf "Fixed atom: $fixed\n"
+echo "Integration plane coordinates:"
+printf "in = $start  out = $out  up = $up  down = $down \n"
+printf "Width of the slices: $delta\n"
+printf "Magnetic field direction: $MF \n\n"
+
+printf "\n*****************************************************************************\n\n"
+
+
+echo "Would you like to do any modifications? Press [y] to list the options."
+read accept
+if  [ ! -z $accept ] && [ $accept == "y" ]
+then
+    printf "\nParameters for the calculation:\n"
+    echo "[1] start value"
+    echo "[2] out value"
+    echo "[3] up value"
+    echo "[4] down value"
+    echo "[5] delta"
+    echo "[6] magnetic field direction"
+    entry="0"
+    printf "\n\nEnter the number of the entry to change it or press [ENTER] to continue\n"
+    read entry
+    while [ ! -z $entry ] # while it has a value 
+    do
+	if  [ $entry == "1" ]
+	then
+	    valueInp start $start
+	elif [ $entry == "2" ]
+	then
+	    valueInp out $out
+	elif [ $entry == "3" ]
+	then
+	    valueInp up $up
+	elif [ $entry == "4" ]
+	then
+	    valueInp down $down
+	elif [ $entry == "5" ]
+	then
+	    valueInp delta $delta
+	elif [ $entry == "6" ]
+	then
+	    valueInp MF $MF
+	else
+	    echo "Invalid entry. Try again."
+	    read entry
+	fi
+	printf "\n\nEnter the number of the entry to change it or press [ENTER] to continue\n"
+	read entry
+    done
+fi
+
+nsteps=$( awk -v start=$start -v out=$out -v delta=$delta 'BEGIN{if (start > 0) {start = -start}; nsteps=(out-start)/delta; if (nsteps > 0) {printf("%d",nsteps)} else {printf("%d",-nsteps);}; }'   )
+
+#Practice has shown that for delta=0.1, the spacing value should be 0.02 in order to have at least 9 Gaussian points per slice
+# If the delta is smaller than 0.1, recalculate:
+# spacingFactor=$( awk -v delta=$delta 'BEGIN{ printf("%.4f",delta/0.02) }' )    # how many times smaller the chosen delta value is
+# spacing=$( awk -v f=$spacingFactor 'BEGIN{ printf("%.3f",0.013*f) }' )
+spacingX=$( awk -v delta=$delta 'BEGIN{ f=delta/0.02; printf("%.3f",1.00*f); }' )
+spacingY=$( awk -v delta=$delta 'BEGIN{ f=delta/0.02; printf("%.3f",0.01*f); }' )
+spacingZ=$( awk -v delta=$delta 'BEGIN{ f=delta/0.02; printf("%.3f",0.01*f); }' )
+
+printf "\n\nSPACING\n"
+printf  "\nDo you accept spacing=[$spacingX, $spacingY, $spacingZ]?\nPress [n] to change\n"
+read accept;
+if [ ! -z $accept ] && [ $accept == "n" ]
+then
+    printf "spacingX="; read spacingX
+    validateInput spacingX $spacingX
+    printf "spacingY="; read spacingY
+    validateInput spacingY $spacingY
+    printf "spacingZ="; read spacingZ
+    validateInput spacingZ $spacingZ
+fi
+
+printf "Integration plane split into $nsteps slices with width $delta bohr and grid spacing [$spacingX; $spacingY; $spacingZ] \n"
+
+#rotation=0.0
+#printf  "\nRotation from the normal to the bond at the bond centre: $rotation degrees. Do you accept?\nPress [n] to modify\n"
+#read accept;
+#if [ ! -z $accept ] && [ $accept == "n" ]
+#then
+#    printf "Enter the index of the atom, which the plane has to go through: "
+#    read atom3;
+#    validateInput atom3 $atom3
+#    rotation=$(calculateRot);
+#    
+#    printf "Do you accept rotation to $rotation degrees?\nPress [n] to modify\n"
+#    read accept;
+#    if [ ! -z $accept ] && [ $accept == "n" ]
+#    then
+#        printf "rotation="; read rotation
+#	validateInput rotation $rotation
+#    fi  
+#fi
+
+
+#string="s/@COORD1@/$COORD1/; s/@COORD2@/$COORD2/; s/@fixed@/$fixed/; s/@distance@/$distance/; s/@up@/$up/; s/@down@/$down/; s/@MF@/$MF/; s/@spacingX@/$spacingX/; s/@spacingY@/$spacingY/; s/@spacingZ@/$spacingZ/;  s/@rotation@/$rotation/; s/@FX@/$Fx/; s/@FY@/$Fy/; s/@FZ@/$Fz/ ; "
+string="s/@COORD1@/$COORD1/; s/@COORD2@/$COORD2/; s/@distance@/$distance/; s/@up@/$up/; s/@down@/$down/; s/@spacingX@/$spacingX/; s/@spacingY@/$spacingY/; s/@spacingZ@/$spacingZ/;  s/@rotation@/$rotation/; s/@MFx@/$MFx/; s/@MFy@/$MFy/; s/@MFz@/$MFz/; s/@FX@/$Fx/; s/@FY@/$Fy/; s/@FZ@/$Fz/ ;"
+sed "$string" @SCRIPTS_DIR@/gimic.int.coord > ./$dirname/gimic.int.coord
+
+#heading=\""atom1=$ATOMS1 atom2=$ATOMS2 fixed=$fixed delta=$delta \nspacing=[ $spacingX;$spacingY;$spacingZ] in=$start out=$out \nup=$up down=$down"\"
+
+echo $heading > ./$dirname/calculation.dat
+
+
+
+xstart=$( awk -v delta=$delta -v start=$start 'BEGIN{printf "%.3f\n", -start }' )  # start is a negative number 
+xend=$( awk -v delta=$delta -v xstart=$xstart 'BEGIN{ printf "%.3f\n", xstart+delta }' ) 
+#xend=$( awk -v delta=$delta -v start=$start 'BEGIN{ if (start < 0) {print start+delta} else {print start-delta}; }' ) 
+#xend=$( awk -v i=$i -v delta=$delta -v end=$end 'BEGIN{printf "%.3f\n", end+delta*i }' )
+smaller=$(awk -v start=$xstart -v end=$xend 'BEGIN{ if (start > end) {print "1"} else {print "0"} }')
+if [ $smaller -eq 1 ]
+then
+    tmp=$xstart
+    xstart=$xend
+    xend=$tmp
+fi
+string=" s/@start@/$xstart/; s/@end@/$xend/; s/@up@/$xup/; s/@down@/$xdown/"
+sed "$string" $dirname/gimic.int.coord > $dirname/gimic.0.inp
+
+printf "\nPerforming a dry run...\n\n"
+(cd ./$dirname/ && gimic --dryrun gimic.0.inp | grep "grid points" )
+printf "\n\n"
+
+echo "Do you accept the above parameters? Press [n] to cancel."; read accept
+if  [ ! -z $accept ] && [ $accept == "n" ]
+then
+    exit
+fi
+
+
+echo "Preparing input files..."
+for (( i=1; i<$nsteps; i++ ))
+do
+    xstart=$( awk -v xstart=$xstart -v delta=$delta 'BEGIN{printf "%.3f\n", xstart+delta }' )
+    xend=$( awk -v delta=$delta -v xstart=$xstart 'BEGIN{ printf "%.3f\n", xstart+delta }' ) 
+#    xstart=$( awk -v i=$i -v delta=$delta -v start=$start 'BEGIN{printf "%.3f\n", start+delta*i }' )
+#    xend=$( awk -v i=$i -v delta=$delta -v end=$end 'BEGIN{printf "%.3f\n", end+delta*i }' )
+#    if [ $smaller -eq 1 ]
+#    then
+#        tmp=$xstart
+#        xstart=$xend
+#        xend=$tmp
+#    fi
+    string=" s/@start@/$xstart/; s/@end@/$xend/"
+    sed "$string" $dirname/gimic.int.coord > $dirname/gimic.$i.inp
+done    
+echo "done"
+
+# sanity check for the integration plane
+
+echo "Do you want to create an xyz file showing the ends of the integration plane?"
+echo "Press [y] or any other key to skip"; read accept
+if  [ ! -z $accept ] && [ $accept == "y" ]
+then
+(cd ./$dirname/ && gimic --dryrun gimic.0.inp | grep "grid points" )
+#    gimic --dryrun gimic.0.inp
+    # take the first two coordinates of the int plane
+    cat ./$dirname/grid.xyz | head -n -3 > ./$dirname/grid.check.xyz
+
+    last=$(ls ./$dirname/*inp | wc -l)
+    last=$(( $last -1 ))
+    (cd ./$dirname/ && gimic --dryrun gimic.$last.inp )
+
+    # take the coords of the end of the int plane
+    grep X ./$dirname/grid.xyz  | awk '{ if (NR <=2) {print $0} }' >> ./$dirname/grid.check.xyz
+    # copy the MF direction "Be" atom
+    grep Be ./$dirname/grid.xyz  >> ./$dirname/grid.check.xyz
+
+#    atomNum=$(head -n 1 ./$dirname/grid.xyz)
+#    atomNum=$(( $atomNum + 2 ))
+#    sed -i "1s/.*/$atomNum/" ./$dirname/grid.check.xyz
+
+    echo
+    echo "The file grid.check.xyz created at $wrkdir/grid.check.xyz"
+    echo "You can now put this script to the background and inspect the molecule."
+    echo "Bring the script to foreground to run the calculation."
+    read accept # just wait
+
+    echo "Current profile analysis resumed." 
+fi
+
+
+
+# Submit the calculation
+
+wrkdir=$(pwd)
+wrkdir=$(echo $wrkdir/$dirname)
+echo "Working directory:"; echo $wrkdir; echo
+
+echo "Running Gimic calculations..."
+
+filenum=$(ls $wrkdir/*inp | wc -l)
+#filenum=$(echo $nsteps)
+
+parallel=4
+
+echo "How many parallel tasks to execute?"
+read parallel
+validateInput parallel $parallel
+
+# check if too many parallel tasks are called
+if [ $parallel -gt $nsteps ]
+then
+    $parallel=$($nsteps)
+fi
+
+# clean up possible previous calculations
+rm -rf *dat *eps GIMIC.*
+
+date
+echo "Running $parallel out of $filenum GIMIC calculations at a time..."
+
+whole=$( awk -v filenum=$filenum -v parallel=$parallel 'BEGIN{printf "%d\n", filenum/parallel}'  )
+remain=$(awk -v whole=$whole -v filenum=$filenum -v parallel=$parallel 'BEGIN{printf "%d\n", (filenum-whole*parallel) }')
+
+completed=0
+
+for ((i=0; i<$whole; i++)) 
+do 
+    for ((j=0; j<$parallel; j++))
+    do  
+        index=$(($i+$j*$whole))
+        grepstring=""
+        if [ -f "$wrkdir/gimic.$index.out" ]
+        then
+            echo "The file $wrkdir/gimic.$index.out already exists."
+            grepstring=$(grep "wall" $wrkdir/gimic.$index.out)
+            echo "$grepstring"
+        fi
+
+        if [ -z "$grepstring" ]
+        then
+            cd $wrkdir && gimic gimic.$index.inp > $wrkdir/gimic.$index.out & 
+        fi
+    done 
+    wait
+    completed=$(( $completed+$parallel ))
+    date
+    echo $completed of $filenum completed; echo
+done
+
+if [ "$remain" -gt 0 ]; then
+    for ((i=0; i<$remain; i++))
+    do  
+        (cd $wrkdir && gimic $wrkdir/gimic.$(($parallel*$whole+$i)).inp >  $wrkdir/gimic.$(($parallel*$whole+$i)).out &) 
+    done
+fi
+echo $filenum of $filenum completed
+
+
+#    cd $wrkdir && gimic gimic.$index.inp > $wrkdir/gimic.$index.out
+
+
+
+rm -rf GIMIC* 
+
+###################################################################################
+
+echo "Calculating the gradient..."
+
+cat /dev/null > $wrkdir/paratropic.dat #delete if it already exists
+cat /dev/null > $wrkdir/diatropic.dat
+cat /dev/null > $wrkdir/current.dat
+
+out=$(grep out= $wrkdir/gimic.0.inp | grep -o -E '[0-9.]+')
+start=$(grep in= $wrkdir/gimic.0.inp | grep -o -E '[0-9.]+')
+delta=$( awk -v out=$out -v start=$start 'BEGIN{ value=out-start; delta=(value<0?-value:value); print delta }' )
+
+for (( i=0; i<$filenum; i++ ))
+do
+
+    grep -A 2 "Induced current" $wrkdir/gimic.$i.out | awk -v wrkdir=$wrkdir '{ dia=sprintf("%s/diatropic.dat",wrkdir); para=sprintf("%s/paratropic.dat",wrkdir); if (NR == 2) printf("% f\n", $5) >> dia; else if (NR == 3) printf("% f\n", $5) >> para; }'
+    grep "Induced current (nA/T)" $wrkdir/gimic.$i.out | awk -v i=$i -v start=$start -v delta=$delta -v wrkdir=$wrkdir '{ out=sprintf("%s/current.dat",wrkdir); printf("%5.2f\t% f\n", i*delta,$5) >> out; }'
+done
+
+paste $wrkdir/current.dat $wrkdir/diatropic.dat $wrkdir/paratropic.dat > $wrkdir/current_profile.dat
+rm -f $wrkdir/paratropic.dat $wrkdir/diatropic.dat $wrkdir/current.dat
+
+printf "\nData saved in current_profile.dat\n\n"
+
+gnuplot << EOF                                                                                   
+
+set format x "%5.2f"
+set format y "%5.2f"
+set format z "%5.2f"
+unset label
+set xlabel "Distance [bohr]"
+set ylabel "dJ/dx [nA/T / bohr]"
+
+set terminal postscript eps enhanced color 'Helvetica' 22
+
+set output "$wrkdir/$dirname-current-profile.eps"
+plot "$wrkdir/current_profile.dat" u 1:(\$2/$delta) w l lc 0 lw 2 notitle
+set output "$wrkdir/$dirname-current-dia-para.eps"
+plot "$wrkdir/current_profile.dat" u 1:(\$3/$delta) w l lc 3 lw 2 title "Diatropic", "$wrkdir/current_profile.dat" u 1:(\$4/$delta) w l lc 1 lw 2 title "Paratropic"
+
+EOF
+
+echo "Plots generated at "
+echo $wrkdir/$dirname-current-profile.eps
+echo $wrkdir/$dirname-current-dia-para.eps
+echo
+
+#######################################################################
+# Find the zeroes on the current profile plot
+
+echo "Calculating the critical points of the current profile..."
+echo
+#echo DirName: $dirname 
+#echo Dir: $wrkdir
+
+(cd $wrkdir && @SCRIPTS_DIR@/crit_pts.sh > profile-points.out )
+
+#######################################################################
+
+echo

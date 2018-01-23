@@ -1,0 +1,21 @@
+USEFUL ALIASES AND FUNCTIONS:
+
+
+alias grid="xmakemol -f grid.xyz &"
+alias revcurrent="mv current_profile.dat current_profile.dat.1 && awk '{printf "%.6f\t%.6f\t%.6f\t%.6f\n", $1, -$2, -$4, -$3}' current_profile.dat.1 > current_profile.dat"
+alias gim="$GIMIC_HOME/jobscripts/gimic-run.sh"
+alias 3g="$GIMIC_HOME/jobscripts/3D-run.sh"
+alias plotcurrent=" $GIMIC_HOME/jobscripts/plot-current-profile.sh"
+alias geps="display *eps &"
+alias intprofile="$GIMIC_HOME/jobscripts/intprofile.sh"
+
+Note: on a cluster replace the name of the script below to current-profile-cluster.sh
+alias gcurrent="$GIMIC_HOME/jobscripts/current-profile-local.sh"
+
+function anprofile() { awk -v lower= -v upper= '{ if (( >= lower) && ( <= upper)) { total+=; dia+=; para+=; } } END { printf(nTotal current: %fnDiatropic: %fnParatropic: %fnn, total, dia, para); } ' current_profile.dat ;  };
+
+function dryrun() { gimic --dryrun "$@" > /dev/null ; xmakemol -f grid.xyz;  };
+
+function critpoints() { CURRDIR=$(pwd); $GIMIC_HOME/crit_pts.sh $CURRDIR; };
+
+

@@ -1,0 +1,329 @@
+#!/bin/bash
+
+# Function definitions:
+source  @SCRIPTS_DIR@/functions-def
+
+checkIfInputExists
+
+printf "\nSTARTING CURRENT PROFILE ANALYSIS\n"
+printf "\nUsing atomic units of length\n\n"
+
+echo "Define the bond perpendicular to which to integrate"; echo
+echo "Enter the indices of the atoms according to the coord file"
+printf "Atom 1:  "; read atom1; 
+validateInput atom1 $atom1
+printf "Atom 2:  "; read atom2
+validateInput atom2 $atom2
+
+# Read the coordinates of atom1:
+A1x=$( awk -v atom1=$atom1 '{ if (NR==(atom1+1)) {print $1} }' coord  )
+A1y=$( awk -v atom1=$atom1 '{ if (NR==(atom1+1)) {print $2} }' coord  )
+A1z=$( awk -v atom1=$atom1 '{ if (NR==(atom1+1)) {print $3} }' coord  )
+
+# Read the coordinates of atom2:
+A2x=$( awk -v atom2=$atom2 '{ if (NR==(atom2+1)) {print $1} }' coord  )
+A2y=$( awk -v atom2=$atom2 '{ if (NR==(atom2+1)) {print $2} }' coord  )
+A2z=$( awk -v atom2=$atom2 '{ if (NR==(atom2+1)) {print $3} }' coord  )
+
+dirname=current_profile_$atom1.$atom2
+
+checkIfPreviousCalculationExists "$dirname"
+
+# Calculate the distance between the atoms
+echo "Define where between the two atoms the integration plane passes"
+echo "Default: through the midpoint"
+distance=$( halfDistance $atom1 $atom2 )
+valueInp distance $distance
+
+# Coordinates of the centre:
+bond=$atom1","$atom2
+BOND=$(centroid $atom1 $atom2)
+
+Bx=$( echo $BOND | awk '{print $1} ' )
+By=$( echo $BOND | awk '{print $2} ' )
+Bz=$( echo $BOND | awk '{print $3} ' )
+
+#echo "Bond centre coordinates:"
+#printf "("$Bx";"$By";"$Bz")\n"
+#echo
+
+printf "\n\nSTARTING POINT OF THE INTEGRATION\n"
+userInp start $start
+while [ -z "$start" ]
+do 
+    userInp start $start
+done
+
+printf "\nEND POINT OF THE INTEGRATION\n"
+out=10
+printf "\nDo you accept out=$out bohr?" # ask about the default value 
+userInp out $out
+
+printf "\n\nUPPER AND LOWER BOUNDS OF THE INTEGRATION\n"
+up=10
+down=-10
+valueInp up $up 
+valueInp down $down
+
+printf "\n\nWIDTH OF THE SLICES\n"
+delta=0.02
+valueInp delta $delta
+
+nsteps=$( awk -v start=$start -v out=$out -v delta=$delta 'BEGIN{if (start > 0) {start = -start}; nsteps=(out-start)/delta; if (nsteps > 0) {printf("%d",nsteps)} else {printf("%d",-nsteps);}; }'   )
+checkIfEmpty nsteps $nsteps
+
+
+printf "\n\nGRID POINT SPACING\n"
+#Practice has shown that for delta=0.1, the spacing value should be 0.02 in order to have at least 9 Gaussian points per slice
+# If the delta is smaller than 0.1, recalculate:
+# spacingFactor=$( awk -v delta=$delta 'BEGIN{ printf("%.4f",delta/0.02) }' )    # how many times smaller the chosen delta value is
+# spacing=$( awk -v f=$spacingFactor 'BEGIN{ printf("%.3f",0.013*f) }' )
+spacingX=$( awk -v delta=$delta 'BEGIN{ f=delta/0.02; printf("%.3f",1.00*f); }' )
+spacingY=$( awk -v delta=$delta 'BEGIN{ f=delta/0.02; printf("%.3f",0.01*f); }' )
+spacingZ=$( awk -v delta=$delta 'BEGIN{ f=delta/0.02; printf("%.3f",0.01*f); }' )
+
+printf  "\nDo you accept spacing=[$spacingX, $spacingY, $spacingZ]?\nPress [n] to change\n"
+read accept;
+if [ ! -z $accept ] && [ $accept == "n" ]
+then
+    valueInp spacingX $spacingX
+    valueInp spacingY $spacingY
+    valueInp spacingZ $spacingZ
+fi
+
+
+printf "\nMAGNETIC FIELD DIRECTION\n\n"
+
+# default along the Z axis
+MFx=0.0
+MFy=0.0
+MFz=-1.0
+
+echo "Do you accept the default MF orientation along the Z axis (0, 0, -1)?"
+echo "Press [a] to calculate the direction automatically or [m] to enter manually"
+
+read accept;
+checkMaxProj="installed"
+if [ ! -z $accept ] && [ $accept == "a" ]
+then
+    checkMaxProj=$(command -v maximise_projection) #  command -> returns the path of the binary if it is found
+    if [ -e $checkMaxProj ]
+    then
+	echo "The program maximise_projection is not found. Switching to manual input of the magnetic field components."
+    else
+	maximise_projection coord.xyz > $dirname/field.dat
+	MFx=$( cat $dirname/field.dat | sed -e 's#{#_#g; s#}#_#g; s#,#_#g' | awk -F [_] '{ {print -$2} }')
+	MFy=$( cat $dirname/field.dat | sed -e 's#{#_#g; s#}#_#g; s#,#_#g' | awk -F [_] '{ {print -$3} }')
+	MFz=$( cat $dirname/field.dat | sed -e 's#{#_#g; s#}#_#g; s#,#_#g' | awk -F [_] '{ {print -$4} }')
+    fi
+fi
+if ( [ ! -z $accept ] && [ $accept == "m" ] ) || [ -e $checkMaxProj ]
+then
+    echo "Please enter numeric values."
+    valueInp MFx $MFx
+    valueInp MFy $MFy
+    valueInp MFz $MFz
+fi
+
+echo "Magnetic field vector coordinates: ($MFx; $MFy; $MFz)"
+echo
+
+
+printf "\nFIXED COORDINATE\n"
+
+# fixed point (Ax, Ay and Az are the coords of the bond atoms 1 and 2)
+Fx=$(calculateFixedCoord $A2x $A2y $A2z | awk '{print $1}')
+Fy=$(calculateFixedCoord $A2x $A2y $A2z | awk '{print $2}')
+#Fz=$( awk -v A1z=$A1z -v A2z=$A2z 'BEGIN{ print (A1z+A2z)*0.5 }')
+#Fz=$( awk -v A1z=$A1z -v A2z=$A2z 'BEGIN{ print A2z }')
+
+# use the coords of atom 1 and the MF vector
+# vector OA and OF defined with the coords of atom1 and the fixed point
+# vector AF.MF = 0
+Fz=$( awk -v Ax=$A1x -v Fx=$Fx -v Ay=$A1y -v Fy=$Fy -v Az=$A1z -v mx=$MFx -v my=$MFy -v mz=$MFz 'BEGIN{ print( ( (mx*(Fx-Ax) + my*(Fy-Ay)) / mz) + Az )}')
+echo
+echo "Fixed coordinate: ($Fx; $Fy; $Fz)"
+
+echo "Do you want to modify the coordinates of the fixed point?"
+echo "Press [y] enter Cartesian coordinates" 
+
+read accept;
+if [ ! -z $accept ] && [ $accept == "y" ]
+then
+    valueInp Fx $Fx
+    valueInp Fy $Fy
+    valueInp Fz $Fz
+
+    echo "Fixed coordinate: ($Fx, $Fy, $Fz)"
+fi
+
+
+printf "\nROTATION OF THE PLANE\n\n"
+
+# rotation is done with respect to the midpoint of the bond unless a rotation origin is specified
+rotX=0.0
+rotY=0.0
+rotZ=0.0
+
+rotationOriginEnabled=n
+origX=0.0
+origY=0.0
+origZ=0.0
+
+echo "Do you want to rotate the integration plane?"
+echo "Press [y] enter rotation angles and origin" 
+
+read accept;
+if [ ! -z $accept ] && [ $accept == "y" ]
+then
+    valueInp rotX $rotX 
+    valueInp rotY $rotY
+    valueInp rotZ $rotZ
+
+    echo "Rotation angles: ($rotX, $rotY, $rotZ)"
+
+    printf "\nDo you accept the rotation origin to be at the bond midpoint?\n"
+    echo "Press [n] to enter Cartesian coordinates." 
+
+    read accept;
+    if [ ! -z $accept ] && [ $accept == "n" ]
+    then
+	rotationOriginEnabled=y
+	valueInp origX $origX 
+	valueInp origY $origY
+	valueInp origZ $origZ
+    fi
+fi
+
+
+# Sumarizing the selected input 
+
+#echo "Enter title:"
+#read heading
+#heading=\"$heading"\n bond=["$bond"], fixed="$fixed", in="$start", out="$out", delta="$delta", up="$up", down="$down\"
+#heading=\""bond=[$bond] Fx=$Fx, Fy=$Fy, Fz=$Fz \ndelta=$delta \nspacing=[ $spacingX;$spacingY;$spacingZ] in=$start out=$out \nup=$up down=$down \ndistance=$distance"\"
+#echo $heading > ./$dirname/calculation.dat
+
+cat /dev/null > ./$dirname/calculation.dat
+#echo bond=[$bond] > ./$dirname/calculation.dat
+echo atom1=$atom1  >> ./$dirname/calculation.dat
+echo atom2=$atom2 >> ./$dirname/calculation.dat
+echo distance=$distance >> ./$dirname/calculation.dat
+echo in=$start out=$out up=$up down=$down  >> ./$dirname/calculation.dat
+echo fixed point: Fx=$Fx, Fy=$Fy, Fz=$Fz  >> ./$dirname/calculation.dat
+echo delta=$delta >> ./$dirname/calculation.dat
+echo spacing: spacingX=$spacingX, spacingY=$spacingY, spacingZ=$spacingZ  >> ./$dirname/calculation.dat
+echo magnetic field: MFx=$MFx, MFy=$MFy, MFz=$MFz  >> ./$dirname/calculation.dat
+echo rotation angles: rotX=$rotX, rotY=$rotY, rotZ=$rotZ >> ./$dirname/calculation.dat
+
+################################################################################
+
+#printf "\nnsteps="$nsteps", delta="$delta", spacing="$spacing", in="$start", out="$out", up="$up", down="$down", bond=["$bond"], fixed="$fixed"\n"
+printf "\n\n*****************************************************************************\n\nSUMMARY\n\n"
+printf "Bond: ["$bond"]\n"
+echo "Integration plane coordinates"
+printf "in = $start  out = $out  up = $up  down = $down \n"
+printf "Split into $nsteps slices with width $delta and grid spacing [$spacingX; $spacingY; $spacingZ] \n"
+printf "Fixed coordinate: ( $Fx; $Fy; $Fz )\n"
+printf "Magnetic field direction: ( $MFx; $MFy; $MFz ) \n"
+printf "Rotation angles: ( $rotX; $rotY; $rotZ ) \n\n"
+
+printf "\n*****************************************************************************\n\n"
+
+
+# Preparing the input files
+
+string="s/@bond@/$bond/; s/@fixed@/$fixed/; s/@distance@/$distance/; s/@up@/$up/; s/@down@/$down/; s/@spacingX@/$spacingX/; s/@spacingY@/$spacingY/; s/@spacingZ@/$spacingZ/;  s/@rotX@/$rotX/;  s/@rotY@/$rotY/;  s/@rotZ@/$rotZ/; s/@origX@/$origX/; s/@origY@/$origY/; s/@origZ@/$origZ/; s/@MFx@/$MFx/; s/@MFy@/$MFy/; s/@MFz@/$MFz/; s/@FX@/$Fx/; s/@FY@/$Fy/; s/@FZ@/$Fz/ ;"
+sed "$string" @SCRIPTS_DIR@/gimic.Inp > ./$dirname/gimic.Inp
+
+# if the rotation_origin keyword is not defined in the input file, rotation is done around the bond midpoint
+if [ $rotationOriginEnabled == "y" ]
+then
+    sed -i '/rot/s/#rotation_origin/rotation_origin/' ./$dirname/gimic.Inp
+fi
+
+
+xstart=$( awk -v delta=$delta -v start=$start 'BEGIN{printf "%.3f\n", -start }' )  # start is a negative number 
+xend=$( awk -v delta=$delta -v xstart=$xstart 'BEGIN{ printf "%.3f\n", xstart+delta }' ) 
+#xend=$( awk -v delta=$delta -v start=$start 'BEGIN{ if (start < 0) {print start+delta} else {print start-delta}; }' ) 
+#xend=$( awk -v i=$i -v delta=$delta -v end=$end 'BEGIN{printf "%.3f\n", end+delta*i }' )
+smaller=$(awk -v start=$xstart -v end=$xend 'BEGIN{ if (start > end) {print "1"} else {print "0"} }')
+if [ $smaller -eq 1 ]
+then
+    tmp=$xstart
+    xstart=$xend
+    xend=$tmp
+fi
+
+checkIfEmpty xstart $xstart
+checkIfEmpty xend $xend
+
+string=" s/@start@/$xstart/; s/@end@/$xend/; s/@up@/$xup/; s/@down@/$xdown/"
+sed "$string" ./$dirname/gimic.Inp > ./$dirname/gimic.0.inp
+
+
+printf "\nPerforming a dry run...\n\n"
+(cd ./$dirname/ && gimic --dryrun gimic.0.inp | grep "grid points" )
+printf "\n\n"
+
+echo "Do you accept the above parameters? Press [n] to cancel."; read accept
+if  [ ! -z $accept ] && [ $accept == "n" ]
+then
+    exit
+fi
+
+
+echo "Preparing input files..."
+for (( i=1; i<$nsteps; i++ ))
+do
+    xstart=$( awk -v xstart=$xstart -v delta=$delta 'BEGIN{printf "%.3f\n", xstart+delta }' )
+    xend=$( awk -v delta=$delta -v xstart=$xstart 'BEGIN{ printf "%.3f\n", xstart+delta }' ) 
+#    xstart=$( awk -v i=$i -v delta=$delta -v start=$start 'BEGIN{printf "%.3f\n", start+delta*i }' )
+#    xend=$( awk -v i=$i -v delta=$delta -v end=$end 'BEGIN{printf "%.3f\n", end+delta*i }' )
+#    if [ $smaller -eq 1 ]
+#    then
+#        tmp=$xstart
+#        xstart=$xend
+#        xend=$tmp
+#    fi
+    string=" s/@start@/$xstart/; s/@end@/$xend/"
+    sed "$string" $dirname/gimic.Inp > $dirname/gimic.$i.inp
+done    
+echo "done"
+
+# sanity check for the integration plane
+
+planeSanityCheck $dirname
+
+
+
+# Submit the calculation
+
+wrkdir=$(pwd)
+wrkdir=$(echo $wrkdir/$dirname)
+echo "Working directory:"; echo $wrkdir; echo
+
+#echo "Running Gimic calculations..."
+
+filenum=$(ls $wrkdir/*inp | wc -l)
+checkIfEmpty filenum $filenum
+
+parallel=4
+echo "How many parallel tasks to execute?"
+read parallel
+checkIfEmpty parallel $parallel
+
+# check if too many parallel tasks are called
+if [ $parallel -gt $nsteps ]
+then
+    $parallel=$($nsteps)
+fi
+
+# job duration:
+echo "Enter the time limit for the execution of the batch job in hours"
+read duration
+checkIfEmpty duration $duration
+
+sbatch --ntasks="$parallel" --job-name="$dirname" --time="$duration":00:00 @SCRIPTS_DIR@/jobscript "$wrkdir" "$parallel" 
+echo
+
