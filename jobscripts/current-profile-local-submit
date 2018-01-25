@@ -13,7 +13,7 @@ checkIfEmpty filenum $filenum
 
 parallel=4
 
-echo "How many parallel tasks to execute?"
+echo "Enter the number of parallel jobs"
 read parallel
 checkIfEmpty parallel $parallel
 

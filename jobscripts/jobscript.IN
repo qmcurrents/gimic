@@ -97,9 +97,9 @@ cat /dev/null > $wrkdir/paratropic.dat #delete if it already exists
 cat /dev/null > $wrkdir/diatropic.dat
 cat /dev/null > $wrkdir/current.dat
 
-start=$( sed -n -e 's/^.*in=//p' calculation.dat | awk '{print $1}')
-out=$( sed -n -e 's/^.*out=//p' calculation.dat | awk '{print $1}')
-delta=$( sed -n -e 's/^.*delta=//p' calculation.dat | awk '{print $1}')
+start=$( sed -n -e 's/^.*in=//p' $wrkdir/calculation.dat | awk '{print $1}')
+out=$( sed -n -e 's/^.*out=//p' $wrkdir/calculation.dat | awk '{print $1}')
+delta=$( sed -n -e 's/^.*delta=//p' $wrkdir/calculation.dat | awk '{print $1}')
 checkIfEmpty start $start
 checkIfEmpty out $out
 checkIfEmpty delta $delta
