@@ -171,7 +171,7 @@ origY=0.0
 origZ=0.0
 
 echo "Do you want to rotate the integration plane?"
-echo "Press [y] enter rotation angles and origin" 
+echo "Press [y] to enter rotation angles and origin" 
 
 read accept;
 if [ ! -z $accept ] && [ $accept == "y" ]

@@ -158,6 +158,24 @@ function valueInp()
     eval $__resultVar="'$__varValue'"
 }
 
+function degInp()
+{
+    # handles input of any numerical or string variable
+    # valueInp variable $variable
+    local __resultVar=$1
+    local __varValue="$2"
+
+    printf  "\nDo you accept $__resultVar=$__varValue degrees?\nPress [n] to change\n"
+    read accept;
+    if [ ! -z $accept ] && [ $accept == "n" ]
+    then
+	printf "$__resultVar="; read __varValue
+	validateInput __varValue $__varValue
+    fi # if centroid calculation not accepted 
+
+    eval $__resultVar="'$__varValue'"
+}
+
 
 
 function checkIfInputExists() {
@@ -243,7 +261,7 @@ function planeSanityCheck() {
 
 dirname="$@"
 
-echo "Do you want to create an xyz file showing the ends of the integration plane?"
+echo "Do you want to preview the integration plane in XYZ format?"
 echo "Press [y] or any other key to skip"; read accept
 if  [ ! -z $accept ] && [ $accept == "y" ]
 then
