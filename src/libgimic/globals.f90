@@ -6,7 +6,7 @@ module globals_module
     use settings_module
     use teletype_module
     use getkw_class
-    implicit none 
+    implicit none
 
     ! file descriptors
     integer, parameter :: BASFD=42
@@ -26,7 +26,7 @@ module globals_module
     integer, parameter :: JTFD=70
     integer, parameter :: JVECFD=30
 
-    
+
     integer, parameter :: MAX_L=5 ! Max angular momentum in basis (h)
     integer, parameter :: BUFLEN=80
     integer, parameter :: MAX_LINE_LEN=200
@@ -56,12 +56,12 @@ module globals_module
     real(DP), parameter :: SCREEN_THRS = 1.d-6
 
     real(DP), dimension(3), parameter :: INITRV = 123456789.d5
-    
+
     real(DP), parameter :: D0=0.0D0,D1=1.0D0,D2=2.0D0,D4=4.0D0,D5=5.0D0
     real(DP), parameter :: DP25=0.25D0, DP50=0.50D0, DP75=0.75D0
     real(DP), dimension(3), parameter :: NILL_VECTOR=(/0.d0, 0.d0, 0.d0/)
 
-    
+
     ! default filenames
     character(*), parameter :: DEFAULT_INPUT='gimic.inp'
     character(*), parameter :: DEFAULT_DENSFILE='XDENS'
@@ -104,15 +104,15 @@ module globals_module
         integer(I4), dimension(:), pointer :: pos ! starting idx for n:th ctr
     end type
 
-! The atom_t type holds _individual_ atom data. atom%basis is therefore a 
-! pointer to a basis_t type, so that we don't have to duplicate the basis 
+! The atom_t type holds _individual_ atom data. atom%basis is therefore a
+! pointer to a basis_t type, so that we don't have to duplicate the basis
 ! for every atom, if it is the same.
     type atom_t
         character(2) :: symbol
-        character(2) :: id     
+        character(2) :: id
         real(DP), dimension(3) :: coord
         real(DP) :: charge
-        type(basis_t), pointer :: basis  
+        type(basis_t), pointer :: basis
     end type
 
     type molecule_t
@@ -132,12 +132,12 @@ contains
     function xtrim(str) result(r)
         character(BUFLEN), intent(in) :: str
         character(BUFLEN) :: r
-        
+
         integer(I4) :: i
         character(1), dimension(BUFLEN) :: tmp
 
         tmp=transfer(str,tmp)
-        
+
         do i=1,BUFLEN
             if (iachar(tmp(i)) == 0) then
                 tmp(i) = ' '
@@ -145,16 +145,16 @@ contains
             end if
         end do
         r=transfer(tmp,r)
-        
+
     end function
 
     function getnlines(fd) result(n)
         integer(I4), intent(in) :: fd
         integer(I4) :: n
-        
+
         n=0
         rewind(fd)
-        do 
+        do
             read(fd,*,end=100)
             n=n+1
         end do
@@ -251,7 +251,7 @@ contains
 
     end subroutine
 
-    subroutine getfd(fd) 
+    subroutine getfd(fd)
         integer(4), intent(out) :: fd
 
         integer(4) :: i
@@ -260,7 +260,7 @@ contains
             if (afd(i) == 0) then
                 afd(i) = i
                 fd=i
-                return 
+                return
             end if
         end do
         write(str_g, '(a)') 'getfd(): File descriptor table full!'
@@ -277,7 +277,7 @@ contains
             write(str_g, '(a,i4)') &
               'freefd(): File descriptor out of bounds: ', fd
             call msg_warn(str_g)
-        else 
+        else
             if (afd(fd) /= 0) then
                 afd(fd) = 0
                 fd=0

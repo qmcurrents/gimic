@@ -8,7 +8,7 @@ contains
 
 !
 ! THIS ROUTINE EXPANDS THE A COMPRESSED MATRIX A(P,Q)
-! P >= Q TO AN ARRAY A(PQ) WITH P,Q. NOTE THIS ROUTINE 
+! P >= Q TO AN ARRAY A(PQ) WITH P,Q. NOTE THIS ROUTINE
 ! EXPECTS THAT THE ARRAY A IS SYMMETRY PACKED.
 !
 !  INPUT : IRREP  ...  THE IRREP OF THE CORRESPONDING PART OF A
@@ -75,7 +75,7 @@ contains
                         do i=1,j
                             ind1=ind(j,i)+ipo
                             ind2=(j-1)*numj+i+ipn
-                            ind3=(i-1)*numj+j+ipn 
+                            ind3=(i-1)*numj+j+ipn
                             b(ind2)=a(ind1)
                             b(ind3)=-a(ind1)
                         end do
@@ -180,7 +180,7 @@ contains
             if(ib.eq.3) call getrec(20,'JOBARC','PDENSC3Z',nlength*iintfp,scr)
         endif
         !
-        ! DEAL WITH OCCUPIED-OCCUPIED BLOCK 
+        ! DEAL WITH OCCUPIED-OCCUPIED BLOCK
         !
         ioff=0
         do irrepr=1,nirrep
@@ -196,7 +196,7 @@ contains
             end do
         end do
         !
-        ! DEAL WITH VIRTUAL-VIRTUAL BLOCK 
+        ! DEAL WITH VIRTUAL-VIRTUAL BLOCK
         !
         do irrepr=1,nirrep
             irrepl=dirprd(irrepx,irrepr)
@@ -211,7 +211,7 @@ contains
             end do
         end do
         !
-        ! DEAL WITH VIRTUAL-OCCUPIED BLOCK 
+        ! DEAL WITH VIRTUAL-OCCUPIED BLOCK
         !
         do irrepr=1,nirrep
             irrepl=dirprd(irrepx,irrepr)
@@ -284,7 +284,7 @@ contains
             ! FILL NOW WITH VIRTUAL ORBITALS OF THIS BLOCK
             !
             print *, iofft,iintfp*vrt(irrep)*nbast,&
-            iofft+iintfp*vrt(irrep)*nbast 
+            iofft+iintfp*vrt(irrep)*nbast
             call myicopy(scr(ioffv),a(iofft),iintfp*vrt(irrep)*nbast)
 
             ioffv=ioffv+nbast*vrt(irrep)
@@ -408,7 +408,7 @@ program xcpdens_sym
 !
 ! J. GAUSS, UNIVERSITY OF MAINZ, 2002
 !
-! Open-shells and F90 version 
+! Open-shells and F90 version
 ! J. Juselius, University of Tromsø, 2007
 !
     use aces2_module
@@ -429,12 +429,12 @@ program xcpdens_sym
     common/syminf/nstart,nirrep,irreps(255,2),dirprd(8,8)
     common/sym/pop(8,2),vrt(8,2),nt(2),nf1(2),nf2(2)
     common/sympop/irpdpd(8,22),isytyp(2,500),id(18)
-    common/symloc/isymoff(8,8,25) 
+    common/symloc/isymoff(8,8,25)
     common/flags/iflags(100)
     common/info/noca,nocb,nvrta,nvrtb
     common/pert/ntpert,npert(8),ipert(8),ixpert,iypert,izpert, &
     iyzpert,ixzpert,ixypert,itransx,itransy,itransz,&
-    nucind                                                        
+    nucind
 
     data fact/26.62568098450085d+00/
     data halfm/-.5d0/
@@ -456,7 +456,7 @@ program xcpdens_sym
         case default
             magn=.false.
     end select
-    
+
     if (magn) then
         open(42, file='XDENS', status='unknown')
     else
@@ -487,9 +487,9 @@ contains
         real(8), dimension(:,:), intent(out) :: dmat
 
         integer(4) :: i, j, nbas
-        
+
         nbas=size(dmat(:,1))
-        
+
         open(42, file='CAODENS', status='unknown')
         read(42,*) dmat
         close(42)
@@ -503,7 +503,7 @@ contains
         end do
         close(42)
     end subroutine
-    
+
     subroutine gendens(ispin)
         integer, intent(in) :: ispin
 !
@@ -522,7 +522,7 @@ contains
         CALL GETREC(20,'JOBARC','NAOBASFN',IONE,NBASC)
         if (debug) print *, 'NBAS[C]', NBAS, NBASC
 !
-! SYMMETRY STUFF, NUMBER OF BASIS FUNCTIONS PER IRREP 
+! SYMMETRY STUFF, NUMBER OF BASIS FUNCTIONS PER IRREP
 !
         do irrep=1,nirrep
             nbasi(irrep)=pop(irrep,ispin)+vrt(irrep,ispin)
@@ -533,7 +533,7 @@ contains
         idens=1
         istart=idens+nbasc*nbasc
 !
-! READ FROM JOBARC 
+! READ FROM JOBARC
 !
         if(iflags(2).eq.0) then
 !
@@ -574,7 +574,7 @@ contains
                     write(42,*) scr(ijj)
                 end if
             end do
-            write(42,*) 
+            write(42,*)
 
 
         else
@@ -608,18 +608,18 @@ contains
             istart2=istart
 
             if (ispin == 1) then
-                call getrec(20,'JOBARC','SCFEVCA0',nbas2*iintfp,scr(imo)) 
+                call getrec(20,'JOBARC','SCFEVCA0',nbas2*iintfp,scr(imo))
             else
-                call getrec(20,'JOBARC','SCFEVCB0',nbas2*iintfp,scr(imo)) 
+                call getrec(20,'JOBARC','SCFEVCB0',nbas2*iintfp,scr(imo))
             endif
 
 !
 ! REFORMAT MO COEFFICIENTS
 !
             if(debug) then
-                write(*,*) ' MO coefficients c(mu,p)' 
+                write(*,*) ' MO coefficients c(mu,p)'
                 call output(scr(imo),1,nbas,1,nbas,nbas,nbas,1)
-            endif 
+            endif
 !
 ! MO--> (S)AO TRANSFORMATION: TWO XGEMM CALLS
 !
@@ -656,7 +656,7 @@ contains
                     write(42,*) scr(ijj)
                 end if
             end do
-            write(42,*) 
+            write(42,*)
 
         endif
 
@@ -673,9 +673,9 @@ contains
         istart=imo+nbas*nbas
 
         if (ispin == 1) then
-            call getrec(20,'JOBARC','SCFEVCA0',nbas2*iintfp,scr(istart)) 
+            call getrec(20,'JOBARC','SCFEVCA0',nbas2*iintfp,scr(istart))
         else
-            call getrec(20,'JOBARC','SCFEVCB0',nbas2*iintfp,scr(istart)) 
+            call getrec(20,'JOBARC','SCFEVCB0',nbas2*iintfp,scr(istart))
         endif
 
 !
@@ -688,10 +688,10 @@ contains
             call prvecr(scr(imo),nbas*nbas)
         endif
 !
-! GET MAGNETIC FIELD INFORMATION                    
+! GET MAGNETIC FIELD INFORMATION
 !
 !        print *, '/kusse/', ntpert
-        call getrec(20,'JOBARC','NSYMPERT',27,ntpert)                             
+        call getrec(20,'JOBARC','NSYMPERT',27,ntpert)
 !
 ! IRREPS OF B-FIELD COMPONENTS
 !
@@ -725,9 +725,9 @@ contains
             iuai=istart0
             isij=iuai+irpdpd(irrepx,9)
             istart=isij+irpdpd(irrepx,21)
-! 
+!
 ! READ IN U(A*,I)^x FROM MOINTS FILE
-!     
+!
 !            print *, '!!! check getlst() 182'
             if (ispin == 1) then
                 call getlst(scr(iuai),ip(irrepx),1,1,irrepx,182)
@@ -744,7 +744,7 @@ contains
                 call getlst(scr(isij),ip(irrepx),1,1,irrepx,171)
             end if
 !
-! CONVERT S(I,J)^x TO U(I,J)^x (FACTOR -1/2) (NOT FOR PERTURBED 
+! CONVERT S(I,J)^x TO U(I,J)^x (FACTOR -1/2) (NOT FOR PERTURBED
 ! CANONICAL ORBITALS, IFLAGS(64).NE.0)
 !
             if(iflags(64).eq.0) then
@@ -754,7 +754,7 @@ contains
 ! MAKE PERTURBED OCCUPIED MOs
 !
 !  dc(mu,i)/dx =  sum_p c(mu,p) U(p,i)
-! 
+!
             idmo=istart
             istart=idmo+nbas*noca
 
@@ -783,7 +783,7 @@ contains
                 ioffdm=ioffdmo(irrepi)
                 ioffm=ioffmo(irrepp)
 
-                do  i=1,noci 
+                do  i=1,noci
                     do  imu=1,nb
                         index=ioffdm-1+imu+(i-1)*nb
                         sum=0.d0
@@ -802,7 +802,7 @@ contains
                 end do
             end do
 
-            if(debug) then 
+            if(debug) then
                 write(*,*) ' Perturbed MO coefficients dC(mu,i)/dx'
                 call output(scr(idmo),1,nbas,1,noca,nbas,noca,1)
             endif
@@ -888,14 +888,14 @@ contains
                 call readpd(scr(iscr1),scr(iscr2),noca,nvrta,nbas,1,&
                 ib,irrepx, ispin)
 !
-! READ CONTRIBUTION FROM DDXDF1 ... DDOO (PERTURBED CANONICAL ORBITALS ONLY) 
+! READ CONTRIBUTION FROM DDXDF1 ... DDOO (PERTURBED CANONICAL ORBITALS ONLY)
 !
                 if(iflags(64).ne.0) then
                     call readpd(scr(iscr1),scr(iscr2),noca,nvrta,nbas,2,ib,&
                     irrepx, ispin)
                 endif
 !
-! READ CONTRIBUTION FROM DDXDF2 ... DDVO 
+! READ CONTRIBUTION FROM DDXDF2 ... DDVO
 !
                 call readpd(scr(iscr1),scr(iscr2),noca,nvrta,nbas,3,ib,&
                 irrepx, ispin)
@@ -947,7 +947,7 @@ contains
                         write(42,*) scr(ijj)
                     end if
                 end do
-                write(42,*) 
+                write(42,*)
             endif
 !
 ! CHECK PERTURBED DENSITY MATRICES BY COMPUTING PARAMAGNETIC SHIELDINGS
@@ -962,7 +962,7 @@ contains
 !test            IF(DEBUG) THEN
 !test               call output(scr(istart+nbas2),1,nbas,1,nbas,nbas,nbas,1)
 !test            ENDIF
-! 
+!
 ! CONTRACTION   dh(mu,nu)/dm * dD(mu,nu)/dB
 !
 !test            A=FACT*SDOT(NBAS2,SCR(ISTART+NBAS2),1,SCR(IDDENS),1)

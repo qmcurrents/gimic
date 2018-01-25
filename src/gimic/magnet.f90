@@ -4,7 +4,7 @@ module magnet_module
     use settings_module
     use grid_class
     implicit none
-    
+
     public get_magnet
     private
 contains
@@ -22,14 +22,14 @@ contains
         mag=0.d0
         axis = settings%magnet_axis
         if (trim(axis) /= '') then
-            if (axis(1:1) == '-') then 
+            if (axis(1:1) == '-') then
                 dir=-1.d0
                 axis(1:1)=axis(2:2)
             end if
 
             call get_basvec(g, i, j, k)
             select case(axis(1:1))
-                case('i') 
+                case('i')
                     mag=i*dir
                 case('j')
                     mag=j*dir
@@ -49,7 +49,7 @@ contains
                     call msg_error('Invalid axis specifier: ' // axis)
                     stop
             end select
-        else 
+        else
             mag = settings%magnet
         end if
 
@@ -65,7 +65,7 @@ contains
 
     end subroutine
 
-    subroutine check_field(dir,mag) 
+    subroutine check_field(dir,mag)
         real(DP), dimension(3), intent(in) :: dir
         real(DP), dimension(3), intent(inout) :: mag
 
@@ -92,7 +92,7 @@ contains
         real(DP), dimension(3) :: magnet,v
         real(DP) :: x
 
-        call get_magnet(g, magnet) 
+        call get_magnet(g, magnet)
         call get_basvec(g, 3, v)
 
         stop 'is_diamagnetic(): not implemented yet'
@@ -101,7 +101,7 @@ contains
         if (x < 0.d0) then
             dia=.false.
         end if
-        
+
     end function
 
 end module

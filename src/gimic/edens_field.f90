@@ -1,7 +1,7 @@
 !
 ! Calulate the electronic density on a grid.
 ! Coded by Jonas Juselius <jonas@iki.fi> 2003 & 2011
-! 
+!
 
 module edens_field_class
     use globals_module
@@ -15,10 +15,10 @@ module edens_field_class
     use parallel_module
     use cubeplot_module
     implicit none
-    
+
     public new_edens_field, del_edens_field, edens_field_t
     public edens_plot, edens_field
-    
+
     type edens_field_t
         type(edens_t) :: edens
         type(grid_t), pointer :: grid
@@ -55,7 +55,7 @@ contains
     subroutine edens_plot(this, basename)
         type(edens_field_t), intent(inout) :: this
         character(*), intent(in) :: basename
-        
+
         integer(I4) :: i,j,p1,p2,p3
         real(DP) :: amax
         real(DP), dimension(3) :: rr
@@ -75,7 +75,7 @@ contains
                 write(EDPFD, '(4f19.8)') rr, buf(i,j,1)
                 if (abs(buf(i,j,1)) > amax) amax=abs(buf(i,j,1))
             end do
-            write(EDPFD, *) 
+            write(EDPFD, *)
         end do
         close(EDPFD)
         write(str_g, '(a,e19.12)') 'Max electronic density:', amax
@@ -94,7 +94,7 @@ contains
         call get_grid_size(this%grid, p1, p2, p3)
 
         buf=>this%buf
-    
+
         do k=1,p3
             do j=1,p2
                 do i=1,p1

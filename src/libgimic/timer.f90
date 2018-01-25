@@ -24,13 +24,13 @@ contains
         call msg_out(str_g)
         call msg_out(repeat('-', 70))
         call msg_out(fdate())
-    end subroutine 
+    end subroutine
 
     subroutine swatch(foo)
         integer(I4), intent(in) :: foo
 
         real(4) :: dtime
-        
+
         delta_t=dtime(times)
         if (foo > 0) then
             call msg_out(repeat('-', 70))
@@ -42,7 +42,7 @@ contains
             call msg_out(str_g)
             call msg_out(repeat('-', 70))
         end if
-    end subroutine 
+    end subroutine
 end module
 
 

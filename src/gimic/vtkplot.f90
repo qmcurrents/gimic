@@ -36,7 +36,7 @@ contains
             0, npts(3)-1, &
             '" Origin="', qmin(1), qmin(2),qmin(3), '" Spacing="', &
             step(1), step(2), step(3), '">'
-        write(fd, *) '  <Piece Extent="', & 
+        write(fd, *) '  <Piece Extent="', &
             0, npts(1)-1, &
             0, npts(2)-1, &
             0, npts(3)-1, &
@@ -55,7 +55,7 @@ contains
                 end do
             end do
         end do
-        write(fd, *) 
+        write(fd, *)
         write(fd, *) '   </DataArray>'
         write(fd, *) '   </PointData>'
 

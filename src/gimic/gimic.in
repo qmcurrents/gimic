@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 # vim:filetype=python:
 #
-# Written by Jonas Juselius <jonas.juselius@chem.uit.no> 
+# Written by Jonas Juselius <jonas.juselius@chem.uit.no>
 # University of Tromsø, 2007
 #
 
@@ -103,7 +103,7 @@ def main():
 
     top.add_sect(adv)
     top.add_sect(grid)
-    
+
     input=getkw.GetkwParser(top)
     inkw=input.parseFile(args.infile)
     inkw.sanitize(top)
@@ -170,10 +170,10 @@ def check_grid(grid):
         if flag == 3:
             print "Error: Both spacing and grid_points set!"
             sys.exit(1)
-    elif arg == 'file': 
+    elif arg == 'file':
         required=('file',)
-        ignore=('ivec', 'jvec', 'bond', 'fixpoint', 'fixcoord', 'coord1', 
-                'coord2', 'origin', 'in', 'out', 'up', 'down', 'rotation', 
+        ignore=('ivec', 'jvec', 'bond', 'fixpoint', 'fixcoord', 'coord1',
+                'coord2', 'origin', 'in', 'out', 'up', 'down', 'rotation',
                 'radius', 'lengths','distance', 'spacing', 'map')
         for i in required:
             if not check_opt(grid,i):
@@ -233,14 +233,14 @@ def check_grid(grid):
                 print "Error: Both bond and coord(s) have been specified"
                 sys.exit(1)
         elif check_opt(grid,'coord1'):
-            if not check_opt(grid,'coord2'): 
+            if not check_opt(grid,'coord2'):
                 print "Error: coord2 not specified"
                 sys.exit(1)
             if check_opt(grid,'bond'):
                 print "Error: Both atom(s) and coord(s) have been specified"
                 sys.exit(1)
         elif check_opt(grid,'coord2'):
-            if not check_opt(grid,'coord1'): 
+            if not check_opt(grid,'coord1'):
                 print "Error: coord1 not specified"
                 sys.exit(1)
             if check_opt(grid,'bond'):
@@ -254,12 +254,12 @@ def check_grid(grid):
             if check_opt(grid,i):
                 print warn % (i,arg)
     else:
-        print "Error: unknown grid type '%s'" % arg 
+        print "Error: unknown grid type '%s'" % arg
         sys.exit(1)
 
     if grid.getkw('type')[0] == 'even':
         if check_opt(grid,'gauss_order'):
-            print "Error: 'gauss_order' incompatible with type=even grids" 
+            print "Error: 'gauss_order' incompatible with type=even grids"
             sys.exit(1)
         if  check_opt(grid,'spacing') and check_opt(grid, 'grid_points'):
             print "Error: both spacing and grid_points cannot be specified"
@@ -270,7 +270,7 @@ def check_grid(grid):
 
 #    if grid.getkw('type')[0] == 'gauss':
 #        if check_opt(grid,'spacing'):
-#            print "Error: 'spacing' incompatible with type=gauss grids" 
+#            print "Error: 'spacing' incompatible with type=gauss grids"
 #            sys.exit(1)
 #        if not (check_opt(grid,'gauss_order') and \
 #                check_opt(grid, 'grid_points')):
@@ -279,7 +279,7 @@ def check_grid(grid):
 #            sys.exit(1)
 
 def check_top(top):
-    calc=top.getkw('calc')[0]	
+    calc=top.getkw('calc')[0]
     allow={'cdens':1, 'integral':1, 'divj':1, 'edens':1}
     ortho = ['X', 'T', 'perp', 'perpendicular', 'ortho', 'orthogonal']
     if not allow.has_key(calc):

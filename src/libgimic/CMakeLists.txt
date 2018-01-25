@@ -2,7 +2,7 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
 set(sources
     globals.f90
-    getkw.f90  
+    getkw.f90
     basis.f90
     bfeval.f90
     cao2sao.f90
@@ -24,8 +24,8 @@ set(sources
     timer.f90
     )
 
-if (FortranCInterface_MODULE_FOUND) 
-    set (sources 
+if (FortranCInterface_MODULE_FOUND)
+    set (sources
         ${sources}
         gimic_interface.f90
         gimic_interface.h
@@ -42,23 +42,23 @@ if (CYTHON_FOUND)
 set_source_files_properties(
     ${CMAKE_CURRENT_SOURCE_DIR}/gimic.pxd
     ${CMAKE_CURRENT_SOURCE_DIR}/gimic.pyx
-    PROPERTIES CYTHON_IS_CXX TRUE 
+    PROPERTIES CYTHON_IS_CXX TRUE
     )
 
-cython_add_module(gimic 
-    gimic.pxd 
-    gimic.pyx 
+cython_add_module(gimic
+    gimic.pxd
+    gimic.pyx
     )
-target_link_libraries(gimic 
+target_link_libraries(gimic
     gimic2
     )
-install(TARGETS gimic 
+install(TARGETS gimic
     ARCHIVE DESTINATION ${PYTHON_INSTDIR}
     LIBRARY DESTINATION ${PYTHON_INSTDIR}
     )
 endif()
 
-install(TARGETS gimic2 
+install(TARGETS gimic2
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}

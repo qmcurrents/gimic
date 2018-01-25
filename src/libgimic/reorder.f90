@@ -16,7 +16,7 @@ contains
         real(DP), dimension(:), intent(inout) :: vec
 
         integer(I4) :: i, ncgto
-        
+
         ncgto=get_ncgto(bofh%mol)
         do i=1,ncgto
             bofh%tmp(bofh%sv(i),1)=vec(i)
@@ -29,7 +29,7 @@ contains
         real(DP), dimension(:,:), intent(inout) :: vec
 
         integer(I4) :: i, ncgto
-        
+
         ncgto=get_ncgto(bofh%mol)
         do i=1,ncgto
             bofh%tmp(:,bofh%sv(i))=vec(:,i)
@@ -59,12 +59,12 @@ contains
         type(basis_t), pointer :: aob
         type(contraction_t), pointer :: ctr
         integer(I4), dimension(:), allocatable :: lvec
-        
+
         natoms=get_natoms(bofh%mol)
         ncgto=get_ncgto(bofh%mol)
 
         allocate(lvec(ncgto))
-        
+
         q=1
         do i=1,natoms
             call get_atom(bofh%mol, i, atom)
@@ -81,7 +81,7 @@ contains
                 end do
             end do
         end do
-        l=0 
+        l=0
         q=1
         do while (q <= ncgto)
             do i=1,ncgto
@@ -102,10 +102,10 @@ contains
         type(atom_t),  pointer :: atom
         type(basis_t), pointer :: aob
         type(contraction_t), pointer :: ctr
-        
+
         natoms=get_natoms(bofh%mol)
         ncgto=get_ncgto(bofh%mol)
-        
+
         bofh%sv=0
         q=1
         do i=1,natoms
@@ -140,17 +140,17 @@ contains
 
         deallocate(bofh%sv)
         deallocate(bofh%tmp)
-    end subroutine 
+    end subroutine
 
 !    subroutine ugly_reorder_hack(bofh, vec)
 !        type(reorder_t), intent(inout) :: bofh
 !        real(DP), dimension(:), intent(inout) :: vec
 !
 !        integer(I4) :: curl, ncgto, pos, i
-!        
+!
 !        ncgto=get_ncgto()
 !        bofh%tmp=0.d0
-!        curl=0 
+!        curl=0
 !        pos=1
 !        do while (pos <= ncgto)
 !            do i=1,ncgto
