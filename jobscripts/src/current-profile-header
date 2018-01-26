@@ -25,7 +25,15 @@ A2x=$( awk -v atom2=$atom2 '{ if (NR==(atom2+1)) {print $1} }' coord  )
 A2y=$( awk -v atom2=$atom2 '{ if (NR==(atom2+1)) {print $2} }' coord  )
 A2z=$( awk -v atom2=$atom2 '{ if (NR==(atom2+1)) {print $3} }' coord  )
 
-dirname=current_profile_$atom1.$atom2
+echo "Optionally enter a suffix for the directory name"
+read suffix
+if [ -z $suffix ]
+then
+    suffix=""
+else
+    suffix=$(printf _$suffix)
+fi
+dirname=current_profile_$atom1.$atom2$suffix
 
 checkIfPreviousCalculationExists "$dirname"
 cp @SCRIPTS_DIR@/src/gimic.Inp ./$dirname/gimic.Inp
@@ -49,7 +57,6 @@ Bz=$( echo $BOND | awk '{print $3} ' )
 #echo
 
 printf "\n\nSTARTING POINT OF THE INTEGRATION\n"
-start=10
 userInp start $start
 while [ -z "$start" ]
 do 
@@ -57,13 +64,13 @@ do
 done
 
 printf "\nEND POINT OF THE INTEGRATION\n"
-out=10
+out=8
 printf "\nDo you accept out=$out bohr?" # ask about the default value 
 userInp out $out
 
 printf "\n\nUPPER AND LOWER BOUNDS OF THE INTEGRATION\n"
-up=10
-down=-10
+up=8 
+down=8 
 valueDimInp up $up "bohr"
 valueDimInp down $down "bohr"
 
@@ -80,7 +87,7 @@ printf "\n\nGRID POINT SPACING\n"
 # If the delta is smaller than 0.1, recalculate:
 # spacingFactor=$( awk -v delta=$delta 'BEGIN{ printf("%.4f",delta/0.02) }' )    # how many times smaller the chosen delta value is
 # spacing=$( awk -v f=$spacingFactor 'BEGIN{ printf("%.3f",0.013*f) }' )
-spacingX=$( awk -v delta=$delta 'BEGIN{ f=delta/0.02; printf("%.3f",1.00*f); }' )
+spacingX=$( awk -v delta=$delta 'BEGIN{ f=delta/0.02; printf("%.3f",0.025*f); }' )
 spacingY=$( awk -v delta=$delta 'BEGIN{ f=delta/0.02; printf("%.3f",0.01*f); }' )
 spacingZ=$( awk -v delta=$delta 'BEGIN{ f=delta/0.02; printf("%.3f",0.01*f); }' )
 
@@ -106,20 +113,39 @@ echo "Press [a] to calculate the direction automatically, [m] to enter manually 
 
 read accept;
 checkMaxProj="installed"
+checkPlaneDir="1"
 if [ ! -z $accept ] && [ $accept == "a" ]
 then
-    checkMaxProj=$(command -v maximise_projection) #  command -> returns the path of the binary if it is found
-    if [ -e $checkMaxProj ]
+    #RAUL'S PLANE
+    checkPlaneDir=$(command -v normalise_plane)
+    if [ ! -e $checkPlaneDir ]
     then
-	echo "The program maximise_projection is not found. Switching to manual input of the magnetic field components."
+	echo "The program for orienting with respect a plane is not found. Switching to manual input of the magnetic field components."
     else
-	maximise_projection coord.xyz > $dirname/field.dat
-	MFx=$( cat $dirname/field.dat | sed -e 's#{#_#g; s#}#_#g; s#,#_#g' | awk -F [_] '{ {print -$2} }')
-	MFy=$( cat $dirname/field.dat | sed -e 's#{#_#g; s#}#_#g; s#,#_#g' | awk -F [_] '{ {print -$3} }')
-	MFz=$( cat $dirname/field.dat | sed -e 's#{#_#g; s#}#_#g; s#,#_#g' | awk -F [_] '{ {print -$4} }')
+	echo "Enter the indices of the atoms defining a plane perpendicular to the MF"
+	read MFatoms
+	echo $MFatoms > ./$dirname/MF_idx.dat
+	echo
+	MFcoords=$(plane coord.xyz ./$dirname/MF_idx.dat 2>&1 > /dev/null | awk '{ if (NR ==2) {print $2, $3, $4} }')
+	MFx=$(echo $MFcoords | awk '{print $1}')
+	MFy=$(echo $MFcoords | awk '{print $2}')
+	MFz=$(echo $MFcoords | awk '{print $3}')
     fi
 fi
-if ( [ ! -z $accept ] && [ $accept == "m" ] ) || [ -e $checkMaxProj ]
+
+#    checkMaxProj=$(command -v maximise_projection) #  command -> returns the path of the binary if it is found
+#    if [ ! -e $checkMaxProj ]
+#    then
+#	echo "The program maximise_projection is not found. Switching to manual input of the magnetic field components."
+#    else
+#	maximise_projection coord.xyz > $dirname/field.dat
+#	MFx=$( cat $dirname/field.dat | sed -e 's#{#_#g; s#}#_#g; s#,#_#g' | awk -F [_] '{ {print -$2} }')
+#	MFy=$( cat $dirname/field.dat | sed -e 's#{#_#g; s#}#_#g; s#,#_#g' | awk -F [_] '{ {print -$3} }')
+#	MFz=$( cat $dirname/field.dat | sed -e 's#{#_#g; s#}#_#g; s#,#_#g' | awk -F [_] '{ {print -$4} }')
+#    fi
+#fi
+#if ( [ ! -z $accept ] && [ $accept == "m" ] ) || [ -z $checkMaxProj ]
+if ( [ ! -z $accept ] && [ $accept == "m" ] ) || [ ! -e $checkPlaneDir ]
 then
     echo "Please enter numeric values."
     valueDimInp MFx $MFx "bohr"
@@ -139,23 +165,56 @@ fi
 printf "\nFIXED COORDINATE\n"
 
 # fixed point (Ax, Ay and Az are the coords of the bond atoms 1 and 2)
-Fx=$(calculateFixedCoord $A2x $A2y $A2z | awk '{print $1}')
-Fy=$(calculateFixedCoord $A2x $A2y $A2z | awk '{print $2}')
+#Fx=$(calculateFixedCoord $A2x $A2y $A2z | awk '{print $1}')
+#Fy=$(calculateFixedCoord $A2x $A2y $A2z | awk '{print $2}')
+
+
 #Fz=$( awk -v A1z=$A1z -v A2z=$A2z 'BEGIN{ print (A1z+A2z)*0.5 }')
 #Fz=$( awk -v A1z=$A1z -v A2z=$A2z 'BEGIN{ print A2z }')
 
 # use the coords of atom 1 and the MF vector
 # vector OA and OF defined with the coords of atom1 and the fixed point
-# vector AF.MF = 0
-Fz=$( awk -v Ax=$A1x -v Fx=$Fx -v Ay=$A1y -v Fy=$Fy -v Az=$A1z -v mx=$MFx -v my=$MFy -v mz=$MFz 'BEGIN{ print( ( (mx*(Fx-Ax) + my*(Fy-Ay)) / mz) + Az )}')
+# vector AB.MF = 0
+#Fz=$( awk -v A1x=$A1x -v A2x=$A2x -v A1y=$A1y -v A2y=$A2y -v A1z=$A1z -v A2z=$A2z -v mx=$MFx -v my=$MFy -v mz=$MFz 'BEGIN{ print( ( (mx*(A2x-A1x) + my*(A2y-A1y) + mz*(A2z-A1z) ))) }')
+#Fz=$( awk -v Ax=$A2x -v Fx=$Fx -v Ay=$A2y -v Fy=$Fy -v Az=$A2z -v mx=$MFx -v my=$MFy -v mz=$MFz 'BEGIN{ print( ( (mx*(Fx-Ax) + my*(Fy-Ay)) / mz) + Az )}')
+#
+# eq of a plane: a*(x-x0) + b*(y-y0) + c*(z-z0) = 0
+#	<=>	ax + by + cz - (a*x0 + b*y0 + c*z0) = 0
+#		ax + by + cz = D
+# where the normal to the plane n(a,b,c) = A1 - B (vectors)
+# and P(x0,y0,z0) = A2
+# Fx and Fy are any two points and Fz is what fixes the "fixed point" onto the plane
+#Fz=$( awk -v A1x=$A1x -v A2x=$A2x -v Fx=$Fx -v A1y=$A1y -v A2y=$A2y -v Fy=$Fy -v A1z=$A1z -v A2z=$A2z -v mx=$MFx -v my=$MFy -v mz=$MFz 'BEGIN{ Bx = mx + A1x; By = my + A1y; Bz = mz + A1z;  a = A1x - Bx; b = A1y - By; c = A1z - Bz; D = a*A2x + b*A2y + c*A2z; Fz = D/(a*Fx + b*Fy ); print Fz }')
+#
+# Plane defined by A1, A2 and B
+# Vectors u = A1B and v = A1A2
+# Use: n = u x v
+# The fixed point is the normal 
+Fcoords=$( awk -v A1x=$A1x -v A2x=$A2x -v A1y=$A1y -v A2y=$A2y -v A1z=$A1z -v A2z=$A2z -v mx=$MFx -v my=$MFy -v mz=$MFz -v my=$MFy -v mz=$MFz 'BEGIN{ Bx = A1x + mx; By = A1y + my; Bz = A1z + mz; ux = Bx - A1x; uy = By - A1y; uz = Bz - A1z; vx = A2x - A1x; vy = A2y - A1y; vz = A2z - A1z; nx = uy*vz - uz*vy; ny = uz*vx - ux*vz; nz = ux*vy - uy*vx; print nx + A2x, ny + A2y, nz + A2z }' )
+Fx=$(echo $Fcoords | awk '{print $1}')
+Fy=$(echo $Fcoords | awk '{print $2}')
+Fz=$(echo $Fcoords | awk '{print $3}')
+
+
 echo
 echo "Fixed coordinate: ($Fx; $Fy; $Fz)"
 
 echo "Do you want to modify the coordinates of the fixed point?"
-echo "Press [y] enter Cartesian coordinates" 
+echo "Press [a] to enter an atomic index or [c] enter Cartesian coordinates" 
 
 read accept;
-if [ ! -z $accept ] && [ $accept == "y" ]
+if [ ! -z $accept ] && [ $accept == "a" ]
+then
+    echo "Enter the index of the fixed atom: "
+    read fixed_atom
+    validateInput fixed_atom $fixed_atom
+
+    # Read the coordinates of the fixed atom
+    Fx=$( awk -v atom=$fixed_atom '{ if (NR==(atom+1)) {print $1} }' coord  )
+    Fy=$( awk -v atom=$fixed_atom '{ if (NR==(atom+1)) {print $2} }' coord  )
+    Fz=$( awk -v atom=$fixed_atom '{ if (NR==(atom+1)) {print $3} }' coord  )
+    echo "Fixed coordinate: ($Fx, $Fy, $Fz)"
+elif [ ! -z $accept ] && [ $accept == "c" ]
 then
     valueDimInp Fx $Fx "bohr"
     valueDimInp Fy $Fy "bohr"
@@ -202,29 +261,19 @@ then
 fi
 
 
-# Sumarizing the selected input 
-
-#echo "Enter title:"
-#read heading
-#heading=\"$heading"\n bond=["$bond"], fixed="$fixed", in="$start", out="$out", delta="$delta", up="$up", down="$down\"
-#heading=\""bond=[$bond] Fx=$Fx, Fy=$Fy, Fz=$Fz \ndelta=$delta \nspacing=[ $spacingX;$spacingY;$spacingZ] in=$start out=$out \nup=$up down=$down \ndistance=$distance"\"
-#echo $heading > ./$dirname/calculation.dat
-
 cat /dev/null > ./$dirname/calculation.dat
-#echo bond=[$bond] > ./$dirname/calculation.dat
 echo atom1=$atom1  >> ./$dirname/calculation.dat
 echo atom2=$atom2 >> ./$dirname/calculation.dat
 echo distance=$distance >> ./$dirname/calculation.dat
 echo in=$start out=$out up=$up down=$down  >> ./$dirname/calculation.dat
-echo fixed point: Fx=$Fx, Fy=$Fy, Fz=$Fz  >> ./$dirname/calculation.dat
+echo fixed point: Fx=$Fx Fy=$Fy Fz=$Fz  >> ./$dirname/calculation.dat
 echo delta=$delta nsteps=$nsteps >> ./$dirname/calculation.dat
-echo spacing: spacingX=$spacingX, spacingY=$spacingY, spacingZ=$spacingZ  >> ./$dirname/calculation.dat
-echo magnetic field: MFx=$MFx, MFy=$MFy, MFz=$MFz  >> ./$dirname/calculation.dat
-echo rotation angles: rotX=$rotX, rotY=$rotY, rotZ=$rotZ >> ./$dirname/calculation.dat
+echo spacing: spacingX=$spacingX spacingY=$spacingY spacingZ=$spacingZ  >> ./$dirname/calculation.dat
+echo magnetic field: MFx=$MFx MFy=$MFy MFz=$MFz  >> ./$dirname/calculation.dat
+echo rotation angles: rotX=$rotX rotY=$rotY rotZ=$rotZ >> ./$dirname/calculation.dat
 
 ################################################################################
 
-#printf "\nnsteps="$nsteps", delta="$delta", spacing="$spacing", in="$start", out="$out", up="$up", down="$down", bond=["$bond"], fixed="$fixed"\n"
 printf "\n\n*****************************************************************************\n\nSUMMARY\n\n"
 printf "Bond: ["$bond"]\n"
 echo "Integration plane coordinates"
@@ -239,13 +288,20 @@ printf "\n**********************************************************************
 
 # Preparing the input files
 
+down=$( awk -v down=$down -v delta=$delta 'BEGIN{printf "%.3f\n", -down }' )  # down is a negative number
+smaller=$(awk -v up=$up -v down=$down 'BEGIN{ if (up < down ) {print "1"} else {print "0"} }')
+if [ $smaller -eq 1 ]
+then
+    tmp=$xup
+    xup=$xdown
+    xdown=$tmp
+fi
+
 string="s/@bond@/$bond/; s/@fixed@/$fixed/; s/@distance@/$distance/; s/@up@/$up/; s/@down@/$down/; s/@spacingX@/$spacingX/; s/@spacingY@/$spacingY/; s/@spacingZ@/$spacingZ/;  s/@rotX@/$rotX/;  s/@rotY@/$rotY/;  s/@rotZ@/$rotZ/; s/@origX@/$origX/; s/@origY@/$origY/; s/@origZ@/$origZ/; s/@MFx@/$MFx/; s/@MFy@/$MFy/; s/@MFz@/$MFz/; s/@FX@/$Fx/; s/@FY@/$Fy/; s/@FZ@/$Fz/ ;"
 sed -i "$string" ./$dirname/gimic.Inp
 
-xstart=$( awk -v delta=$delta -v start=$start 'BEGIN{printf "%.3f\n", -start }' )  # start is a negative number 
+xstart=$( awk -v start=$start -v delta=$delta 'BEGIN{printf "%.3f\n", -start }' )   
 xend=$( awk -v delta=$delta -v xstart=$xstart 'BEGIN{ printf "%.3f\n", xstart+delta }' ) 
-#xend=$( awk -v delta=$delta -v start=$start 'BEGIN{ if (start < 0) {print start+delta} else {print start-delta}; }' ) 
-#xend=$( awk -v i=$i -v delta=$delta -v end=$end 'BEGIN{printf "%.3f\n", end+delta*i }' )
 smaller=$(awk -v start=$xstart -v end=$xend 'BEGIN{ if (start > end) {print "1"} else {print "0"} }')
 if [ $smaller -eq 1 ]
 then
@@ -257,7 +313,10 @@ fi
 checkIfEmpty xstart $xstart
 checkIfEmpty xend $xend
 
-string=" s/@start@/$xstart/; s/@end@/$xend/; s/@up@/$xup/; s/@down@/$xdown/"
+checkIfEmpty up $up
+checkIfEmpty down $down
+
+string=" s/@start@/$xstart/; s/@end@/$xend/"
 sed "$string" ./$dirname/gimic.Inp > ./$dirname/gimic.0.inp
 
 
@@ -277,14 +336,6 @@ for (( i=1; i<$nsteps; i++ ))
 do
     xstart=$( awk -v xstart=$xstart -v delta=$delta 'BEGIN{printf "%.3f\n", xstart+delta }' )
     xend=$( awk -v delta=$delta -v xstart=$xstart 'BEGIN{ printf "%.3f\n", xstart+delta }' ) 
-#    xstart=$( awk -v i=$i -v delta=$delta -v start=$start 'BEGIN{printf "%.3f\n", start+delta*i }' )
-#    xend=$( awk -v i=$i -v delta=$delta -v end=$end 'BEGIN{printf "%.3f\n", end+delta*i }' )
-#    if [ $smaller -eq 1 ]
-#    then
-#        tmp=$xstart
-#        xstart=$xend
-#        xend=$tmp
-#    fi
     string=" s/@start@/$xstart/; s/@end@/$xend/"
     sed "$string" $dirname/gimic.Inp > $dirname/gimic.$i.inp
 done    
@@ -293,6 +344,6 @@ echo
 
 # sanity check for the integration plane
 
-planeSanityCheck $dirname
+planeSanityCheck $dirname 
 
 

@@ -2,7 +2,7 @@ USEFUL ALIASES AND FUNCTIONS:
 
 
 alias grid="xmakemol -f grid.xyz &"
-alias revcurrent="mv current_profile.dat current_profile.dat.1 && awk '{printf "%.6f\t%.6f\t%.6f\t%.6f\n", $1, -$2, -$4, -$3}' current_profile.dat.1 > current_profile.dat"
+alias revcurrent="mv current_profile.dat current_profile.dat.1 && awk '{printf \"%.6f\t%.6f\t%.6f\t%.6f\n\", $1, -$2, -$4, -$3}' current_profile.dat.1 > current_profile.dat"
 alias gim="$GIMIC_HOME/gimic-run.sh"
 alias 3g="$GIMIC_HOME/3D-run.sh"
 alias plotcurrent=" $GIMIC_HOME/plot-current-profile.sh"
@@ -19,4 +19,14 @@ function dryrun() { gimic --dryrun "$@" > /dev/null ; xmakemol -f grid.xyz;  };
 
 function critpoints() { CURRDIR=$(pwd); $GIMIC_HOME/crit_pts.sh $CURRDIR; };
 
+function molecule() {
+babel -ixyz mol.xyz -ocml mol.cml
+awk '{ {FS="\""}; {OFS="\""};
+     if ($1 ~ "<atom id") {
+         if ($5 ~ "spinMultiplicity")
+             { print $1, $2, $3, $4, $5, $6, $7, $8/0.526, $9, $10/0.526, $11, $12/0.526, $13 }
+         else  { print $1, $2, $3, $4, $5, $6/0.526, $7, $8/0.526, $9, $10/0.526, $11 }
+         }
+     else print $0; }' mol.cml > mol-bohr.cml
+}
 

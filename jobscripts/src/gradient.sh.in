@@ -21,6 +21,7 @@ checkIfEmpty wrkdir $wrkdir
 dirname=$( echo ${wrkdir##*/} ) # removes everything before the backslash
 checkIfEmpty dirname $dirname
 
+#filenum=$( (cd $wrkdir && find . -maxdepth 1 -type f -name '*.inp' | wc -l)) # Doesn't work for some reason
 filenum=$(ls *.inp | wc -l)
 checkIfEmpty filenum $filenum
 
@@ -37,10 +38,9 @@ checkIfEmpty delta $delta
 
 for (( i=0; i<$filenum; i++ ))
 do
+    grep -A 4 "Induced current (au)" gimic.$i.out | awk -v i=$i -v down=$down -v dia="$wrkdir/diatropic.dat" -v para="$wrkdir/paratropic.dat" -v delta=$delta -v out="$wrkdir/current.dat" '{if (NR == 5) {printf("%5.2f\t% .8f\n", i*delta, $5) >> out;} else if (NR == 2) {printf("% .8f\n", $5) >> dia} else if (NR == 3) {printf("% .8f\n", $5) >> para};}'
 #    grep -A 2 "Induced current" $wrkdir/gimic.$i.out | awk -v wrkdir=$wrkdir '{ dia=sprintf("%s/diatropic.dat",wrkdir); para=sprintf("%s/paratropic.dat",wrkdir); if (NR == 2) printf("% f\n", $5) >> dia; else if (NR == 3) printf("% f\n", $5) >> para; }'
-    grep -A 2 "Induced current" $wrkdir/gimic.$i.out | awk -v dia="$wrkdir/diatropic.dat" -v para="$wrkdir/paratropic.dat" '{ if (NR == 2) printf("% f\n", $5) >> dia; else if (NR == 3) printf("% f\n", $5) >> para; }'
 #    grep "Induced current (nA/T)" $wrkdir/gimic.$i.out | awk -v i=$i -v down=$down -v delta=$delta -v wrkdir=$wrkdir '{ out=sprintf("%s/current.dat",wrkdir); printf("%5.2f\t% f\n", i*delta,$5) >> out; }'
-    grep "Induced current (nA/T)" $wrkdir/gimic.$i.out | awk -v i=$i -v down=$down -v delta=$delta -v out="$wrkdir/current.dat" '{ printf("%5.2f\t% f\n", i*delta,$5) >> out; }'
 done
 
 paste $wrkdir/current.dat $wrkdir/diatropic.dat $wrkdir/paratropic.dat > $wrkdir/current_profile.dat
@@ -65,11 +65,15 @@ unset label
 set xlabel "Distance [bohr]"
 set ylabel "dJ/dx [nA/T / bohr]"
 
-set terminal pngcairo size 900, 700 font "Helvetica,22"
-set output "$wrkdir/$dirname\_current-profile.png"
-plot "$wrkdir/current_profile.dat" u 1:(\$2/$delta) w l lc 0 lw 2 notitle
-set output "$wrkdir/$dirname\_current-dia-para.png"
-plot "$wrkdir/current_profile.dat" u 1:(\$3/$delta) w l lc 3 lw 2 title "Diatropic", "$wrkdir/current_profile.dat" u 1:(\$4/$delta) w l lc 1 lw 2 title "Paratropic"
+set terminal postscript eps enhanced color 'Helvetica' 22
+
+set output "$wrkdir/$dirname\_current-profile.eps"
+set title $heading
+plot "$wrkdir/current_profile.dat" u 1:2 w l lc 0 lw 2 notitle
+set output "$wrkdir/$dirname\_current-dia-para.eps"
+set title $heading
+plot "$wrkdir/current_profile.dat" u 1:3 w l ls 1 title "Diatropic", "$wrkdir/current_profile.dat" u 1:4 w l ls 2 title "Paratropic"
+
 EOF
 
 echo

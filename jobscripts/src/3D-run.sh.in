@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Function definitions:
+source  @SCRIPTS_DIR@/src/functions-def
+
 function calcVertices() {
 cat coord | sed -n "2,/^\\$/p" |  awk 'BEGIN{
   			 infinity=10000;
@@ -110,7 +113,12 @@ fi
 
 echo "Magnetic field vector coordinates: ($MFx; $MFy; $MFz)"
 
-sedstring="s/@MINX@/${vert[0]}/; s/@MINY@/${vert[1]}/; s/@MINZ@/${vert[2]}/; s/@LX@/${vert[3]}/; s/@LY@/${vert[4]}/; s/@LZ@/${vert[5]}/; s/@MFx@/$MFx/; s/@MFy@/$MFy/; s/@MFz@/$MFz/;"
 
-sed "$sedstring" @SCRIPTS_DIR@/gimic.cdens > 3D/gimic.inp
+printf "\nGRID SPACING\n"
+spacing=0.5
+valueDimInp spacing $spacing "bohr"
+
+sedstring="s/@MINX@/${vert[0]}/; s/@MINY@/${vert[1]}/; s/@MINZ@/${vert[2]}/; s/@LX@/${vert[3]}/; s/@LY@/${vert[4]}/; s/@LZ@/${vert[5]}/; s/@MFx@/$MFx/; s/@MFy@/$MFy/; s/@MFz@/$MFz/; s/@spacing@/$spacing/g;"
+
+sed "$sedstring" @SCRIPTS_DIR@/src/gimic.cdens > 3D/gimic.inp
 
