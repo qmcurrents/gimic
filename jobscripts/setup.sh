@@ -13,6 +13,18 @@ fi
 
 
 
+# Prepare the base structure of the squares profile script for a local machine:
+file1=squares-profile-header
+file2=squares-profile-local-submit
+file3=functions-def
+SCRIPT_OUT="squares-profile-local.sh.in"
+
+if [ $SCRIPT_OUT -ot $file1 ] || [ $SCRIPT_OUT -ot $file2 ] || [ $SCRIPT_OUT -ot $file3 ]  # [ FILE1 -ot FILE2 ]  -> True if FILE1 is older than FILE2, or is FILE2 exists and FILE1 does not.
+then 
+    cat squares-profile-header > squares-profile-local.sh.in
+    cat squares-profile-local-submit >> squares-profile-local.sh.in
+fi
+
 # Prepare the base structure of the current profile script for a local machine:
 file1=current-profile-header
 file2=current-profile-local-submit
@@ -23,6 +35,19 @@ if [ $SCRIPT_OUT -ot $file1 ] || [ $SCRIPT_OUT -ot $file2 ] || [ $SCRIPT_OUT -ot
 then 
     cat current-profile-header > current-profile-local.sh.in
     cat current-profile-local-submit >> current-profile-local.sh.in
+fi
+
+# Prepare the base structure  of the squares profile script for cluster
+
+file1=squares-profile-header
+file2=squares-profile-cluster-submit
+file3=functions-def
+SCRIPT_OUT="squares-profile-cluster.sh.in"
+
+if [ $SCRIPT_OUT -ot $file1 ] || [ $SCRIPT_OUT -ot $file2 ] || [ $SCRIPT_OUT -ot $file3 ]
+then 
+    cat squares-profile-header > squares-profile-cluster.sh.in
+    cat squares-profile-cluster-submit >> squares-profile-cluster.sh.in
 fi
 
 
@@ -41,6 +66,20 @@ fi
 
 
 # Prepare the batch job scripts:
+
+file=jobscript.IN
+SCRIPT_OUT=jobscript
+sedstring="s:@SCRIPTS_DIR@:$SCRIPTS_DIR:"
+if [ $SCRIPT_OUT -ot $file ] 
+then 
+    echo; echo "REMEMBER TO CHANGE THE BATCH SCRIPT jobscript-header TO SUIT YOUR CLUSTER BEFORE SETUP"
+    cat jobscript-header > $SCRIPT_OUT
+    sed "$sedstring" $file >> $SCRIPT_OUT
+    echo "Created script $SCRIPT_OUT."
+    chmod +x $SCRIPT_OUT
+fi
+
+# Prepare the batch job script for squares profile:
 
 file=jobscript.IN
 SCRIPT_OUT=jobscript
