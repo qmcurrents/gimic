@@ -148,7 +148,7 @@ function valueDimInp()
     local __varValue="$2"
     dim="$3"
 
-    printf  "\nDo you accept $__resultVar=$__varValue $dim?\nPress [n] to change\n"
+    printf  "\nDo you accept $__resultVar = $__varValue $dim?\nPress [n] to change\n"
     read accept;
     if [ ! -z $accept ] && [ $accept == "n" ]
     then

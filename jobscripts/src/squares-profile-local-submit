@@ -1,4 +1,4 @@
-
+#!bin/bash
 # Submit the calculation
 
 wrkdir=$(pwd)
@@ -34,53 +34,51 @@ echo "Running $parallel out of $filenum GIMIC calculations at a time..."
 
 # Run the tasks in row-major order
 wholeH=$( awk -v filenum=$nstepsH -v parallel=$parallel 'BEGIN{printf "%d\n", filenum/parallel}'  ) 
-remainH=$(awk -v whole=$wholeH -v filenum=$nstepsH -v parallel=$parallel 'BEGIN{printf "%d\n", (filenum*0.5-whole*parallel) }')
+remainH=$(awk -v whole=$wholeH -v filenum=$nstepsH -v parallel=$parallel 'BEGIN{printf "%d\n", (filenum-whole*parallel) }')
 checkIfEmpty wholeH $wholeH
 checkIfEmpty remainH $remainH
 
 wholeV=$( awk -v filenum=$nstepsV -v parallel=$parallel 'BEGIN{printf "%d\n", filenum/parallel}'  ) 
-remainV=$(awk -v whole=$wholeV -v filenum=$nstepsV -v parallel=$parallel 'BEGIN{printf "%d\n", (filenum*0.5-whole*parallel) }')
+remainV=$(awk -v whole=$wholeV -v filenum=$nstepsV -v parallel=$parallel 'BEGIN{printf "%d\n", (filenum-whole*parallel) }')
 checkIfEmpty wholeV $wholeV
 checkIfEmpty remainV $remainV
 
 completedH=0
 completedV=0
 
-for ((i=0; i<$wholeH; i++)) 	
+idxH=-1
+idxV=-1
+for ((i=0; i<$wholeH; i++))	
 do 
-    for ((k=0; k<$wholeV; k++)) 	
-    do 
-	for ((j=0; j<$parallel; j++))
-	do  
-	    idxH=$(($i+$j*$wholeH))
-	    idxV=$(($k+$j*$wholeV))
-	    #	    grepstring=""
-	    #	    if [ -f "$wrkdir/gimic.$index.out" ]
-	    #	    then
-	    #		echo "The file $wrkdir/gimic.$index.out already exists."
-	    #		grepstring=$(grep "wall" $wrkdir/gimic.$index.out)
-	    #		echo "$grepstring"
-	    #	    fi
-
-	    #	    if [ -z "$grepstring" ]
-	    #	    then
-	    cd $wrkdir && gimic gimic.$idxH.$idxV.inp > $wrkdir/gimic.$idxH.$idxV.out & 
-	    #	    fi
-	done 
-	wait
+    for ((j=0; j<$parallel; j++))  
+    do  
+	idxH=$(( $i + $j*$wholeH ))
+	for ((k=0; k<$wholeV; k++)) 
+	do 
+	    for ((l=0; l<$parallel; l++)) 
+	    do  
+		idxV=$(( $k + $l*$wholeV ))
+	#	echo idx = $idxH, $idxV
+		cd $wrkdir && gimic gimic.$idxH.$idxV.inp > $wrkdir/gimic.$idxH.$idxV.out & 
+	    done 
+	    wait
+	done
 	completedV=$(( $completedV+$parallel ))
 	date
 	echo "$completedV vertical completed"; echo
-    done
-    # calculate the remaining vertical ones:
-    if [[ "$remainV" -gt 0 ]]; then
-	for ((m=0; m<$remainV; m++))
-	do  
-	    (cd $wrkdir && gimic $wrkdir/gimic.$idxH.$(($parallel*$whole+$m)).inp >  $wrkdir/gimic.$idXH.$(($parallel*$whole+$m)).out &) 
-	done
-    fi
-    completedH=$(( $compltedH+$parallel ))
-    echo "$completedH horizontal completed"; echo
+	# calculate the remaining vertical ones:
+	if [[ "$remainV" -gt 0 ]]; then
+	    for ((m=0; m<$remainV; m++))
+	    do  
+		    idxV=$(( $parallel*$wholeV + $m ))
+	#	    echo idx = $idxH, $idxV
+		    cd $wrkdir && gimic gimic.$idxH.$idxV.inp > $wrkdir/gimic.$idxH.$idxV.out & 
+		wait
+		completedH=$(( $compltedH+$parallel ))
+		echo "$completedH horizontal completed"; echo
+	    done
+	fi
+    done    
 done
 
 
@@ -89,39 +87,32 @@ done
 if [[ "$remainH" -gt 0 ]]; then
     for ((i=0; i<$remainH; i++))
     do  
-	for ((k=0; k<$wholeV; k++)) 	
+	idxH=$(( $parallel*$wholeH + $i ))
+	for ((k=0; k<$wholeV; k++)) 
 	do 
-	    for ((j=0; j<$parallel; j++))
+	    for ((l=0; l<$parallel; l++)) 
 	    do  
-		idxH=$(($parallel*$wholeH+$i))
-		idxV=$(($k+$j*$wholeV))
-		#	    grepstring=""
-		#	    if [ -f "$wrkdir/gimic.$index.out" ]
-		#	    then
-		#		echo "The file $wrkdir/gimic.$index.out already exists."
-		#		grepstring=$(grep "wall" $wrkdir/gimic.$index.out)
-		#		echo "$grepstring"
-		#	    fi
-
-		#	    if [ -z "$grepstring" ]
-		#	    then
+		idxV=$(( $k + $l*$wholeV ))
+	#	echo idx = $idxH, $idxV
 		cd $wrkdir && gimic gimic.$idxH.$idxV.inp > $wrkdir/gimic.$idxH.$idxV.out & 
-		#	    fi
 	    done 
 	    wait
-	    completedV=$(( $completedV+$parallel ))
-	    date
-	    echo "$completedV vertical completed"; echo
 	done
+	completedV=$(( $completedV+$parallel ))
+	date
+	echo "$completedV vertical completed"; echo
 	# calculate the remaining vertical ones:
 	if [[ "$remainV" -gt 0 ]]; then
 	    for ((m=0; m<$remainV; m++))
 	    do  
-		(cd $wrkdir && gimic $wrkdir/gimic.$idxH.$(($parallel*$whole+$m)).inp >  $wrkdir/gimic.$idXH.$(($parallel*$whole+$m)).out &) 
+		    idxV=$(( $parallel*$wholeV + $m ))
+	#	    echo idx = $idxH, $idxV
+		    cd $wrkdir && gimic gimic.$idxH.$idxV.inp > $wrkdir/gimic.$idxH.$idxV.out & 
+		completedH=$(( $compltedH+$parallel ))
+		echo "$completedH horizontal completed"; echo
 	    done
 	fi
-
-	#	(cd $wrkdir && gimic $wrkdir/gimic.$(($parallel*$whole+$i)).inp >  $wrkdir/gimic.$(($parallel*$whole+$i)).out &) 
+#	done
     done
 fi
 #    echo "$filenum of $filenum completed"
@@ -131,61 +122,13 @@ fi
 rm -rf GIMIC* 
 
 
-###################################################################################
-
-echo "Calculating the gradient..."
-
-cat /dev/null > $wrkdir/paratropic.dat #delete if it already exists
-cat /dev/null > $wrkdir/diatropic.dat
-cat /dev/null > $wrkdir/current.dat
-
-out=$(grep out= $wrkdir/gimic.0.inp | grep -o -E '[0-9.]+')
-start=$(grep in= $wrkdir/gimic.0.inp | grep -o -E '[0-9.]+')
-delta=$( awk -v out=$out -v start=$start 'BEGIN{ value=out-start; delta=(value<0?-value:value); print delta }' )
-checkIfEmpty start $start
-checkIfEmpty out $out
-checkIfEmpty delta $delta
-
-for (( i=0; i<$filenum; i++ ))
-do
-
-    grep -A 2 "Induced current" $wrkdir/gimic.$i.out | awk -v wrkdir=$wrkdir '{ dia=sprintf("%s/diatropic.dat",wrkdir); para=sprintf("%s/paratropic.dat",wrkdir); if (NR == 2) printf("% f\n", $5) >> dia; else if (NR == 3) printf("% f\n", $5) >> para; }'
-    grep "Induced current (nA/T)" $wrkdir/gimic.$i.out | awk -v i=$i -v start=$start -v delta=$delta -v wrkdir=$wrkdir '{ out=sprintf("%s/current.dat",wrkdir); printf("%5.2f\t% f\n", i*delta,$5) >> out; }'
-done
-
-paste $wrkdir/current.dat $wrkdir/diatropic.dat $wrkdir/paratropic.dat > $wrkdir/current_profile.dat
-rm -f $wrkdir/paratropic.dat $wrkdir/diatropic.dat $wrkdir/current.dat
-
-printf "\nData saved in current_profile.dat\n\n"
-
-gnuplot << EOF                                                                                   
-
-set format x "%5.2f"
-set format y "%5.2f"
-set format z "%5.2f"
-unset label
-set xlabel "Distance [bohr]"
-set ylabel "dJ/dx [nA/T / bohr]"
-
-set terminal postscript eps enhanced color 'Helvetica' 22
-
-set output "$wrkdir/$dirname-current-profile.eps"
-plot "$wrkdir/current_profile.dat" u 1:(\$2/$delta) w l lc 0 lw 2 notitle
-set output "$wrkdir/$dirname-current-dia-para.eps"
-plot "$wrkdir/current_profile.dat" u 1:(\$3/$delta) w l lc 3 lw 2 title "Diatropic", "$wrkdir/current_profile.dat" u 1:(\$4/$delta) w l lc 1 lw 2 title "Paratropic"
-EOF
-
-echo "Plots generated at "
-echo $wrkdir/$dirname-current-profile.eps
-echo $wrkdir/$dirname-current-dia-para.eps
-echo
-
 #######################################################################
 # Find the zeroes on the current profile plot
 
-(cd $wrkdir && @SCRIPTS_DIR@/crit_pts.sh > profile-points.out )
+(cd $wrkdir && @SCRIPTS_DIR@/gradient-square.sh  )
+#@SCRIPTS_DIR@/gradient-square.sh
 
-cat $wrkdir/profile-points.out
+#cat $wrkdir/profile-points.out
 
 #######################################################################
 

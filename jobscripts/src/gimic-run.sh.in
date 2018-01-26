@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Function definitions:
-source @SCRIPTS_DIR@/functions-def
+source @SCRIPTS_DIR@/src/functions-def
 
 checkIfInputExists
 
@@ -91,7 +91,7 @@ checkMaxProj="installed"
 if [ ! -z $accept ] && [ $accept == "a" ]
 then
     checkMaxProj=$(command -v maximise_projection) #  command -> returns the path of the binary if it is found
-    if [ -e $checkMaxProj ]
+    if [ ! -e $checkMaxProj ]
     then
 	echo "The program maximise_projection is not found. Switching to manual input of the magnetic field components."
     else
@@ -184,7 +184,7 @@ fi
 
 
 string="s/@bond@/$bond/; s/@fixed@/$fixed/; s/@distance@/$distance/; s/@up@/$up/; s/@down@/$down/; s/@start@/$start/; s/@end@/$out/; s/@FX@/$Fx/; s/@FY@/$Fy/; s/@FZ@/$Fz/; s/@MFx@/$MFx/; s/@MFy@/$MFy/; s/@MFz@/$MFz/; s/@spacingX@/$spacingX/; s/@spacingY@/$spacingY/; s/@spacingZ@/$spacingZ/; s/@rotX@/$rotX/;  s/@rotY@/$rotY/;  s/@rotZ@/$rotZ/; "
-sed "$string" @SCRIPTS_DIR@/gimic.Inp > ./$dirname/gimic.inp
+sed "$string" @SCRIPTS_DIR@/src/gimic.Inp > ./$dirname/gimic.inp
 
 printf "Performing a dry run...\n\n"
 (cd ./$dirname/ && gimic --dryrun gimic.inp | grep "grid points" )

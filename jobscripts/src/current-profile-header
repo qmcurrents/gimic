@@ -49,7 +49,6 @@ Bz=$( echo $BOND | awk '{print $3} ' )
 #echo
 
 printf "\n\nSTARTING POINT OF THE INTEGRATION\n"
-start=10
 userInp start $start
 while [ -z "$start" ]
 do 
@@ -109,7 +108,7 @@ checkMaxProj="installed"
 if [ ! -z $accept ] && [ $accept == "a" ]
 then
     checkMaxProj=$(command -v maximise_projection) #  command -> returns the path of the binary if it is found
-    if [ -e $checkMaxProj ]
+    if [ ! -e $checkMaxProj ]
     then
 	echo "The program maximise_projection is not found. Switching to manual input of the magnetic field components."
     else

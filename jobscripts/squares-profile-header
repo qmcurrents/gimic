@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Function definitions:
-source  @SCRIPTS_DIR@/src/functions-def
+source  @SCRIPTS_DIR@/functions-def
 
 checkIfInputExists
 
@@ -31,7 +31,6 @@ suffix=$(printf _$suffix)
 dirname=squares_profile_$atom1.$atom2$suffix
 
 checkIfPreviousCalculationExists "$dirname"
-cp @SCRIPTS_DIR@/src/gimic.Inp ./$dirname/gimic.Inp
 
 # Calculate the distance between the atoms
 echo "Define where between the two atoms the integration plane passes"
@@ -59,27 +58,27 @@ do
 done
 
 printf "\nEND POINT OF THE INTEGRATION\n"
-out=7
+out=10
 printf "\nDo you accept out=$out bohr?" # ask about the default value 
 userInp out $out
 
 printf "\n\nUPPER AND LOWER BOUNDS OF THE INTEGRATION\n"
-up=5
-down=-5
-valueDimInp up $up "bohr"
-valueDimInp down $down "bohr"
+up=10
+down=-10
+valueInp up $up 
+valueInp down $down
 
 printf "\n\nWIDTH OF THE SLICES\n"
-delta=1 #0.05
+delta=0.05
 #deltaV=0.05
 #echo "Horizontal slicing (in-out):"
-valueDimInp delta $delta "bohr"	
+valueInp delta $delta
 #echo "Vertical slicing (up-down):"
 #valueInp deltaV $deltaV
 
 nstepsH=$( awk -v start=$start -v out=$out -v delta=$delta 'BEGIN{if (start > 0) {start = -start}; nsteps=(out-start)/delta; if (nsteps > 0) {printf("%d",nsteps)} else {printf("%d",-nsteps);}; }'   )
 checkIfEmpty nstepsH $nstepsH
-nstepsV=$( awk -v start=$up -v out=$down -v delta=$delta 'BEGIN{nsteps=(out-start)/delta; if (nsteps > 0) {printf("%d",nsteps)} else {printf("%d",-nsteps);}; }'   )
+nstepsV=$( awk -v start=$up -v out=$down -v delta=$delta 'BEGIN{if (start > 0) {start = -start}; nsteps=(out-start)/delta; if (nsteps > 0) {printf("%d",nsteps)} else {printf("%d",-nsteps);}; }'   )
 checkIfEmpty nstepsV $nstepsV
 
 
@@ -96,9 +95,9 @@ printf  "\nDo you accept spacing=[$spacingX, $spacingY, $spacingZ]?\nPress [n] t
 read accept;
 if [ ! -z $accept ] && [ $accept == "n" ]
 then
-    valueDimInp spacingX $spacingX "bohr"
-    valueDimInp spacingY $spacingY "bohr"
-    valueDimInp spacingZ $spacingZ "bohr"
+    valueInp spacingX $spacingX
+    valueInp spacingY $spacingY
+    valueInp spacingZ $spacingZ
 fi
 
 
@@ -117,7 +116,7 @@ checkMaxProj="installed"
 if [ ! -z $accept ] && [ $accept == "a" ]
 then
     checkMaxProj=$(command -v maximise_projection) #  command -> returns the path of the binary if it is found
-    if [ ! -e $checkMaxProj ]
+    if [ -e $checkMaxProj ]
     then
 	echo "The program maximise_projection is not found. Switching to manual input of the magnetic field components."
     else
@@ -130,9 +129,9 @@ fi
 if ( [ ! -z $accept ] && [ $accept == "m" ] ) || [ -e $checkMaxProj ]
 then
     echo "Please enter numeric values."
-    valueDimInp MFx $MFx "bohr"
-    valueDimInp MFy $MFy "bohr"
-    valueDimInp MFz $MFz "bohr"
+    valueInp MFx $MFx
+    valueInp MFy $MFy
+    valueInp MFz $MFz
 fi
 
 echo "Magnetic field vector coordinates: ($MFx; $MFy; $MFz)"
@@ -160,9 +159,9 @@ echo "Press [y] enter Cartesian coordinates"
 read accept;
 if [ ! -z $accept ] && [ $accept == "y" ]
 then
-    valueDimInp Fx $Fx "bohr"
-    valueDimInp Fy $Fy "bohr"
-    valueDimInp Fz $Fz "bohr"
+    valueInp Fx $Fx
+    valueInp Fy $Fy
+    valueInp Fz $Fz
 
     echo "Fixed coordinate: ($Fx, $Fy, $Fz)"
 fi
@@ -175,6 +174,7 @@ rotX=0.0
 rotY=0.0
 rotZ=0.0
 
+rotationOriginEnabled=n
 origX=0.0
 origY=0.0
 origZ=0.0
@@ -185,9 +185,9 @@ echo "Press [y] to enter rotation angles and origin"
 read accept;
 if [ ! -z $accept ] && [ $accept == "y" ]
 then
-    valueDimInp rotX $rotX "degrees"
-    valueDimInp rotY $rotY "degrees"
-    valueDimInp rotZ $rotZ "degrees"
+    valueInp rotX $rotX 
+    valueInp rotY $rotY
+    valueInp rotZ $rotZ
 
     echo "Rotation angles: ($rotX, $rotY, $rotZ)"
 
@@ -197,10 +197,10 @@ then
     read accept;
     if [ ! -z $accept ] && [ $accept == "n" ]
     then
-	sed -i '/rot/s/#rotation_origin/rotation_origin/' ./$dirname/gimic.Inp
-	valueDimInp origX $origX "bohr" 
-	valueDimInp origY $origY "bohr"
-	valueDimInp origZ $origZ "bohr"
+	rotationOriginEnabled=y
+	valueInp origX $origX 
+	valueInp origY $origY
+	valueInp origZ $origZ
     fi
 fi
 
@@ -243,11 +243,20 @@ printf "\n**********************************************************************
 
 # Preparing the input files
 
-string="s/@bond@/$bond/; s/@fixed@/$fixed/; s/@distance@/$distance/; s/@spacingX@/$spacingX/; s/@spacingY@/$spacingY/; s/@spacingZ@/$spacingZ/;  s/@rotX@/$rotX/;  s/@rotY@/$rotY/;  s/@rotZ@/$rotZ/; s/@origX@/$origX/; s/@origY@/$origY/; s/@origZ@/$origZ/; s/@MFx@/$MFx/; s/@MFy@/$MFy/; s/@MFz@/$MFz/; s/@FX@/$Fx/; s/@FY@/$Fy/; s/@FZ@/$Fz/ ;"
-sed -i "$string" ./$dirname/gimic.Inp
+string="s/@bond@/$bond/; s/@fixed@/$fixed/; s/@distance@/$distance/; s/@up@/$up/; s/@down@/$down/; s/@spacingX@/$spacingX/; s/@spacingY@/$spacingY/; s/@spacingZ@/$spacingZ/;  s/@rotX@/$rotX/;  s/@rotY@/$rotY/;  s/@rotZ@/$rotZ/; s/@origX@/$origX/; s/@origY@/$origY/; s/@origZ@/$origZ/; s/@MFx@/$MFx/; s/@MFy@/$MFy/; s/@MFz@/$MFz/; s/@FX@/$Fx/; s/@FY@/$Fy/; s/@FZ@/$Fz/ ;"
+sed "$string" @SCRIPTS_DIR@/gimic.Inp > ./$dirname/gimic.Inp
 
-xstart=$( awk -v start=$start 'BEGIN{printf "%.3f\n", -start+delta }' )  # start is a negative number 
-xend=$( awk -v delta=$delta -v xstart=$xstart 'BEGIN{ printf "%.3f\n", xstart-delta }' ) 
+# if the rotation_origin keyword is not defined in the input file, rotation is done around the bond midpoint
+if [ $rotationOriginEnabled == "y" ]
+then
+    sed -i '/rot/s/#rotation_origin/rotation_origin/' ./$dirname/gimic.Inp
+fi
+
+
+xstart=$( awk -v delta=$delta -v start=$start 'BEGIN{printf "%.3f\n", -start }' )  # start is a negative number 
+xend=$( awk -v delta=$delta -v xstart=$xstart 'BEGIN{ printf "%.3f\n", xstart+delta }' ) 
+#xend=$( awk -v delta=$delta -v start=$start 'BEGIN{ if (start < 0) {print start+delta} else {print start-delta}; }' ) 
+#xend=$( awk -v i=$i -v delta=$delta -v end=$end 'BEGIN{printf "%.3f\n", end+delta*i }' )
 smaller=$(awk -v start=$xstart -v end=$xend 'BEGIN{ if (start > end) {print "1"} else {print "0"} }')
 if [ $smaller -eq 1 ]
 then
@@ -260,16 +269,15 @@ checkIfEmpty xstart $xstart
 checkIfEmpty xend $xend
 
 
-# Perform the dry run in a square larger by 1, so that for the actual loop, the numbers start from what the user requested
-xdown=$( awk -v down=$down -v delta=$delta 'BEGIN{printf "%.3f\n", down-delta }' )  # down is a negative number
-xup=$( awk -v delta=$delta -v xdown=$xdown 'BEGIN{ printf "%.3f\n", xdown+delta }' ) 
-#smaller=$(awk -v up=$xup -v down=$xdown 'BEGIN{ if (up < down ) {print "1"} else {print "0"} }')
-# if [ $smaller -eq 1 ]
-# then
-#     tmp=$xup
-#     xup=$xdown
-#     xdown=$tmp
-# fi
+xup=$( awk -v delta=$delta -v start=$up 'BEGIN{printf "%.3f\n", -start }' )  # start is a negative number 
+xdown=$( awk -v delta=$delta -v xstart=$xup 'BEGIN{ printf "%.3f\n", xstart+delta }' ) 
+smaller=$(awk -v start=$xup -v end=$xdown 'BEGIN{ if (start > end) {print "1"} else {print "0"} }')
+if [ $smaller -eq 1 ]
+then
+    tmp=$xup
+    xstart=$xdown
+    xend=$tmp
+fi
 
 checkIfEmpty xup $xup
 checkIfEmpty xdown $xdown
@@ -279,7 +287,7 @@ sed "$string" ./$dirname/gimic.Inp > ./$dirname/gimic.0.0.inp
 
 
 printf "\nPerforming a dry run...\n\n"
-(cd ./$dirname/ && gimic --dryrun gimic.0.0.inp | grep "grid points" )
+(cd ./$dirname/ && gimic --dryrun gimic.0.inp | grep "grid points" )
 printf "\n\n"
 
 echo "Do you accept the above parameters? Press [n] to cancel."; read accept
@@ -288,20 +296,27 @@ then
     exit
 fi
 
+
 echo "Preparing input files..."
 for (( i=0; i<$nstepsH; i++ ))
 do
     xstart=$( awk -v xstart=$xstart -v delta=$delta 'BEGIN{printf "%.3f\n", xstart+delta }' )
     xend=$( awk -v delta=$delta -v xstart=$xstart 'BEGIN{ printf "%.3f\n", xstart+delta }' ) 
+#    xstart=$( awk -v i=$i -v delta=$delta -v start=$start 'BEGIN{printf "%.3f\n", start+delta*i }' )
+#    xend=$( awk -v i=$i -v delta=$delta -v end=$end 'BEGIN{printf "%.3f\n", end+delta*i }' )
+#    if [ $smaller -eq 1 ]
+#    then
+#        tmp=$xstart
+#        xstart=$xend
+#        xend=$tmp
+#    fi
     for (( j=0; j<$nstepsV; j++ ))
     do
-	xdown=$( awk -v delta=$delta -v xdown=$xdown 'BEGIN{ printf "%.3f\n", xdown+delta }' ) 
-	xup=$( awk -v xdown=$xdown -v delta=$delta 'BEGIN{printf "%.3f\n", xdown+delta }' )
+	xup=$( awk -v xstart=$xup -v delta=$delta 'BEGIN{printf "%.3f\n", xstart+delta }' )
+	xdown=$( awk -v delta=$delta -v xstart=$xup 'BEGIN{ printf "%.3f\n", xstart+delta }' ) 
 	string=" s/@start@/$xstart/; s/@end@/$xend/; s/@up@/$xup/; s/@down@/$xdown/"
 	sed "$string" $dirname/gimic.Inp > $dirname/gimic.$i.$j.inp 
     done
-    xdown=$( awk -v down=$down -v delta=$delta 'BEGIN{printf "%.3f\n", down-delta }' )  # down is a negative number
-    xup=$( awk -v delta=$delta -v xdown=$xdown 'BEGIN{ printf "%.3f\n", xdown+delta }' ) 
 done    
 echo "done"
 echo

@@ -12,7 +12,7 @@ checkIfEmpty filenum $filenum
 
 parallel=4
 echo "Enter the number of parallel jobs"
-valueDimInp parallel $parallel
+read parallel
 checkIfEmpty parallel $parallel
 
 # check if too many parallel tasks are called
@@ -22,11 +22,10 @@ then
 fi
 
 # job duration:
-duration=12
 echo "Enter the time limit for the execution of the batch job in hours"
-valueDimInp duration $duration "hours"
+read duration
 checkIfEmpty duration $duration
 
-sbatch --ntasks="$parallel" --job-name="$dirname" --time="$duration":00:00 @SCRIPTS_DIR@/jobscript "$wrkdir" "$parallel" 
+sbatch --ntasks="$parallel" --job-name="$dirname" --time="$duration":00:00 @SCRIPTS_DIR@/jobscript-squares "$wrkdir" "$parallel" 
 echo
 
