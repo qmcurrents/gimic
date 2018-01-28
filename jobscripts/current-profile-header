@@ -101,7 +101,7 @@ MFy=0.0
 MFz=-1.0
 
 echo "Do you accept the default MF orientation along the Z axis (0, 0, -1)?"
-echo "Press [a] to calculate the direction automatically or [m] to enter manually"
+echo "Press [a] to calculate the direction automatically, [m] to enter manually or [X] for the MF=X option."
 
 read accept;
 checkMaxProj="installed"
@@ -128,6 +128,11 @@ fi
 
 echo "Magnetic field vector coordinates: ($MFx; $MFy; $MFz)"
 echo
+if [ ! -z $accept ] && [ $accept == "X" ]
+then
+    sed -i '/rot/s/magnet=/#magnet=/' ./$dirname/gimic.Inp
+    sed -i '/rot/s/#magnet_axis=/magnet_axis=/' ./$dirname/gimic.Inp
+fi
 
 
 printf "\nFIXED COORDINATE\n"
