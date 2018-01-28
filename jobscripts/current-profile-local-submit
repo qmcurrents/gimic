@@ -11,11 +11,14 @@ echo "Running Gimic calculations..."
 filenum=$(ls $wrkdir/*inp | wc -l)
 checkIfEmpty filenum $filenum
 
+nsteps=$( sed -n -e 's/^.*nsteps=//p' $wrkdir/calculation.dat | awk '{print $1}')
+
 parallel=4
 
 echo "Enter the number of parallel jobs"
 read parallel
 checkIfEmpty parallel $parallel
+
 
 # check if too many parallel tasks are called
 if [ $parallel -gt $nsteps ]

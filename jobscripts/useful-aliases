@@ -3,16 +3,17 @@ USEFUL ALIASES AND FUNCTIONS:
 
 alias grid="xmakemol -f grid.xyz &"
 alias revcurrent="mv current_profile.dat current_profile.dat.1 && awk '{printf "%.6f\t%.6f\t%.6f\t%.6f\n", $1, -$2, -$4, -$3}' current_profile.dat.1 > current_profile.dat"
-alias gim="$GIMIC_HOME/jobscripts/gimic-run.sh"
-alias 3g="$GIMIC_HOME/jobscripts/3D-run.sh"
-alias plotcurrent=" $GIMIC_HOME/jobscripts/plot-current-profile.sh"
+alias gim="$GIMIC_HOME/gimic-run.sh"
+alias 3g="$GIMIC_HOME/3D-run.sh"
+alias plotcurrent=" $GIMIC_HOME/plot-current-profile.sh"
 alias geps="display *eps &"
-alias intprofile="$GIMIC_HOME/jobscripts/intprofile.sh"
+alias intprofile="$GIMIC_HOME/intprofile.sh"
 
-Note: on a cluster replace the name of the script below to current-profile-cluster.sh
-alias gcurrent="$GIMIC_HOME/jobscripts/current-profile-local.sh"
+NOTE: on a laptop or desktop, replace the name of the script below with current-profile-local.sh
+alias gcurrent="$GIMIC_HOME/current-profile-local.sh"
 
-function anprofile() { awk -v lower= -v upper= '{ if (( >= lower) && ( <= upper)) { total+=; dia+=; para+=; } } END { printf(nTotal current: %fnDiatropic: %fnParatropic: %fnn, total, dia, para); } ' current_profile.dat ;  };
+function anprofile() { awk -v lower=$1 -v upper=$2 '{ if (($1 >= lower) && ($1 <= upper)) { total+=$2; dia+=$3; para+=$4; } } END { printf("\nNet current: %f\nDiatropic: %f\nParatropic: %f\n\n", total, dia, para); } ' current_profile.dat ;  };
+
 
 function dryrun() { gimic --dryrun "$@" > /dev/null ; xmakemol -f grid.xyz;  };
 

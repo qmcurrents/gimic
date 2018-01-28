@@ -33,7 +33,7 @@ checkIfPreviousCalculationExists "$dirname"
 echo "Define where between the two atoms the integration plane passes"
 echo "Default: through the midpoint"
 distance=$( halfDistance $atom1 $atom2 )
-valueInp distance $distance
+valueDimInp distance $distance "bohr"
 
 # Coordinates of the centre:
 bond=$atom1","$atom2
@@ -48,6 +48,7 @@ Bz=$( echo $BOND | awk '{print $3} ' )
 #echo
 
 printf "\n\nSTARTING POINT OF THE INTEGRATION\n"
+start=10
 userInp start $start
 while [ -z "$start" ]
 do 
@@ -62,12 +63,12 @@ userInp out $out
 printf "\n\nUPPER AND LOWER BOUNDS OF THE INTEGRATION\n"
 up=10
 down=-10
-valueInp up $up 
-valueInp down $down
+valueDimInp up $up "bohr"
+valueDimInp down $down "bohr"
 
 printf "\n\nWIDTH OF THE SLICES\n"
 delta=0.02
-valueInp delta $delta
+valueDimInp delta $delta "bohr"
 
 nsteps=$( awk -v start=$start -v out=$out -v delta=$delta 'BEGIN{if (start > 0) {start = -start}; nsteps=(out-start)/delta; if (nsteps > 0) {printf("%d",nsteps)} else {printf("%d",-nsteps);}; }'   )
 checkIfEmpty nsteps $nsteps
@@ -86,9 +87,9 @@ printf  "\nDo you accept spacing=[$spacingX, $spacingY, $spacingZ]?\nPress [n] t
 read accept;
 if [ ! -z $accept ] && [ $accept == "n" ]
 then
-    valueInp spacingX $spacingX
-    valueInp spacingY $spacingY
-    valueInp spacingZ $spacingZ
+    valueDimInp spacingX $spacingX "bohr" 
+    valueDimInp spacingY $spacingY "bohr" 
+    valueDimInp spacingZ $spacingZ "bohr" 
 fi
 
 
@@ -120,9 +121,9 @@ fi
 if ( [ ! -z $accept ] && [ $accept == "m" ] ) || [ -e $checkMaxProj ]
 then
     echo "Please enter numeric values."
-    valueInp MFx $MFx
-    valueInp MFy $MFy
-    valueInp MFz $MFz
+    valueDimInp MFx $MFx "bohr"
+    valueDimInp MFy $MFy "bohr"
+    valueDimInp MFz $MFz "bohr"
 fi
 
 echo "Magnetic field vector coordinates: ($MFx; $MFy; $MFz)"
@@ -150,9 +151,9 @@ echo "Press [y] enter Cartesian coordinates"
 read accept;
 if [ ! -z $accept ] && [ $accept == "y" ]
 then
-    valueInp Fx $Fx
-    valueInp Fy $Fy
-    valueInp Fz $Fz
+    valueDimInp Fx $Fx "bohr"
+    valueDimInp Fy $Fy "bohr"
+    valueDimInp Fz $Fz "bohr"
 
     echo "Fixed coordinate: ($Fx, $Fy, $Fz)"
 fi
@@ -176,9 +177,9 @@ echo "Press [y] to enter rotation angles and origin"
 read accept;
 if [ ! -z $accept ] && [ $accept == "y" ]
 then
-    valueInp rotX $rotX 
-    valueInp rotY $rotY
-    valueInp rotZ $rotZ
+    valueDimInp rotX $rotX "degrees"
+    valueDimInp rotY $rotY "degrees"
+    valueDimInp rotZ $rotZ "degrees"
 
     echo "Rotation angles: ($rotX, $rotY, $rotZ)"
 
@@ -189,9 +190,9 @@ then
     if [ ! -z $accept ] && [ $accept == "n" ]
     then
 	rotationOriginEnabled=y
-	valueInp origX $origX 
-	valueInp origY $origY
-	valueInp origZ $origZ
+	valueDimInp origX $origX "bohr" 
+	valueDimInp origY $origY "bohr"
+	valueDimInp origZ $origZ "bohr"
     fi
 fi
 

@@ -10,7 +10,12 @@ then
 #    exit
 fi
 
-
+pathToGimic=$(which gimic)
+if [ -z $pathToGimic ]
+then
+    echo "The path to the GIMIC binary is not defined. Please add it to your .bashrc as"
+    echo export PATH=\"/path/to/gimic/\":\${PATH}
+fi
 
 
 # Prepare the base structure of the squares profile script for a local machine:
@@ -109,4 +114,4 @@ do
 done
 
 echo; echo "Path to GIMIC:"
-echo 'export GIMIC_HOME='${SCRIPTS_DIR/%jobscripts}
+echo "export GIMIC_HOME=\"$SCRIPTS_DIR\""

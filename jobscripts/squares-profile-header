@@ -51,6 +51,7 @@ Bz=$( echo $BOND | awk '{print $3} ' )
 #echo
 
 printf "\n\nSTARTING POINT OF THE INTEGRATION\n"
+start=10
 userInp start $start
 while [ -z "$start" ]
 do 
@@ -282,12 +283,14 @@ fi
 checkIfEmpty xup $xup
 checkIfEmpty xdown $xdown
 
+echo DEBUG dry run:
+echo $xstart, $xend, $xup, $xdown 
 string=" s/@start@/$xstart/; s/@end@/$xend/; s/@up@/$xup/; s/@down@/$xdown/"
 sed "$string" ./$dirname/gimic.Inp > ./$dirname/gimic.0.0.inp
 
 
 printf "\nPerforming a dry run...\n\n"
-(cd ./$dirname/ && gimic --dryrun gimic.0.inp | grep "grid points" )
+(cd ./$dirname/ && gimic --dryrun gimic.0.0.inp | grep "grid points" )
 printf "\n\n"
 
 echo "Do you accept the above parameters? Press [n] to cancel."; read accept
