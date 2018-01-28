@@ -14,10 +14,10 @@ checkIfEmpty filenum $filenum
 nsteps=$( sed -n -e 's/^.*nsteps=//p' $wrkdir/calculation.dat | awk '{print $1}')
 
 parallel=4
-
 echo "Enter the number of parallel jobs"
 read parallel
 checkIfEmpty parallel $parallel
+valueDimInp parallel $parallel
 
 
 # check if too many parallel tasks are called
@@ -30,7 +30,7 @@ fi
 rm -rf *dat *eps GIMIC.*
 
 date
-echo "Running $parallel out of $filenum GIMIC calculations at a time..."
+echo "Running $parallel out of $filenum GIMIC calculations at a time..."; echo 
 
 whole=$( awk -v filenum=$filenum -v parallel=$parallel 'BEGIN{printf "%d\n", filenum/parallel}'  )
 remain=$(awk -v whole=$whole -v filenum=$filenum -v parallel=$parallel 'BEGIN{printf "%d\n", (filenum-whole*parallel) }')
@@ -87,9 +87,9 @@ cat /dev/null > $wrkdir/paratropic.dat #delete if it already exists
 cat /dev/null > $wrkdir/diatropic.dat
 cat /dev/null > $wrkdir/current.dat
 
-out=$(grep out= $wrkdir/gimic.0.inp | grep -o -E '[0-9.]+')
-start=$(grep in= $wrkdir/gimic.0.inp | grep -o -E '[0-9.]+')
-delta=$( awk -v out=$out -v start=$start 'BEGIN{ value=out-start; delta=(value<0?-value:value); print delta }' )
+start=$( sed -n -e 's/^.*in=//p' $wrkdir/calculation.dat | awk '{print $1}')
+out=$( sed -n -e 's/^.*out=//p' $wrkdir/calculation.dat | awk '{print $1}')
+delta=$( sed -n -e 's/^.*delta=//p' $wrkdir/calculation.dat | awk '{print $1}')
 checkIfEmpty start $start
 checkIfEmpty out $out
 checkIfEmpty delta $delta

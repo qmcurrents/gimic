@@ -44,7 +44,7 @@ parallel=$2
 checkIfEmpty parallel $parallel
 
 date
-echo "Running $parallel out of $filenum GIMIC calculations at a time..."
+echo "Running $parallel out of $filenum GIMIC calculations at a time..."; echo 
 
 whole=$( awk -v filenum=$filenum -v parallel=$parallel 'BEGIN{printf "%d\n", filenum/parallel}'  )
 remain=$(awk -v whole=$whole -v filenum=$filenum -v parallel=$parallel 'BEGIN{printf "%d\n", (filenum-whole*parallel) }')

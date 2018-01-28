@@ -217,7 +217,7 @@ echo atom2=$atom2 >> ./$dirname/calculation.dat
 echo distance=$distance >> ./$dirname/calculation.dat
 echo in=$start out=$out up=$up down=$down  >> ./$dirname/calculation.dat
 echo fixed point: Fx=$Fx, Fy=$Fy, Fz=$Fz  >> ./$dirname/calculation.dat
-echo delta=$delta >> ./$dirname/calculation.dat
+echo delta=$delta nsteps=$nsteps >> ./$dirname/calculation.dat
 echo spacing: spacingX=$spacingX, spacingY=$spacingY, spacingZ=$spacingZ  >> ./$dirname/calculation.dat
 echo magnetic field: MFx=$MFx, MFy=$MFy, MFz=$MFz  >> ./$dirname/calculation.dat
 echo rotation angles: rotX=$rotX, rotY=$rotY, rotZ=$rotZ >> ./$dirname/calculation.dat
