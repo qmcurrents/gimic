@@ -102,9 +102,8 @@ SCRIPTS_DIR=$(pwd)
 
 for file in $SCRIPTS_IN
 do
-#    SCRIPT_OUT=$(echo ${file/.in/} )
-SCRIPT_OUT=$(echo $file | sed -e s:^src/:: -e s:.in:: )
-    sedstring="s:@SCRIPTS_DIR@:$SCRIPTS_DIR/src:"
+    SCRIPT_OUT=$(echo $file | sed -e s:^src/:: -e s:.in:: )
+    sedstring="s:@SCRIPTS_DIR@:$SCRIPTS_DIR:"
     if [ $SCRIPT_OUT -ot $file ] 
     then 
         sed "$sedstring" $file > $SCRIPT_OUT

@@ -6,7 +6,7 @@ alias revcurrent="mv current_profile.dat current_profile.dat.1 && awk '{printf "
 alias gim="$GIMIC_HOME/gimic-run.sh"
 alias 3g="$GIMIC_HOME/3D-run.sh"
 alias plotcurrent=" $GIMIC_HOME/plot-current-profile.sh"
-alias geps="display *eps &"
+alias gplot="display *png &"
 alias intprofile="$GIMIC_HOME/intprofile.sh"
 
 NOTE: on a laptop or desktop, replace the name of the script below with current-profile-local.sh
