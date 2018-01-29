@@ -1,10 +1,5 @@
-#!/bin/bash
 
-# Function definitions:
-source  @SCRIPTS_DIR@/functions-def
-
-
-echo "Restart and continue the current profile calculation"
+# Submit the calculation
 
 wrkdir=$(pwd)
 wrkdir=$(echo $wrkdir/$dirname)
@@ -16,8 +11,8 @@ filenum=$(ls $wrkdir/*inp | wc -l)
 checkIfEmpty filenum $filenum
 
 parallel=4
-echo "How many parallel tasks to execute?"
-read parallel
+echo "Enter the number of parallel jobs"
+valueDimInp parallel $parallel
 checkIfEmpty parallel $parallel
 
 # check if too many parallel tasks are called
@@ -28,7 +23,7 @@ fi
 
 # job duration:
 echo "Enter the time limit for the execution of the batch job in hours"
-read duration
+valueDimInp duration $duration
 checkIfEmpty duration $duration
 
 sbatch --ntasks="$parallel" --job-name="$dirname" --time="$duration":00:00 @SCRIPTS_DIR@/jobscript "$wrkdir" "$parallel" 

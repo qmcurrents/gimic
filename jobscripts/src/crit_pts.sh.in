@@ -2,7 +2,7 @@
 
 
 # Function definitions:
-source  @SCRIPTS_DIR@/functions-def
+source  @SCRIPTS_DIR@/src/functions-def
 
 function critical_dia() { 
 awk 'BEGIN { 

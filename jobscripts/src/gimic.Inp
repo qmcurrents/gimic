@@ -7,7 +7,7 @@ xdens="../XDENS"
 debug=1           # debug print level
 openshell=false 
 #show_axis=true   # mark "up" axis in .xyz files
-#magnet_axis=@MF@ #[-] i,j,k || x,y,z -> align magnet along axis
+#magnet_axis=X  # @MF@ #[-] i,j,k || x,y,z -> align magnet along axis
 magnet=[ @MFx@, @MFy@, @MFz@ ]   # magnet vector
 #scale_vectors=1.0
 

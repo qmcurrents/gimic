@@ -44,7 +44,7 @@ parallel=$2
 checkIfEmpty parallel $parallel
 
 date
-echo "Running $parallel out of $filenum GIMIC calculations at a time..."
+echo "Running $parallel out of $filenum GIMIC calculations at a time..."; echo 
 
 whole=$( awk -v filenum=$filenum -v parallel=$parallel 'BEGIN{printf "%d\n", filenum/parallel}'  )
 remain=$(awk -v whole=$whole -v filenum=$filenum -v parallel=$parallel 'BEGIN{printf "%d\n", (filenum-whole*parallel) }')
@@ -85,63 +85,17 @@ if [[ "$remain" -gt 0 ]]; then
     done
 fi
 echo "$filenum of $filenum completed"
+echo
 
 
 rm -rf GIMIC* 
 
 ###################################################################################
 
-echo "Calculating the gradient..."
+# Calculating the gradient:
+(cd $wrkdir && @SCRIPTS_DIR@/gradient.sh)
 
-cat /dev/null > $wrkdir/paratropic.dat #delete if it already exists
-cat /dev/null > $wrkdir/diatropic.dat
-cat /dev/null > $wrkdir/current.dat
-
-start=$( sed -n -e 's/^.*in=//p' $wrkdir/calculation.dat | awk '{print $1}')
-out=$( sed -n -e 's/^.*out=//p' $wrkdir/calculation.dat | awk '{print $1}')
-delta=$( sed -n -e 's/^.*delta=//p' $wrkdir/calculation.dat | awk '{print $1}')
-checkIfEmpty start $start
-checkIfEmpty out $out
-checkIfEmpty delta $delta
-
-
-for (( i=0; i<$filenum; i++ ))
-do
-
-    grep -A 2 "Induced current" $wrkdir/gimic.$i.out | awk -v wrkdir=$wrkdir '{ dia=sprintf("%s/diatropic.dat",wrkdir); para=sprintf("%s/paratropic.dat",wrkdir); if (NR == 2) printf("% f\n", $5) >> dia; else if (NR == 3) printf("% f\n", $5) >> para; }'
-    grep "Induced current (nA/T)" $wrkdir/gimic.$i.out | awk -v i=$i -v start=$start -v delta=$delta -v wrkdir=$wrkdir '{ out=sprintf("%s/current.dat",wrkdir); printf("%5.2f\t% f\n", i*delta,$5) >> out; }'
-done
-
-paste $wrkdir/current.dat $wrkdir/diatropic.dat $wrkdir/paratropic.dat > $wrkdir/current_profile.dat
-rm -f $wrkdir/paratropic.dat $wrkdir/diatropic.dat $wrkdir/current.dat
-
-printf "\nData saved in current_profile.dat\n\n"
-
-gnuplot << EOF                                                                                   
-
-set format x "%5.2f"
-set format y "%5.2f"
-set format z "%5.2f"
-unset label
-set xlabel "Distance [bohr]"
-set ylabel "dJ/dx [nA/T / bohr]"
-
-set terminal postscript eps enhanced color 'Helvetica' 22
-
-set output "$wrkdir/$dirname-current-profile.eps"
-plot "$wrkdir/current_profile.dat" u 1:(\$2/$delta) w l lc 0 lw 2 notitle
-set output "$wrkdir/$dirname-current-dia-para.eps"
-plot "$wrkdir/current_profile.dat" u 1:(\$3/$delta) w l lc 3 lw 2 title "Diatropic", "$wrkdir/current_profile.dat" u 1:(\$4/$delta) w l lc 1 lw 2 title "Paratropic"
-EOF
-
-echo "Plots generated at "
-echo $wrkdir/$dirname-current-profile.eps
-echo $wrkdir/$dirname-current-dia-para.eps
-echo
-
-#######################################################################
 # Find the zeroes on the current profile plot
-
 @SCRIPTS_DIR@/crit_pts.sh $wrkdir 
 
 #######################################################################

@@ -7,25 +7,7 @@ function bohr2A() { for val in $@; do awk -v a=$val 'BEGIN{ bohr=0.5291772490; p
 
 
 # Geometry related functions:
-
-function centroid() { 
-        atoms="$@"
-        for i in $atoms 
-        do
-            awk -v i=$i '{  
-                        if (NR == i+1) print $0 
-                        }' coord 
-        done | awk '{ 
-	             x+=$1; 
-		     y+=$2; 
-		     z+=$3; 
-		     n++
-		  } 
-		  END { 
-		     print x/n, y/n, z/n ; 
-		 }';
-}
-
+function centroid() { atoms="$@"; for i in $atoms; do awk -v i=$i '{ if (NR == i+1) print $0 }' coord; done | awk '{ x+=$1; y+=$2; z+=$3; n++} END{ print x/n, y/n, z/n; }'; }
 
 function halfDistance() { awk -v a1="$1" -v a2="$2" '{ if (NR == a1+1) { x+=$1;y+=$2;z+=$3;}; if (NR == a2+1) {x-=$1;y-=$2;z-=$3} } END{ dist=sqrt(x*x+y*y+z*z); print dist*0.5; }' coord ; }
 
@@ -84,12 +66,12 @@ function validateInput() {
     local __inputValue="$2"
     while [ -z "$__inputValue" ]
     do
-        printf "*** Input missing ***\nPlease enter it\n"
+        printf "*** Input missing ***\nPlease enter a value\n"
         read __inputValue
 	echo
+	eval $__inputVar="'$__inputValue'"
     done
 #    echo "Checked value: $__inputValue"
-    eval $__inputVar="'$__inputValue'"
 }
 
 
@@ -158,14 +140,15 @@ function valueInp()
     eval $__resultVar="'$__varValue'"
 }
 
-function degInp()
+function valueDimInp()
 {
     # handles input of any numerical or string variable
-    # valueInp variable $variable
+    # valueDimInp variable $variable $dimension
     local __resultVar=$1
     local __varValue="$2"
+    dim="$3"
 
-    printf  "\nDo you accept $__resultVar=$__varValue degrees?\nPress [n] to change\n"
+    printf  "\nDo you accept $__resultVar=$__varValue $dim?\nPress [n] to change\n"
     read accept;
     if [ ! -z $accept ] && [ $accept == "n" ]
     then
@@ -265,7 +248,7 @@ echo "Do you want to preview the integration plane in XYZ format?"
 echo "Press [y] or any other key to skip"; read accept
 if  [ ! -z $accept ] && [ $accept == "y" ]
 then
-    echo "Running calculations..."
+    echo "Preparing the plane..."
     (cd ./$dirname/ && gimic --dryrun gimic.0.inp  > /dev/null )
 #    gimic --dryrun gimic.0.inp
     # take the first two coordinates of the int plane
