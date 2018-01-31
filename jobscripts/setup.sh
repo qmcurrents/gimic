@@ -1,5 +1,7 @@
 #!/bin/bash
 
+SCRIPTS_DIR=$(pwd)
+
 checkMaxProj=$(command -v maximise_projection)
 if [ ! -e $checkMaxProj ]
 then
@@ -137,7 +139,6 @@ fi
 
 # Prepare all other scripts
 SCRIPTS_IN=$(ls src/*in)
-SCRIPTS_DIR=$(pwd)
 
 for file in $SCRIPTS_IN
 do
