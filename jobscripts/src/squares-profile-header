@@ -25,9 +25,14 @@ A2x=$( awk -v atom2=$atom2 '{ if (NR==(atom2+1)) {print $1} }' coord  )
 A2y=$( awk -v atom2=$atom2 '{ if (NR==(atom2+1)) {print $2} }' coord  )
 A2z=$( awk -v atom2=$atom2 '{ if (NR==(atom2+1)) {print $3} }' coord  )
 
-echo "Enter a suffix for the directory name"
+echo "Optionally enter a suffix for the directory name"
 read suffix
-suffix=$(printf _$suffix)
+if [ -z $suffix ]
+then
+    suffix=""
+else
+    suffix=$(printf _$suffix)
+fi
 dirname=squares_profile_$atom1.$atom2$suffix
 
 checkIfPreviousCalculationExists "$dirname"

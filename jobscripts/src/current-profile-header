@@ -25,7 +25,15 @@ A2x=$( awk -v atom2=$atom2 '{ if (NR==(atom2+1)) {print $1} }' coord  )
 A2y=$( awk -v atom2=$atom2 '{ if (NR==(atom2+1)) {print $2} }' coord  )
 A2z=$( awk -v atom2=$atom2 '{ if (NR==(atom2+1)) {print $3} }' coord  )
 
-dirname=current_profile_$atom1.$atom2
+echo "Optionally enter a suffix for the directory name"
+read suffix
+if [ -z $suffix ]
+then
+    suffix=""
+else
+    suffix=$(printf _$suffix)
+fi
+dirname=current_profile_$atom1.$atom2$suffix
 
 checkIfPreviousCalculationExists "$dirname"
 cp @SCRIPTS_DIR@/src/gimic.Inp ./$dirname/gimic.Inp
