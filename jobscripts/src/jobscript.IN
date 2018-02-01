@@ -10,14 +10,14 @@
 
 function checkIfEmpty() {
 # usage: validateInput variable $variable 
-    local __inputVar=$1
-    local __inputValue="$2"
-    while [ -z "$__inputValue" ]
-    do
-        printf "*** Variable \"$__inputVar\" empty ***\nPlease restart the script.\n"
-	echo "If the error persists, file a bug report to maria.dimitrova@helsinki.fi or https://github.com/mariavd/gimic"; echo
-        exit;
-    done
+local __inputVar=$1
+local __inputValue="$2"
+while [ -z "$__inputValue" ]
+do
+    printf "*** Variable \"$__inputVar\" empty ***\nPlease restart the script.\n"
+    echo "If the error persists, file a bug report to maria.dimitrova@helsinki.fi or https://github.com/mariavd/gimic"; echo
+    exit;
+done
 
 }
 
@@ -38,7 +38,7 @@ filenum=$(ls $wrkdir/*inp | wc -l)
 checkIfEmpty filenum $filenum
 
 # clean up possible previous calculations
-rm -rf *out *dat *eps GIMIC.*
+rm -rf *eps GIMIC.*
 
 parallel=$2
 checkIfEmpty parallel $parallel
@@ -58,19 +58,19 @@ for ((i=0; i<$whole; i++))
 do 
     for ((j=0; j<$parallel; j++))
     do  
-        index=$(($i+$j*$whole))
-        grepstring=""
-        if [ -f "$wrkdir/gimic.$index.out" ]
-        then
-            echo "The file $wrkdir/gimic.$index.out already exists."
-            grepstring=$(grep "wall" $wrkdir/gimic.$index.out)
-            echo "$grepstring"
-        fi
+	index=$(($i+$j*$whole))
+	grepstring=""
+	if [ -f "$wrkdir/gimic.$index.out" ]
+	then
+	    echo "The file $wrkdir/gimic.$index.out already exists."
+	    grepstring=$(grep "wall" $wrkdir/gimic.$index.out)
+	    echo "$grepstring"
+	fi
 
-        if [ -z "$grepstring" ]
-        then
-            cd $wrkdir && gimic gimic.$index.inp > $wrkdir/gimic.$index.out & 
-        fi
+	if [ -z "$grepstring" ]
+	then
+	    cd $wrkdir && gimic gimic.$index.inp > $wrkdir/gimic.$index.out & 
+	fi
     done 
     wait
     completed=$(( $completed+$parallel ))
@@ -81,7 +81,19 @@ done
 if [[ "$remain" -gt 0 ]]; then
     for ((i=0; i<$remain; i++))
     do  
-        (cd $wrkdir && gimic $wrkdir/gimic.$(($parallel*$whole+$i)).inp >  $wrkdir/gimic.$(($parallel*$whole+$i)).out &) 
+	index=$(($parallel*$whole+$i))
+	grepstring=""
+	if [ -f "$wrkdir/gimic.$index.out" ]
+	then
+	    echo "The file $wrkdir/gimic.$index.out already exists."
+	    grepstring=$(grep "wall" $wrkdir/gimic.$index.out)
+	    echo "$grepstring"
+	fi
+
+	if [ -z "$grepstring" ]
+	then
+	    cd $wrkdir && gimic gimic.$index.inp > $wrkdir/gimic.$index.out & 
+	fi
     done
 fi
 echo "$filenum of $filenum completed"
