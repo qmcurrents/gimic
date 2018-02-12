@@ -21,7 +21,7 @@ checkIfEmpty wrkdir $wrkdir
 dirname=$( echo ${wrkdir##*/} ) # removes everything before the backslash
 checkIfEmpty dirname $dirname
 
-filenum=$(ls *.inp | wc -l)
+filenum=$( (cd $wrkdir && find . -maxdepth 1 -type f -name '*.inp' | wc -l))
 checkIfEmpty filenum $filenum
 
 cat /dev/null > $wrkdir/paratropic.dat #delete if it already exists
@@ -37,14 +37,16 @@ checkIfEmpty delta $delta
 
 for (( i=0; i<$filenum; i++ ))
 do
-#    grep -A 2 "Induced current" $wrkdir/gimic.$i.out | awk -v wrkdir=$wrkdir '{ dia=sprintf("%s/diatropic.dat",wrkdir); para=sprintf("%s/paratropic.dat",wrkdir); if (NR == 2) printf("% f\n", $5) >> dia; else if (NR == 3) printf("% f\n", $5) >> para; }'
-    grep -A 2 "Induced current" $wrkdir/gimic.$i.out | awk -v dia="$wrkdir/diatropic.dat" -v para="$wrkdir/paratropic.dat" '{ if (NR == 2) printf("% f\n", $5) >> dia; else if (NR == 3) printf("% f\n", $5) >> para; }'
-#    grep "Induced current (nA/T)" $wrkdir/gimic.$i.out | awk -v i=$i -v down=$down -v delta=$delta -v wrkdir=$wrkdir '{ out=sprintf("%s/current.dat",wrkdir); printf("%5.2f\t% f\n", i*delta,$5) >> out; }'
-    grep "Induced current (nA/T)" $wrkdir/gimic.$i.out | awk -v i=$i -v down=$down -v delta=$delta -v out="$wrkdir/current.dat" '{ printf("%5.2f\t% f\n", i*delta,$5) >> out; }'
+    echo $i/$filenum
+    awk -v i=$i -v down=$down -v dia="$wrkdir/diatropic.dat" -v para="$wrkdir/paratropic.dat" -v delta=$delta -v out="$wrkdir/current.dat" '/Induced current \(n/ {printf("%5.2f\t% .8f\n", i*delta, $5) >> out}; /Positive cont/ {printf("% .8f\n", $5) >> dia}; /Negative cont/ {printf("% .8f\n", $5) >> para};  ' gimic.$i.out
+
+    #awk -v i=$i -v down=$down -v delta=$delta -v dia="$wrkdir/diatropic_prime.dat" -v para="$wrkdir/paratropic_prime.dat" -v out="$wrkdir/current_prime.dat" '/Induced j_prime current \(n/ {printf("%5.2f\t% .8f\n", i*delta, $6) >> out}; /Positive j_prime/ {printf("% .8f\n", $6) >> dia}; /Negative j_prime/ {printf("% .8f\n", $6) >> para};  ' gimic.$i.out
+
+    #awk -v i=$i -v down=$down -v delta=$delta -v dia="$wrkdir/diatropic_second.dat" -v para="$wrkdir/paratropic_second.dat" -v out="$wrkdir/current_second.dat" '/Induced j_second current \(n/ {printf("%5.2f\t% .8f\n", i*delta, $6) >> out}; /Positive j_second/ {printf("% .8f\n", $6) >> dia}; /Negative j_second/ {printf("% .8f\n", $6) >> para};  ' gimic.$i.out
 done
 
 paste $wrkdir/current.dat $wrkdir/diatropic.dat $wrkdir/paratropic.dat > $wrkdir/current_profile.dat
-rm -f $wrkdir/paratropic.dat $wrkdir/diatropic.dat $wrkdir/current.dat
+#rm -f $wrkdir/paratropic.dat $wrkdir/diatropic.dat $wrkdir/current.dat
 
 printf "\nData saved in current_profile.dat\n\n"
 

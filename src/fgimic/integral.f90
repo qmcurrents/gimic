@@ -53,23 +53,12 @@ contains
         character(*), optional :: spinn
 
         integer(I4) :: i, j, k, p1, p2, p3, lo, hi
-        real(DP), dimension(3) :: normal, rr, center, bb, bb_prime, bb_second
+        real(DP), dimension(3) :: normal, rr, center, bb
         real(DP) :: psum, nsum, w, jp, r, bound
         real(DP) :: psum2, nsum2
         real(DP) :: psum3, nsum3
         real(DP) :: xsum, xsum2, xsum3
-
-        real(DP) :: jp_prime, jp_second
-        real(DP) :: p_prime_sum, n_prime_sum
-        real(DP) :: p_prime_sum2, n_prime_sum2
-        real(DP) :: p_prime_sum3, n_prime_sum3
-        real(DP) :: x_prime_sum, x_prime_sum2, x_prime_sum3
-        real(DP) :: p_second_sum, n_second_sum
-        real(DP) :: p_second_sum2, n_second_sum2
-        real(DP) :: p_second_sum3, n_second_sum3
-        real(DP) :: x_second_sum, x_second_sum2, x_second_sum3
-
-        real(DP), dimension(3) :: jvec, jvec_prime, jvec_second
+        real(DP), dimension(3) :: jvec
         real(DP), dimension(9) :: tt
         type(jtensor_t) :: jt
 
@@ -97,9 +86,6 @@ contains
 
         normal=get_grid_normal(this%grid)
 
-        bb_prime=normal
-        bb_second=cross_product(bb,bb_prime);
-
         bound=1.d+10
         bound=this%grid%radius
         if (bound < 1.d+10) then
@@ -116,95 +102,50 @@ contains
         xsum3=0.d0
         psum3=0.d0
         nsum3=0.d0
-
-        x_prime_sum3=0.d0
-        p_prime_sum3=0.d0
-        n_prime_sum3=0.d0
-        x_second_sum3=0.d0
-        p_second_sum3=0.d0
-        n_second_sum3=0.d0
-!!$OMP PARALLEL PRIVATE(i,j,k,r,rr,xsum,psum,nsum) &
-!!$OMP PRIVATE(jt,w,jp,tt,jvec) &
-!!$OMP SHARED(xsum2,psum2,nsum2) &
-!!$OMP SHARED(p1,p2,p3,this,center,spin,bb,normal,mol,xdens,lo,hi) &
-!!$OMP REDUCTION(+:xsum3,psum3,nsum3)
+!$OMP PARALLEL PRIVATE(i,j,k,r,rr,xsum,psum,nsum) &
+!$OMP PRIVATE(jt,w,jp,tt,jvec) &
+!$OMP SHARED(xsum2,psum2,nsum2) &
+!$OMP SHARED(p1,p2,p3,this,center,spin,bb,normal,mol,xdens,lo,hi) &
+!$OMP REDUCTION(+:xsum3,psum3,nsum3)
         call new_jtensor(jt, mol, xdens)
         do k=1,p3
             xsum2=0.d0
             psum2=0.d0
             nsum2=0.d0
-
-            x_prime_sum2=0.d0
-            p_prime_sum2=0.d0
-            n_prime_sum2=0.d0
-            x_second_sum2=0.d0
-            p_second_sum2=0.d0
-            n_second_sum2=0.d0
-
-            !!$OMP DO SCHEDULE(STATIC) REDUCTION(+:xsum2,psum2,nsum2)
+            !$OMP DO SCHEDULE(STATIC) REDUCTION(+:xsum2,psum2,nsum2)
             do j=lo,hi
                 xsum=0.d0
                 psum=0.d0
                 nsum=0.d0
-
-                x_prime_sum=0.d0
-                p_prime_sum=0.d0
-                n_prime_sum=0.d0
-                x_second_sum=0.d0
-                p_second_sum=0.d0
-                n_second_sum=0.d0
-
                 do i=1,p1
                     rr=gridpoint(this%grid, i, j, k)
                     r=sqrt(sum((rr-center)**2))
                     call ctensor(jt, rr, tt, spin)
                     jvec=matmul(reshape(tt,(/3,3/)),bb)
-                    jvec_prime=matmul(reshape(tt,(/3,3/)),bb_prime)
-                    jvec_second=matmul(reshape(tt,(/3,3/)),bb_second)
                     if ( r > bound ) then
                         w=0.d0
                         jp=0.d0
-                        jp_prime=0.d0
-                        jp_second=0.d0
                     else
                         w=get_weight(this%grid, i, 1)
                         jp=dot_product(normal,jvec)*w
-                        jp_prime=dot_product(normal,jvec_prime)*w
-                        jp_second=dot_product(normal,jvec_second)*w
                     end if
                     ! total
                     xsum=xsum+jp
-                    x_prime_sum = x_prime_sum + jp_prime
-                    x_second_sum = x_second_sum + jp_second
                     if (jp > 0.d0) then
                         ! get positive contribution
                         psum=psum+jp
-                        p_prime_sum = p_prime_sum + jp_prime
-                        p_second_sum = p_second_sum + jp_second
-
                     else
                         ! get negative contribution
                         nsum=nsum+jp
-                        n_prime_sum = n_prime_sum + jp_prime
-                        n_second_sum = n_second_sum + jp_second
                     end if
-                    end do
+                end do
                 w=get_weight(this%grid,j,2)
                 xsum2=xsum2+xsum*w
                 psum2=psum2+psum*w
                 nsum2=nsum2+nsum*w
-                
-                x_prime_sum2=x_prime_sum2+x_prime_sum*w
-                p_prime_sum2=p_prime_sum2+p_prime_sum*w
-                n_prime_sum2=n_prime_sum2+n_prime_sum*w
-
-                x_second_sum2=x_second_sum2+x_second_sum*w
-                p_second_sum2=p_second_sum2+p_second_sum*w
-                n_second_sum2=n_second_sum2+n_second_sum*w
-                
             end do
-            !!$OMP END DO
-            !!$OMP MASTER
+            !$OMP END DO
+            !$OMP MASTER
             call collect_sum(xsum2, xsum)
             call collect_sum(psum2, psum)
             call collect_sum(nsum2, nsum)
@@ -212,74 +153,28 @@ contains
             xsum3=xsum3+xsum*w
             psum3=psum3+psum*w
             nsum3=nsum3+nsum*w
-
-            x_prime_sum3=x_prime_sum3+x_prime_sum*w
-            p_prime_sum3=p_prime_sum3+p_prime_sum*w
-            n_prime_sum3=n_prime_sum3+n_prime_sum*w
-
-            x_second_sum3=x_second_sum3+x_second_sum*w
-            p_second_sum3=p_second_sum3+p_second_sum*w
-            n_second_sum3=n_second_sum3+n_second_sum*w
-            !!$OMP END MASTER
+            !$OMP END MASTER
         end do
         call del_jtensor(jt)
-!!$OMP END PARALLEL
-
-write (*,*) 'DEBUGGING'
+!$OMP END PARALLEL
 
         call nl
         call msg_out(repeat('*', 60))
-!        write(str_g, '(a,3f10.5)') '   Magnetic field <x,y,z> =', bb
-!        call msg_out(str_g)
-        write(str_g, '(a,f15.8)') '   Induced current (au)    :', xsum3
+        write(str_g, '(a,f13.6)') '   Induced current (au)    :', xsum3
         call msg_out(str_g)
-        write(str_g, '(a,f15.8,a,f13.8,a)') &
+        write(str_g, '(a,f13.6,a,f11.6,a)') &
             '      Positive contribution:', psum3, '  (',au2si(psum3),' )'
         call msg_out(str_g)
-        write(str_g, '(a,f15.8,a,f13.8,a)') &
+        write(str_g, '(a,f13.6,a,f11.6,a)') &
             '      Negative contribution:', nsum3, '  (',au2si(nsum3),' )'
         call msg_out(str_g)
         call nl
-        write(str_g, '(a,f15.8)') '   Induced current (nA/T)  :', au2si(xsum3)
+        write(str_g, '(a,f13.6)') '   Induced current (nA/T)  :', au2si(xsum3)
         call msg_out(str_g)
-        write(str_g, '(a,f15.8)') '      (conversion factor)  :', au2si(1.d0)
+        write(str_g, '(a,f13.6)') '      (conversion factor)  :', au2si(1.d0)
         call msg_out(str_g)
-        call nl
-
-        call nl
         call msg_out(repeat('*', 60))
         call nl
-        write(str_g, '(a,3f10.5)') '   Magnetic field <x,y,z> =', bb_prime
-        call msg_out(str_g)
-        write(str_g, '(a,f15.8)') '   Induced j_prime current (au)    :', x_prime_sum3
-        call msg_out(str_g)
-        write(str_g, '(a,f15.8,a,f13.8,a)') &
-            '      Positive j_prime contribution:', p_prime_sum3, '  (',au2si(p_prime_sum3),' )'
-        call msg_out(str_g)
-        write(str_g, '(a,f15.8,a,f13.8,a)') &
-            '      Negative j_prime contribution:', n_prime_sum3, '  (',au2si(n_prime_sum3),' )'
-        call msg_out(str_g)
-        call nl
-        write(str_g, '(a,f15.8)') '   Induced j_prime current (nA/T)  :', au2si(x_prime_sum3)
-        call msg_out(str_g)
-        call nl
-        call msg_out(repeat('*', 60))
-        call nl
-        write(str_g, '(a,3f10.5)') '   Magnetic field <x,y,z> =', bb_second
-        call msg_out(str_g)
-        write(str_g, '(a,f15.8)') '   Induced j_second current (au)    :', x_second_sum3
-        call msg_out(str_g)
-        write(str_g, '(a,f15.8,a,f13.8,a)') &
-            '      Positive j_second contribution:', p_second_sum3, '  (',au2si(p_second_sum3),' )'
-        call msg_out(str_g)
-        write(str_g, '(a,f15.8,a,f13.8,a)') &
-            '      Negative j_second contribution:', n_second_sum3, '  (',au2si(n_second_sum3),' )'
-        call msg_out(str_g)
-        call nl
-        write(str_g, '(a,f15.8)') '   Induced j_second current (nA/T)  :', au2si(x_second_sum3)
-        call msg_out(str_g)
-        call nl
-        call msg_out(repeat('*', 60))
 
         spin = 'total'
     end subroutine

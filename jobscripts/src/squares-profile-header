@@ -64,18 +64,18 @@ do
 done
 
 printf "\nEND POINT OF THE INTEGRATION\n"
-out=7
+out=10
 printf "\nDo you accept out=$out bohr?" # ask about the default value 
 userInp out $out
 
 printf "\n\nUPPER AND LOWER BOUNDS OF THE INTEGRATION\n"
-up=5
-down=-5
+up=10
+down=-10
 valueDimInp up $up "bohr"
 valueDimInp down $down "bohr"
 
 printf "\n\nWIDTH OF THE SLICES\n"
-delta=1 #0.05
+delta=0.25
 #deltaV=0.05
 #echo "Horizontal slicing (in-out):"
 valueDimInp delta $delta "bohr"	
@@ -122,7 +122,7 @@ checkMaxProj="installed"
 if [ ! -z $accept ] && [ $accept == "a" ]
 then
     checkMaxProj=$(command -v maximise_projection) #  command -> returns the path of the binary if it is found
-    if [ ! -e $checkMaxProj ]
+    if [ -z $checkMaxProj ]
     then
 	echo "The program maximise_projection is not found. Switching to manual input of the magnetic field components."
     else
@@ -132,7 +132,7 @@ then
 	MFz=$( cat $dirname/field.dat | sed -e 's#{#_#g; s#}#_#g; s#,#_#g' | awk -F [_] '{ {print -$4} }')
     fi
 fi
-if ( [ ! -z $accept ] && [ $accept == "m" ] ) || [ -e $checkMaxProj ]
+if ( [ ! -z $accept ] && [ $accept == "m" ] ) || [ -z $checkMaxProj ]
 then
     echo "Please enter numeric values."
     valueDimInp MFx $MFx "bohr"
@@ -294,16 +294,18 @@ then
 fi
 
 echo "Preparing input files..."
+sed -i 's#../#../../#g' ./$dirname/gimic.Inp # the input files lie in a subdirectory of the work directory
 for (( i=0; i<$nstepsH; i++ ))
 do
     xstart=$( awk -v xstart=$xstart -v delta=$delta 'BEGIN{printf "%.3f\n", xstart+delta }' )
     xend=$( awk -v delta=$delta -v xstart=$xstart 'BEGIN{ printf "%.3f\n", xstart+delta }' ) 
+    mkdir ./$dirname/gimic.$i
     for (( j=0; j<$nstepsV; j++ ))
     do
 	xdown=$( awk -v delta=$delta -v xdown=$xdown 'BEGIN{ printf "%.3f\n", xdown+delta }' ) 
 	xup=$( awk -v xdown=$xdown -v delta=$delta 'BEGIN{printf "%.3f\n", xdown+delta }' )
 	string=" s/@start@/$xstart/; s/@end@/$xend/; s/@up@/$xup/; s/@down@/$xdown/"
-	sed "$string" $dirname/gimic.Inp > $dirname/gimic.$i.$j.inp 
+	sed "$string" $dirname/gimic.Inp > $dirname/gimic.$i/gimic.$i.$j.inp 
     done
     xdown=$( awk -v down=$down -v delta=$delta 'BEGIN{printf "%.3f\n", down-delta }' )  # down is a negative number
     xup=$( awk -v delta=$delta -v xdown=$xdown 'BEGIN{ printf "%.3f\n", xdown+delta }' ) 

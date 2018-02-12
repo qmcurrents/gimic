@@ -8,114 +8,44 @@ checkIfEmpty wrkdir $wrkdir
 
 echo "Running Gimic calculations..."
 
-filenum=$(ls $wrkdir/*inp | wc -l)
+filenum=$( (cd $wrkdir && find . -maxdepth 1 -type f -name '*.inp' | wc -l))
 checkIfEmpty filenum $filenum
 
-nstepsH=$( sed -n -e 's/^.*nstepsH=//p' $wrkdir/calculation.dat | awk '{print $1}')
 nstepsV=$( sed -n -e 's/^.*nstepsV=//p' $wrkdir/calculation.dat | awk '{print $1}')
-checkIfEmpty nstepsH $nstepsH
 checkIfEmpty nstepsV $nstepsV
 
 parallel=4
-
 echo "Enter the number of parallel jobs"
 read parallel
 checkIfEmpty parallel $parallel
 
 # check if too many parallel tasks are called
-if [ $parallel -gt $nstepsH ]
+if [ $parallel -gt $filenum ]
 then
-    $parallel=$($nstepsH)
+    $parallel=$(echo $filenum)
 fi
 
 rm -rf *out *dat *eps GIMIC.*
+echo
 date
 echo "Running $parallel out of $filenum GIMIC calculations at a time..."
 
-# Run the tasks in row-major order
-wholeH=$( awk -v filenum=$nstepsH -v parallel=$parallel 'BEGIN{printf "%d\n", filenum/parallel}'  ) 
-remainH=$(awk -v whole=$wholeH -v filenum=$nstepsH -v parallel=$parallel 'BEGIN{printf "%d\n", (filenum-whole*parallel) }')
-checkIfEmpty wholeH $wholeH
-checkIfEmpty remainH $remainH
-
-wholeV=$( awk -v filenum=$nstepsV -v parallel=$parallel 'BEGIN{printf "%d\n", filenum/parallel}'  ) 
-remainV=$(awk -v whole=$wholeV -v filenum=$nstepsV -v parallel=$parallel 'BEGIN{printf "%d\n", (filenum-whole*parallel) }')
-checkIfEmpty wholeV $wholeV
-checkIfEmpty remainV $remainV
-
-completedH=0
-completedV=0
-
-idxH=-1
-idxV=-1
-for ((i=0; i<$wholeH; i++))	
-do 
-    for ((j=0; j<$parallel; j++))  
-    do  
-	idxH=$(( $i + $j*$wholeH ))
-	for ((k=0; k<$wholeV; k++)) 
-	do 
-	    for ((l=0; l<$parallel; l++)) 
-	    do  
-		idxV=$(( $k + $l*$wholeV ))
-	#	echo idx = $idxH, $idxV
-		cd $wrkdir && gimic gimic.$idxH.$idxV.inp > $wrkdir/gimic.$idxH.$idxV.out & 
-	    done 
-	    wait
-	done
-	completedV=$(( $completedV+$parallel ))
+for ((col=0; col<$nstepsV; col++))
+do
+    counter=$(( $counter+1 ))
+    idxH=$(echo $file | sed -e "s#\.# #g" | awk '{ print $2}' )
+    idxV=$(echo $file | sed -e "s#\.# #g" | awk '{ print $3}' )
+#    echo $file " == gimic.$idxH.$idxV.inp"
+    cd $wrkdir && gimic gimic.$idxH.$idxV.inp > $wrkdir/gimic.$idxH.$idxV.out &
+    if [ $counter -eq $parallel ]
+    then
+	wait
+	counter=0
+	completed=$(( $completed*$parallel ))
 	date
-	echo "$completedV vertical completed"; echo
-	# calculate the remaining vertical ones:
-	if [[ "$remainV" -gt 0 ]]; then
-	    for ((m=0; m<$remainV; m++))
-	    do  
-		    idxV=$(( $parallel*$wholeV + $m ))
-	#	    echo idx = $idxH, $idxV
-		    cd $wrkdir && gimic gimic.$idxH.$idxV.inp > $wrkdir/gimic.$idxH.$idxV.out & 
-		wait
-		completedH=$(( $compltedH+$parallel ))
-		echo "$completedH horizontal completed"; echo
-	    done
-	fi
-    done    
+	echo "$completed out of $filenum jobs completed"; echo
+    fi
 done
-
-
-
-# calculate the remaining horizontal ones:
-if [[ "$remainH" -gt 0 ]]; then
-    for ((i=0; i<$remainH; i++))
-    do  
-	idxH=$(( $parallel*$wholeH + $i ))
-	for ((k=0; k<$wholeV; k++)) 
-	do 
-	    for ((l=0; l<$parallel; l++)) 
-	    do  
-		idxV=$(( $k + $l*$wholeV ))
-	#	echo idx = $idxH, $idxV
-		cd $wrkdir && gimic gimic.$idxH.$idxV.inp > $wrkdir/gimic.$idxH.$idxV.out & 
-	    done 
-	    wait
-	done
-	completedV=$(( $completedV+$parallel ))
-	date
-	echo "$completedV vertical completed"; echo
-	# calculate the remaining vertical ones:
-	if [[ "$remainV" -gt 0 ]]; then
-	    for ((m=0; m<$remainV; m++))
-	    do  
-		    idxV=$(( $parallel*$wholeV + $m ))
-	#	    echo idx = $idxH, $idxV
-		    cd $wrkdir && gimic gimic.$idxH.$idxV.inp > $wrkdir/gimic.$idxH.$idxV.out & 
-		completedH=$(( $compltedH+$parallel ))
-		echo "$completedH horizontal completed"; echo
-	    done
-	fi
-#	done
-    done
-fi
-#    echo "$filenum of $filenum completed"
 
 
 

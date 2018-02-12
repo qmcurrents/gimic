@@ -7,7 +7,7 @@ echo "Working directory:"; echo $wrkdir; echo
 
 #echo "Running Gimic calculations..."
 
-filenum=$(ls $wrkdir/*inp | wc -l)
+filenum=$( (cd $wrkdir && find . -maxdepth 1 -type f -name '*.inp' | wc -l))
 checkIfEmpty filenum $filenum
 
 parallel=4

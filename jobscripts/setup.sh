@@ -111,26 +111,12 @@ fi
 
 # Prepare the batch job script for squares profile:
 
-file="src/jobscript.IN"
+file="src/jobscript-squares.IN"
 SCRIPT_OUT=jobscript-squares
 sedstring="s:@SCRIPTS_DIR@:$SCRIPTS_DIR:"
 if [ $SCRIPT_OUT -ot $file ] 
 then 
     cat src/jobscript-header > $SCRIPT_OUT
-    sed "$sedstring" $file >> $SCRIPT_OUT
-    echo "Created script $SCRIPT_OUT."
-    chmod +x $SCRIPT_OUT
-fi
-
-# Prepare the batch job script for squares profile:
-
-file=jobscript.IN
-SCRIPT_OUT=jobscript
-sedstring="s:@SCRIPTS_DIR@:$SCRIPTS_DIR:"
-if [ $SCRIPT_OUT -ot $file ] 
-then 
-    echo; echo "REMEMBER TO CHANGE THE BATCH SCRIPT jobscript-header TO SUIT YOUR CLUSTER BEFORE SETUP"
-    cat jobscript-header > $SCRIPT_OUT
     sed "$sedstring" $file >> $SCRIPT_OUT
     echo "Created script $SCRIPT_OUT."
     chmod +x $SCRIPT_OUT
