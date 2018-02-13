@@ -1,0 +1,158 @@
+#!/bin/bash
+
+function checkIfEmpty() {
+# usage: validateInput variable $variable 
+    local __inputVar=$1
+    local __inputValue="$2"
+    while [ -z "$__inputValue" ]
+    do
+        printf "*** Variable \"$__inputVar\" empty ***\nPlease restart the script.\n"
+	echo "If the error persists, file a bug report to maria.dimitrova@helsinki.fi or https://github.com/mariavd/gimic"; echo
+        exit;
+    done
+
+}
+
+
+echo "Calculating the gradient..."
+
+wrkdir=$(pwd)
+checkIfEmpty wrkdir $wrkdir
+dirname=$( echo ${wrkdir##*/} ) # removes everything before the backslash
+checkIfEmpty dirname $dirname
+
+filenum=$(ls *.inp | wc -l)
+checkIfEmpty filenum $filenum
+
+cat /dev/null > $wrkdir/paratropic.dat #delete if it already exists
+cat /dev/null > $wrkdir/diatropic.dat
+cat /dev/null > $wrkdir/current.dat
+
+cat /dev/null > $wrkdir/paratropic_prime.dat #delete if it already exists
+cat /dev/null > $wrkdir/diatropic_prime.dat
+cat /dev/null > $wrkdir/current_prime.dat
+
+cat /dev/null > $wrkdir/paratropic_second.dat #delete if it already exists
+cat /dev/null > $wrkdir/diatropic_second.dat
+cat /dev/null > $wrkdir/current_second.dat
+
+start=$( sed -n -e 's/^.*in=//p' $wrkdir/calculation.dat | awk '{print $1}')
+out=$( sed -n -e 's/^.*out=//p' $wrkdir/calculation.dat | awk '{print $1}')
+delta=$( sed -n -e 's/^.*delta=//p' $wrkdir/calculation.dat | awk '{print $1}')
+checkIfEmpty start $start
+checkIfEmpty out $out
+checkIfEmpty delta $delta
+
+for (( i=0; i<$filenum; i++ ))
+do
+    grep -A 2 "Induced current" $wrkdir/gimic.$i.out | awk -v dia="$wrkdir/diatropic.dat" -v para="$wrkdir/paratropic.dat" '{ if (NR == 2) printf("% .8f\n", $5) >> dia; else if (NR == 3) printf("% .8f\n", $5) >> para; }'
+    grep "Induced current (nA/T)" $wrkdir/gimic.$i.out | awk -v i=$i -v down=$down -v delta=$delta -v out="$wrkdir/current.dat" '{ printf("%5.2f\t% .8f\n", i*delta,$5) >> out; }'
+
+    grep -A 2 "Induced j_prime current" $wrkdir/gimic.$i.out | awk -v dia="$wrkdir/diatropic_prime.dat" -v para="$wrkdir/paratropic_prime.dat" '{ if (NR == 2) printf("% .8f\n", $6) >> dia; else if (NR == 3) printf("% .8f\n", $6) >> para; }'
+    grep "Induced j_prime current (nA/T)" $wrkdir/gimic.$i.out | awk -v i=$i -v down=$down -v delta=$delta -v out="$wrkdir/current_prime.dat" '{ printf("%5.2f\t% f\n", i*delta,$6) >> out; }'
+
+    grep -A 2 "Induced j_second current" $wrkdir/gimic.$i.out | awk -v dia="$wrkdir/diatropic_second.dat" -v para="$wrkdir/paratropic_second.dat" '{ if (NR == 2) printf("% .8f\n", $6) >> dia; else if (NR == 3) printf("% .8f\n", $6) >> para; }'
+    grep "Induced j_second current (nA/T)" $wrkdir/gimic.$i.out | awk -v i=$i -v down=$down -v delta=$delta -v out="$wrkdir/current_second.dat" '{ printf("%5.2f\t% f\n", i*delta,$6) >> out; }'
+done
+
+paste $wrkdir/current.dat $wrkdir/diatropic.dat $wrkdir/paratropic.dat > $wrkdir/current_profile.dat
+rm -f $wrkdir/paratropic.dat $wrkdir/diatropic.dat $wrkdir/current.dat
+
+paste $wrkdir/current_prime.dat $wrkdir/diatropic_prime.dat $wrkdir/paratropic_prime.dat > $wrkdir/current_profile_prime.dat
+rm -f $wrkdir/paratropic_prime.dat $wrkdir/diatropic_prime.dat $wrkdir/current_prime.dat
+
+paste $wrkdir/current_second.dat $wrkdir/diatropic_second.dat $wrkdir/paratropic_second.dat > $wrkdir/current_profile_second.dat
+rm -f $wrkdir/paratropic_second.dat $wrkdir/diatropic_second.dat $wrkdir/current_second.dat
+
+printf "\nData saved in current_profile.dat\n\n"
+
+gnuplot << EOF                                                                                   
+
+# diatropic (green)
+set style line 1 lt 1 lw 5 lc rgb "#007F00" 
+# paratropic (blue)
+set style line 2 lt 3 lw 5 lc rgb "#1E46FF"
+# vertical lines (cyan)
+set style line 3 lt 1 lw 2 lc rgb "#00DCFF"
+# vertical zero line
+set style line 4 lt 1 lw 5 lc rgb "#000000" 
+
+set format x "%5.2f"
+set format y "%5.2f"
+unset label
+set xlabel "Distance [bohr]"
+set ylabel "dJ/dx [nA/T / bohr]"
+
+set terminal pngcairo size 900, 700 font "Helvetica,22"
+set output "$wrkdir/$dirname\_current-profile.png"
+plot "$wrkdir/current_profile.dat" u 1:(\$2/$delta) w l lc 0 lw 2 notitle
+set output "$wrkdir/$dirname\_current-dia-para.png"
+plot "$wrkdir/current_profile.dat" u 1:(\$3/$delta) w l lc 3 lw 2 title "Diatropic", "$wrkdir/current_profile.dat" u 1:(\$4/$delta) w l lc 1 lw 2 title "Paratropic"
+EOF
+
+
+gnuplot << EOF                                                                                   
+
+# diatropic (green)
+set style line 1 lt 1 lw 5 lc rgb "#007F00" 
+# paratropic (blue)
+set style line 2 lt 3 lw 5 lc rgb "#1E46FF"
+# vertical lines (cyan)
+set style line 3 lt 1 lw 2 lc rgb "#00DCFF"
+# vertical zero line
+set style line 4 lt 1 lw 5 lc rgb "#000000" 
+
+set format x "%5.2f"
+set format y "%5.2f"
+unset label
+set xlabel "Distance [bohr]"
+set ylabel "dJ/dx [nA/T / bohr]"
+
+set terminal pngcairo size 900, 700 font "Helvetica,22"
+set output "$wrkdir/$dirname\_current-profile_prime.png"
+plot "$wrkdir/current_profile_prime.dat" u 1:(\$2/$delta) w l lc 0 lw 2 notitle
+set output "$wrkdir/$dirname\_current-dia-para_prime.png"
+plot "$wrkdir/current_profile_prime.dat" u 1:(\$3/$delta) w l lc 3 lw 2 title "Diatropic", "$wrkdir/current_profile_prime.dat" u 1:(\$4/$delta) w l lc 1 lw 2 title "Paratropic"
+EOF
+
+
+gnuplot << EOF                                                                                   
+
+# diatropic (green)
+set style line 1 lt 1 lw 5 lc rgb "#007F00" 
+# paratropic (blue)
+set style line 2 lt 3 lw 5 lc rgb "#1E46FF"
+# vertical lines (cyan)
+set style line 3 lt 1 lw 2 lc rgb "#00DCFF"
+# vertical zero line
+set style line 4 lt 1 lw 5 lc rgb "#000000" 
+
+set format x "%5.2f"
+set format y "%5.2f"
+unset label
+set xlabel "Distance [bohr]"
+set ylabel "dJ/dx [nA/T / bohr]"
+
+set terminal pngcairo size 900, 700 font "Helvetica,22"
+set output "$wrkdir/$dirname\_current-profile_second.png"
+plot "$wrkdir/current_profile_second.dat" u 1:(\$2/$delta) w l lc 0 lw 2 notitle
+set output "$wrkdir/$dirname\_current-dia-para_second.png"
+plot "$wrkdir/current_profile_second.dat" u 1:(\$3/$delta) w l lc 3 lw 2 title "Diatropic", "$wrkdir/current_profile_second.dat" u 1:(\$4/$delta) w l lc 1 lw 2 title "Paratropic"
+EOF
+
+echo
+echo "Plots generated at "
+echo $wrkdir/$dirname\_current-profile.png
+echo $wrkdir/$dirname\_current-dia-para.png
+echo
+
+#######################################################################
+# Find the zeroes on the current profile plot
+
+@SCRIPTS_DIR@/crit_pts.sh $wrkdir
+
+#cat $wrkdir/profile-points.out
+
+#######################################################################
+
+echo
