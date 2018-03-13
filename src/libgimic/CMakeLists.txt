@@ -11,7 +11,6 @@ set(sources
     caos.f90
     dens.f90
     divj.f90
-    edens.f90
     factorial.f90
     gaussint.f90
     gtodefs.f90

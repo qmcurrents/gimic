@@ -179,8 +179,6 @@ contains
             call run_integral()
         else if (settings%calc(1:4) == 'divj') then
             call run_divj()
-        else if (settings%calc(1:5) == 'edens') then
-            call run_edens()
         else
             call msg_error('gimic(): Unknown operation!')
         end if
@@ -270,32 +268,6 @@ contains
             call divj_plot(dj, 'divj')
         end if
         call del_divj_field(dj)
-    end subroutine
-
-    subroutine run_edens
-        use edens_field_class
-        type(edens_field_t) :: ed
-        type(dens_t) :: modens
-        call msg_out('Calculating charge density')
-        call msg_out('*****************************************')
-        ! do some allocation stuff !
-        call new_dens(modens, mol, .true.)
-        ! read all information in !
-        ! print *, "morange default", settings%morange
-        ! this is 0 0
-        print *, 'DEBUG'
-        print *, 'morange', settings%morange
-        !                             edens             mos   0,0
-        call read_modens(modens, settings%density, settings%mofile, &
-            settings%morange)
-        call new_edens_field(ed, mol, modens, grid, 'edens.bin')
-        if (settings%dryrun) return
-        call edens_field(ed)
-        if (mpi_rank == 0) then
-            call edens_plot(ed, "edens")
-        end if
-        call del_edens_field(ed)
-        call del_dens(modens)
     end subroutine
 
     subroutine program_header
