@@ -17,8 +17,7 @@ f = [get_filter(rel_tolerance=1.0e-8)]
 ierr = run(options,
            configure,
            input_files=['gimic.inp'],
-           filters={'acid.txt': f,
-                    'jmod.txt': f,
+           filters={'jmod.txt': f,
                     'jvec.txt': f,
                     'jvec.vti': f})
 
