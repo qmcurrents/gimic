@@ -3,7 +3,6 @@ add_executable(gimic.bin
     gimic.F90
     getkw.f90
     integral.f90
-    cubeplot.f90
     vtkplot.f90
     magnet.f90
     grid.f90

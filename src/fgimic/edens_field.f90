@@ -13,7 +13,7 @@ module edens_field_class
     use edens_class
     use teletype_module
     use parallel_module
-    use cubeplot_module
+!   use cubeplot_module
     implicit none
 
     public new_edens_field, del_edens_field, edens_field_t
@@ -124,7 +124,7 @@ contains
         do k=1,p3
             read(EDFD, rec=k) buf(:,:,k)
         end do
-        call write_cubeplot(trim(fname), this%grid, buf)
+        ! call write_cubeplot(trim(fname), this%grid, buf)
         deallocate(buf)
 
     end subroutine
