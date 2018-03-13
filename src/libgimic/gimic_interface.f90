@@ -14,7 +14,6 @@ module gimic_interface
     use basis_class
     use dens_class
     use jtensor_class
-    use edens_class
     use divj_module   ! must be turned into class
     use caos_module
     use gaussint_module
@@ -165,15 +164,5 @@ contains
         d = 0.0
     end subroutine
 
-    subroutine gimic_calc_edens(r, d) bind(c)
-        real(C_DOUBLE), dimension(3), intent(in) :: r
-        real(C_DOUBLE), intent(out) :: d
-
-        type(edens_t) :: rho
-
-        call new_edens(rho, mol, xdens)
-        d = edens(rho, r)
-        call del_edens(rho)
-    end subroutine
 end module
 
