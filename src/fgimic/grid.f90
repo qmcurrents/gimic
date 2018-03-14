@@ -327,7 +327,7 @@ contains
         end do
 
         if (flag) then
-            write(str_g, '(a,3i5)'), &
+            write(str_g, '(a,3i5)') &
             'Adjusted number of grid points for quadrature: ', this%npts
             call msg_info(str_g)
         end if
