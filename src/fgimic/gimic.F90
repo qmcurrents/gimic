@@ -74,7 +74,6 @@ contains
         call getkw(input, 'magnet', settings%magnet)
         call getkw(input, 'openshell', settings%is_uhf)
         call getkw(input, 'dryrun', settings%dryrun)
-        ! call getkw(input, 'show_axis', settings%show_axis)
         call getkw(input, 'calc', settings%calc)
         call getkw(input, 'xdens', settings%xdens)
         call getkw(input, 'density', settings%density)
@@ -89,10 +88,8 @@ contains
         call getkw(input, 'Advanced.paramag',settings%use_paramag)
         call getkw(input, 'Advanced.screening', settings%use_screening)
         call getkw(input, 'Advanced.screening_thrs', settings%screen_thrs)
-!        call getkw(input, 'Advanced.lip_order', settings%lip_order)
 
         call getkw(input, 'Essential.acid', settings%acid)
-       ! call getkw(input, 'Essential.jav', settings%jav)
 
         ierr=hostnm(sys)
         if (mpi_rank == 0) then
@@ -250,9 +247,6 @@ contains
            call nl
         end if
 
-!        call msg_note('Integrating current tensor')
-!        call int_t_direct(it)  ! tensor integral
-!        call write_integral(it)
         call del_integral(it)
     end subroutine
 

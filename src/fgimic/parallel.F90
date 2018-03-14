@@ -92,14 +92,9 @@ contains
             return
         end if
 #ifdef HAVE_MPI
-!        call mpi_barrier(MPI_COMM_WORLD, ierr)
-
         call mpi_gather(source, size(source), MPI_DOUBLE_PRECISION, &
             dest, size(source), MPI_DOUBLE_PRECISION, 0, &
             MPI_COMM_WORLD, ierr)
-!        call mpi_gather(dest, n, MPI_DOUBLE_PRECISION, &
-!            MPI_IN_PLACE, n, MPI_DOUBLE_PRECISION, 0, &
-!            MPI_COMM_WORLD, ierr)
         if (ierr /= 0) then
             stop 'MPI error in gather_data()'
         end if
