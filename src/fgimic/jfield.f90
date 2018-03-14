@@ -312,23 +312,32 @@ contains
         end do
         call closefd(fd1)
         call closefd(fd2)
-        if (settings%acid) then
-          call closefd(fd3)
-          call acid_vtkplot(this)
+        ! case 3D grid
+        if (grid_is_3d(this%grid)) then
+          if (settings%acid) then
+            call closefd(fd3)
+            call acid_vtkplot(this)
+          end if
+          ! put modulus info on file
+          if (present(tag)) then
+            call jmod2_vtkplot(this, tag)
+          else
+            call jmod2_vtkplot(this)
+          end if
         end if
         ! put jvec information on vti file
         call write_vtk_vector_imagedata("jvec.vti", this%grid, jval)
         deallocate(jval)
-        ! put modulus info on file
-        call jmod2_vtkplot(this)
+
 
     end subroutine
 
-    subroutine jmod2_vtkplot(this)
+    subroutine jmod2_vtkplot(this, tag)
     ! based on jmod_vtkplot
     ! purpose: write all information on one file
         use vtkplot_module
         type(jfield_t) :: this
+        character(*), optional :: tag
 
         integer(I4) :: p1, p2, p3, fd1, fd2
         integer(I4) :: i, j, k, l
@@ -382,7 +391,11 @@ contains
                 end do
             end do
         end do
-        call write_vtk_imagedata('jmod.vti', this%grid, val)
+        if (present(tag)) then
+          call write_vtk_imagedata('jmod'// tag // '.vti', this%grid, val)
+        else
+          call write_vtk_imagedata('jmod.vti', this%grid, val)
+        end if
         deallocate(val)
     end subroutine
 
