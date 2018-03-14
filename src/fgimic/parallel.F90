@@ -95,9 +95,6 @@ contains
         call mpi_gather(source, size(source), MPI_DOUBLE_PRECISION, &
             dest, size(source), MPI_DOUBLE_PRECISION, 0, &
             MPI_COMM_WORLD, ierr)
-        if (ierr /= 0) then
-            stop 'MPI error in gather_data()'
-        end if
 #endif
     end subroutine
 
