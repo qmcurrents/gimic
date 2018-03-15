@@ -1,0 +1,37 @@
+#!/usr/bin/env python
+
+import os
+import sys
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
+
+from runtest import version_info, get_filter, cli, run
+from runtest_config import configure
+
+assert version_info.major == 2
+
+options = cli()
+
+# we check entire files
+f = [get_filter(rel_tolerance=1.0e-7)]
+
+ierr = run(options,
+           configure,
+           input_files=['gimic.inp'],
+           filters={'jmodbeta.txt': f,
+		    'jmodspindens.vti': f,
+		    'jvecalpha.txt': f,
+		    'jvecbeta.vti': f,
+	            'jvec.txt': f,
+		    'jmodalpha.txt': f,
+		    'jmodbeta.vti': f,
+	            'jmod.txt': f,
+	            'jvecalpha.vti': f,
+		    'jvecspindens.txt': f,
+		    'jvec.vti': f,
+		    'jmodalpha.vti': f,
+ 		    'jmodspindens.txt': f,
+		    'jmod.vti': f,
+	            'jvecbeta.txt': f,
+		    'jvecspindens.vti': f})
+
+sys.exit(ierr)

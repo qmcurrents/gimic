@@ -326,7 +326,11 @@ contains
           end if
         end if
         ! put jvec information on vti file
-        call write_vtk_vector_imagedata("jvec.vti", this%grid, jval)
+        if (present(tag)) then
+          call write_vtk_vector_imagedata('jvec'// tag // '.vti', this%grid, jval)
+        else
+          call write_vtk_vector_imagedata("jvec.vti", this%grid, jval)
+        end if
         deallocate(jval)
 
 
