@@ -14,7 +14,6 @@ module gimic_interface
     use basis_class
     use dens_class
     use jtensor_class
-    use divj_module   ! must be turned into class
     use caos_module
     use gaussint_module
     implicit none
@@ -149,12 +148,6 @@ contains
         call new_jtensor(jtens, mol, xdens)
         call jvector(jtens, r, settings%magnet, jv, spin)
         call del_jtensor(jtens)
-    end subroutine
-
-    subroutine gimic_calc_divj(r, d) bind(c)
-        real(C_DOUBLE), dimension(3), intent(in) :: r
-        real(C_DOUBLE), intent(out) :: d
-        d = divj(r, settings%magnet)
     end subroutine
 
     subroutine gimic_calc_modj(r, d) bind(c)

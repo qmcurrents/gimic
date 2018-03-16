@@ -10,7 +10,6 @@ set(sources
     cao2sao.f90
     caos.f90
     dens.f90
-    divj.f90
     factorial.f90
     gaussint.f90
     gtodefs.f90

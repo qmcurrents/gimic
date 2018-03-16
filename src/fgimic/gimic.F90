@@ -174,8 +174,6 @@ contains
             call run_cdens(jf,mol,xdens)
         else if (settings%calc(1:8) == 'integral') then
             call run_integral()
-        else if (settings%calc(1:4) == 'divj') then
-            call run_divj()
         else
             call msg_error('gimic(): Unknown operation!')
         end if
@@ -248,20 +246,6 @@ contains
         end if
 
         call del_integral(it)
-    end subroutine
-
-    subroutine run_divj
-        use divj_field_class
-        type(divj_field_t) :: dj
-        call msg_out('Calculating divergence')
-        call msg_out('*****************************************')
-        call new_divj_field(dj, grid, magnet)
-        if (settings%dryrun) return
-        call divj_field(dj)
-        if (mpi_rank == 0) then
-            call divj_plot(dj, 'divj')
-        end if
-        call del_divj_field(dj)
     end subroutine
 
     subroutine program_header
