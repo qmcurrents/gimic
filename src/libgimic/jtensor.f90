@@ -44,7 +44,6 @@ contains
 
         ncgto=get_ncgto(mol)
 
-!        call new_dens(ddens)
         this%mol=>mol
         this%xdens=>xdens
         call new_bfeval(this%basv, this%mol)
@@ -178,8 +177,6 @@ contains
               ppd=dot_product(this%pdbf, this%drvec(:,m))
               ct(m,b)=ZETA*ppd
               if (settings%use_giao) ct(m,b)=ct(m,b)+ZETA*(prsp1+prsp2)
-!              print *, m,b
-!              print *, ppd, prsp1, prsp2
               k=k+1
             end do
         end do
@@ -208,71 +205,4 @@ contains
 
     end subroutine
 
-!    subroutine jdebug(this, r)
-!        type(jtensor_t) :: this
-!        real(DP), dimension(3), intent(in) :: r
-
-!        integer(I4) :: i, b
-!        integer(I4), save :: notify=1
-
-!        call bfeval(this%bfv, r, this%bfvec)
-!        call dfdr(this%dfr, r, this%drvec)
-!        call mkdbop(this%dop, r, this%dbop)
-!        call dfdb(this%dbt, r, this%bfvec, this%dbop, this%dbvec)
-!        call d2fdrdb(this%d2f, r, this%bfvec, this%drvec, this%dbop, this%d2fvec)
-!
-!        print *, 'bfvec'
-!        print *, repeat('-', 70)
-!        print *, this%bfvec
-!        print *
-
-!        print *, 'drvec'
-!        print *, repeat('-', 70)
-!        print 45
-!        print 41, this%drvec(1,:)
-!        print 42, this%drvec(2,:)
-!        print 43, this%drvec(3,:)
-!        print 44, this%drvec(4,:)
-!        print *
-
-!        print *, 'dbvec'
-!        print *, repeat('-', 70)
-!        print 45
-!        print 41, this%dbvec(1,:)
-!        print 42, this%dbvec(2,:)
-!        print 43, this%dbvec(3,:)
-!        print 44, this%dbvec(4,:)
-!        print *
-
-!        print *, 'd2fvec'
-!        print *, repeat('-', 70)
-!        print *, 'X'
-!        print 45
-!        print 41, this%d2fvec(1,1:3)
-!        print 42, this%d2fvec(2,1:3)
-!        print 43, this%d2fvec(3,1:3)
-!        print 44, this%d2fvec(4,1:3)
-!        print *
-!        print *, 'Y'
-!        print 45
-!        print 41, this%d2fvec(1,4:6)
-!        print 42, this%d2fvec(2,4:6)
-!        print 43, this%d2fvec(3,4:6)
-!        print 44, this%d2fvec(4,4:6)
-!        print *
-!        print *, 'Z'
-!        print 45
-!        print 41, this%d2fvec(1,7:9)
-!        print 42, this%d2fvec(2,7:9)
-!        print 43, this%d2fvec(3,7:9)
-!        print 44, this%d2fvec(4,7:9)
-!41 format('s ',3f15.10)
-!42 format('px',3f15.10)
-!43 format('py',3f15.10)
-!44 format('pz',3f15.10)
-!45 format('===        x             y               z')
-!    end subroutine
-
 end module
-
-! vim:et:sw=4:ts=4
