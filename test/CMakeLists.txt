@@ -17,6 +17,8 @@ foreach(_name
     benzene/giao-test   
     c4h4/integration
     c4h4/read-grid
+    open-shell/3d
+    open-shell/integration
     )
     add_test(
         NAME ${_name}
