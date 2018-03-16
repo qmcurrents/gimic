@@ -76,6 +76,8 @@ to produce the ``MOL`` and ``XDENS`` files.
 ::
     $ turbo2gimic.py > MOL
 
+Note, open-shell calculations are not supported.
+
 
 Running QChem and FERMION++
 ---------------------------
@@ -93,6 +95,8 @@ qc2tm -h:
 USAGE: qc2tm -t <qchem or fermions> -qcout <output-file> -scr
              <scratch-directory> -s2c (opt.) -openshell (opt.)
 
+Note, open-shell calculations are not supported.
+
 Running LSDalton
 ---------------- 
 
@@ -103,6 +107,8 @@ Written by C. Kumar, University of Oslo, chandan.kumar@kjemi.uio.no
 ".GIMIC" needs to be added in LSDALTON.INP 
 
 Run in the same directory "python lsdalton2gimic.py"
+
+Note, open-shell calculations are not supported.
 
 Running Gausian
 --------------- 
