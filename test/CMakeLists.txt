@@ -12,6 +12,7 @@ foreach(_name
     benzene/keyword-rotation_origin
     benzene/keyword-radius
     benzene/int-grid-bond-even
+    benzene/int-cdens
     benzene/diamag-off
     benzene/paramag-off
     benzene/giao-test   

@@ -1,0 +1,37 @@
+# NEW INPUT
+
+calc=cdens          # cdens, integral, edens, divj
+#dryrun=off        # don't actually calculate (good for tuning grids, etc.)
+title=""
+basis="MOL"
+xdens="XDENS"
+debug=1           # debug print level
+openshell=false
+# show_axis=true   # mark "up" axis in .xyz files
+magnet_axis=X #[-] i,j,k || x,y,z -> align magnet along axis
+
+# grid type can be: base/std, bond or file (see examples below)
+Grid(bond) {                    # define grid orthogonal to a bond
+    type=gauss                  # gauss distribution of grid points
+    bond=[1,2]
+    fixpoint=4
+    distance=1.32               # place grid 'distance' between atoms
+    gauss_order=9               # order for gauss quadrature
+    grid_points=[30, 30, 0]
+    height=[-5.0, 5.0]
+    width=[-2.2, 5.0]
+}
+
+Advanced {
+    lip_order=5      # order of Lagrange Interpolating Polynominals to use
+    spherical=off     # don't touch, unless you REALLY know what you are doing
+    diamag=on           # turn on/off diamagnetic contributions
+    paramag=on          # turn on/off paramagnetic contributions
+    GIAO=on             # turn on/off GIAOs. Don't change unless you know why.
+    screening=on        # use screening to speed up
+    screening_thrs=1.d-8   # Screening threshold
+}
+
+Essential {
+    acid=on
+}
