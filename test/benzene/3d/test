@@ -18,9 +18,7 @@ ierr = run(options,
            configure,
            input_files=['gimic.inp'],
            filters={'acid.vti': f,
-                    'jmod.txt': f,
                     'jmod.vti': f,
-                    'jvec.txt': f,
                     'jvec.vti': f})
 
 sys.exit(ierr)

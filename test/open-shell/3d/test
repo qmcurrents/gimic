@@ -17,21 +17,13 @@ f = [get_filter(rel_tolerance=1.0e-7)]
 ierr = run(options,
            configure,
            input_files=['gimic.inp'],
-           filters={'jmodbeta.txt': f,
-		    'jmodspindens.vti': f,
-		    'jvecalpha.txt': f,
+           filters={'jmodspindens.vti': f,
 		    'jvecbeta.vti': f,
-	            'jvec.txt': f,
-		    'jmodalpha.txt': f,
 		    'jmodbeta.vti': f,
-	            'jmod.txt': f,
 	            'jvecalpha.vti': f,
-		    'jvecspindens.txt': f,
 		    'jvec.vti': f,
 		    'jmodalpha.vti': f,
- 		    'jmodspindens.txt': f,
 		    'jmod.vti': f,
-	            'jvecbeta.txt': f,
 		    'jvecspindens.vti': f})
 
 sys.exit(ierr)

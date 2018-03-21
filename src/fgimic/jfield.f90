@@ -234,9 +234,10 @@ contains
         type(molecule_t) :: mol
         character(*), optional :: tag
         logical :: circle_log
+        logical :: debug 
 
         integer(I4) :: i, j, k, p1, p2, p3
-        integer(I4) :: fd1, fd2, fd3, fd4, fd5
+        integer(I4) :: fd1, fd2, fd4, fd5
         integer(I4) :: idx, ptf
         real(DP), dimension(3) :: v, rr
         real(DP), dimension(3) :: center, normal
@@ -247,26 +248,40 @@ contains
         real(DP) :: bound, r
 
         if (mpi_rank > 0) return
+        ! get rid of print out of txt files but keep them for debugging
+        ! keep also jmod.txt for 2D case to check integration planes
 
-        if (present(tag)) then
-            fd1 = open_plot('jvec' // tag // '.txt')
-            fd2 = open_plot('jmod' // tag // '.txt')
-        else
-            fd1 = open_plot('jvec.txt')
-            fd2 = open_plot('jmod.txt')
+        debug = .false.
+        if (debug) then
+          if (present(tag)) then
+              fd1 = open_plot('jvec' // tag // '.txt')
+              fd2 = open_plot('jmod' // tag // '.txt')
+          else
+              fd1 = open_plot('jvec.txt')
+              fd2 = open_plot('jmod.txt')
+          end if
+        end if
+        ! print only jmod.txt for gauss type grid
+        if (this%grid%gauss) then
+          if (present(tag)) then
+              fd2 = open_plot('jmod' // tag // '.txt')
+          else
+              fd2 = open_plot('jmod.txt')
+          end if
         end if
 
         ! print out magnetic field
         write(*,*) "magnetic field"
         write(*,*) this%b
         write(*,*) ""
-
+        ! 
         call get_grid_size(this%grid, p1, p2, p3)
         ! this is for cdens visualization when radius option is used
         call grid_center(this%grid,center)
         bound=1.d+10
         bound=this%grid%radius
         circle_log = .false.
+        ! this only applies for grid base
         if (grid_is_3d(this%grid)) then
             circle_log = .false.
         else
@@ -298,24 +313,38 @@ contains
                     end if
                     ! collect jv vec information to put it on vti file
                     jval(i,j,k,1:3) = v
-                    call wrt_jvec(rr,v,fd1)
-                    call wrt_jmod(rr,v,fd2)
+                    if (debug) then
+                      call wrt_jvec(rr,v,fd1)
+                      call wrt_jmod(rr,v,fd2)
+                    end if
+                    if (this%grid%gauss) then
+                      call wrt_jmod(rr,v,fd2)
+                    end if
                     ! case ACID
                     if (settings%acid) then
                       idx = i+(j-1)*p1+(k-1)*p1*p2
                       val = get_acid(rr,jtens(:,idx))
                     end if
                 end do
-                if (fd1 /= 0) write(fd1, *)
-                if (fd2 /= 0) write(fd2, *)
+                    if (debug) then
+                      if (fd1 /= 0) write(fd1, *)
+                      if (fd2 /= 0) write(fd2, *)
+                    end if
+                    if (this%grid%gauss) then
+                      if (fd2 /= 0) write(fd2, *)
+                    end if
             end do
         end do
-        call closefd(fd1)
-        call closefd(fd2)
+        if (debug) then
+          call closefd(fd1)
+          call closefd(fd2)
+        end if
+        if (this%grid%gauss) then
+          call closefd(fd2)
+        end if
         ! case 3D grid
         if (grid_is_3d(this%grid)) then
           if (settings%acid) then
-            call closefd(fd3)
             call acid_vtkplot(this)
           end if
           ! put modulus info on file
@@ -326,10 +355,14 @@ contains
           end if
         end if
         ! put jvec information on vti file
-        if (present(tag)) then
-          call write_vtk_vector_imagedata('jvec'// tag // '.vti', this%grid, jval)
+        if (this%grid%gauss) then
+          write(*,*) "VTK files are only printed for even grids"
         else
-          call write_vtk_vector_imagedata("jvec.vti", this%grid, jval)
+          if (present(tag)) then
+            call write_vtk_vector_imagedata('jvec'// tag // '.vti', this%grid, jval)
+          else
+            call write_vtk_vector_imagedata("jvec.vti", this%grid, jval)
+          end if
         end if
         deallocate(jval)
 
