@@ -12,11 +12,14 @@ foreach(_name
     benzene/keyword-rotation_origin
     benzene/keyword-radius
     benzene/int-grid-bond-even
+    benzene/int-cdens
     benzene/diamag-off
     benzene/paramag-off
     benzene/giao-test   
     c4h4/integration
     c4h4/read-grid
+    open-shell/3d
+    open-shell/integration
     )
     add_test(
         NAME ${_name}

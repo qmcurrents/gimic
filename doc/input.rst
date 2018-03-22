@@ -97,15 +97,11 @@ acid=on
 
 Produce files suitable for plotting with ’gnuplot’, ’ParaView’, 'JMol'
 
-* ``acid.txt``: contains information about a grid point and the ACID function value in atomic units at that point. x, y, z, f_acid(x,y,z), x,y,z are given in bohr
-* ``acid.cube``: contains information about ACID function as Gaussian cube file
 * ``acid.vti``: contains information about ACID function as VTK file compatible with ParaView
 * ``jvec.txt``: contains information about a grid point x,y,z and the current density vector in that point jx, jy, jz (x,y,z, f_current(x,y,z), the point is given in bohr (it used to be in Ångstrøm) 
 * ``jvec.vti``: contains information about the current density vector function as VTK file compatible with ParaView
 * ``jmod.txt``: contains a grid point and the modulus of the current density vector function, x,y,z, f_mod(x,y,z)
 * ``jmod.vti``: contains the signed modulus of the current density vector function and can be visualized via two isosurfaces in ParaView
-* ``jmod.cube``: contains the modulus of the current density vector function as Gaussian cube file
-* ``jmod_quasi.cube``: contains the negative part of the signed modulus as Gaussian cube file
 
 Integration
 -----------

@@ -143,7 +143,6 @@ contains
         integer(I4) :: i
         integer(I4), dimension(3) :: atoms
         real(DP), dimension(3) :: normv
-        real(DP), dimension(2,3) :: refbond
 
         call getkw(input, 'Grid.origin', this%origin)
         call getkw(input, 'Grid.ivec', this%basv(:,1))
@@ -172,7 +171,6 @@ contains
         real(DP), dimension(3) :: normv
         integer(I4), dimension(3) :: atoms
         real(DP), dimension(3) :: v1, v2, v3, oo
-        !real(DP), dimension(2,3) :: refbond
         real(DP), dimension(2) :: hgt, wdt
         real(DP) :: l3
 
@@ -327,7 +325,7 @@ contains
         end do
 
         if (flag) then
-            write(str_g, '(a,3i5)'), &
+            write(str_g, '(a,3i5)') &
             'Adjusted number of grid points for quadrature: ', this%npts
             call msg_info(str_g)
         end if

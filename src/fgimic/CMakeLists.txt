@@ -3,14 +3,11 @@ add_executable(gimic.bin
     gimic.F90
     getkw.f90
     integral.f90
-    cubeplot.f90
     vtkplot.f90
     magnet.f90
     grid.f90
     jfield.f90
-    divj_field.f90
     parallel.F90
-    edens_field.f90
     )
 target_link_libraries(gimic.bin gimic2)
 

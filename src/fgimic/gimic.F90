@@ -74,7 +74,6 @@ contains
         call getkw(input, 'magnet', settings%magnet)
         call getkw(input, 'openshell', settings%is_uhf)
         call getkw(input, 'dryrun', settings%dryrun)
-        ! call getkw(input, 'show_axis', settings%show_axis)
         call getkw(input, 'calc', settings%calc)
         call getkw(input, 'xdens', settings%xdens)
         call getkw(input, 'density', settings%density)
@@ -89,10 +88,8 @@ contains
         call getkw(input, 'Advanced.paramag',settings%use_paramag)
         call getkw(input, 'Advanced.screening', settings%use_screening)
         call getkw(input, 'Advanced.screening_thrs', settings%screen_thrs)
-!        call getkw(input, 'Advanced.lip_order', settings%lip_order)
 
         call getkw(input, 'Essential.acid', settings%acid)
-       ! call getkw(input, 'Essential.jav', settings%jav)
 
         ierr=hostnm(sys)
         if (mpi_rank == 0) then
@@ -177,10 +174,6 @@ contains
             call run_cdens(jf,mol,xdens)
         else if (settings%calc(1:8) == 'integral') then
             call run_integral()
-        else if (settings%calc(1:4) == 'divj') then
-            call run_divj()
-        else if (settings%calc(1:5) == 'edens') then
-            call run_edens()
         else
             call msg_error('gimic(): Unknown operation!')
         end if
@@ -252,50 +245,7 @@ contains
            call nl
         end if
 
-!        call msg_note('Integrating current tensor')
-!        call int_t_direct(it)  ! tensor integral
-!        call write_integral(it)
         call del_integral(it)
-    end subroutine
-
-    subroutine run_divj
-        use divj_field_class
-        type(divj_field_t) :: dj
-        call msg_out('Calculating divergence')
-        call msg_out('*****************************************')
-        call new_divj_field(dj, grid, magnet)
-        if (settings%dryrun) return
-        call divj_field(dj)
-        if (mpi_rank == 0) then
-            call divj_plot(dj, 'divj')
-        end if
-        call del_divj_field(dj)
-    end subroutine
-
-    subroutine run_edens
-        use edens_field_class
-        type(edens_field_t) :: ed
-        type(dens_t) :: modens
-        call msg_out('Calculating charge density')
-        call msg_out('*****************************************')
-        ! do some allocation stuff !
-        call new_dens(modens, mol, .true.)
-        ! read all information in !
-        ! print *, "morange default", settings%morange
-        ! this is 0 0
-        print *, 'DEBUG'
-        print *, 'morange', settings%morange
-        !                             edens             mos   0,0
-        call read_modens(modens, settings%density, settings%mofile, &
-            settings%morange)
-        call new_edens_field(ed, mol, modens, grid, 'edens.bin')
-        if (settings%dryrun) return
-        call edens_field(ed)
-        if (mpi_rank == 0) then
-            call edens_plot(ed, "edens")
-        end if
-        call del_edens_field(ed)
-        call del_dens(modens)
     end subroutine
 
     subroutine program_header

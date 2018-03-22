@@ -11,14 +11,15 @@ assert version_info.major == 2
 
 options = cli()
 
-# we check entire files
-f = [get_filter(rel_tolerance=1.0e-8)]
+f = [
+    get_filter(from_string='*** Integrating total density',
+               num_lines=10,
+               rel_tolerance=1.0e-8),
+]
 
 ierr = run(options,
            configure,
            input_files=['gimic.inp'],
-           filters={'acid.vti': f,
-                    'jmod.vti': f,
-                    'jvec.vti': f})
+           filters={'stdout': f})
 
 sys.exit(ierr)

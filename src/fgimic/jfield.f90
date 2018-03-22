@@ -29,7 +29,6 @@ module jfield_class
 
     public new_jfield, del_jfield, calc_jtensors, calc_jvectors
     public jfield_t, jvector_plots, jfield_eta, compute_jvectors
-    public jmod_cubeplot
     private
 
     real(DP) :: vec_scale=D1
@@ -235,9 +234,10 @@ contains
         type(molecule_t) :: mol
         character(*), optional :: tag
         logical :: circle_log
+        logical :: debug 
 
         integer(I4) :: i, j, k, p1, p2, p3
-        integer(I4) :: fd1, fd2, fd3, fd4, fd5
+        integer(I4) :: fd1, fd2, fd4, fd5
         integer(I4) :: idx, ptf
         real(DP), dimension(3) :: v, rr
         real(DP), dimension(3) :: center, normal
@@ -248,31 +248,40 @@ contains
         real(DP) :: bound, r
 
         if (mpi_rank > 0) return
+        ! get rid of print out of txt files but keep them for debugging
+        ! keep also jmod.txt for 2D case to check integration planes
 
-        if (present(tag)) then
-            fd1 = open_plot('jvec' // tag // '.txt')
-            fd2 = open_plot('jmod' // tag // '.txt')
-        else
-            fd1 = open_plot('jvec.txt')
-            fd2 = open_plot('jmod.txt')
+        debug = .false.
+        if (debug) then
+          if (present(tag)) then
+              fd1 = open_plot('jvec' // tag // '.txt')
+              fd2 = open_plot('jmod' // tag // '.txt')
+          else
+              fd1 = open_plot('jvec.txt')
+              fd2 = open_plot('jmod.txt')
+          end if
         end if
-
-        if (settings%acid) then
-            fd3 = open_plot('acid.txt')
-            jtens=>this%tens
+        ! print only jmod.txt for gauss type grid
+        if (this%grid%gauss) then
+          if (present(tag)) then
+              fd2 = open_plot('jmod' // tag // '.txt')
+          else
+              fd2 = open_plot('jmod.txt')
+          end if
         end if
 
         ! print out magnetic field
         write(*,*) "magnetic field"
         write(*,*) this%b
         write(*,*) ""
-
+        ! 
         call get_grid_size(this%grid, p1, p2, p3)
         ! this is for cdens visualization when radius option is used
         call grid_center(this%grid,center)
         bound=1.d+10
         bound=this%grid%radius
         circle_log = .false.
+        ! this only applies for grid base
         if (grid_is_3d(this%grid)) then
             circle_log = .false.
         else
@@ -297,110 +306,75 @@ contains
                        if (r > bound) then
                            v = 0.0d0
                        else
-                           ! Vincent correction
-                           ! v=jv(:,i+(j-1)*p1+(k-1)*p1*p2)*AU2A
                            v = jv(:,i+(j-1)*p1+(k-1)*p1*p2)
-                           ! end corr
                        end if
                     else
-                        ! Vincent correction
-                        ! v=jv(:,i+(j-1)*p1+(k-1)*p1*p2)*AU2A
                         v = jv(:,i+(j-1)*p1+(k-1)*p1*p2)
-                        ! end corr
                     end if
                     ! collect jv vec information to put it on vti file
                     jval(i,j,k,1:3) = v
-                    call wrt_jvec(rr,v,fd1)
-                    call wrt_jmod(rr,v,fd2)
+                    if (debug) then
+                      call wrt_jvec(rr,v,fd1)
+                      call wrt_jmod(rr,v,fd2)
+                    end if
+                    if (this%grid%gauss) then
+                      call wrt_jmod(rr,v,fd2)
+                    end if
                     ! case ACID
                     if (settings%acid) then
                       idx = i+(j-1)*p1+(k-1)*p1*p2
                       val = get_acid(rr,jtens(:,idx))
-                      call wrt_acid(rr,val,fd3)
                     end if
                 end do
-                if (fd1 /= 0) write(fd1, *)
-                if (fd2 /= 0) write(fd2, *)
-                if (settings%acid) then
-                  if (fd3 /= 0) write(fd3, *)
-                end if
+                    if (debug) then
+                      if (fd1 /= 0) write(fd1, *)
+                      if (fd2 /= 0) write(fd2, *)
+                    end if
+                    if (this%grid%gauss) then
+                      if (fd2 /= 0) write(fd2, *)
+                    end if
             end do
         end do
-        call closefd(fd1)
-        call closefd(fd2)
-        if (settings%acid) then
-          call closefd(fd3)
+        if (debug) then
+          call closefd(fd1)
+          call closefd(fd2)
+        end if
+        if (this%grid%gauss) then
+          call closefd(fd2)
+        end if
+        ! case 3D grid
+        if (grid_is_3d(this%grid)) then
+          if (settings%acid) then
+            call acid_vtkplot(this)
+          end if
+          ! put modulus info on file
+          if (present(tag)) then
+            call jmod2_vtkplot(this, tag)
+          else
+            call jmod2_vtkplot(this)
+          end if
         end if
         ! put jvec information on vti file
-        call write_vtk_vector_imagedata("jvec.vti", this%grid, jval)
+        if (this%grid%gauss) then
+          write(*,*) "VTK files are only printed for even grids"
+        else
+          if (present(tag)) then
+            call write_vtk_vector_imagedata('jvec'// tag // '.vti', this%grid, jval)
+          else
+            call write_vtk_vector_imagedata("jvec.vti", this%grid, jval)
+          end if
+        end if
         deallocate(jval)
 
-        ! case 3D Grid
-        if (grid_is_3d(this%grid)) then
-            if (settings%acid) then
-              ! add here ACID plot stuff !
-              call acid_cube_plot(this)
-            end if
-            if (present(tag)) then
-                call jmod_cubeplot(this, tag)
-            else
-                call jmod_cubeplot(this)
-            end if
-        end if
+
     end subroutine
 
-    subroutine jmod_vtkplot(this)
-        use vtkplot_module
-        type(jfield_t) :: this
-
-        integer(I4) :: p1, p2, p3, fd1, fd2
-        integer(I4) :: i, j, k, l
-        real(DP), dimension(3) :: qmin, qmax
-        real(DP), dimension(3) :: norm, step, mag, v, rr
-        real(DP) :: maxi, mini, sgn
-        integer(I4), dimension(3) :: npts
-        real(DP), dimension(:,:), pointer :: buf
-        real(DP), dimension(:,:,:), allocatable :: val
-
-        if (mpi_rank > 0) return
-
-        call get_grid_size(this%grid, p1, p2, p3)
-        allocate(val(p1,p2,p3))
-
-        npts=(/p1,p2,p3/)
-        norm=get_grid_normal(this%grid)
-        qmin=gridpoint(this%grid,1,1,1)
-        qmax=gridpoint(this%grid,p1,p2,p3)
-
-        step=(qmax-qmin)/(npts-1)
-
-        mag = this%b
-
-        buf => this%vec
-        maxi=0.d0
-        mini=0.d0
-        l=0
-        do i=1,p1
-            do j=1,p2
-                do k=1,p3
-        !do i=1,p3
-        !    do j=1,p2
-        !        do k=1,p1
-                    v=buf(:,i+(j-1)*p1+(k-1)*p1*p2)
-                    rr=gridpoint(this%grid,i,j,k)
-                    val(i,j,k)=(sqrt(sum(v**2)))
-                end do
-            end do
-        end do
-        call write_vtk_imagedata('jmod.vti', this%grid, val)
-        deallocate(val)
-    end subroutine
-
-    subroutine jmod2_vtkplot(this)
+    subroutine jmod2_vtkplot(this, tag)
     ! based on jmod_vtkplot
     ! purpose: write all information on one file
         use vtkplot_module
         type(jfield_t) :: this
+        character(*), optional :: tag
 
         integer(I4) :: p1, p2, p3, fd1, fd2
         integer(I4) :: i, j, k, l
@@ -454,113 +428,13 @@ contains
                 end do
             end do
         end do
-        call write_vtk_imagedata('jmod.vti', this%grid, val)
+        if (present(tag)) then
+          call write_vtk_imagedata('jmod'// tag // '.vti', this%grid, val)
+        else
+          call write_vtk_imagedata('jmod.vti', this%grid, val)
+        end if
         deallocate(val)
     end subroutine
-
-    subroutine jmod_cubeplot(this, tag)
-        type(jfield_t) :: this
-        character(*), optional :: tag
-
-        integer(I4) :: p1, p2, p3, fd1, fd2
-        integer(I4) :: i, j, k, l
-        real(DP), dimension(3) :: qmin, qmax
-        real(DP), dimension(3) :: norm, step, mag, v, rr
-        real(DP) :: maxi, mini, val, sgn
-        integer(I4), dimension(3) :: npts
-        real(DP), dimension(:,:), pointer :: buf
-
-        if (mpi_rank > 0) return
-
-        ! call jmod_vtkplot(this)
-        ! chf
-        ! adapted jmod_vtkplot from jonas - or tried to do so
-        call jmod2_vtkplot(this)
-        call get_grid_size(this%grid, p1, p2, p3)
-        npts=(/p1,p2,p3/)
-        norm=get_grid_normal(this%grid)
-        qmin=gridpoint(this%grid,1,1,1)
-        qmax=gridpoint(this%grid,p1,p2,p3)
-
-!        step=(qmax-qmin)/(npts-1) ! In a 2D plot qmin(3)-qmax(3) = 0 -> dividing it by npts(3) gives a NaN
-        do i=1,3
-           step(i) = qmax(i) - qmin(i)
-           if ( step(i) > 1E-8 ) then    ! floating point numbers cannot be compared as ( step(i) == 0.0 )
-               step(i) = step(i) / ( npts(i) - 1)  ! if ( step(i) != 0 ) divide, else leave it 0
-           end if
-        end do
-
-        !if (present(tag)) then
-        !    fd1=opencube('jmod_'// tag // '.cube', qmin, step, npts)
-        !    fd2=opencube('jmod_quasi'// tag // '.cube', qmin, step, npts)
-        !else
-        !    fd1=opencube('jmod.cube', qmin, step, npts)
-        !    fd2=opencube('jmod_quasi.cube', qmin, step, npts)
-        !end if
-        fd1=opencube('jmod.cube', qmin, step, npts)
-        fd2=opencube('jmod_quasi.cube', qmin, step, npts)
-
-        mag = this%b
-        buf => this%vec
-        maxi=0.d0
-        mini=0.d0
-        l=0
-        do i=1,p1
-            do j=1,p2
-                do k=1,p3
-                    v=buf(:,i+(j-1)*p1+(k-1)*p1*p2)
-                    rr=gridpoint(this%grid,i,j,k)
-                    val=(sqrt(sum(v**2)))
-                    rr=rr-dot_product(mag,rr)*mag
-                    norm=cross_product(mag,rr)
-                    sgn=dot_product(norm,v)
-                    if (val > maxi) maxi=val
-                    if (val < mini) mini=val
-                    if (fd1 /= 0) then
-                        write(fd1,'(f12.6)',advance='no') val
-                        if (mod(l,6) == 5) write(fd1,*)
-                    end if
-                    if (fd2 /= 0) then
-                        if (sgn >= 0.d0 ) then
-                            write(fd2,'(f12.6)',advance='no') val
-                        else
-                            write(fd2,'(f12.6)',advance='no') -1.d0*val
-                        end if
-                        if (mod(l,6) == 5) write(fd2,*)
-                    end if
-                    l=l+1
-                end do
-            end do
-        end do
-        print *, 'maxi, mini:', maxi, mini
-        call closefd(fd1)
-        call closefd(fd2)
-    end subroutine
-
-    function opencube(fname, origin, step, npts) result(fd)
-        character(*), intent(in) :: fname
-        real(DP), dimension(3), intent(in) :: origin, step
-        integer(I4), dimension(3), intent(in) :: npts
-
-        integer(I4) :: fd
-
-        fd=0
-        if (mpi_rank > 0) return
-        if (trim(fname) == '') return
-
-        call getfd(fd)
-        if (fd == 0) then
-            stop 1
-        end if
-
-        open(fd,file=trim(fname),form='formatted',status='unknown')
-        write(fd,*) 'Gaussian cube data, generated by genpot'
-        write(fd,*)
-        write(fd, '(i5,3f12.6)') 0, origin
-        write(fd, '(i5,3f12.6)') npts(1), step(1), 0.d0, 0.d0
-        write(fd, '(i5,3f12.6)') npts(2), 0.d0, step(2), 0.d0
-        write(fd, '(i5,3f12.6)') npts(3), 0.d0, 0.d0, step(3)
-    end function
 
     subroutine wrt_jvec(rr,v,fd)
         real(DP), dimension(:), intent(in) :: rr, v
@@ -614,16 +488,6 @@ contains
         write(fd, '(6f11.7)')  rr, jmod
     end subroutine
 
-    subroutine wrt_acid(rr,dT2,fd)
-        real(DP), dimension(:), intent(in) :: rr
-        real(DP), intent(in) :: dT2
-        integer(I4), intent(in) :: fd
-
-        if (fd == 0) return
-
-        write(fd, '(6f11.7)')  rr, au2si(dT2)
-    end subroutine
-
     subroutine print_jt(rr, jt)
         real(DP), dimension(3), intent(in) :: rr
         real(DP), dimension(3,3), intent(in) :: jt
@@ -637,65 +501,7 @@ contains
         print '(a,e19.12)', ' Trace:', jt(1,1)+jt(2,2)+jt(3,3)
     end subroutine
 
-    subroutine acid_cube_plot(this)
-    ! this routine is based on jmod_cube_plot()
-        type(jfield_t), intent(inout) :: this
-        integer(I4), dimension(3) :: npts
-        integer(I4) :: fd1, i, j, k, l, m, idx
-        real(DP), dimension(:,:), pointer :: jtens
-        real(DP), dimension(3) :: qmin, qmax, step, r
-        real(DP) :: val, maxi, mini
-        ! create vti file
-        call acid_vtkplot(this)
-
-        ! collect grid information
-        call get_grid_size(this%grid, npts(1), npts(2), npts(3))
-        qmin = gridpoint(this%grid, 1, 1, 1)
-        qmax = gridpoint(this%grid, npts(1), npts(2), npts(3))
-!        step=(qmax-qmin)/(npts-1) ! In a 2D plot qmin(3)-qmax(3) = 0 -> dividing it by npts(3) gives a NaN
-        do i=1,3
-           step(i) = qmax(i) - qmin(i)
-           if ( step(i) > 1E-8 ) then    ! floating point numbers cannot be compared as ( step(i) == 0.0 )
-               step(i) = step(i) / ( npts(i) - 1)  ! if ( step(i) != 0 ) divide, else leave it 0
-           end if
-        end do
-
-        ! get T tensor assume that this information is kept
-        ! not sure because tens gets deallocated at one point...
-        jtens => this%tens
-        ! open cube file
-        fd1 = opencube('acid.cube', qmin, step, npts)
-        maxi = 0.0d0
-        mini = 0.0d0
-        l = 0
-        m = 0
-        idx = 0
-        do i = 1, npts(1)
-           do j = 1, npts(2)
-               do k = 1, npts(3)
-                   m = m + 1
-                   r = gridpoint(this%grid, i, j, k)
-                   ! maybe better to call ctens here ?? check code !
-                   ! which index for jtens? --> copy from cube plot file
-                   idx = i+(j-1)*npts(1) + (k-1)*npts(1)*npts(2)
-                   val = get_acid(r, jtens(:,idx))
-                   if (val > maxi) maxi = val
-                   if (val > mini) mini = val
-                   if (fd1 /= 0) then
-                       write(fd1,'(f12.6)',advance='no') val
-                       if (mod(l,6) == 5) write(fd1,*)
-                   end if
-                   l = l + 1
-               end do
-           end do
-        end do
-        print *, 'ACID: maxi, mini', maxi, mini
-
-        call closefd(fd1)
-    end subroutine
-
     subroutine acid_vtkplot(this)
-    ! based on jmod_vtkplot and acid_cube_plot subroutines
         use vtkplot_module
         type(jfield_t) :: this
 
@@ -706,7 +512,6 @@ contains
         real(DP), dimension(3) :: norm, step, mag, v, rr
         real(DP) :: maxi, mini, sgn
         integer(I4), dimension(3) :: npts
-        !real(DP), dimension(:,:), pointer :: buf
         real(DP), dimension(:,:,:), allocatable :: val
 
         if (mpi_rank > 0) return
