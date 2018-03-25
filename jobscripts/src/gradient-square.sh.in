@@ -59,10 +59,9 @@ do
     done
 done
 
-(cd $wrkdir && files=$(ls -v current.*.dat) && paste $files  > $wrkdir/cr.dat )
-
 #rm -f $wrkdir/paratropic.dat $wrkdir/diatropic.dat $wrkdir/current.dat
 
+(cd $wrkdir && files=$(find . -maxdepth 1 -type f -name 'current.*.dat') && paste $files  > $wrkdir/cr.dat )
 tac $wrkdir/cr.dat > $wrkdir/current_profile.dat
 
 printf "\nData saved in current_profile.dat\n\n"
@@ -77,6 +76,7 @@ echo
 currentRange=$( awk 'NR == 1 {min=$1; max=$1}  {for(i=1;i<=NF;i++) {if ($i < min) min=$i ; if ($i > max) max=$i;} }   END { printf("%.2f", (min+max)*0.5);}' cr.dat  )
 checkIfEmpty currentRange $currentRange
 
+# GNUPLOT:
 gnuplot << EOF                                                                                   
 #set title "MF || X"
 unset key
@@ -84,7 +84,6 @@ unset xtics
 unset ytics
 set view map
 set cbrange [-$currentRange:$currentRange]
-#set cbrange [-0.05:0.05]
 set xrange [0:$nstepsH]
 set yrange [0:$nstepsV]
 set rmargin screen 0.8
@@ -103,6 +102,5 @@ set output "squares-profile-interpolate-20,20.png"
 set pm3d map
 set pm3d interpolate 20,20
 splot "current_profile.dat" matrix notitle
-
 EOF
 

@@ -315,6 +315,6 @@ echo
 
 # sanity check for the integration plane
 
-planeSanityCheck $dirname
+planeSanityCheckSquares $dirname
 
 

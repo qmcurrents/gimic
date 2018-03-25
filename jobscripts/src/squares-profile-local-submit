@@ -8,11 +8,13 @@ checkIfEmpty wrkdir $wrkdir
 
 echo "Running Gimic calculations..."
 
-filenum=$( (cd $wrkdir && find . -maxdepth 1 -type f -name '*.inp' | wc -l))
+filenum=$( (cd $wrkdir/gimic.0 && find . -maxdepth 1 -type f -name '*.inp' | wc -l)) # holds the number of files in a row of the squares
 checkIfEmpty filenum $filenum
 
-nstepsV=$( sed -n -e 's/^.*nstepsV=//p' $wrkdir/calculation.dat | awk '{print $1}')
-checkIfEmpty nstepsV $nstepsV
+nstepsH=$( sed -n -e 's/^.*nstepsH=//p' $wrkdir/calculation.dat | awk '{print $1}')
+#nstepsV=$( sed -n -e 's/^.*nstepsV=//p' $wrkdir/calculation.dat | awk '{print $1}')
+checkIfEmpty nstepsH $nstepsH
+#checkIfEmpty nstepsV $nstepsV
 
 parallel=4
 echo "Enter the number of parallel jobs"
@@ -30,21 +32,29 @@ echo
 date
 echo "Running $parallel out of $filenum GIMIC calculations at a time..."
 
-for ((col=0; col<$nstepsV; col++))
+completed=0
+
+for (( row=0; row<$nstepsH; row++ ))
 do
-    counter=$(( $counter+1 ))
-    idxH=$(echo $file | sed -e "s#\.# #g" | awk '{ print $2}' )
-    idxV=$(echo $file | sed -e "s#\.# #g" | awk '{ print $3}' )
-#    echo $file " == gimic.$idxH.$idxV.inp"
-    cd $wrkdir && gimic gimic.$idxH.$idxV.inp > $wrkdir/gimic.$idxH.$idxV.out &
-    if [ $counter -eq $parallel ]
-    then
-	wait
-	counter=0
-	completed=$(( $completed*$parallel ))
-	date
-	echo "$completed out of $filenum jobs completed"; echo
-    fi
+    filesList=$( ( cd $wrkdir/gimic.0/ && find . -maxdepth 1 -type f -name "*.$col.inp" ) )
+    checkIfEmpty filesList $filesList
+
+    counter=0
+    for file in $filesList
+    do
+	counter=$(( $counter+1 ))
+	idxH=$(echo $file | sed -e "s#\.# #g" | awk '{ print $2}' )
+	idxV=$(echo $file | sed -e "s#\.# #g" | awk '{ print $3}' )
+	cd $wrkdir/gimic.$row && gimic gimic.$idxH.$idxV.inp > $wrkdir/gimic.$row/gimic.$idxH.$idxV.out &
+	if [ $counter -eq $parallel ]
+	then
+	    wait
+	    counter=0
+	    completed=$(( $completed+$parallel ))
+	    date
+	    echo "$completed out of " $(($filenum*$nstepsH)) " jobs completed"; echo
+	fi
+    done
 done
 
 

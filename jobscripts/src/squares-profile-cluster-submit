@@ -7,7 +7,7 @@ echo "Working directory:"; echo $wrkdir; echo
 
 #echo "Running Gimic calculations..."
 
-filenum=$( (cd $wrkdir && find . -maxdepth 1 -type f -name '*.inp' | wc -l ))
+filenum=$(cd $wrkdir/gimic.0 && find . -maxdepth 1 -type f -name '*.inp' | wc -l )
 checkIfEmpty filenum $filenum
 
 nstepsH=$( sed -n -e 's/^.*nstepsH=//p' $wrkdir/calculation.dat | awk '{print $1}')
@@ -15,7 +15,7 @@ nstepsH=$( sed -n -e 's/^.*nstepsH=//p' $wrkdir/calculation.dat | awk '{print $1
 checkIfEmpty nstepsH $nstepsH
 #checkIfEmpty nstepsV $nstepsV
 
-parallel=4
+parallel=16
 echo "Enter the number of parallel jobs"
 read parallel
 checkIfEmpty parallel $parallel
