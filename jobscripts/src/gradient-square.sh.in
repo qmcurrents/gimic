@@ -1,0 +1,106 @@
+#!/bin/bash
+
+function checkIfEmpty() {
+# usage: validateInput variable $variable 
+    local __inputVar=$1
+    local __inputValue="$2"
+    while [ -z "$__inputValue" ]
+    do
+        printf "*** Variable \"$__inputVar\" empty ***\nPlease restart the script.\n"
+	echo "If the error persists, file a bug report to maria.dimitrova@helsinki.fi or https://github.com/mariavd/gimic"; echo
+        exit;
+    done
+
+}
+
+
+echo "Calculating the gradient..."
+
+wrkdir=$(pwd)
+checkIfEmpty wrkdir $wrkdir
+dirname=$( echo ${wrkdir##*/} ) # removes everything before the backslash
+checkIfEmpty dirname $dirname
+
+filenum=$( (cd $wrkdir && find . -maxdepth 1 -type f -name '*.inp' | wc -l))
+checkIfEmpty filenum $filenum
+
+start=$( sed -n -e 's/^.*in=//p' $wrkdir/calculation.dat | awk '{print $1}')
+out=$( sed -n -e 's/^.*out=//p' $wrkdir/calculation.dat | awk '{print $1}')
+delta=$( sed -n -e 's/^.*delta=//p' $wrkdir/calculation.dat | awk '{print $1}')
+checkIfEmpty start $start
+checkIfEmpty out $out
+checkIfEmpty delta $delta
+
+nstepsH=$( sed -n -e 's/^.*nstepsH=//p' $wrkdir/calculation.dat | awk '{print $1}')
+nstepsV=$( sed -n -e 's/^.*nstepsV=//p' $wrkdir/calculation.dat | awk '{print $1}')
+checkIfEmpty nstepsH $nstepsH
+checkIfEmpty nstepsV $nstepsV
+
+
+for (( i=0; i<$nstepsH; i++ ))
+do
+    cat /dev/null > $wrkdir/paratropic.$i.dat #delete if it already exists
+    cat /dev/null > $wrkdir/diatropic.$i.dat
+    cat /dev/null > $wrkdir/current.$i.dat
+done
+
+start=$( sed -n -e 's/^.*in=//p' $wrkdir/calculation.dat | awk '{print $1}')
+out=$( sed -n -e 's/^.*out=//p' $wrkdir/calculation.dat | awk '{print $1}')
+delta=$( sed -n -e 's/^.*delta=//p' $wrkdir/calculation.dat | awk '{print $1}')
+checkIfEmpty start $start
+checkIfEmpty out $out
+checkIfEmpty delta $delta
+
+for ((i=0; i<nstepsH; i++))
+do
+    for ((j=0; j<nstepsV; j++))
+    do
+	awk -v dia="$wrkdir/diatropic.$i.dat" -v para="$wrkdir/paratropic.$i.dat" -v delta=$delta -v out="$wrkdir/current.$i.dat" '/Induced current \(n/ {printf("% .8f\n", $5) >> out}; /Positive cont/ {printf("% .8f\n", $5) >> dia}; /Negative cont/ {printf("% .8f\n", $5) >> para};  ' gimic.$i/gimic.$i.$j.out
+    done
+done
+
+#rm -f $wrkdir/paratropic.dat $wrkdir/diatropic.dat $wrkdir/current.dat
+
+(cd $wrkdir && files=$(find . -maxdepth 1 -type f -name 'current.*.dat') && paste $files  > $wrkdir/cr.dat )
+tac $wrkdir/cr.dat > $wrkdir/current_profile.dat
+
+printf "\nData saved in current_profile.dat\n\n"
+
+echo
+
+#minCurrent=$( awk 'NR == 1 {min=$1;} {for(i=1;i<=NF;i++) if ($i < min) min=$i ;}  END { print min;}' cr.dat )
+#maxCurrent=$( awk 'NR == 1 {max=$1;} {for(i=1;i<=NF;i++) if ($i > max) max=$i ;}  END { print min;}' cr.dat )
+#checkIfEmpty minCurrent $minCurrent
+#checkIfEmpty maxCurrent $maxCurrent
+
+currentRange=$( awk 'NR == 1 {min=$1; max=$1}  {for(i=1;i<=NF;i++) {if ($i < min) min=$i ; if ($i > max) max=$i;} }   END { printf("%.2f", (min+max)*0.5);}' cr.dat  )
+checkIfEmpty currentRange $currentRange
+
+# GNUPLOT:
+gnuplot << EOF                                                                                   
+#set title "MF || X"
+unset key
+unset xtics
+unset ytics
+set view map
+set cbrange [-$currentRange:$currentRange]
+set xrange [0:$nstepsH]
+set yrange [0:$nstepsV]
+set rmargin screen 0.8
+set lmargin screen 0.1
+set palette defined (0 "blue", 50 "white", 100 "red")
+#set palette defined (0 "blue", 30 "#009bff", 45 "#aaffff", 50 "white", 60 "#ffd154", 67 "#ffaa00", 79 "#ff7200", 100 "red")
+#set palette negative
+#set palette positive 
+#splot "current_profile.dat" matrix with image
+
+set terminal pngcairo enhanced font 'Helvetica, 22' size 800,900
+set output "squares-profile.png"
+splot "current_profile.dat" matrix with image
+
+set output "squares-profile-interpolate-20,20.png"
+set pm3d map
+set pm3d interpolate 20,20
+splot "current_profile.dat" matrix notitle
+EOF
+

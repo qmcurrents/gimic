@@ -7,25 +7,19 @@ echo "Working directory:"; echo $wrkdir; echo
 
 #echo "Running Gimic calculations..."
 
-filenum=$(cd $wrkdir/gimic.0 && find . -maxdepth 1 -type f -name '*.inp' | wc -l )
+filenum=$(ls $wrkdir/*inp | wc -l)
 checkIfEmpty filenum $filenum
 
-nstepsH=$( sed -n -e 's/^.*nstepsH=//p' $wrkdir/calculation.dat | awk '{print $1}')
-#nstepsV=$( sed -n -e 's/^.*nstepsV=//p' $wrkdir/calculation.dat | awk '{print $1}')
-checkIfEmpty nstepsH $nstepsH
-#checkIfEmpty nstepsV $nstepsV
-
-parallel=16
+parallel=4
 echo "Enter the number of parallel jobs"
 read parallel
 checkIfEmpty parallel $parallel
 
 # check if too many parallel tasks are called
-if [ $parallel -gt $filenum ]
+if [ $parallel -gt $nsteps ]
 then
-    $parallel=$(echo $filenum)
+    $parallel=$($nsteps)
 fi
-
 
 # job duration:
 echo "Enter the time limit for the execution of the batch job in hours"

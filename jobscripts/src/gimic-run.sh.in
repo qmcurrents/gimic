@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Function definitions:
-source @SCRIPTS_DIR@/functions-def
+source @SCRIPTS_DIR@/src/functions-def
 
 checkIfInputExists
 
@@ -22,9 +22,15 @@ A1z=$( awk -v atom1=$atom1 '{ if (NR==(atom1+1)) {print $3} }' coord  )
 A2x=$( awk -v atom2=$atom2 '{ if (NR==(atom2+1)) {print $1} }' coord  )
 A2y=$( awk -v atom2=$atom2 '{ if (NR==(atom2+1)) {print $2} }' coord  )
 A2z=$( awk -v atom2=$atom2 '{ if (NR==(atom2+1)) {print $3} }' coord  )
-echo "Enter the suffix for the directory name"
+
+echo "Optionally enter a suffix for the directory name"
 read suffix
-suffix=$(printf _$suffix)
+if [ -z $suffix ]
+then
+    suffix=""
+else
+    suffix=$(printf _$suffix)
+fi
 dirname=bond_int_$atom1.$atom2$suffix
 #echo $dirname
 
@@ -91,7 +97,7 @@ checkMaxProj="installed"
 if [ ! -z $accept ] && [ $accept == "a" ]
 then
     checkMaxProj=$(command -v maximise_projection) #  command -> returns the path of the binary if it is found
-    if [ -e $checkMaxProj ]
+    if [ ! -e $checkMaxProj ]
     then
 	echo "The program maximise_projection is not found. Switching to manual input of the magnetic field components."
     else
@@ -184,7 +190,7 @@ fi
 
 
 string="s/@bond@/$bond/; s/@fixed@/$fixed/; s/@distance@/$distance/; s/@up@/$up/; s/@down@/$down/; s/@start@/$start/; s/@end@/$out/; s/@FX@/$Fx/; s/@FY@/$Fy/; s/@FZ@/$Fz/; s/@MFx@/$MFx/; s/@MFy@/$MFy/; s/@MFz@/$MFz/; s/@spacingX@/$spacingX/; s/@spacingY@/$spacingY/; s/@spacingZ@/$spacingZ/; s/@rotX@/$rotX/;  s/@rotY@/$rotY/;  s/@rotZ@/$rotZ/; "
-sed "$string" @SCRIPTS_DIR@/gimic.Inp > ./$dirname/gimic.inp
+sed "$string" @SCRIPTS_DIR@/src/gimic.Inp > ./$dirname/gimic.inp
 
 printf "Performing a dry run...\n\n"
 (cd ./$dirname/ && gimic --dryrun gimic.inp | grep "grid points" )

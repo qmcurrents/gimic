@@ -148,7 +148,7 @@ function valueDimInp()
     local __varValue="$2"
     dim="$3"
 
-    printf  "\nDo you accept $__resultVar=$__varValue $dim?\nPress [n] to change\n"
+    printf  "\nDo you accept $__resultVar = $__varValue $dim?\nPress [n] to change\n"
     read accept;
     if [ ! -z $accept ] && [ $accept == "n" ]
     then
@@ -204,8 +204,9 @@ function calculateFixedCoord() {
     # multiply the vector originating at (0;0;A2z) and ending at the second atom with coords (A2x; A2y; A2z).
 
     # Rotation matrix R(theta):
-    #  | cos(theta) -sin(theta) |
-    #  | sin(theta)  cos(theta) |
+    #  | cos(theta) -sin(theta)  0  |
+    #  | sin(theta)  cos(theta)  0  |
+    #  |     0            0      1  |
 
     # The choice of a rotation angle was arbitrary
 
@@ -215,27 +216,15 @@ function calculateFixedCoord() {
 
 
 #    echo "func arg: " "$@"
-    awk -v A2x="$1" -v A2y="$2" -v A2z="$3" 'BEGIN{ 
-    rotAngleDeg=10 ; 
-    rotAngleRad=0.0174532925*rotAngleDeg;
-    Cos=cos(rotAngleRad);
-    Sin=sin(rotAngleRad);
-
-    print(Cos*A2x-Sin*A2y, Sin*A2x+Cos*A2y);
+    awk -v Ax="$1" -v Ay="$2" -v Az="$3" 'BEGIN{ 
+         rotAngleDeg=10 ; 
+         rotAngleRad=0.0174532925*rotAngleDeg;
+         Cos=cos(rotAngleRad);
+         Sin=sin(rotAngleRad);
+     
+         print(Cos*Ax+Sin*Ay, Sin*Ax-Cos*Ay);
     }'
 }
-
-
-function dotProduct() {
-    #
-    awk -v A1x="$1" -v A1y="$2" -v A1z="$3" -v A2x="$4" -v A2y="$5" -v A2z="$6" 'BEGIN{ 
-        dot = A1x*A2x + A1y*A2y + A1z*A2z;
-	print dot;
-    }'
-}
-
-
-
 
 
 
@@ -254,12 +243,58 @@ then
     # take the first two coordinates of the int plane
     cat ./$dirname/grid.xyz | head -n -3 > ./$dirname/grid.check.xyz
 
-    last=$(ls ./$dirname/*inp | wc -l)
+    last=$(  (cd ./$dirname/ && find . -maxdepth 1 -type f -name './$dirname/*.inp' | wc -l ) )
     last=$(( $last -1 ))
     (cd ./$dirname/ && gimic --dryrun gimic.$last.inp > /dev/null)
 
     # take the coords of the end of the int plane
     grep X ./$dirname/grid.xyz  | awk '{ if (NR <=2) {print $0} }' >> ./$dirname/grid.check.xyz
+    # copy the MF direction "Be" atom
+    grep Be ./$dirname/grid.xyz  >> ./$dirname/grid.check.xyz
+
+#    atomNum=$(head -n 1 ./$dirname/grid.xyz)
+#    atomNum=$(( $atomNum + 2 ))
+#    sed -i "1s/.*/$atomNum/" ./$dirname/grid.check.xyz
+
+    echo
+    echo "The file grid.check.xyz created."
+    echo "You can now put this script to the background and inspect the molecule."
+    echo "Bring the script to foreground and press enter to continue the current profile."
+    read accept # just wait
+
+    echo "Current profile analysis resumed." 
+fi
+}
+
+
+function planeSanityCheckSquares() {
+# sanity check for the integration plane
+
+dirname="$@"
+
+echo "Do you want to preview the integration plane in XYZ format?"
+echo "Press [y] or any other key to skip"; read accept
+if  [ ! -z $accept ] && [ $accept == "y" ]
+then
+    echo "Preparing the plane..."
+idxH=$( sed -n -e 's/^.*nstepsH=//p' $wrkdir/calculation.dat | awk '{print $1}')
+idxV=$( sed -n -e 's/^.*nstepsV=//p' $wrkdir/calculation.dat | awk '{print $1}')
+checkIfEmpty idxH $idxH
+checkIfEmpty idxV $idxV
+idxH=$(( $idxH - 1 ))
+idxV=$(( $idxV - 1 ))
+
+    (cd ./$dirname/gimic.0 && gimic --dryrun gimic.0.0.inp  > /dev/null )
+    cat ./$dirname/gimic.0/grid.xyz | head -n -2 > ./$dirname/grid.check.xyz
+    (cd ./$dirname/gimic.0 && gimic --dryrun gimic.0.$idxH.inp  > /dev/null )
+    grep X ./$dirname/gimic.0/grid.xyz  | awk '{ if (NR ==2) {print $0} }' >> ./$dirname/grid.check.xyz
+
+    (cd ./$dirname/gimic.$idxV && gimic --dryrun gimic.$idxH.0.inp  > /dev/null )
+    grep X ./$dirname/gimic.$idxV/grid.xyz  | awk '{ if (NR ==3) {print $0} }' >> ./$dirname/grid.check.xyz
+    (cd ./$dirname/gimic.$idxV && gimic --dryrun gimic.$idxH.$idxV.inp  > /dev/null )
+    grep X ./$dirname/gimic.$idxV/grid.xyz  | awk '{ if (NR ==4) {print $0} }' >> ./$dirname/grid.check.xyz
+
+
     # copy the MF direction "Be" atom
     grep Be ./$dirname/grid.xyz  >> ./$dirname/grid.check.xyz
 
@@ -356,19 +391,19 @@ function checkPreviousCalc() {
 function normalPlane() 
 {
 # usage: 
-# echo $x0 $x1 1 | normalPlane
+# echo $x0 $x1 $x2 | normalPlane
 # where the coordinates are in bohr
-    # take the coordinates of x0 and x1
-    # take a third point C that lies at (x0x, x0y, 1)
-    # define vector a: C -> x0; vector b: C -> x1;
-    # calculate their cross product to find the normal vector to the plane at point C
+# take the coordinates of x0 and x1
+# define the point C with coords the third point from the plane
+# define vector a: C -> x0; vector b: C -> x1;
+# calculate their cross product to find the normal vector to the plane at point C
 
     awk '{
           split($0,crd);
 
-          cx = crd[1]; 
-          cy = crd[2]; 
-          cz = crd[7]; 
+          cx = crd[7]; 
+          cy = crd[8]; 
+          cz = crd[9]; 
 
           ax = cx - crd[1]; 
           ay = cy - crd[2];
@@ -386,5 +421,19 @@ function normalPlane()
           print nx/nmod, ny/nmod, nz/nmod; 
     }'
 };
+
+
+function dotProduct() {
+# usage: 
+# echo $x0 $x1 | dotProduct
+    awk '{
+          split($0,crd);
+	dot = crd[1]*crd[4] + crd[2]*crd[5] + crd[3]*crd[6]
+	print dot;
+    }'
+}
+
+
+
 
 

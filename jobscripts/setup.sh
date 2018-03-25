@@ -1,5 +1,7 @@
 #!/bin/bash
 
+SCRIPTS_DIR=$(pwd)
+
 checkMaxProj=$(command -v maximise_projection)
 if [ ! -e $checkMaxProj ]
 then
@@ -28,6 +30,18 @@ then
     cat src/squares-profile-local-submit >> src/squares-profile-local.sh.in
 fi
 
+# Prepare the base structure of the squares profile script for a local machine:
+file1=squares-profile-header
+file2=squares-profile-local-submit
+file3=functions-def
+SCRIPT_OUT="squares-profile-local.sh.in"
+
+if [ $SCRIPT_OUT -ot $file1 ] || [ $SCRIPT_OUT -ot $file2 ] || [ $SCRIPT_OUT -ot $file3 ]  # [ FILE1 -ot FILE2 ]  -> True if FILE1 is older than FILE2, or is FILE2 exists and FILE1 does not.
+then 
+    cat squares-profile-header > squares-profile-local.sh.in
+    cat squares-profile-local-submit >> squares-profile-local.sh.in
+fi
+
 # Prepare the base structure of the current profile script for a local machine:
 file1="src/current-profile-header"
 file2="src/current-profile-local-submit"
@@ -51,6 +65,19 @@ if [ $SCRIPT_OUT -ot $file1 ] || [ $SCRIPT_OUT -ot $file2 ] || [ $SCRIPT_OUT -ot
 then 
     cat src/squares-profile-header > src/squares-profile-cluster.sh.in
     cat src/squares-profile-cluster-submit >> src/squares-profile-cluster.sh.in
+fi
+
+# Prepare the base structure  of the squares profile script for cluster
+
+file1=squares-profile-header
+file2=squares-profile-cluster-submit
+file3=functions-def
+SCRIPT_OUT="squares-profile-cluster.sh.in"
+
+if [ $SCRIPT_OUT -ot $file1 ] || [ $SCRIPT_OUT -ot $file2 ] || [ $SCRIPT_OUT -ot $file3 ]
+then 
+    cat squares-profile-header > squares-profile-cluster.sh.in
+    cat squares-profile-cluster-submit >> squares-profile-cluster.sh.in
 fi
 
 
@@ -84,7 +111,7 @@ fi
 
 # Prepare the batch job script for squares profile:
 
-file="src/jobscript.IN"
+file="src/jobscript-squares.IN"
 SCRIPT_OUT=jobscript-squares
 sedstring="s:@SCRIPTS_DIR@:$SCRIPTS_DIR:"
 if [ $SCRIPT_OUT -ot $file ] 
@@ -98,7 +125,6 @@ fi
 
 # Prepare all other scripts
 SCRIPTS_IN=$(ls src/*in)
-SCRIPTS_DIR=$(pwd)
 
 for file in $SCRIPTS_IN
 do

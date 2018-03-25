@@ -32,10 +32,13 @@ checkIfEmpty wrkdir $wrkdir
 dirname=$( echo ${wrkdir##*/} ) # removes everything before the backslash
 checkIfEmpty dirname $dirname
 
-#echo "Working directory:"; echo $wrkdir; echo
-
-filenum=$( (cd $wrkdir && find . -maxdepth 1 -type f -name '*.inp' | wc -l))
+filenum=$(cd $wrkdir/gimic.0 && find . -maxdepth 1 -type f -name '*.inp' | wc -l) # holds the number of files in a row of the squares
 checkIfEmpty filenum $filenum
+
+nstepsH=$( sed -n -e 's/^.*nstepsH=//p' $wrkdir/calculation.dat | awk '{print $1}')
+#nstepsV=$( sed -n -e 's/^.*nstepsV=//p' $wrkdir/calculation.dat | awk '{print $1}')
+checkIfEmpty nstepsH $nstepsH
+#checkIfEmpty nstepsV $nstepsV
 
 # clean up possible previous calculations
 rm -rf *eps GIMIC.*
@@ -46,58 +49,28 @@ checkIfEmpty parallel $parallel
 date
 echo "Running $parallel out of $filenum GIMIC calculations at a time..."; echo 
 
-whole=$( awk -v filenum=$filenum -v parallel=$parallel 'BEGIN{printf "%d\n", filenum/parallel}'  )
-remain=$(awk -v whole=$whole -v filenum=$filenum -v parallel=$parallel 'BEGIN{printf "%d\n", (filenum-whole*parallel) }')
+for (( row=0; row<$nstepsH; row++ ))
+do
+    filesList=$( ( cd $wrkdir/gimic.0/ && find . -maxdepth 1 -type f -name "*.$col.inp" ) )
+    checkIfEmpty filesList $filesList
 
-checkIfEmpty whole $whole
-checkIfEmpty remain $remain
-
-completed=0
-
-for ((i=0; i<$whole; i++)) 	
-do 
-    for ((j=0; j<$parallel; j++))
-    do  
-	index=$(($i+$j*$whole))
-	grepstring=""
-	if [ -f "$wrkdir/gimic.$index.out" ]
+    counter=0
+    for file in $filesList
+    do
+	counter=$(( $counter+1 ))
+	idxH=$(echo $file | sed -e "s#\.# #g" | awk '{ print $2}' )
+	idxV=$(echo $file | sed -e "s#\.# #g" | awk '{ print $3}' )
+	cd $wrkdir/gimic.$row && gimic gimic.$idxH.$idxV.inp > $wrkdir/gimic.$row/gimic.$idxH.$idxV.out &
+	if [ $counter -eq $parallel ]
 	then
-	    echo "The file $wrkdir/gimic.$index.out already exists."
-	    grepstring=$(grep "wall" $wrkdir/gimic.$index.out)
-	    echo "$grepstring"
-	fi
-
-	if [ -z "$grepstring" ]
-	then
-	    cd $wrkdir && gimic gimic.$index.inp > $wrkdir/gimic.$index.out & 
-	fi
-    done 
-    wait
-    completed=$(( $completed+$parallel ))
-    date
-    echo "$completed of $filenum completed"; echo
-done
-
-if [[ "$remain" -gt 0 ]]; then
-    for ((i=0; i<$remain; i++))
-    do  
-	index=$(($parallel*$whole+$i))
-	grepstring=""
-	if [ -f "$wrkdir/gimic.$index.out" ]
-	then
-	    echo "The file $wrkdir/gimic.$index.out already exists."
-	    grepstring=$(grep "wall" $wrkdir/gimic.$index.out)
-	    echo "$grepstring"
-	fi
-
-	if [ -z "$grepstring" ]
-	then
-	    cd $wrkdir && gimic gimic.$index.inp > $wrkdir/gimic.$index.out & 
+	    wait
+	    counter=0
+	    completed=$(( $completed+$parallel ))
+	    date
+	    echo "$completed out of " $(($filenum*$nstepsH)) " jobs completed"; echo
 	fi
     done
-fi
-echo "$filenum of $filenum completed"
-echo
+done
 
 
 rm -rf GIMIC* 
@@ -105,10 +78,10 @@ rm -rf GIMIC*
 ###################################################################################
 
 # Calculating the gradient:
-(cd $wrkdir && @SCRIPTS_DIR@/gradient.sh)
+(cd $wrkdir && @SCRIPTS_DIR@/gradient-square.sh)
 
 # Find the zeroes on the current profile plot
-@SCRIPTS_DIR@/crit_pts.sh $wrkdir 
+#@SCRIPTS_DIR@/crit_pts.sh $wrkdir 
 
 #######################################################################
 

@@ -2,9 +2,11 @@
 #SBATCH -p parallel
 #SBATCH --nodes 1         # for SMP only 1 is possible
 #SBATCH --ntasks-per-node=24 # Tasks per node
-#SBATCH --mem-per-cpu=1000
+#SBATCH --mem-per-cpu=100
 #SBATCH -e jobfile.err%J
 #SBATCH -o jobfile.out%J
 #SBATCH --mail-type=END
-##SBATCH --mail-user=youremail
+##SBATCH --mail-user=your-email
+
+## LIST ANY NECESSARY MODULES FOR YOUR CLUSTER
 
