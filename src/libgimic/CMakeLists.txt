@@ -14,7 +14,7 @@ set(sources
     gaussint.f90
     gtodefs.f90
     intgrl.f90
-    jtensor.f90
+    jtensor.F90
     kinds.f90
     lip.f90
     reorder.f90
