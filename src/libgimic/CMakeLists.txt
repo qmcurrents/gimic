@@ -38,6 +38,14 @@ add_library( gimic2
     )
 set_property( TARGET gimic2 PROPERTY POSITION_INDEPENDENT_CODE ON )
 
+if(ENABLE_BLAS)
+    target_compile_options(
+        gimic2
+        PRIVATE
+            -DHAVE_BLAS
+        )
+endif()
+
 if (CYTHON_FOUND)
     set_source_files_properties(
         ${CMAKE_CURRENT_SOURCE_DIR}/gimic.pxd

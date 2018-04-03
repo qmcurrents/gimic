@@ -150,31 +150,57 @@ contains
         real(DP), dimension(3,3), intent(out) :: ct
         integer(I4), intent(in) :: spin
 
-        integer(I4) :: b, m, k, ii,jj
+        integer(I4) :: b, m, n, k, ii,jj
+        integer(I4) :: vec_size
         real(DP) :: prsp1, prsp2       ! paramagnetic wavefunction response
         real(DP) :: ppd                ! paramagnetic probability density
         real(DP), dimension(3) :: dpd  ! diamagnetic probability density
         real(DP) :: diapam
+        real(DP) :: ddot
 
         call get_dens(this%xdens, this%aodens, spin)
+#ifdef HAVE_BLAS
+        vec_size = size(this%bfvec)
+        call dgemv('n', vec_size, vec_size, 1.0d0, this%aodens, vec_size, this%bfvec, 1, 0.0d0, this%denbf, 1)
+        diapam = ddot(vec_size, this%denbf, 1, this%bfvec, 1)
+#else
         this%denbf=matmul(this%bfvec, this%aodens)
+        diapam=dot_product(this%denbf, this%bfvec)
+#endif
 
         k=1
-        diapam=dot_product(this%denbf, this%bfvec)
         do b=1,3! dB <x,y,z>
             ! get perturbed densities: x,y,z
             call get_pdens(this%xdens, b, this%pdens, spin)
+#ifdef HAVE_BLAS
+            call dgemv('t', vec_size, vec_size, 1.0d0, this%pdens, vec_size, this%bfvec, 1, 0.0d0, this%pdbf, 1)
+#else
             this%pdbf=matmul(this%bfvec, this%pdens)
+#endif
             if (settings%use_giao) then
+#ifdef HAVE_BLAS
+              call dgemv('n', vec_size, vec_size, 1.0d0, this%aodens, vec_size, this%dbvec(:,b), 1, 0.0d0, this%dendb, 1)
+#else
               this%dendb=matmul(this%dbvec(:,b), this%aodens)
+#endif
             end if
             dpd(b)=diapam*this%rho(b) ! diamag. contr. to J
             do m=1,3 !dm <x,y,z>
               if (settings%use_giao) then
+#ifdef HAVE_BLAS
+                ! (-i)**2 = -1
+                prsp1 = -ddot(vec_size, this%dendb, 1, this%drvec(1, m), 1)
+                prsp2 = ddot(vec_size, this%denbf, 1, this%d2fvec(1, k), 1)
+#else
                 prsp1=-dot_product(this%dendb, this%drvec(:,m)) ! (-i)**2=-1
                 prsp2=dot_product(this%denbf, this%d2fvec(:,k))
+#endif
               end if
+#ifdef HAVE_BLAS
+              ppd = ddot(vec_size, this%pdbf, 1, this%drvec(1, m), 1)
+#else
               ppd=dot_product(this%pdbf, this%drvec(:,m))
+#endif
               ct(m,b)=ZETA*ppd
               if (settings%use_giao) ct(m,b)=ct(m,b)+ZETA*(prsp1+prsp2)
               k=k+1
