@@ -46,6 +46,15 @@ if(ENABLE_BLAS)
         )
 endif()
 
+option(ENABLE_MKL_FLAG "Enable MKL compile flag" OFF)
+if(ENABLE_MKL_FLAG)
+    target_compile_options(
+        gimic2
+        PRIVATE
+            -DHAVE_BLAS
+        )
+endif()
+
 if (CYTHON_FOUND)
     set_source_files_properties(
         ${CMAKE_CURRENT_SOURCE_DIR}/gimic.pxd
