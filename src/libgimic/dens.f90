@@ -80,11 +80,11 @@ contains
             if (ispin == 2) dens=>this%db
             if (this%pdens_p) then
                 do b=0,3
-                    read(XDFD,*) kusse
+                    call rdkusse(XDFD,s*s,kusse)
                     dens(:,:,b)=kusse
                 end do
             else
-                read(XDFD,*) kusse
+                call rdkusse(XDFD,s*s,kusse)
                 dens(:,:,0)=kusse
             end if
         end do
@@ -125,6 +125,14 @@ contains
             end do
         end do
     end subroutine
+
+    subroutine rdkusse(iunit,n,kusse)
+      integer iunit,n,i
+      double precision kusse(n)
+      do i=1,n
+      read (iunit,*) kusse(i)
+      enddo
+    end subroutine rdkusse
 
     subroutine del_dens(this)
         type(dens_t) :: this
