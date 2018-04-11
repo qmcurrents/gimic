@@ -689,7 +689,6 @@ contains
 !
 ! GET MAGNETIC FIELD INFORMATION
 !
-!        print *, '/kusse/', ntpert
         call getrec(20,'JOBARC','NSYMPERT',27,ntpert)
 !
 ! IRREPS OF B-FIELD COMPONENTS
