@@ -534,18 +534,13 @@ contains
         jtens => this%tens
         mag = this%b
 
-        !buf => this%vec
         maxi=0.d0
         mini=0.d0
         l=0
         idx = 0
-        !do i=1,p1
-        !    do j=1,p2
-        !        do k=1,p3
         do k=1,p3
             do j=1,p2
                 do i=1,p1
-                    !v=buf(:,i+(j-1)*p1+(k-1)*p1*p2)
                     rr=gridpoint(this%grid,i,j,k)
                     idx = i+(j-1)*p1 + (k-1)*p1*p2
                     val(i,j,k)= get_acid(jtens(:,idx))
