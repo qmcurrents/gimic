@@ -186,6 +186,11 @@ contains
             end if
             dpd(b)=diapam*this%rho(b) ! diamag. contr. to J
             do m=1,3 !dm <x,y,z>
+
+              ! we zero these out to avoid compiler warning us that these may be used uninitialized
+              prsp1 = 0.0d0
+              prsp2 = 0.0d0
+
               if (settings%use_giao) then
 #ifdef HAVE_BLAS
                 ! (-i)**2 = -1

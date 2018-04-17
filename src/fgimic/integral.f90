@@ -44,6 +44,7 @@ contains
 
     subroutine del_integral(this)
         type(integral_t) :: this
+        nullify(this%grid)
     end subroutine
 
     subroutine integrate_current(this, mol, xdens, spinn)
@@ -467,7 +468,7 @@ contains
                     r=sqrt(sum((rr-center)**2))
                     call ctensor(jt, rr, tt, spin)
                     ! attention: output of get_acid is in au !
-                    val = get_acid(rr,tt)
+                    val = get_acid(tt)
                     if ( r > bound ) then
                         w=0.d0
                     else

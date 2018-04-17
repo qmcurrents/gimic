@@ -78,7 +78,7 @@ contains
             allocate(b%ctr(bdim(i))) ! mem for all contrs. for atom i
             allocate(b%thrs(bdim(i))) ! mem for screening thrs. for atom i
             allocate(b%pos(bdim(i))) ! mem for pos idx thrs. for ctrs
-            call read_segs(b)    	! atom i
+            call read_segs(b) ! atom i
             b%nctr=bdim(i)
         end do
 

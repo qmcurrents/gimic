@@ -8,7 +8,7 @@ module acid_module
      implicit none
 
 contains
-     function get_acid(r, tens) result(dT2)
+     function get_acid(tens) result(dT2)
      ! purpose: do acid summation of T tensor
      ! see: R. Herges and D. Gruenich,
      !      J. Chem. Phys. A, 105, 3214 (2001)
@@ -24,7 +24,6 @@ contains
      ! assume: T tensor is written on tens(9:number of points)
      !         first column of T eq. first entries of tens(1:3,npts)
      !
-     real(DP), dimension(3), intent(in) :: r
      real(DP), dimension(9), intent(in) :: tens
      real(DP) :: dT2, tmp
      real(DP) :: xxmyy, yymzz, zzmxx, xypyx, xzpzx, yzpzy
