@@ -44,6 +44,7 @@ contains
 
     subroutine del_integral(this)
         type(integral_t) :: this
+        nullify(this%grid)
     end subroutine
 
     subroutine integrate_current(this, mol, xdens, spinn)
