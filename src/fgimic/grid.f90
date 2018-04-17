@@ -426,7 +426,7 @@ contains
             call nl
             return
         end if
-99		format(a,3f12.8,a)
+99      format(a,3f12.8,a)
     end subroutine
 
     subroutine get_grid_size(this, i, j, k)
