@@ -56,7 +56,7 @@ program gimic
 
 contains
     subroutine initialize()
-        integer(I4) :: i, hostnm, rank, ierr
+        integer(I4) :: i, hostnm, ierr
         integer(I4) :: chdir, system
         character(BUFLEN) :: title, fdate, sys
         real(DP), dimension(3) :: magnet
@@ -93,11 +93,11 @@ contains
 
         ierr=hostnm(sys)
         if (mpi_rank == 0) then
-            write(str_g, '(a,i3,a,a)') 'MPI master', rank,' on ', trim(sys)
+            write(str_g, '(a,i3,a,a)') 'MPI master', mpi_rank,' on ', trim(sys)
             call msg_debug(str_g,2)
         else
             call set_teletype_unit(DEVNULL)
-            write(str_g, '(a,i3,a,a)') 'MPI slave', rank,' on ', trim(sys)
+            write(str_g, '(a,i3,a,a)') 'MPI slave', mpi_rank,' on ', trim(sys)
             call msg_debug(str_g,2)
         end if
 
