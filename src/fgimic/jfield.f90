@@ -322,7 +322,7 @@ contains
                     ! case ACID
                     if (settings%acid) then
                       idx = i+(j-1)*p1+(k-1)*p1*p2
-                      val = get_acid(rr,jtens(:,idx))
+                      val = get_acid(jtens(:,idx))
                     end if
                 end do
                     if (debug) then
@@ -548,7 +548,7 @@ contains
                     !v=buf(:,i+(j-1)*p1+(k-1)*p1*p2)
                     rr=gridpoint(this%grid,i,j,k)
                     idx = i+(j-1)*p1 + (k-1)*p1*p2
-                    val(i,j,k)= get_acid(rr, jtens(:,idx))
+                    val(i,j,k)= get_acid(jtens(:,idx))
                 end do
             end do
         end do
