@@ -196,17 +196,17 @@ contains
         if (settings%dryrun) return
 
         call calc_jvectors(jf, mol, xdens)
-        call jvector_plots(jf,mol,'')
+        call jvector_plots(jf,'')
 
         if (settings%is_uhf) then
             call calc_jvectors(jf, mol, xdens, 'alpha')
-            call jvector_plots(jf,mol, 'alpha')
+            call jvector_plots(jf, 'alpha')
 
             call calc_jvectors(jf, mol, xdens, 'beta')
-            call jvector_plots(jf,mol, 'beta')
+            call jvector_plots(jf, 'beta')
 
             call calc_jvectors(jf, mol, xdens, 'spindens')
-            call jvector_plots(jf,mol, 'spindens')
+            call jvector_plots(jf, 'spindens')
         endif
         call del_jfield(jf)
     end subroutine

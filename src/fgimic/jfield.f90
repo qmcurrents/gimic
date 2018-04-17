@@ -227,11 +227,10 @@ contains
         return
     end function
 
-    subroutine jvector_plots(this,mol,tag)
+    subroutine jvector_plots(this,tag)
         use vtkplot_module
 
         type(jfield_t), intent(inout) :: this
-        type(molecule_t) :: mol
         character(*), optional :: tag
         logical :: circle_log
         logical :: debug 
