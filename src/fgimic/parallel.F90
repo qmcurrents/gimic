@@ -35,9 +35,9 @@ contains
         mpirank = 0
 #endif
         if (mpi_world_size == 1) then
-            settings%is_mpirun = .false.
+            is_mpirun = .false.
         else
-            settings%is_mpirun = .true.
+            is_mpirun = .true.
         end if
     end function
 
