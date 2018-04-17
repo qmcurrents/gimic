@@ -160,7 +160,7 @@ contains
             read(fd,*,end=100)
             n=n+1
         end do
-100		rewind(fd)
+100     rewind(fd)
     end function
 
     function getfsize(fil) result(fs)
