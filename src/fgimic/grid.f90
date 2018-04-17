@@ -354,7 +354,7 @@ contains
         this%gauss=.false.
         this%npts(1)=nint(this%l(1)/this%step(1))+1
         this%npts(2)=nint(this%l(2)/this%step(2))+1
-        if (this%l(3) == 0.d0 .or. this%step(3) == 0.d0) then
+        if (abs(this%l(3)) < tiny(0.0d0) .or. abs(this%step(3)) < tiny(0.d0)) then
             this%npts(3)=1
         else
             this%npts(3)=nint(this%l(3)/this%step(3))+1
