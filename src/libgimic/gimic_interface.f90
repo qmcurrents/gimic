@@ -152,8 +152,13 @@ contains
 
     subroutine gimic_calc_modj(r, d) bind(c)
         real(C_DOUBLE), dimension(3), intent(in) :: r
+        real(8), dimension(3) :: r_
         real(C_DOUBLE), intent(out) :: d
         stop 'gimic_calc_modj(): NOT IMPLEMENTED YET!'
+
+        ! this is silly but just to avoid compiler warning that r is unused
+        r_ = r
+
         d = 0.0
     end subroutine
 
