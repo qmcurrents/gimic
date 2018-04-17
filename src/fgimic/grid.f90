@@ -76,7 +76,7 @@ contains
                 call extgrid(this)
                 return
             case ('std','base')
-                call setup_std_grid(this,mol)
+                call setup_std_grid(this)
             case ('bond')
                 call setup_bond_grid(this,mol)
             case default
@@ -135,9 +135,8 @@ contains
         call nl
     end subroutine
 
-    subroutine setup_std_grid(this,mol)
+    subroutine setup_std_grid(this)
         type(grid_t) :: this
-        type(molecule_t) :: mol
         type(atom_t), pointer :: atom
 
         integer(I4) :: i
