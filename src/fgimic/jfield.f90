@@ -321,6 +321,7 @@ contains
                     end if
                     ! case ACID
                     if (settings%acid) then
+                      jtens => this%tens
                       idx = i+(j-1)*p1+(k-1)*p1*p2
                       val = get_acid(jtens(:,idx))
                     end if
