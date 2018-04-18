@@ -108,20 +108,24 @@ contains
         end if
 
         call jfield_eta(this, mol, xdens)
-        !$OMP PARALLEL PRIVATE(jt,rr,n,i,j,k) &
-        !$OMP SHARED(mol,xdens,spincase,tens,lo,hi)
+
+        !$omp parallel default(none) &
+        !$omp private(jt,rr,n,i,j,k) &
+        !$omp shared(this,mol,xdens,spincase,tens,lo,hi)
         call new_jtensor(jt, mol, xdens)
-        !$OMP DO SCHEDULE(STATIC)
+
+        !$omp do schedule(static)
         do n=lo,hi
             call get_grid_index(this%grid, n, i, j, k)
             rr = gridpoint(this%grid, i, j, k)
             ! here the ACID T tensor is calculated and put on tens
             call ctensor(jt, rr, tens(:,n-lo+1), spincase)
         end do
-        !$OMP END DO
-        call del_jtensor(jt)
+        !$omp end do
 
-        !$OMP END PARALLEL
+        call del_jtensor(jt)
+        !$omp end parallel
+
         if (mpi_world_size > 1) then
             call gather_data(tens(:,first:last), this%tens(:,first:))
             if (mpi_rank == 0) then
@@ -164,11 +168,17 @@ contains
         integer(I4) :: k
         integer(I4), dimension(2) :: dims
         dims = shape(this%vec)
-        !$OMP PARALLEL DO PRIVATE(k) SHARED(this,dims)
+        !$omp parallel default(none) &
+        !$omp shared(this,dims) &
+        !$omp private(k)
+
+        !$omp do
         do k=1,dims(2)
             this%vec(:,k)=matmul(reshape(this%tens(:,k),(/3,3/)), this%b)
         end do
-        !$OMP END PARALLEL DO
+        !$omp end do
+
+        !$omp end parallel
     end subroutine
 
 ! Make a rough estimate of how long the calculation will take
