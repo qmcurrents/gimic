@@ -284,9 +284,11 @@ contains
         if (grid_is_3d(this%grid)) then
             circle_log = .false.
         else
-          if (this%grid%radius.gt.0.1d0) then
-            circle_log = .true.
-          end if
+            if (trim(this%grid%mode) .eq. 'bond') then
+                if (this%grid%radius.gt.0.1d0) then
+                    circle_log = .true.
+                end if
+            end if
         end if
         ! get grid normal vector n
         normal=get_grid_normal(this%grid)
