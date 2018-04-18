@@ -20,6 +20,8 @@ foreach(_name
     c4h4/read-grid
     open-shell/3d
     open-shell/integration
+    benzene/valgrind-integral
+    benzene/valgrind-2d
     )
     add_test(
         NAME ${_name}
