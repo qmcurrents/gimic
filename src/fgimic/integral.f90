@@ -103,17 +103,19 @@ contains
         xsum3=0.d0
         psum3=0.d0
         nsum3=0.d0
-!$OMP PARALLEL PRIVATE(i,j,k,r,rr,xsum,psum,nsum) &
+
+!$OMP PARALLEL DEFAULT(NONE) &
+!$OMP PRIVATE(i,j,k,r,rr,xsum,psum,nsum) &
 !$OMP PRIVATE(jt,w,jp,tt,jvec) &
-!$OMP SHARED(xsum2,psum2,nsum2) &
-!$OMP SHARED(p1,p2,p3,this,center,spin,bb,normal,mol,xdens,lo,hi) &
-!$OMP REDUCTION(+:xsum3,psum3,nsum3)
+!$OMP SHARED(p1,p2,p3,this,center,spin,bb,normal,mol,xdens,lo,hi,bound) &
+!$OMP REDUCTION(+:xsum3,psum3,nsum3,xsum2,psum2,nsum2)
         call new_jtensor(jt, mol, xdens)
         do k=1,p3
             xsum2=0.d0
             psum2=0.d0
             nsum2=0.d0
-            !$OMP DO SCHEDULE(STATIC) REDUCTION(+:xsum2,psum2,nsum2)
+
+            !$OMP DO
             do j=lo,hi
                 xsum=0.d0
                 psum=0.d0
@@ -146,15 +148,18 @@ contains
                 nsum2=nsum2+nsum*w
             end do
             !$OMP END DO
-            !$OMP MASTER
-            call collect_sum(xsum2, xsum)
-            call collect_sum(psum2, psum)
-            call collect_sum(nsum2, nsum)
-            w=get_weight(this%grid,k,3)
-            xsum3=xsum3+xsum*w
-            psum3=psum3+psum*w
-            nsum3=nsum3+nsum*w
-            !$OMP END MASTER
+
+            w = get_weight(this%grid,k,3)
+            xsum3 = xsum3 + w*xsum2
+            psum3 = psum3 + w*psum2
+            nsum3 = nsum3 + w*nsum2
+
+            ! TODO old code used collect_sum
+            ! this will be needed for MPI
+!           call collect_sum(xsum2, xsum)
+!           call collect_sum(psum2, psum)
+!           call collect_sum(nsum2, nsum)
+
         end do
         call del_jtensor(jt)
 !$OMP END PARALLEL
@@ -236,17 +241,19 @@ contains
         xsum3=0.d0
         psum3=0.d0
         nsum3=0.d0
-!$OMP PARALLEL PRIVATE(i,j,k,r,rr,sgn,xsum,psum,nsum) &
+
+!$OMP PARALLEL DEFAULT(NONE) &
+!$OMP PRIVATE(i,j,k,r,rr,sgn,xsum,psum,nsum) &
 !$OMP PRIVATE(jt,w,jp,tt,jvec) &
-!$OMP SHARED(xsum2,psum2,nsum2) &
-!$OMP SHARED(p1,p2,p3,this,center,spin,bb,normal,lo,hi) &
-!$OMP REDUCTION(+:xsum3,psum3,nsum3)
+!$OMP SHARED(p1,p2,p3,this,center,spin,bb,normal,lo,hi,bound,xdens,mol) &
+!$OMP REDUCTION(+:xsum3,psum3,nsum3,xsum2,psum2,nsum2)
         call new_jtensor(jt, mol, xdens)
         do k=1,p3
             xsum2=0.d0
             psum2=0.d0
             nsum2=0.d0
-            !$OMP DO SCHEDULE(STATIC) REDUCTION(+:xsum2,psum2,nsum2)
+
+            !$OMP DO
             do j=lo,hi
                 xsum=0.d0
                 psum=0.d0
@@ -283,15 +290,15 @@ contains
                 nsum2=nsum2+nsum*w
             end do
             !$OMP END DO
-            !$OMP MASTER
-            call collect_sum(xsum2, xsum)
-            call collect_sum(psum2, psum)
-            call collect_sum(nsum2, nsum)
-            w=get_weight(this%grid,k,3)
-            xsum3=xsum3+xsum*w
-            psum3=psum3+psum*w
-            nsum3=nsum3+nsum*w
-            !$OMP END MASTER
+
+            w = get_weight(this%grid,k,3)
+            xsum3 = xsum3 + w*xsum2
+            psum3 = psum3 + w*psum2
+            nsum3 = nsum3 + w*nsum2
+
+            ! TODO old code used collect_sum
+            ! this will be needed for MPI
+
         end do
         call del_jtensor(jt)
 !$OMP END PARALLEL
@@ -451,16 +458,17 @@ contains
         end if
 
         xsum3=0.d0
-! NB! Untested parallelization, check with valgrind!
-!$OMP PARALLEL PRIVATE(i,j,k,r,rr,xsum) &
-!$OMP PRIVATE(jt,w,tt) &
-!$OMP SHARED(xsum2) &
-!$OMP SHARED(p1,p2,p3,this,center,spin,mol,xdens,lo,hi) &
-!$OMP REDUCTION(+:xsum3)
+
+!$OMP PARALLEL DEFAULT(NONE) &
+!$OMP PRIVATE(i,j,k,r,rr,xsum) &
+!$OMP PRIVATE(jt,w,tt,val) &
+!$OMP SHARED(p1,p2,p3,this,center,spin,mol,xdens,lo,hi,bound) &
+!$OMP REDUCTION(+:xsum3,xsum2)
         call new_jtensor(jt, mol, xdens)
         do k=1,p3
             xsum2=0.d0
-            !$OMP DO SCHEDULE(STATIC) REDUCTION(+:xsum2)
+
+            !$OMP DO
             do j=lo,hi
                 xsum=0.d0
                 do i=1,p1
@@ -480,15 +488,16 @@ contains
                 xsum2=xsum2+xsum*w
             end do
             !$OMP END DO
-            !$OMP MASTER
-            call collect_sum(xsum2, xsum)
-            w=get_weight(this%grid,k,3)
-            xsum3=xsum3+xsum*w
-            !$OMP END MASTER
+
+            w = get_weight(this%grid,k,3)
+            xsum3 = xsum3 + w*xsum2
+
+            ! TODO old code used collect_sum
+            ! this will be needed for MPI
         end do
         call del_jtensor(jt)
-        acid_val = dsqrt(xsum3)
 !$OMP END PARALLEL
+        acid_val = dsqrt(xsum3)
 
         call nl
         call msg_out(repeat('*', 60))

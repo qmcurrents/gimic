@@ -28,6 +28,16 @@ Test the installation with::
   $ make test
 
 
+Parallelization
+---------------
+
+OpenMP parallelization is available::
+
+  $ ./setup --omp
+
+MPI parallelization is in the works.
+
+
 Installation on Stallo supercomputer
 ------------------------------------
 
