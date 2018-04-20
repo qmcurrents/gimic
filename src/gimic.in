@@ -43,19 +43,13 @@ def parse_cmdline():
     parser.add_argument('-b','--backend',
             action='store',
             dest='backend',
-            choices=('pygimic','fgimic', 'london', 'gimlet'),
+            choices=('pygimic','fgimic','gimlet'),
             default='fgimic',
             help='backend library [default: %(default)s]')
     parser.add_argument('-d','--debug', action='store', type=int, dest='debug',
             help='debug level')
     parser.add_argument('-o','--output', action='store', dest='outfile',
             help='base name for output file(s)')
-    parser.add_argument('-D','--debug-file', action='store', dest='debug_file',
-            help='debug file name')
-    parser.add_argument('-v','--verbose', action='store_true', dest='verbose',
-           help='be verbose')
-    parser.add_argument('-q','--quiet', action='store_false', dest='verbose',
-           help='be quiet')
     parser.add_argument('-y','--dryrun', action='store_true', dest='dryrun',
            help='dryrun without actually calculating anything')
 
@@ -66,7 +60,6 @@ def parse_keywords(args):
     top=getkw.Section('top', callback=check_top)
     top.set_status(True)
     top.add_kw('title', 'STR', ('',))
-    top.add_kw('debug_file', 'STR', ('DEBUG.out',))
     top.add_kw('debug', 'INT', (0,))
     top.add_kw('calc', 'STR', None)
     top.add_kw('backend', 'STR', 'gimic')
@@ -145,8 +138,6 @@ def parse_keywords(args):
         inkw.setkw('dryrun', args.dryrun)
     if args.outfile:
         inkw.setkw('outfile', args.outfile)
-    if args.debug_file:
-        inkw.setkw('debug_file', args.debugf)
     if args.backend:
         inkw.setkw('backend', args.backend)
 
@@ -207,7 +198,6 @@ def check_grid(grid):
                 print(warn % (i,arg))
         return
     elif arg == 'bond':
-#        required=('in', 'out', 'up', 'down', 'distance')
         required=('distance',)
         ignore=('file','ivec', 'jvec', 'lengths')
         inoutupdown=0
