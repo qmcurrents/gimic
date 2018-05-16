@@ -56,9 +56,9 @@ contains
 !        do i=1,natoms
 !            call print_atom_data(atoms(i),i)
 !        end do
-        write(str_g, 77) '  Total number of primitive  GTO''s ', this%ngto
+        write(str_g, '(a, i6)') '  Total number of primitive  GTO''s ', this%ngto
         call msg_out(str_g)
-        write(str_g, 77) '  Total number of contracted GTO''s ', this%ncgto
+        write(str_g, '(a, i6)') '  Total number of contracted GTO''s ', this%ncgto
         call msg_out(str_g)
         call nl
 
@@ -284,7 +284,7 @@ contains
                 !print *
                 k=k+1
             end do
-            write(str_g, 55) npf,' GTO''s and ', ncf, ' CGTO''s of ''',&
+            write(str_g, '(i5,a,i5,a,i5,a)') npf,' GTOs and ', ncf, ' CGTOs of ''',&
                 & shell_names(i-1),''' type.'
             call msg_out(str_g)
         end do
