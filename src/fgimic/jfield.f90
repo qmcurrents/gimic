@@ -214,8 +214,12 @@ contains
 
         delta_t=tim2-tim1
         if ( present(fac) ) delta_t=delta_t*fac
-        write(str_g, '(a,f9.2,a)') 'Estimated CPU time for single core &
-            &calculation: ', delta_t*real(p1*p2*p3)/100.d0, ' sec'
+        write(str_g, '(a,f11.2,a,a,f6.1,a)') 'Estimated CPU time for single core &
+            &calculation: ', delta_t*real(p1*p2*p3)/100.d0, ' sec', &
+            ' (',  delta_t*real(p1*p2*p3)/360000.d0, ' h )'
+        if ( delta_t*real(p1*p2*p3)/360000.d0 .gt. 48 ) then
+            write(str_g, '(a,f4.1,a)') '(', delta_t*real(p1*p2*p3)/360000.d0/24, ' days )' 
+        end if
         call msg_info(str_g)
         call nl
     end subroutine
