@@ -109,24 +109,22 @@ Integration
 Section: integral
 ~~~~~~~~~~~~~~~~~
 
-magnet\_axis=X] Specify the magnetic field along the direction which is
-orthogonal to the molecular plane, but parallel to the integration
-plane.
+magnet\_axis=X] 
+    Specify the magnetic field along the direction which is
+    orthogonal to the molecular plane, but parallel to the integration
+    plane.
 
-Vector which specifies the direction of the magnetic field.
-
-Calculate the mod(J) integral, this is useful to verify that the actual
-integration grid is sensible in “tricky” molecules.
+Calculate the mod(J) integral 
+    This is useful to verify that the actual
+    integration grid is sensible in “tricky” molecules.
 
 Integrate the tensor components
+    If a calculation has been preformed on a even spaced grid, generate a
+    grid suitable for Gaussian integration by doing Lagrange interpolation.
 
-If a calculation has been preformed on a even spaced grid, generate a
-grid suitable for Gaussian integration by doing Lagrange interpolation
+Grid to be used for calculating the currents. 
+    See the ”Grids“ section
+    for a description of how to specify grids.
 
-Polynomial order of the Lagrange Interpolation Polynomials
-
-Grid to be used for calculating the currents. See the ”Grids“ section
-for a description of how to specify grids.
-
-All output is collected in ``gimic.out``.
+All output is collected in ``gimic.out``
 
