@@ -23,7 +23,6 @@ checkIfEmpty dirname $dirname
 
 #filenum=$( (cd $wrkdir && find . -maxdepth 1 -type f -name '*.inp' | wc -l)) # Doesn't work for some reason
 filenum=$(ls *.inp | wc -l)
-checkIfEmpty filenum $filenum
 
 cat /dev/null > $wrkdir/paratropic.dat #delete if it already exists
 cat /dev/null > $wrkdir/diatropic.dat
@@ -44,7 +43,7 @@ do
 done
 
 paste $wrkdir/current.dat $wrkdir/diatropic.dat $wrkdir/paratropic.dat > $wrkdir/current_profile.dat
-rm -f $wrkdir/paratropic.dat $wrkdir/diatropic.dat $wrkdir/current.dat
+#rm -f $wrkdir/paratropic.dat $wrkdir/diatropic.dat $wrkdir/current.dat
 
 printf "\nData saved in current_profile.dat\n\n"
 

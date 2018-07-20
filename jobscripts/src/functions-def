@@ -357,6 +357,52 @@ fi
 }
 
 
+function planeSanityCheckSquares() {
+# sanity check for the integration plane
+
+dirname="$@"
+
+echo "Do you want to preview the integration plane in XYZ format?"
+echo "Press [y] or any other key to skip"; read accept
+if  [ ! -z $accept ] && [ $accept == "y" ]
+then
+    echo "Preparing the plane..."
+idxH=$( sed -n -e 's/^.*nstepsH=//p' $wrkdir/calculation.dat | awk '{print $1}')
+idxV=$( sed -n -e 's/^.*nstepsV=//p' $wrkdir/calculation.dat | awk '{print $1}')
+checkIfEmpty idxH $idxH
+checkIfEmpty idxV $idxV
+idxH=$(( $idxH - 1 ))
+idxV=$(( $idxV - 1 ))
+
+    (cd ./$dirname/gimic.0 && gimic --dryrun gimic.0.0.inp  > /dev/null )
+    cat ./$dirname/gimic.0/grid.xyz | head -n -2 > ./$dirname/grid.check.xyz
+    (cd ./$dirname/gimic.0 && gimic --dryrun gimic.0.$idxH.inp  > /dev/null )
+    grep X ./$dirname/gimic.0/grid.xyz  | awk '{ if (NR ==2) {print $0} }' >> ./$dirname/grid.check.xyz
+
+    (cd ./$dirname/gimic.$idxV && gimic --dryrun gimic.$idxH.0.inp  > /dev/null )
+    grep X ./$dirname/gimic.$idxV/grid.xyz  | awk '{ if (NR ==3) {print $0} }' >> ./$dirname/grid.check.xyz
+    (cd ./$dirname/gimic.$idxV && gimic --dryrun gimic.$idxH.$idxV.inp  > /dev/null )
+    grep X ./$dirname/gimic.$idxV/grid.xyz  | awk '{ if (NR ==4) {print $0} }' >> ./$dirname/grid.check.xyz
+
+
+    # copy the MF direction "Be" atom
+    grep Be ./$dirname/grid.xyz  >> ./$dirname/grid.check.xyz
+
+#    atomNum=$(head -n 1 ./$dirname/grid.xyz)
+#    atomNum=$(( $atomNum + 2 ))
+#    sed -i "1s/.*/$atomNum/" ./$dirname/grid.check.xyz
+
+    echo
+    echo "The file grid.check.xyz created."
+    echo "You can now put this script to the background and inspect the molecule."
+    echo "Bring the script to foreground and press enter to continue the current profile."
+    read accept # just wait
+
+    echo "Current profile analysis resumed." 
+fi
+}
+
+
 function calculateRot() {
 awk -v a1=$atom1 -v a2=$atom2 -v a3=$atom3 '{
     if (NR == a1+1)

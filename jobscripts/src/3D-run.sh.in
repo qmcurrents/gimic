@@ -115,6 +115,7 @@ echo "Magnetic field vector coordinates: ($MFx; $MFy; $MFz)"
 
 
 printf "\nGRID SPACING\n"
+
 spacing=0.5
 valueDimInp spacing $spacing "bohr"
 

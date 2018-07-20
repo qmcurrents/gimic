@@ -28,6 +28,16 @@ Test the installation with::
   $ make test
 
 
+Parallelization
+---------------
+
+OpenMP parallelization is available::
+
+  $ ./setup --omp
+
+MPI parallelization is in the works.
+
+
 Installation on Stallo supercomputer
 ------------------------------------
 
@@ -44,3 +54,15 @@ Installation on Stallo supercomputer
   $ cd build
   $ make
   $ make install
+
+
+Using BLAS1 and BLAS2 routines
+------------------------------
+
+With GNU compilers use::
+
+  $ ./setup --blas
+
+With Intel compilers and MKL use::
+
+  $ ./setup --fc=ifort --cc=icc --cxx=icpc --cmake-options="-D ENABLE_MKL_FLAG=ON"

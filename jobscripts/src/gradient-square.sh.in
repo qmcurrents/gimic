@@ -55,7 +55,7 @@ for ((i=0; i<nstepsH; i++))
 do
     for ((j=0; j<nstepsV; j++))
     do
-	grep -A 4 "Induced current (au)" gimic.$i/gimic.$i.$j.out | awk -v i=$i -v down=$down -v dia="$wrkdir/diatropic.$i.dat" -v para="$wrkdir/paratropic.$i.dat" -v out="$wrkdir/current.$i.dat" '{if (NR == 5) {printf("% .8f\n", $5) >> out;} else if (NR == 2) {printf("% .8f\n", $5) >> dia} else if (NR == 3) {printf("% .8f\n", $5) >> para};}'
+	     grep -A 4 "Induced current (au)" gimic.$i/gimic.$i.$j.out | awk -v i=$i -v down=$down -v dia="$wrkdir/diatropic.$i.dat" -v para="$wrkdir/paratropic.$i.dat" -v out="$wrkdir/current.$i.dat" '{if (NR == 5) {printf("% .8f\n", $5) >> out;} else if (NR == 2) {printf("% .8f\n", $5) >> dia} else if (NR == 3) {printf("% .8f\n", $5) >> para};}'
 #	awk -v dia="$wrkdir/diatropic.$i.dat" -v para="$wrkdir/paratropic.$i.dat" -v delta=$delta -v out="$wrkdir/current.$i.dat" '/Induced current \(n/ {printf("% .8f\n", $5) >> out}; /Positive cont/ {printf("% .8f\n", $5) >> dia}; /Negative cont/ {printf("% .8f\n", $5) >> para};  ' gimic.$i/gimic.$i.$j.out
     done
 done
@@ -100,6 +100,7 @@ set output "squares-profile.eps"
 splot "current_profile.dat" matrix with image
 
 set output "squares-profile-interpolate-20.20.eps"
+
 set pm3d map
 set pm3d interpolate 20,20
 splot "current_profile.dat" matrix notitle

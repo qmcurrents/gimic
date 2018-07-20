@@ -119,6 +119,7 @@ then
     #RAUL'S PLANE
     checkPlaneDir=$(command -v normalise_plane)
     if [ ! -e $checkPlaneDir ]
+
     then
 	echo "The program for orienting with respect a plane is not found. Switching to manual input of the magnetic field components."
     else

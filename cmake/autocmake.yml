@@ -31,6 +31,8 @@ modules:
     - '%(url_root)modules/mpi.cmake'
     - '%(url_root)modules/code_coverage.cmake'
     - '%(url_root)modules/safeguards.cmake'
+    - '%(url_root)modules/math/blas.cmake'
+    - '%(url_root)modules/math/lapack.cmake'
     - 'custom/own.cmake'
     - 'custom/driver.cmake'
     - '%(url_root)modules/src.cmake'

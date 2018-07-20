@@ -421,7 +421,7 @@ contains
 !                call getkw_errundef(ptr%id)
                 return
             end if
-            if (ptr%typ	 /= KW_INT) then
+            if (ptr%typ  /= KW_INT) then
                 call getkw_typerr(ptr)
             else
                 val=ptr%key%ival
@@ -460,7 +460,7 @@ contains
 !                call getkw_errundef(ptr%id)
                 return
             end if
-            if (ptr%typ	 /= KW_IVEC) then
+            if (ptr%typ  /= KW_IVEC) then
                 call getkw_typerr(ptr)
             else
                 val=>ptr%key%ivec
@@ -487,7 +487,7 @@ contains
 !                call getkw_errundef(ptr%id)
                 return
             end if
-            if (ptr%typ	 /= KW_DVEC) then
+            if (ptr%typ  /= KW_DVEC) then
                 call getkw_typerr(ptr)
             else
                 val=>ptr%key%dvec
@@ -526,7 +526,7 @@ contains
 !                call getkw_errundef(ptr%id)
                 return
             end if
-            if (ptr%typ	 /= KW_LVEC) then
+            if (ptr%typ  /= KW_LVEC) then
                 call getkw_typerr(ptr)
             else
                 val=>ptr%key%lvec
@@ -565,7 +565,7 @@ contains
 !                call getkw_errundef(ptr%id)
                 return
             end if
-            if (ptr%typ	 /= KW_STR) then
+            if (ptr%typ  /= KW_STR) then
                 call getkw_typerr(ptr)
             else
                 val=>ptr%key%str
@@ -612,7 +612,7 @@ contains
 !                call getkw_errundef(ptr%id)
                 return
             end if
-            if (ptr%typ	 /= KW_DBL) then
+            if (ptr%typ  /= KW_DBL) then
                 call getkw_typerr(ptr)
             else
                 val=ptr%key%dval
@@ -639,7 +639,7 @@ contains
 !                call getkw_errundef(ptr%id)
                 return
             end if
-            if (ptr%typ	 /= KW_BOOL) then
+            if (ptr%typ  /= KW_BOOL) then
                 call getkw_typerr(ptr)
             else
                 val=ptr%key%bool
@@ -668,7 +668,7 @@ contains
 !                call getkw_errundef(ptr%id)
                 return
             end if
-            if (ptr%typ	 /= KW_INT) then
+            if (ptr%typ  /= KW_INT) then
                 call getkw_typerr(ptr)
             else
                 val=ptr%key%ival
@@ -696,7 +696,7 @@ contains
 !                call getkw_errundef(ptr%id)
                 return
             end if
-            if (ptr%typ	 /= KW_IVEC) then
+            if (ptr%typ  /= KW_IVEC) then
                 call getkw_typerr(ptr)
             else
                 val=>ptr%key%ivec
@@ -723,7 +723,7 @@ contains
 !                call getkw_errundef(ptr%id)
                 return
             end if
-            if (ptr%typ	 /= KW_DVEC) then
+            if (ptr%typ  /= KW_DVEC) then
                 call getkw_typerr(ptr)
             else
                 val=>ptr%key%dvec
@@ -750,7 +750,7 @@ contains
 !                call getkw_errundef(ptr%id)
                 return
             end if
-            if (ptr%typ	 /= KW_LVEC) then
+            if (ptr%typ  /= KW_LVEC) then
                 call getkw_typerr(ptr)
             else
                 val=>ptr%key%lvec
@@ -777,7 +777,7 @@ contains
 !                call getkw_errundef(ptr%id)
                 return
             end if
-            if (ptr%typ	 /= KW_LVEC) then
+            if (ptr%typ  /= KW_LVEC) then
                 call getkw_typerr(ptr)
             else
                 val=>ptr%key%str
@@ -804,7 +804,7 @@ contains
 !                call getkw_errundef(ptr%id)
                 return
             end if
-            if (ptr%typ	 /= KW_DBL) then
+            if (ptr%typ  /= KW_DBL) then
                 call getkw_typerr(ptr)
             else
                 val=ptr%key%dval
@@ -831,7 +831,7 @@ contains
 !                call getkw_errundef(ptr%id)
                 return
             end if
-            if (ptr%typ	 /= KW_BOOL) then
+            if (ptr%typ  /= KW_BOOL) then
                 call getkw_typerr(ptr)
             else
                 val=ptr%key%bool
@@ -1157,7 +1157,7 @@ contains
 
         ok=findkw(this%active, path, ptr)
         if (ok) then
-            if (ptr%typ	 /= KW_INT) then
+            if (ptr%typ  /= KW_INT) then
                 call getkw_typerr(ptr)
             else
                 ptr%key%ival=val
@@ -1181,7 +1181,7 @@ contains
 
         ok=findkw(this%active, path, ptr)
         if (ok) then
-            if (ptr%typ	 /= KW_IVEC) then
+            if (ptr%typ  /= KW_IVEC) then
                 call getkw_typerr(ptr)
             else
                 if (associated(ptr%key%ivec)) then
@@ -1209,7 +1209,7 @@ contains
 
         ok=findkw(this%active, path, ptr)
         if (ok) then
-            if (ptr%typ	 /= KW_DVEC) then
+            if (ptr%typ  /= KW_DVEC) then
                 call getkw_typerr(ptr)
             else
                 if (associated(ptr%key%dvec)) then
@@ -1237,7 +1237,7 @@ contains
 
         ok=findkw(this%active, path, ptr)
         if (ok) then
-            if (ptr%typ	 /= KW_DBL) then
+            if (ptr%typ  /= KW_DBL) then
                 call getkw_typerr(ptr)
             else
                 ptr%key%dval=val
@@ -1261,7 +1261,7 @@ contains
 
         ok=findkw(this%active, path, ptr)
         if (ok) then
-            if (ptr%typ	 /= KW_LVEC) then
+            if (ptr%typ  /= KW_LVEC) then
                 call getkw_typerr(ptr)
             else
                 if (associated(ptr%key%lvec)) then
@@ -1289,7 +1289,7 @@ contains
 
         ok=findkw(this%active, path, ptr)
         if (ok) then
-            if (ptr%typ	 /= KW_BOOL) then
+            if (ptr%typ  /= KW_BOOL) then
                 call getkw_typerr(ptr)
             else
                 ptr%key%bool=val
@@ -1313,7 +1313,7 @@ contains
 
         ok=findkw(this%active, path, ptr)
         if (ok) then
-            if (ptr%typ	 /= KW_LVEC) then
+            if (ptr%typ  /= KW_LVEC) then
                 call getkw_typerr(ptr)
             else
                 if (associated(ptr%key%str)) then

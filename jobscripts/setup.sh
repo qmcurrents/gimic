@@ -64,6 +64,19 @@ then
     cat src/squares-profile-cluster-submit >> $SCRIPT_OUT
 fi
 
+# Prepare the base structure  of the squares profile script for cluster
+
+file1=squares-profile-header
+file2=squares-profile-cluster-submit
+file3=functions-def
+SCRIPT_OUT="squares-profile-cluster.sh.in"
+
+if [ $SCRIPT_OUT -ot $file1 ] || [ $SCRIPT_OUT -ot $file2 ] || [ $SCRIPT_OUT -ot $file3 ]
+then 
+    cat squares-profile-header > squares-profile-cluster.sh.in
+    cat squares-profile-cluster-submit >> squares-profile-cluster.sh.in
+fi
+
 # Prepare the base structure  of the current profile script for cluster
 
 file1="src/current-profile-header"

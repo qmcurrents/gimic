@@ -76,7 +76,7 @@ contains
                 call extgrid(this)
                 return
             case ('std','base')
-                call setup_std_grid(this,mol)
+                call setup_std_grid(this)
             case ('bond')
                 call setup_bond_grid(this,mol)
             case default
@@ -135,9 +135,8 @@ contains
         call nl
     end subroutine
 
-    subroutine setup_std_grid(this,mol)
+    subroutine setup_std_grid(this)
         type(grid_t) :: this
-        type(molecule_t) :: mol
         type(atom_t), pointer :: atom
 
         integer(I4) :: i
@@ -355,7 +354,7 @@ contains
         this%gauss=.false.
         this%npts(1)=nint(this%l(1)/this%step(1))+1
         this%npts(2)=nint(this%l(2)/this%step(2))+1
-        if (this%l(3) == 0.d0 .or. this%step(3) == 0.d0) then
+        if (abs(this%l(3)) < tiny(0.0d0) .or. abs(this%step(3)) < tiny(0.d0)) then
             this%npts(3)=1
         else
             this%npts(3)=nint(this%l(3)/this%step(3))+1
@@ -426,7 +425,7 @@ contains
             call nl
             return
         end if
-99		format(a,3f12.8,a)
+99      format(a,3f12.8,a)
     end subroutine
 
     subroutine get_grid_size(this, i, j, k)

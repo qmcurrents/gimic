@@ -44,6 +44,7 @@ do
 	counter=$(( $counter+1 ))
 	idxH=$(echo $file | sed -e "s#\.# #g" | awk '{ print $2}' )
 	idxV=$(echo $file | sed -e "s#\.# #g" | awk '{ print $3}' )
+  
 	( cd $wrkdir/gimic.$row && gimic gimic.$idxH.$idxV.inp > $wrkdir/gimic.$row/gimic.$idxH.$idxV.out ) &
 	if [ $counter -eq $parallel ]
 	then

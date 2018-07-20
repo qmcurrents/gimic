@@ -108,20 +108,24 @@ contains
         end if
 
         call jfield_eta(this, mol, xdens)
-        !$OMP PARALLEL PRIVATE(jt,rr,n,i,j,k) &
-        !$OMP SHARED(mol,xdens,spincase,tens,lo,hi)
+
+        !$omp parallel default(none) &
+        !$omp private(jt,rr,n,i,j,k) &
+        !$omp shared(this,mol,xdens,spincase,tens,lo,hi)
         call new_jtensor(jt, mol, xdens)
-        !$OMP DO SCHEDULE(STATIC)
+
+        !$omp do schedule(static)
         do n=lo,hi
             call get_grid_index(this%grid, n, i, j, k)
             rr = gridpoint(this%grid, i, j, k)
             ! here the ACID T tensor is calculated and put on tens
             call ctensor(jt, rr, tens(:,n-lo+1), spincase)
         end do
-        !$OMP END DO
-        call del_jtensor(jt)
+        !$omp end do
 
-        !$OMP END PARALLEL
+        call del_jtensor(jt)
+        !$omp end parallel
+
         if (mpi_world_size > 1) then
             call gather_data(tens(:,first:last), this%tens(:,first:))
             if (mpi_rank == 0) then
@@ -164,11 +168,17 @@ contains
         integer(I4) :: k
         integer(I4), dimension(2) :: dims
         dims = shape(this%vec)
-        !$OMP PARALLEL DO PRIVATE(k) SHARED(this,dims)
+        !$omp parallel default(none) &
+        !$omp shared(this,dims) &
+        !$omp private(k)
+
+        !$omp do
         do k=1,dims(2)
             this%vec(:,k)=matmul(reshape(this%tens(:,k),(/3,3/)), this%b)
         end do
-        !$OMP END PARALLEL DO
+        !$omp end do
+
+        !$omp end parallel
     end subroutine
 
 ! Make a rough estimate of how long the calculation will take
@@ -204,8 +214,12 @@ contains
 
         delta_t=tim2-tim1
         if ( present(fac) ) delta_t=delta_t*fac
-        write(str_g, '(a,f9.2,a)') 'Estimated CPU time for single core &
-            &calculation: ', delta_t*real(p1*p2*p3)/100.d0, ' sec'
+        write(str_g, '(a,f11.2,a,a,f6.1,a)') 'Estimated CPU time for single core &
+            &calculation: ', delta_t*real(p1*p2*p3)/100.d0, ' sec', &
+            ' (',  delta_t*real(p1*p2*p3)/360000.d0, ' h )'
+        if ( delta_t*real(p1*p2*p3)/360000.d0 .gt. 48 ) then
+            write(str_g, '(a,f4.1,a)') '(', delta_t*real(p1*p2*p3)/360000.d0/24, ' days )' 
+        end if
         call msg_info(str_g)
         call nl
     end subroutine
@@ -227,11 +241,10 @@ contains
         return
     end function
 
-    subroutine jvector_plots(this,mol,tag)
+    subroutine jvector_plots(this,tag)
         use vtkplot_module
 
         type(jfield_t), intent(inout) :: this
-        type(molecule_t) :: mol
         character(*), optional :: tag
         logical :: circle_log
         logical :: debug 
@@ -285,9 +298,11 @@ contains
         if (grid_is_3d(this%grid)) then
             circle_log = .false.
         else
-          if (this%grid%radius.gt.0.1d0) then
-            circle_log = .true.
-          end if
+            if (trim(this%grid%mode) .eq. 'bond') then
+                if (this%grid%radius.gt.0.1d0) then
+                    circle_log = .true.
+                end if
+            end if
         end if
         ! get grid normal vector n
         normal=get_grid_normal(this%grid)
@@ -322,8 +337,9 @@ contains
                     end if
                     ! case ACID
                     if (settings%acid) then
+                      jtens => this%tens
                       idx = i+(j-1)*p1+(k-1)*p1*p2
-                      val = get_acid(rr,jtens(:,idx))
+                      val = get_acid(jtens(:,idx))
                     end if
                 end do
                     if (debug) then
@@ -535,21 +551,16 @@ contains
         jtens => this%tens
         mag = this%b
 
-        !buf => this%vec
         maxi=0.d0
         mini=0.d0
         l=0
         idx = 0
-        !do i=1,p1
-        !    do j=1,p2
-        !        do k=1,p3
         do k=1,p3
             do j=1,p2
                 do i=1,p1
-                    !v=buf(:,i+(j-1)*p1+(k-1)*p1*p2)
                     rr=gridpoint(this%grid,i,j,k)
                     idx = i+(j-1)*p1 + (k-1)*p1*p2
-                    val(i,j,k)= get_acid(rr, jtens(:,idx))
+                    val(i,j,k)= get_acid(jtens(:,idx))
                 end do
             end do
         end do
