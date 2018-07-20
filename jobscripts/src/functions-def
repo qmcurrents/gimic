@@ -42,6 +42,16 @@ function angle()
  };
 
 
+function readParameter()
+{
+# usage: readParameter variable $dirname 
+    local __inputVar=$1
+    dirname="$2"
+    sedstring=$( echo 's/^.*'$__inputVar'=//p'  )
+     __inputValue=$( sed -n -e $sedstring $dirname/calculation.dat | awk '{print $1}')
+    eval $__inputVar="'$__inputValue'"
+}
+
 ###############################################################################
 
 # user-input handling functions
@@ -98,22 +108,22 @@ function userInp()
 
      __varValue=$( awk -v Cx=$Cx -v Cy=$Cy -v Cz=$Cz -v Bx=$Bx -v By=$By -v Bz=$Bz BEGIN'{dist=sqrt( (Bx-Cx)*(Bx-Cx) + (By-Cy)*(By-Cy) + (Bz-Cz)*(Bz-Cz) ); print dist}' )
      
-     printf  "\nDo you accept $__resultVar=$__varValue bohr?\nPress [n] to change\n"
+     printf  "\nDo you accept $__resultVar = $__varValue bohr?\nPress [n] to change\n"
      read accept;
      if [ ! -z $accept ] && [ $accept == "n" ]
      then
-         printf "$__resultVar="; read __varValue
+         printf "$__resultVar = "; read __varValue
 	 validateInput __varValue $__varValue
      fi # if centroid calculation not accepted 
      elif [ ! -z $accept ] && [ $accept == "v" ]
      then
-         printf "$__resultVar="; read __varValue
+         printf "$__resultVar = "; read __varValue
 	 validateInput __varValue $__varValue
-         printf  "\nDo you accept $__resultVar=$__varValue bohr?\nPress [n] to change\n"
+         printf  "\nDo you accept $__resultVar = $__varValue bohr?\nPress [n] to change\n"
      read accept;
      if [ ! -z $accept ] && [ $accept == "n" ]
      then
-         printf "$__resultVar="; read __varValue
+         printf "$__resultVar = "; read __varValue
 	 validateInput __varValue $__varValue
      fi
 fi 
@@ -129,11 +139,11 @@ function valueInp()
     local __resultVar=$1
     local __varValue="$2"
 
-    printf  "\nDo you accept $__resultVar=$__varValue bohr?\nPress [n] to change\n"
+    printf  "\nDo you accept $__resultVar = $__varValue bohr?\nPress [n] to change\n"
     read accept;
     if [ ! -z $accept ] && [ $accept == "n" ]
     then
-	printf "$__resultVar="; read __varValue
+	printf "$__resultVar = "; read __varValue
 	validateInput __varValue $__varValue
     fi # if centroid calculation not accepted 
 
@@ -152,7 +162,7 @@ function valueDimInp()
     read accept;
     if [ ! -z $accept ] && [ $accept == "n" ]
     then
-	printf "$__resultVar="; read __varValue
+	printf "$__resultVar = "; read __varValue
 	validateInput __varValue $__varValue
     fi # if centroid calculation not accepted 
 
@@ -179,24 +189,21 @@ function checkIfPreviousCalculationExists() {
     if [ -d $dirname ] 
     then
 	echo "Directory $dirname already exists"
-#        printf "\nDirectory already exists.\nCalculation parameters:\n"
-#        grep "bond=\|in=\|out=\|up=\|down=\|MF=" $dirname/gimic.inp
-        echo "Enter [y] to overwrite or any other key to exit."; read accept
-        if [ -z $accept ] || [ ! $accept == "y" ]  # if the variable is empty or different from "y", exit 
-        then 
-    	exit
-        else
-    	rm -f $dirname/*out $dirname/*inp # Remove leftover input and output to avoid confusion
-        fi
+	#        printf "\nDirectory already exists.\nCalculation parameters:\n"
+	#        grep "bond=\|in=\|out=\|up=\|down=\|MF=" $dirname/gimic.inp
+	echo "Enter [y] to overwrite or any other key to exit."; read accept
+	if [ -z $accept ] || [ ! $accept == "y" ]  # if the variable is empty or different from "y", exit 
+	then 
+	    exit
+	else
+	    rm -rf $dirname/*  # Remove leftover input and output to avoid confusion
+	fi
     else
-        mkdir $dirname
-        cp coord $dirname/
-        echo "Directory $dirname created."; echo
-    fi 
-}
-
-
-
+	mkdir $dirname
+	cp coord $dirname/
+	echo "Directory $dirname created."; echo
+    fi
+    }
 
 
 function calculateFixedCoord() {
@@ -217,7 +224,7 @@ function calculateFixedCoord() {
 
 #    echo "func arg: " "$@"
     awk -v Ax="$1" -v Ay="$2" -v Az="$3" 'BEGIN{ 
-         rotAngleDeg=10 ; 
+         rotAngleDeg = 5 ; 
          rotAngleRad=0.0174532925*rotAngleDeg;
          Cos=cos(rotAngleRad);
          Sin=sin(rotAngleRad);
@@ -237,24 +244,107 @@ echo "Do you want to preview the integration plane in XYZ format?"
 echo "Press [y] or any other key to skip"; read accept
 if  [ ! -z $accept ] && [ $accept == "y" ]
 then
-    echo "Preparing the plane..."
+    printf "\nPreparing the plane...\n"
     (cd ./$dirname/ && gimic --dryrun gimic.0.inp  > /dev/null )
-#    gimic --dryrun gimic.0.inp
     # take the first two coordinates of the int plane
     cat ./$dirname/grid.xyz | head -n -3 > ./$dirname/grid.check.xyz
 
-    last=$(  (cd ./$dirname/ && find . -maxdepth 1 -type f -name './$dirname/*.inp' | wc -l ) )
+    last=$(  (cd ./$dirname/ && find . -maxdepth 1 -type f -name '*.inp' | wc -l ) )
     last=$(( $last -1 ))
+    checkIfEmpty last $last 
     (cd ./$dirname/ && gimic --dryrun gimic.$last.inp > /dev/null)
 
     # take the coords of the end of the int plane
     grep X ./$dirname/grid.xyz  | awk '{ if (NR <=2) {print $0} }' >> ./$dirname/grid.check.xyz
     # copy the MF direction "Be" atom
+    #grep Be ./$dirname/grid.xyz  >> ./$dirname/grid.check.xyz
+    readParameter MFx $dirname
+    readParameter MFy $dirname
+    readParameter MFz $dirname
+    printf "Be\t$MFx\t$MFy\t$MFz\n"  >> ./$dirname/grid.check.xyz
+    printf "Fe\t$Fx\t$Fy\t$Fz\n\n"  >> ./$dirname/grid.check.xyz
+
+    echo
+    echo "The file grid.check.xyz created."
+    echo "You can now put this script to the background and inspect the molecule."
+    echo "Bring the script to foreground and press enter to continue the current profile."
+    read accept # just wait
+
+    echo "Current profile analysis resumed." 
+fi
+}
+
+
+function planeSanityCheckVertical() {
+# sanity check for the integration plane
+
+dirname="$@"
+
+echo "Do you want to preview the integration plane in XYZ format?"
+echo "Press [y] or any other key to skip"; read accept
+if  [ ! -z $accept ] && [ $accept == "y" ]
+then
+    printf "\nPreparing the plane...\n"
+    (cd ./$dirname/ && gimic --dryrun gimic.0.inp  > /dev/null )
+    # take the first two coordinates of the int plane
+    cat ./$dirname/grid.xyz | head -n -2 > ./$dirname/grid.check.xyz
+    grep X ./$dirname/grid.xyz  | awk '{ if (NR ==3) {print $0} }' >> ./$dirname/grid.check.xyz
+
+#    last=$(  (cd ./$dirname/ && find . -maxdepth 1 -type f -name '*.inp' | wc -l ) )
+#    echo $last
+#    last=$(( $last -1 ))
+#    echo $last
+#    checkIfEmpty last $last 
+    
+(cd ./$dirname/ && last=$( find . -maxdepth 1 -type f -name '*.inp' | wc -l  ) && last=$(( $last - 1 )) && gimic --dryrun gimic.$last.inp > /dev/null)
+
+    # take the coords of the end of the int plane
+    grep X ./$dirname/grid.xyz  | awk '{ if (NR ==1) {print $0} }' >> ./$dirname/grid.check.xyz
+    grep X ./$dirname/grid.xyz  | awk '{ if (NR ==4) {print $0} }' >> ./$dirname/grid.check.xyz
+    # copy the MF direction "Be" atom
     grep Be ./$dirname/grid.xyz  >> ./$dirname/grid.check.xyz
 
-#    atomNum=$(head -n 1 ./$dirname/grid.xyz)
-#    atomNum=$(( $atomNum + 2 ))
-#    sed -i "1s/.*/$atomNum/" ./$dirname/grid.check.xyz
+    echo
+    echo "The file grid.check.xyz created."
+    echo "You can now put this script to the background and inspect the molecule."
+    echo "Bring the script to foreground and press enter to continue the current profile."
+    read accept # just wait
+
+    echo "Current profile analysis resumed." 
+fi
+}
+
+
+function planeSanityCheckSquares() {
+# sanity check for the integration plane
+
+dirname="$@"
+
+echo "Do you want to preview the integration plane in XYZ format?"
+echo "Press [y] or any other key to skip"; read accept
+if  [ ! -z $accept ] && [ $accept == "y" ]
+then
+    printf "\nPreparing the plane...\n"
+    idxH=$( sed -n -e 's/^.*nstepsH=//p' ./$dirname/calculation.dat | awk '{print $1}')
+    idxV=$( sed -n -e 's/^.*nstepsV=//p' ./$dirname/calculation.dat | awk '{print $1}')
+    checkIfEmpty idxH $idxH
+    checkIfEmpty idxV $idxV
+    idxH=$(( $idxH - 1 ))
+    idxV=$(( $idxV - 1 ))
+
+    (cd ./$dirname/gimic.0 && gimic --dryrun gimic.0.0.inp  > /dev/null )
+    cat ./$dirname/gimic.0/grid.xyz | head -n -4 > ./$dirname/grid.check.xyz
+    (cd ./$dirname/gimic.0 && gimic --dryrun gimic.0.$idxV.inp  > /dev/null )
+    grep X ./$dirname/gimic.0/grid.xyz  | awk '{ if (NR ==2) {print $0} }' >> ./$dirname/grid.check.xyz
+
+    (cd ./$dirname/gimic.$idxH && gimic --dryrun gimic.$idxV.0.inp  > /dev/null )
+    grep X ./$dirname/gimic.$idxH/grid.xyz  | awk '{ if (NR ==3) {print $0} }' >> ./$dirname/grid.check.xyz
+    (cd ./$dirname/gimic.$idxH && gimic --dryrun gimic.$idxH.$idxV.inp  > /dev/null )
+    grep X ./$dirname/gimic.$idxH/grid.xyz  | awk '{ if (NR ==4) {print $0} }' >> ./$dirname/grid.check.xyz
+
+
+    # copy the MF direction "Be" atom
+    grep Be ./$dirname/grid.xyz  >> ./$dirname/grid.check.xyz
 
     echo
     echo "The file grid.check.xyz created."

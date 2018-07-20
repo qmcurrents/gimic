@@ -68,11 +68,41 @@ out=10
 printf "\nDo you accept out=$out bohr?" # ask about the default value 
 userInp out $out
 
+# Check if start and out are valid (we don't want height = 0)
+smaller=$(awk -v start=$start -v end=$out 'BEGIN{ diff = start + end; if (diff == 0) {print "2"} else if (diff < 0) {print "1"} else {print "0"} }')
+checkIfEmpty smaller $smaller
+if [ $smaller -eq 1 ]
+then
+    tmp=$start
+    out=$start
+    start=$tmp
+elif [ $smaller -eq 2 ]
+then
+    echo "The width of the integration plane is 0. Please enter the parameters again."
+    userInp start $start
+    userInp out $out
+fi
+
 printf "\n\nUPPER AND LOWER BOUNDS OF THE INTEGRATION\n"
 up=10
-down=-10
+down=10
 valueDimInp up $up "bohr"
 valueDimInp down $down "bohr"
+
+# Check if up and down are valid (we don't want height = 0)
+smaller=$(awk -v up=$up -v down=$down 'BEGIN{ diff = up - down; if (diff == 0) {print "2"} else if (diff < 0) {print "1"} else {print "0"} }')
+checkIfEmpty smaller $smaller
+if [ $smaller -eq 1 ]
+then
+    tmp=$up
+    up=$down
+    down=$tmp
+elif [ $smaller -eq 2 ]
+then
+    echo "The height of the integration plane is 0. Please enter the parameters again."
+    valueDimInp up $up "bohr"
+    valueDimInp down $down "bohr"
+fi
 
 printf "\n\nWIDTH OF THE SLICES\n"
 delta=0.25
@@ -84,7 +114,7 @@ valueDimInp delta $delta "bohr"
 
 nstepsH=$( awk -v start=$start -v out=$out -v delta=$delta 'BEGIN{if (start > 0) {start = -start}; nsteps=(out-start)/delta; if (nsteps > 0) {printf("%d",nsteps)} else {printf("%d",-nsteps);}; }'   )
 checkIfEmpty nstepsH $nstepsH
-nstepsV=$( awk -v start=$up -v out=$down -v delta=$delta 'BEGIN{nsteps=(out-start)/delta; if (nsteps > 0) {printf("%d",nsteps)} else {printf("%d",-nsteps);}; }'   )
+nstepsV=$( awk -v down=$down -v up=$up -v delta=$delta 'BEGIN{if (down > 0) {down = -down}; nsteps=(up-down)/delta; if (nsteps > 0) {printf("%d",nsteps)} else {printf("%d",-nsteps);}; }'   )
 checkIfEmpty nstepsV $nstepsV
 
 
@@ -233,7 +263,6 @@ echo rotation angles: rotX=$rotX, rotY=$rotY, rotZ=$rotZ >> ./$dirname/calculati
 
 ################################################################################
 
-#printf "\nnsteps="$nsteps", delta="$delta", spacing="$spacing", in="$start", out="$out", up="$up", down="$down", bond=["$bond"], fixed="$fixed"\n"
 printf "\n\n*****************************************************************************\n\nSUMMARY\n\n"
 printf "Bond: ["$bond"]\n"
 echo "Integration plane coordinates"
@@ -251,8 +280,9 @@ printf "\n**********************************************************************
 string="s/@bond@/$bond/; s/@fixed@/$fixed/; s/@distance@/$distance/; s/@spacingX@/$spacingX/; s/@spacingY@/$spacingY/; s/@spacingZ@/$spacingZ/;  s/@rotX@/$rotX/;  s/@rotY@/$rotY/;  s/@rotZ@/$rotZ/; s/@origX@/$origX/; s/@origY@/$origY/; s/@origZ@/$origZ/; s/@MFx@/$MFx/; s/@MFy@/$MFy/; s/@MFz@/$MFz/; s/@FX@/$Fx/; s/@FY@/$Fy/; s/@FZ@/$Fz/ ;"
 sed -i "$string" ./$dirname/gimic.Inp
 
-xstart=$( awk -v start=$start 'BEGIN{printf "%.3f\n", -start+delta }' )  # start is a negative number 
-xend=$( awk -v delta=$delta -v xstart=$xstart 'BEGIN{ printf "%.3f\n", xstart-delta }' ) 
+# Perform the dry run in a square larger by 1, so that for the actual loop, the numbers start from what the user requested
+xstart=$( awk -v start=$start -v delta=$delta 'BEGIN{printf "%.3f\n", -start-delta }' )  # start is a negative number 
+xend=$( awk -v delta=$delta -v xstart=$xstart 'BEGIN{ printf "%.3f\n", xstart+delta }' ) 
 smaller=$(awk -v start=$xstart -v end=$xend 'BEGIN{ if (start > end) {print "1"} else {print "0"} }')
 if [ $smaller -eq 1 ]
 then
@@ -266,15 +296,15 @@ checkIfEmpty xend $xend
 
 
 # Perform the dry run in a square larger by 1, so that for the actual loop, the numbers start from what the user requested
-xdown=$( awk -v down=$down -v delta=$delta 'BEGIN{printf "%.3f\n", down-delta }' )  # down is a negative number
+xdown=$( awk -v down=$down -v delta=$delta 'BEGIN{printf "%.3f\n", -down-delta }' )  # down is a negative number
 xup=$( awk -v delta=$delta -v xdown=$xdown 'BEGIN{ printf "%.3f\n", xdown+delta }' ) 
-#smaller=$(awk -v up=$xup -v down=$xdown 'BEGIN{ if (up < down ) {print "1"} else {print "0"} }')
-# if [ $smaller -eq 1 ]
-# then
-#     tmp=$xup
-#     xup=$xdown
-#     xdown=$tmp
-# fi
+smaller=$(awk -v up=$xup -v down=$xdown 'BEGIN{ if (up < down ) {print "1"} else {print "0"} }')
+if [ $smaller -eq 1 ]
+then
+    tmp=$xup
+    xup=$xdown
+    xdown=$tmp
+fi
 
 checkIfEmpty xup $xup
 checkIfEmpty xdown $xdown
@@ -286,6 +316,7 @@ sed "$string" ./$dirname/gimic.Inp > ./$dirname/gimic.0.0.inp
 printf "\nPerforming a dry run...\n\n"
 (cd ./$dirname/ && gimic --dryrun gimic.0.0.inp | grep "grid points" )
 printf "\n\n"
+#rm -rf gimic.0.0.inp grid.xyz 
 
 echo "Do you accept the above parameters? Press [n] to cancel."; read accept
 if  [ ! -z $accept ] && [ $accept == "n" ]
@@ -302,13 +333,15 @@ do
     mkdir ./$dirname/gimic.$i
     for (( j=0; j<$nstepsV; j++ ))
     do
-	xdown=$( awk -v delta=$delta -v xdown=$xdown 'BEGIN{ printf "%.3f\n", xdown+delta }' ) 
+	xdown=$( awk -v delta=$delta -v xdown=$xdown 'BEGIN{ printf "%.3f\n", -xdown+delta }' ) 
 	xup=$( awk -v xdown=$xdown -v delta=$delta 'BEGIN{printf "%.3f\n", xdown+delta }' )
 	string=" s/@start@/$xstart/; s/@end@/$xend/; s/@up@/$xup/; s/@down@/$xdown/"
 	sed "$string" $dirname/gimic.Inp > $dirname/gimic.$i/gimic.$i.$j.inp 
     done
-    xdown=$( awk -v down=$down -v delta=$delta 'BEGIN{printf "%.3f\n", down-delta }' )  # down is a negative number
-    xup=$( awk -v delta=$delta -v xdown=$xdown 'BEGIN{ printf "%.3f\n", xdown+delta }' ) 
+    xdown=down
+    xup=up
+    #xdown=$( awk -v down=$down -v delta=$delta 'BEGIN{printf "%.3f\n", down-delta }' )  # down is a negative number
+    #xup=$( awk -v delta=$delta -v xdown=$xdown 'BEGIN{ printf "%.3f\n", xdown+delta }' ) 
 done    
 echo "done"
 echo

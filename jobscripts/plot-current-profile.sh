@@ -45,9 +45,7 @@ offset=${offsets[0]}
 max_x=$max_x
 set xrange [-offset:max_x-offset]
 
-if ($customRange == 1) {
-    set yrange [$bottom : $upper];
-}
+if ($customRange == 1) { set yrange [$bottom : $upper] }
 
 set terminal postscript eps enhanced color size 9.80, 5.40 'Helvetica' 44
 
@@ -89,7 +87,7 @@ function centroid() {
         do
             awk -v i=$i '{  
                         if (NR == i+1) print $0 
-                        }' coord 
+                        }' ../coord 
         done | awk '{  
                      x+=$1; 
                      y+=$2; 

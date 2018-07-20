@@ -1,12 +1,13 @@
 #!/bin/bash -l
-#SBATCH -p parallel
-#SBATCH --nodes 1         # for SMP only 1 is possible
-#SBATCH --ntasks-per-node=24 # Tasks per node
-#SBATCH --mem-per-cpu=100
+
+##SBATCH -p parallel   # Put the name of the partition on your cluster
+##SBATCH --nodes 1         
+##SBATCH --ntasks-per-node=24 # Tasks per node
+##SBATCH --mem-per-cpu=100  # Might not be needed as a keyword at all
 #SBATCH -e jobfile.err%J
 #SBATCH -o jobfile.out%J
 #SBATCH --mail-type=END
-##SBATCH --mail-user=your-email
+##SBATCH --mail-user=your-email   # Give your email address
 
 ## LIST ANY NECESSARY MODULES FOR YOUR CLUSTER
 

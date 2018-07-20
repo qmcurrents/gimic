@@ -8,7 +8,7 @@ checkIfEmpty wrkdir $wrkdir
 
 echo "Running Gimic calculations..."
 
-filenum=$(find . -maxdepth 1 -type f -name '*.inp' | wc -l)
+filenum=$(cd $wrkdir && find . -maxdepth 1 -type f -name '*.inp' | wc -l)
 checkIfEmpty filenum $filenum
 
 nsteps=$( sed -n -e 's/^.*nsteps=//p' $wrkdir/calculation.dat | awk '{print $1}')
