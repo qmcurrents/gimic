@@ -84,6 +84,7 @@ def parse_keywords(args):
 
     ess=getkw.Section('Essential')
     ess.add_kw('acid', 'BOOL', (False,))
+    ess.add_kw('jmod', 'BOOL', (False,))
 #   ess.add_kw('jav', 'BOOL', (False,))
 
     grid=getkw.Section('Grid', callback=check_grid)
@@ -109,6 +110,7 @@ def parse_keywords(args):
     grid.add_kw("gridplot", 'INT', 1)
     grid.add_kw("grid_points", 'INT_ARRAY', 3)
     grid.add_kw("gauss_order", 'INT', (7,))
+
     gimlet=getkw.Section('Gimlet')
     gimlet.add_kw('teletype', 'BOOL', True)
     gimlet.add_kw('printlevel', 'INT', 3)

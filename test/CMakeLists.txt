@@ -22,6 +22,7 @@ foreach(_name
     open-shell/integration
     benzene/valgrind-integral
     benzene/valgrind-2d
+    benzene/skip-jmod-integration
     )
     add_test(
         NAME ${_name}
