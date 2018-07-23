@@ -90,6 +90,7 @@ contains
         call getkw(input, 'Advanced.screening_thrs', settings%screen_thrs)
 
         call getkw(input, 'Essential.acid', settings%acid)
+        call getkw(input, 'Essential.jmod', settings%jmod)
 
         ierr=hostnm(sys)
         if (mpi_rank == 0) then
@@ -221,14 +222,18 @@ contains
 
         if (settings%dryrun) return
 
-        call msg_note('Integrating |J|')
-        call integrate_modulus(it, mol, xdens)
-        if (settings%is_uhf) then
-            call integrate_modulus(it, mol, xdens, 'alpha')
-            call integrate_modulus(it, mol, xdens, 'beta')
-            call integrate_modulus(it, mol, xdens, 'spindens')
+        if (settings%jmod) then 
+          call msg_note('Integrating |J|')
+          call integrate_modulus(it, mol, xdens)
+          if (settings%is_uhf) then
+              call integrate_modulus(it, mol, xdens, 'alpha')
+              call integrate_modulus(it, mol, xdens, 'beta')
+              call integrate_modulus(it, mol, xdens, 'spindens')
+          end if
+          call nl
+        else
+          write(*,*) "Jmod integration skipped."
         end if
-        call nl
 
         call msg_note('Integrating current')
         call integrate_current(it, mol, xdens)

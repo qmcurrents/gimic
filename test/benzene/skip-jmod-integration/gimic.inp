@@ -5,7 +5,8 @@ title=""
 basis="MOL"
 xdens="XDENS"
 debug=1           # debug print level
-openshell=true
+openshell=false
+# show_axis=true   # mark "up" axis in .xyz files
 magnet_axis=X #[-] i,j,k || x,y,z -> align magnet along axis
 
 # grid type can be: base/std, bond or file (see examples below)
@@ -31,5 +32,6 @@ Advanced {
 }
 
 Essential {
-    jmod=on
+    acid=off
+    jmod=off
 }
