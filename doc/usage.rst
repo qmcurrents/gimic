@@ -110,8 +110,8 @@ Run in the same directory "python lsdalton2gimic.py"
 
 Note, open-shell calculations are not supported.
 
-Running Gausian
---------------- 
+Running Gaussian
+---------------- 
 
 The scripts/input needed can be found in ``/tools/g092gimic``. 
 
