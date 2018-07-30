@@ -335,12 +335,6 @@ contains
                     if (this%grid%gauss) then
                       call wrt_jmod(rr,v,fd2)
                     end if
-                    ! case ACID
-                    if (settings%acid) then
-                      jtens => this%tens
-                      idx = i+(j-1)*p1+(k-1)*p1*p2
-                      val = get_acid(jtens(:,idx))
-                    end if
                 end do
                     if (debug) then
                       if (fd1 /= 0) write(fd1, *)
@@ -392,12 +386,10 @@ contains
         type(jfield_t) :: this
         character(*), optional :: tag
 
-        integer(I4) :: p1, p2, p3, fd1, fd2
-        integer(I4) :: i, j, k, l
-        real(DP), dimension(3) :: qmin, qmax
-        real(DP), dimension(3) :: norm, step, mag, v, rr
-        real(DP) :: maxi, mini, sgn
-        integer(I4), dimension(3) :: npts
+        integer(I4) :: p1, p2, p3
+        integer(I4) :: i, j, k
+        real(DP), dimension(3) :: norm, mag, v, rr
+        real(DP) :: sgn
         real(DP), dimension(:,:), pointer :: buf
         real(DP), dimension(:,:,:), allocatable :: val
 
@@ -405,30 +397,10 @@ contains
 
         call get_grid_size(this%grid, p1, p2, p3)
         allocate(val(p1,p2,p3))
-        !allocate(val(p3,p2,p1))
-
-        npts=(/p1,p2,p3/)
-        norm=get_grid_normal(this%grid)
-        qmin=gridpoint(this%grid,1,1,1)
-        qmax=gridpoint(this%grid,p1,p2,p3)
-
-!        step=(qmax-qmin)/(npts-1) ! In a 2D plot qmin(3)-qmax(3) = 0 -> dividing it by npts(3) gives a NaN
-        do i=1,3
-           step(i) = qmax(i) - qmin(i)
-           if ( step(i) > 1E-8 ) then    ! floating point numbers cannot be compared as ( step(i) == 0.0 )
-               step(i) = step(i) / ( npts(i) - 1)  ! if ( step(i) != 0 ) divide, else leave it 0
-           end if
-        end do
 
         mag = this%b
 
         buf => this%vec
-        maxi=0.d0
-        mini=0.d0
-        l=0
-        !do i=1,p1
-        !    do j=1,p2
-        !        do k=1,p3
         do k=1,p3
             do j=1,p2
                 do i=1,p1
@@ -521,13 +493,9 @@ contains
         use vtkplot_module
         type(jfield_t) :: this
 
-        integer(I4) :: p1, p2, p3, fd1, fd2, idx
-        integer(I4) :: i, j, k, l
+        integer(I4) :: p1, p2, p3, idx
+        integer(I4) :: i, j, k
         real(DP), dimension(:,:), pointer :: jtens
-        real(DP), dimension(3) :: qmin, qmax
-        real(DP), dimension(3) :: norm, step, mag, v, rr
-        real(DP) :: maxi, mini, sgn
-        integer(I4), dimension(3) :: npts
         real(DP), dimension(:,:,:), allocatable :: val
 
         if (mpi_rank > 0) return
@@ -535,30 +503,11 @@ contains
         call get_grid_size(this%grid, p1, p2, p3)
         allocate(val(p1,p2,p3))
 
-        npts=(/p1,p2,p3/)
-        norm=get_grid_normal(this%grid)
-        qmin=gridpoint(this%grid,1,1,1)
-        qmax=gridpoint(this%grid,p1,p2,p3)
-
-!        step=(qmax-qmin)/(npts-1) ! In a 2D plot qmin(3)-qmax(3) = 0 -> dividing it by npts(3) gives a NaN
-        do i=1,3
-           step(i) = qmax(i) - qmin(i)
-           if ( step(i) > 1E-8 ) then    ! floating point numbers cannot be compared as ( step(i) == 0.0 )
-               step(i) = step(i) / ( npts(i) - 1)  ! if ( step(i) != 0 ) divide, else leave it 0
-           end if
-        end do
-
         jtens => this%tens
-        mag = this%b
-
-        maxi=0.d0
-        mini=0.d0
-        l=0
         idx = 0
         do k=1,p3
             do j=1,p2
                 do i=1,p1
-                    rr=gridpoint(this%grid,i,j,k)
                     idx = i+(j-1)*p1 + (k-1)*p1*p2
                     val(i,j,k)= get_acid(jtens(:,idx))
                 end do
