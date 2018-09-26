@@ -4,4 +4,4 @@ pyparsing
 pyyaml
 sphinx
 sphinx_rtd_theme
-git+https://github.com/bast/runtest.git@master
+runtest == 2.2.0
