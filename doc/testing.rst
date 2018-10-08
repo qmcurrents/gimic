@@ -18,6 +18,6 @@ Adding new tests
 
 Adding new tests can be done in the ``test`` directory. The provided tests can serve as example. The definition of what are tested variables is done in the ``.test`` executable. Remember to add the name of your new test in the ``test/CMakeLists.txt`` file. In case of doubts, read the documentation_ of ``runtest``.
 
-.. _documentation: http://runtest.readthedocs.io/en/latest/
+.. _documentation: https://runtest.readthedocs.io
 
 

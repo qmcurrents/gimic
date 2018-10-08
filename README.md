@@ -4,7 +4,7 @@
 # GIMIC: gauge-including magnetically induced currents
 
 
-## Documentation: http://gimic.readthedocs.io
+## Documentation: https://gimic.readthedocs.io
 
 
 ## About GIMIC
