@@ -20,4 +20,4 @@ matrices.
 
 ## Example
 
-There is an annotated example input in the examples/ directory.
+There is an annotated example input in the [examples](examples) directory.
