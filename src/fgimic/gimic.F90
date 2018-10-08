@@ -144,13 +144,15 @@ contains
             call new_basis(mol, settings%basis, -1.d0)
         end if
 
-        if (settings%use_spherical) then
-            call new_c2sop(c2s,mol)
-            call set_c2sop(mol, c2s)
-        end if
+        if (.not. settings%dryrun) then
+            if (settings%use_spherical) then
+                call new_c2sop(c2s,mol)
+                call set_c2sop(mol, c2s)
+            end if
 
-        call new_dens(xdens, mol)
-        call read_dens(xdens, settings%xdens)
+            call new_dens(xdens, mol)
+            call read_dens(xdens, settings%xdens)
+        end if
 
         call new_grid(grid, input, mol)
         if (mpi_rank == 0) then
@@ -167,7 +169,7 @@ contains
         call nl
 
         if (settings%dryrun) then
-            call msg_note('Dry run, not calculating...')
+            call msg_note('Dry run, not calculating ...')
             call nl
         end if
 
@@ -179,10 +181,12 @@ contains
             call msg_error('gimic(): Unknown operation!')
         end if
 
-        if (settings%use_spherical) then
-            call del_c2sop(c2s)
+        if (.not. settings%dryrun) then
+            if (settings%use_spherical) then
+                call del_c2sop(c2s)
+            end if
+            call del_dens(xdens)
         end if
-        call del_dens(xdens)
         call del_grid(grid)
     end subroutine
 
@@ -222,7 +226,7 @@ contains
 
         if (settings%dryrun) return
 
-        if (settings%jmod) then 
+        if (settings%jmod) then
           call msg_note('Integrating |J|')
           call integrate_modulus(it, mol, xdens)
           if (settings%is_uhf) then
@@ -290,7 +294,7 @@ call nl
     subroutine program_footer
         real(DP) :: rnd
         character(*), dimension(5), parameter :: raboof=(/ &
-            'GIMIC - Grossly Irrelevant Magnetically Incuced Currents', &
+            'GIMIC - Grossly Irrelevant Magnetically Induced Currents', &
             'GIMIC - Gone Interrailing, My Inspiration Croaked       ', &
             'GIMIC - Galenskap I Miniatyr, Ingen Censur              ', &
             'GIMIC - Gone Insane, My Indifferent Cosmos              ', &
