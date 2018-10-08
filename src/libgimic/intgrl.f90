@@ -40,7 +40,7 @@ contains
         read(BASFD, '(a6)') intgrlkw
         if ( intgrlkw /= 'INTGRL' ) then
             call nl
-            call msg_error('  Hmm... this doesn''t look like a ''INTGRL''&
+            call msg_error('  Hmm... this doesn''t look like an ''INTGRL''&
                 & file. Check your input.')
             call nl
             stop
