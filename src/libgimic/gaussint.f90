@@ -8,13 +8,13 @@ module gaussint_module
         real(DP), dimension(:), pointer :: pts, wgt
     end type
 
-    public gdata_t, gaussl, lobatomy, legendrep, gaussgrid, gauscale
+    public gdata_t, gaussl, lobattomy, legendrep, gaussgrid, gauscale
     public setup_gauss_data
 
     private
     real(DP), parameter :: EPS=3.0d-12
     integer(I4), parameter :: NEWTON_MAX_ITER=10
-    integer(I4), parameter :: MAX_LOBATO_POINTS=13 ! > 13 is unstable...
+    integer(I4), parameter :: MAX_LOBATTO_POINTS=13 ! > 13 is unstable...
 
 contains
 
@@ -58,7 +58,7 @@ contains
         end do
     end subroutine gaussl
 
-    subroutine lobatomy(a,b,pts,weight)
+    subroutine lobattomy(a,b,pts,weight)
         real(DP), intent(in) :: a,b
         real(DP), dimension(:), intent(out) :: pts, weight
 
@@ -66,11 +66,11 @@ contains
         real(DP) :: z, z1, xm, xl, lp, dlp, d2lp, damp
 
         n=size(pts)
-        if ( n > MAX_LOBATO_POINTS ) then
+        if ( n > MAX_LOBATTO_POINTS ) then
             write(str_g,'(a,i4)') &
-                'lobatomy(): Warning, too many Gauss points:', n
+                'lobattomy(): Warning, too many Gauss points:', n
             call msg_warn(str_g)
-            call msg_warn('lobatomy(): &
+            call msg_warn('lobattomy(): &
                 &using this many points is not stable.')
             call nl
         end if
@@ -103,13 +103,13 @@ contains
                 end if
             end do
             if ( iter >= NEWTON_MAX_ITER ) then
-                stop '*** lobatomy(): Newton step did not converge!'
+                stop '*** lobattomy(): Newton step did not converge!'
             end if
 
             pts(i)=xm-xl*z
             weight(i)=2.d0*xl/((n**2-n)*lp**2)
         end do
-    end subroutine lobatomy
+    end subroutine lobattomy
 
     subroutine legendrep(x, n, y)
         real(DP), intent(in) :: x
@@ -244,14 +244,14 @@ contains
         ! lenght of one block
         step=(b-a)/real(nblock)
 
-        ! set up unscaled Lobato points and weights ( interval [-1,1])
-!        call lobatomy(-1.d0, 1.d0, pts, wgt)
+        ! set up unscaled Lobatto points and weights ( interval [-1,1])
+!        call lobattomy(-1.d0, 1.d0, pts, wgt)
         call gaussl(-1.d0, 1.d0, pts, wgt)
 
         k=0
         pos=a
         xl=step*0.5
-        ! scale and translate Lobato points and weights
+        ! scale and translate Lobatto points and weights
         do i=1,nblock
             do j=1,ngp
                 k=k+1
@@ -273,7 +273,7 @@ contains
         integer(I4) :: nblock, i, ngau, npts, foo
         real(DP), dimension(:), allocatable :: tpts, twgt
         real(DP) :: xl, step
-        logical :: lobato
+        logical :: lobatto
 
         npts=size(gdata%pts)
 
@@ -294,15 +294,15 @@ contains
         step=(b-a)/real(nblock)
         xl=step*0.5
 
-        ! set up unscaled Lobato points and weights ( interval [-1,1])
+        ! set up unscaled Lobatto points and weights ( interval [-1,1])
         allocate(tpts(ngp))
         allocate(twgt(ngp))
 
         select case (quadr)
             case ('gauss')
                 call gaussl(-1.d0, 1.d0, tpts, twgt)
-            case ('lobato')
-                call lobatomy(-1.d0, 1.d0, tpts, twgt)
+            case ('lobatto')
+                call lobattomy(-1.d0, 1.d0, tpts, twgt)
             case default
                 call msg_error('Invalid quadrature type: ' // quadr)
                 stop
@@ -366,7 +366,7 @@ contains
 !            allocate(pts(np))
 !            allocate(weight(np))
 !            a=1.0d0
-!            call lobatomy(-a, a, pts, weight)
+!            call lobattomy(-a, a, pts, weight)
 !
 !            ss=0.d0
 !            b=-10.d0
