@@ -4,7 +4,7 @@
 # GIMIC: gauge-including magnetically induced currents
 
 
-## Documentation: http://gimic.readthedocs.io
+## Documentation: https://gimic.readthedocs.io
 
 
 ## About GIMIC
@@ -20,4 +20,4 @@ matrices.
 
 ## Example
 
-There is an annotated example input in the examples/ directory.
+There is an annotated example input in the [examples](examples) directory.
