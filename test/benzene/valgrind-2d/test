@@ -9,7 +9,7 @@ from runtest_config import configure
 
 assert version_info.major == 2
 
-os.environ["GIMIC_LAUNCHER"] = "valgrind --tool=memcheck --log-file=valgrid-summary.dat --leak-check=full --track-origins=yes --show-reachable=yes -v"
+os.environ["GIMIC_LAUNCHER"] = "valgrind --tool=memcheck --log-file=valgrind-summary.dat --leak-check=summary --show-reachable=yes"
 
 options = cli()
 
@@ -28,7 +28,7 @@ ierr = run(options,
            configure,
            input_files=['gimic.inp'],
 	   filters={'jvec.vti': acc, 
-	   	    'valgrid-summary.dat': f} )
+	        'valgrind-summary.dat': f} )
 
 sys.exit(ierr)
 
