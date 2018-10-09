@@ -12,8 +12,8 @@ integration. There is also a third grid type ’file’, which specifies a
 file containing gridpoints For the exact format of this file please
 refer to the source in grid.f90. Furthermore there are two types of
 grids, evenly spaced or with grid points distributed for Gauss-Legendre
-or Guass-Lobato quadrature. This is specified with the
-’type=even\|gauss\|lobato’ keyword. When a quadrature grid is specified
+or Gauss-Lobatto quadrature. This is specified with the
+’type=even\|gauss\|lobatto’ keyword. When a quadrature grid is specified
 the order of the quadrature must also be specified with the
 ’gauss\_order’ keyword. The number of grid points in each direction is
 specified either explicitly using either of the array keywords
@@ -109,7 +109,7 @@ keywords, which specify intervals relative to the origin:
 grid(std):
 ~~~~~~~~~~
 
-type=gauss\|lobato
+type=gauss\|lobatto
     Use uneven distribution of grid points for quadrature
 
 bond=1,2
