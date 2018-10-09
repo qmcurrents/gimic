@@ -14,24 +14,27 @@ contains
         real(4) :: etime
         character(BUFLEN) :: fdate
 
+        real(4) :: secs_per_hour = 3600.0
+        real(4) :: hours_per_day = 24.0
+
         delta_t=etime(times)
         call msg_out(repeat('-', 70))
         write(str_g, '(a,f9.2,a,a,f6.1,a)') '   wall time:', delta_t, 'sec', &
-            ' (', delta_t/360000.d0, ' h )'
-        if ( delta_t/360000.d0 .gt. 48 ) then
-            write(str_g, '(a,f4.1,a)') '(', delta_t/360000.d0/24, ' days )' 
+            ' (', delta_t/secs_per_hour, ' h )'
+        if ( delta_t/secs_per_hour .gt. 2*hours_per_day ) then
+            write(str_g, '(a,f4.1,a)') '(', delta_t/secs_per_hour/hours_per_day, ' days )' 
         end if
         call msg_out(str_g)
         write(str_g, '(a,f9.2,a,a,f6.1,a)') '        user:', times(1), 'sec', &
-            ' (', times(1)/360000.d0, ' h )'
-        if ( times(1)/360000.d0 .gt. 48 ) then
-            write(str_g, '(a,f4.1,a)') '(', times(1)/360000.d0/24, ' days )' 
+            ' (', times(1)/secs_per_hour, ' h )'
+        if ( times(1)/secs_per_hour .gt. 2*hours_per_day ) then
+            write(str_g, '(a,f4.1,a)') '(', times(1)/secs_per_hour/hours_per_day, ' days )' 
         end if
         call msg_out(str_g)
         write(str_g, '(a,f9.2,a,a,f6.1,a)') '         sys:', times(2), 'sec', &
-            ' (', times(2)/360000.d0, ' h )'
-        if ( times(2)/360000.d0 .gt. 48 ) then
-            write(str_g, '(a,f4.1,a)') '(', times(2)/360000.d0/24, ' days )' 
+            ' (', times(2)/secs_per_hour, ' h )'
+        if ( times(2)/secs_per_hour .gt. 2*hours_per_day ) then
+            write(str_g, '(a,f4.1,a)') '(', times(2)/secs_per_hour/hours_per_day, ' days )' 
         end if
         call msg_out(str_g)
         call msg_out(repeat('-', 70))
@@ -42,26 +45,28 @@ contains
         integer(I4), intent(in) :: foo
 
         real(4) :: dtime
+        real(4) :: secs_per_hour = 3600.0
+        real(4) :: hours_per_day = 24.0
 
         delta_t=dtime(times)
         if (foo > 0) then
             call msg_out(repeat('-', 70))
         write(str_g, '(a,f9.2,a,a,f6.1,a)') '   wall time:', delta_t, 'sec', &
-            ' (', delta_t/360000.d0, ' h )'
-        if ( delta_t/360000.d0 .gt. 48 ) then
-            write(str_g, '(a,f4.1,a)') '(', delta_t/360000.d0/24, ' days )' 
+            ' (', delta_t/secs_per_hour, ' h )'
+        if ( delta_t/secs_per_hour .gt. 2*hours_per_day ) then
+            write(str_g, '(a,f4.1,a)') '(', delta_t/secs_per_hour/hours_per_day, ' days )' 
         end if
         call msg_out(str_g)
         write(str_g, '(a,f9.2,a,a,f6.1,a)') '        user:', times(1), 'sec', &
-            ' (', times(1)/360000.d0, ' h )'
-        if ( times(1)/360000.d0 .gt. 48 ) then
-            write(str_g, '(a,f4.1,a)') '(', times(1)/360000.d0/24, ' days )' 
+            ' (', times(1)/secs_per_hour, ' h )'
+        if ( times(1)/secs_per_hour .gt. 2*hours_per_day ) then
+            write(str_g, '(a,f4.1,a)') '(', times(1)/secs_per_hour/hours_per_day, ' days )' 
         end if
         call msg_out(str_g)
         write(str_g, '(a,f9.2,a,a,f6.1,a)') '         sys:', times(2), 'sec', &
-            ' (', times(2)/360000.d0, ' h )'
-        if ( times(2)/360000.d0 .gt. 48 ) then
-            write(str_g, '(a,f4.1,a)') '(', times(2)/360000.d0/24, ' days )' 
+            ' (', times(2)/secs_per_hour, ' h )'
+        if ( times(2)/secs_per_hour .gt. 2*hours_per_day ) then
+            write(str_g, '(a,f4.1,a)') '(', times(2)/secs_per_hour/hours_per_day, ' days )' 
         end if
         call msg_out(str_g)
             call msg_out(repeat('-', 70))
