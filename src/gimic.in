@@ -202,7 +202,6 @@ def check_grid(grid):
     elif arg == 'bond':
         required=('distance',)
         ignore=('file','ivec', 'jvec', 'lengths')
-        inoutupdown=0
         wdthgt=0
         for i in required:
             if not check_opt(grid,i):
@@ -219,16 +218,8 @@ def check_grid(grid):
             wdthgt=wdthgt+1
         if check_opt(grid,'height'):
             wdthgt=wdthgt+1
-        if (wdthgt != 0 and wdthgt != 2):
-            print("Error: incomplete specification for width and height")
-            sys.exit(1)
-
-        if (wdthgt != 0 and inoutupdown != 0):
-            print("Error: both width/height and in/out/up/down specified")
-            sys.exit(1)
-
-        if (wdthgt == 0 and inoutupdown == 0):
-            print("Error: either width/height or in/out/up/down must be specified")
+        if (wdthgt != 2):
+            print("Error: missing or incomplete specification for width and height")
             sys.exit(1)
 
         if check_opt(grid,'bond'):

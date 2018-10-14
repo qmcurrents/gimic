@@ -121,6 +121,8 @@ contains
                 call setup_even_grid(this)
             case ('gauss')
                 call setup_gauss_grid(this, 'gauss')
+            case ('lobatto')
+                call setup_gauss_grid(this, 'lobatto')
             case default
                 call msg_error('Unknown grid type: ' // trim(this%gtype))
                 stop
@@ -292,9 +294,9 @@ contains
 
         integer(I4) ::  i, rem, order
         real(DP), dimension(3) :: spc
-        logical :: flag
+        logical :: no_of_points_fixed
 
-        flag=.false.
+        no_of_points_fixed=.false.
 
         call msg_info('Integration grid selected.')
         call getkw(input, 'Grid.gauss_order', this%gauss_order)
@@ -319,11 +321,11 @@ contains
             rem=mod(this%npts(i),order)
             if (rem /= 0) then
                 this%npts(i)=this%npts(i)-rem+order
-                flag=.true.
+                no_of_points_fixed=.true.
             end if
         end do
 
-        if (flag) then
+        if (no_of_points_fixed) then
             write(str_g, '(a,3i5)') &
             'Adjusted number of grid points for quadrature: ', this%npts
             call msg_info(str_g)

@@ -74,7 +74,7 @@ calc=cdens,…
 magnet=[Bx,By,Bz]
     Define the direction of the external magnetic field
 
-magnet\_axis=[i,j,k] / [x,y,z] / T
+magnet\_axis=[i,j,k]|[x,y,z]|T
     Specify the magnetic field along a defined axis. Valid
     options are: i,j,k or x,y,z or T. “i,j,k” are the directions of the
     basis vectors defining the computational grid after any Euler rotation.
