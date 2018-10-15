@@ -15,11 +15,14 @@ f = [
     get_filter(from_string=' *** Integrating current',
                num_lines=10,
                rel_tolerance=1.0e-8),
+    get_filter(from_string=' *** Integrating ACID density',
+               num_lines=7,
+               rel_tolerance=1.0e-8),
 ]
 
 ierr = run(options,
            configure,
-           input_files=['bondint.inp'],
+           input_files=['gimic.inp'],
            filters={'stdout': f})
 
 sys.exit(ierr)

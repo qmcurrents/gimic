@@ -85,26 +85,15 @@ using either the ’fixpoint’ atom index or the ’fixcoord’ keyword. This
 triple of coordinates is also used to fix the direction of the magnetic
 field when the ’magnet\_axis=T’ is used.
 
-The shape and size of the bond grid can be specified in two ways. The
-origin of the grid is fixed to the center of the bond, and all
-specifications are relative to this origin. The first method specifies
-lengths in four directions (they can be negative, as long as they
-pairwise sum up to a positive number):
+The shape and size of the bond grid is specified by the keywords 'width' and
+'height'.  Each of the four components is relative to a point on the line
+connecting the two reference atoms/coordinates.  Typically (but not
+necessarily) the first component of both ranges is negative and the second
+component is positive.
 
 ::
-
-    up=5.0
-    down=5.0
-    in=1.5
-    out=5.0
-
-The other way to specify the shape is using the ’height’ and ’width’
-keywords, which specify intervals relative to the origin:
-
-::
-
-    height=[-5.0, 5.0]
     width=[-1.5, 5.0]
+    height=[-5.0, 5.0]
 
 grid(std):
 ~~~~~~~~~~
@@ -139,18 +128,6 @@ spacing=0.5, 0.5, 0.5
 grid\_points=50, 50, 0
     Number of grid points on grid (i,j,k) (approximate)
 
-up=4.0
-    Grid size in :math:`\vec i` direction
-
-down=4.0
-    Grid size in :math:`-\vec i` direction
-
-in=1.0
-    Grid size in :math:`-\vec j` direction
-
-out=6.0
-    Grid size in :math:`\vec j` direction
-
 height=-4.0, 4.0
     Grid size relative to grid center
 
@@ -163,3 +140,4 @@ radius=3.0
 rotation=0.0, 0.0, 0.0
     Rotation of (i,j,k) -> (i’,j’,k’) in degrees. Given as Euler angles
     in the x->y->z convention.
+

@@ -1,6 +1,6 @@
 foreach(_name
-    benzene/integration
-    benzene/bond-integration
+    benzene/integration-gauss
+    benzene/integration-lobatto
     benzene/vectors
     benzene/2d
     benzene/3d
