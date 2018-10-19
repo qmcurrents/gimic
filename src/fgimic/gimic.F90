@@ -277,7 +277,7 @@ call nl
 call msg_out('****************************************************************')
 call msg_out('***                                                          ***')
 call msg_out('***           GIMIC '// PROJECT_VERSION // &
-                       ' (' // GIT_REVISION // ')                          ***')
+                       ' (' // GIT_HASH // ')                              ***')
 call msg_out('***              Written by Jonas Juselius                   ***')
 call msg_out('***                                                          ***')
 call msg_out('***  This software is copyright (c) 2003-2011 by             ***')
