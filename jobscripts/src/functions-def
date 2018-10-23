@@ -224,7 +224,7 @@ function calculateFixedCoord() {
 
 #    echo "func arg: " "$@"
     awk -v Ax="$1" -v Ay="$2" -v Az="$3" 'BEGIN{ 
-         rotAngleDeg = 5 ; 
+         rotAngleDeg = -10 ; 
          rotAngleRad=0.0174532925*rotAngleDeg;
          Cos=cos(rotAngleRad);
          Sin=sin(rotAngleRad);
@@ -233,26 +233,58 @@ function calculateFixedCoord() {
     }'
 }
 
+dryRun() {
+    printf "\nPerforming a dry run...\n\n"
+    (cd ./$dirname/ && gimic --dryrun "$1" | grep "grid points" )
+    printf "\n\n"
 
+    echo "Do you accept the above parameters? Press [n] to cancel."; read accept
+    if  [ ! -z $accept ] && [ $accept == "n" ]
+    then
+	exit
+    fi
+}
+
+compareEqual() {
+# usage: compareEqual down up
+    local __inputVar1=$1 # down
+    local __inputVar2=$2 # up
+    local equal=$(awk -v down=$__inputVar1 -v up=$__inputVar2 'BEGIN{ if (down = up) {print -down } else {print "ok"} }')
+    if [ ! -z $equal ] &&  [ ! $equal == "ok" ]
+    then
+	eval __inputVar2=$equal
+    fi
+}
+
+compareSmaller() {
+# usage: compareSmaller down up
+    local __inputVar1=$1 # down
+    local __inputVar2=$2 # up
+    local smaller=$(awk -v down=$__inputVar1 -v up=$__inputVar2 'BEGIN{ if (down > up) {print "1"} else {print "0"} }')
+    if [ $smaller -eq 1 ]
+    then
+	tmp=$__inputVar1
+	eval __inputVar1=$__inputVar2
+	eval __inputVar2=$tmp
+    fi
+}
 
 function planeSanityCheck() {
 # sanity check for the integration plane
 
-dirname="$@"
+    echo starting sanity check
+    dirname="$@"
 
-echo "Do you want to preview the integration plane in XYZ format?"
-echo "Press [y] or any other key to skip"; read accept
-if  [ ! -z $accept ] && [ $accept == "y" ]
-then
     printf "\nPreparing the plane...\n"
     (cd ./$dirname/ && gimic --dryrun gimic.0.inp  > /dev/null )
+
     # take the first two coordinates of the int plane
     cat ./$dirname/grid.xyz | head -n -3 > ./$dirname/grid.check.xyz
 
-    last=$(  (cd ./$dirname/ && find . -maxdepth 1 -type f -name '*.inp' | wc -l ) )
-    last=$(( $last -1 ))
-    checkIfEmpty last $last 
-    (cd ./$dirname/ && gimic --dryrun gimic.$last.inp > /dev/null)
+    #$last=$(  (cd ./$dirname/ && find . -maxdepth 1 -type f -name '*.inp' | wc -l ) )
+    #$last=$(( $last -1 ))
+    #$checkIfEmpty last $last 
+    (cd ./$dirname/ && gimic --dryrun gimic.last.inp > /dev/null )
 
     # take the coords of the end of the int plane
     grep X ./$dirname/grid.xyz  | awk '{ if (NR <=2) {print $0} }' >> ./$dirname/grid.check.xyz
@@ -262,7 +294,10 @@ then
     readParameter MFy $dirname
     readParameter MFz $dirname
     printf "Be\t$MFx\t$MFy\t$MFz\n"  >> ./$dirname/grid.check.xyz
-    printf "Fe\t$Fx\t$Fy\t$Fz\n\n"  >> ./$dirname/grid.check.xyz
+    # for debugging the fixed coord:
+    # fixedCrd=$(awk -v x=$Fx -v y=$Fy -v z=$Fz 'BEGIN{bohr=0.5291772490; printf("U\t%f%f%f\n", bohr*x, bohr*y, bohr*z); }')
+    #echo "fixed coord U: " $fixedCrd
+    #echo $fixedCrd  >> ./$dirname/grid.check.xyz
 
     echo
     echo "The file grid.check.xyz created."
@@ -271,7 +306,6 @@ then
     read accept # just wait
 
     echo "Current profile analysis resumed." 
-fi
 }
 
 
@@ -315,7 +349,7 @@ fi
 }
 
 
-function planeSanityCheckSquares() {
+function planeSanityCheckVertical() {
 # sanity check for the integration plane
 
 dirname="$@"
@@ -366,31 +400,27 @@ echo "Do you want to preview the integration plane in XYZ format?"
 echo "Press [y] or any other key to skip"; read accept
 if  [ ! -z $accept ] && [ $accept == "y" ]
 then
-    echo "Preparing the plane..."
-idxH=$( sed -n -e 's/^.*nstepsH=//p' $wrkdir/calculation.dat | awk '{print $1}')
-idxV=$( sed -n -e 's/^.*nstepsV=//p' $wrkdir/calculation.dat | awk '{print $1}')
-checkIfEmpty idxH $idxH
-checkIfEmpty idxV $idxV
-idxH=$(( $idxH - 1 ))
-idxV=$(( $idxV - 1 ))
+    printf "\nPreparing the plane...\n"
+    idxH=$( sed -n -e 's/^.*nstepsH=//p' ./$dirname/calculation.dat | awk '{print $1}')
+    idxV=$( sed -n -e 's/^.*nstepsV=//p' ./$dirname/calculation.dat | awk '{print $1}')
+    checkIfEmpty idxH $idxH
+    checkIfEmpty idxV $idxV
+    idxH=$(( $idxH - 1 ))
+    idxV=$(( $idxV - 1 ))
 
     (cd ./$dirname/gimic.0 && gimic --dryrun gimic.0.0.inp  > /dev/null )
-    cat ./$dirname/gimic.0/grid.xyz | head -n -2 > ./$dirname/grid.check.xyz
-    (cd ./$dirname/gimic.0 && gimic --dryrun gimic.0.$idxH.inp  > /dev/null )
+    cat ./$dirname/gimic.0/grid.xyz | head -n -4 > ./$dirname/grid.check.xyz
+    (cd ./$dirname/gimic.0 && gimic --dryrun gimic.0.$idxV.inp  > /dev/null )
     grep X ./$dirname/gimic.0/grid.xyz  | awk '{ if (NR ==2) {print $0} }' >> ./$dirname/grid.check.xyz
 
-    (cd ./$dirname/gimic.$idxV && gimic --dryrun gimic.$idxH.0.inp  > /dev/null )
-    grep X ./$dirname/gimic.$idxV/grid.xyz  | awk '{ if (NR ==3) {print $0} }' >> ./$dirname/grid.check.xyz
-    (cd ./$dirname/gimic.$idxV && gimic --dryrun gimic.$idxH.$idxV.inp  > /dev/null )
-    grep X ./$dirname/gimic.$idxV/grid.xyz  | awk '{ if (NR ==4) {print $0} }' >> ./$dirname/grid.check.xyz
+    (cd ./$dirname/gimic.$idxH && gimic --dryrun gimic.$idxV.0.inp  > /dev/null )
+    grep X ./$dirname/gimic.$idxH/grid.xyz  | awk '{ if (NR ==3) {print $0} }' >> ./$dirname/grid.check.xyz
+    (cd ./$dirname/gimic.$idxH && gimic --dryrun gimic.$idxH.$idxV.inp  > /dev/null )
+    grep X ./$dirname/gimic.$idxH/grid.xyz  | awk '{ if (NR ==4) {print $0} }' >> ./$dirname/grid.check.xyz
 
 
     # copy the MF direction "Be" atom
     grep Be ./$dirname/grid.xyz  >> ./$dirname/grid.check.xyz
-
-#    atomNum=$(head -n 1 ./$dirname/grid.xyz)
-#    atomNum=$(( $atomNum + 2 ))
-#    sed -i "1s/.*/$atomNum/" ./$dirname/grid.check.xyz
 
     echo
     echo "The file grid.check.xyz created."
