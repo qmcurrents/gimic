@@ -31,22 +31,6 @@ cdef class Gimic(GimicConnector):
             vec.append(cv[i])
         return vec
 
-    cpdef divj(self, r):
-        cdef double cr[3]
-        cdef double cd
-        for i in range(3):
-            cr[i] = r[i]
-        self.thisptr.calc_divj(cr, &cd)
-        return cd
-
-    cpdef rho(self, r):
-        cdef double cr[3]
-        cdef double cd
-        for i in range(3):
-            cr[i] = r[i]
-        self.thisptr.calc_edens(cr, &cd)
-        return cd
-
     cpdef set_property(self, prop, val):
         eval('self.set_{0}({1})'.format(prop, repr(val)))
 

@@ -36,15 +36,7 @@ void GimicInterface::calc_jvector(const double r[3], double jv[3]) {
     gimic_calc_jvector(r, jv);
 }
 
-void GimicInterface::calc_divj(const double r[3], double *dj) {
-    gimic_calc_divj(r, dj);
-}
-
 void GimicInterface::calc_modj(const double r[3], double *mj) {
     gimic_calc_modj(r, mj);
-}
-
-void GimicInterface::calc_edens(const double r[3], double *mj) {
-    gimic_calc_edens(r, mj);
 }
 
