@@ -26,6 +26,11 @@ echo "SLURM_JOB_ID is" $SLURM_JOB_ID
 echo 
 echo "Current profile calculation"
 
+# parallelization is ensured in a poor man's way
+export OMP_NUM_THREADS=1 
+
+module load gimic
+
 wrkdir=$( echo $1 )
 checkIfEmpty wrkdir $wrkdir
 
