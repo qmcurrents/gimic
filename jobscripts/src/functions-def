@@ -206,6 +206,11 @@ function checkIfPreviousCalculationExists() {
     }
 
 
+function checkGimic() {
+    command -v gimic >/dev/null 2>&1 || { echo >&2 "GIMIC not found. Load the module or check your \$PATH."; exit 1; }
+    }
+
+
 function calculateFixedCoord() {
     # calculate the rotation matrix for 2D rotation with respect to the z axis such that the rotation will be counterclockwise
     # multiply the vector originating at (0;0;A2z) and ending at the second atom with coords (A2x; A2y; A2z).
@@ -284,7 +289,7 @@ function planeSanityCheck() {
     #$last=$(  (cd ./$dirname/ && find . -maxdepth 1 -type f -name '*.inp' | wc -l ) )
     #$last=$(( $last -1 ))
     #$checkIfEmpty last $last 
-    (cd ./$dirname/ && gimic --dryrun gimic.last.inp > /dev/null )
+    (cd ./$dirname/ && gimic --dryrun gimic.last.inp > /dev/null && rm -rf gimic.last.inp )
 
     # take the coords of the end of the int plane
     grep X ./$dirname/grid.xyz  | awk '{ if (NR <=2) {print $0} }' >> ./$dirname/grid.check.xyz
