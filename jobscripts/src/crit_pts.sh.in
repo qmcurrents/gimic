@@ -161,7 +161,7 @@ x0z=$(A2bohr ${crd0[2]})
 x1z=$(A2bohr ${crd1[2]})
 dz=$(awk -v z0=$x0z -v z1=$x1z 'BEGIN{dz = z0-z1; print dz;}')
 
-echo dz = $dz
+#echo dz = $dz
 
 length=$( echo $x0A $x1A | point_dist )
 length=$(A2bohr $length)

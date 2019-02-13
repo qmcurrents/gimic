@@ -30,6 +30,35 @@ function createInpTemplate()
     fi
 }
 
+function printSummary() {
+cat /dev/null > ./$dirname/calculation.dat
+echo atom1=$atom1  >> ./$dirname/calculation.dat
+echo atom2=$atom2 >> ./$dirname/calculation.dat
+echo distance=$distance >> ./$dirname/calculation.dat
+echo in=$start out=$out up=$up down=$down  >> ./$dirname/calculation.dat
+echo fixed point: Fx=$Fx Fy=$Fy Fz=$Fz  >> ./$dirname/calculation.dat
+echo delta=$delta nsteps=$nsteps >> ./$dirname/calculation.dat
+#echo spacing: spacingX=$spacingX spacingY=$spacingY spacingZ=$spacingZ  >> ./$dirname/calculation.dat
+echo spacing: spacingX=$spacingX spacingY=$spacingY  >> ./$dirname/calculation.dat
+echo magnetic field: MFx=$MFx MFy=$MFy MFz=$MFz  >> ./$dirname/calculation.dat
+echo rotation angles: rotX=$rotX rotY=$rotY rotZ=$rotZ >> ./$dirname/calculation.dat
+
+################################################################################
+
+printf "\n\n*****************************************************************************\n\nSUMMARY\n\n"
+printf "Bond: ["$bond"], distance = $distance\n\n"
+echo "Integration plane coordinates"
+printf "in = $start  out = $out  up = $up  down = $down \n"
+printf "Split into $nsteps slices with width $delta and grid spacing [$spacingX; $spacingY] \n"
+printf "Fixed coordinate: ( $Fx; $Fy; $Fz )\n"
+printf "Magnetic field direction: ( $MFx; $MFy; $MFz ) \n"
+printf "Rotation angles: ( $rotX; $rotY; $rotZ ) \n\n"
+
+printf "\n*****************************************************************************\n\n"
+}
+
+checkGimic 
+
 checkIfInputExists
 
 printf "\nSTARTING CURRENT PROFILE ANALYSIS\n"
@@ -312,31 +341,7 @@ then
     fi
 fi
 
-
-cat /dev/null > ./$dirname/calculation.dat
-echo atom1=$atom1  >> ./$dirname/calculation.dat
-echo atom2=$atom2 >> ./$dirname/calculation.dat
-echo distance=$distance >> ./$dirname/calculation.dat
-echo in=$start out=$out up=$up down=$down  >> ./$dirname/calculation.dat
-echo fixed point: Fx=$Fx Fy=$Fy Fz=$Fz  >> ./$dirname/calculation.dat
-echo delta=$delta nsteps=$nsteps >> ./$dirname/calculation.dat
-#echo spacing: spacingX=$spacingX spacingY=$spacingY spacingZ=$spacingZ  >> ./$dirname/calculation.dat
-echo spacing: spacingX=$spacingX spacingY=$spacingY  >> ./$dirname/calculation.dat
-echo magnetic field: MFx=$MFx MFy=$MFy MFz=$MFz  >> ./$dirname/calculation.dat
-echo rotation angles: rotX=$rotX rotY=$rotY rotZ=$rotZ >> ./$dirname/calculation.dat
-
-################################################################################
-
-printf "\n\n*****************************************************************************\n\nSUMMARY\n\n"
-printf "Bond: ["$bond"], distance = $distance\n\n"
-echo "Integration plane coordinates"
-printf "in = $start  out = $out  up = $up  down = $down \n"
-printf "Split into $nsteps slices with width $delta and grid spacing [$spacingX; $spacingY] \n"
-printf "Fixed coordinate: ( $Fx; $Fy; $Fz )\n"
-printf "Magnetic field direction: ( $MFx; $MFy; $MFz ) \n"
-printf "Rotation angles: ( $rotX; $rotY; $rotZ ) \n\n"
-
-printf "\n*****************************************************************************\n\n"
+printSummary # print to stdout and to calculation.dat
 
 
 # Preparing the input files
@@ -379,11 +384,9 @@ do
     # gimic.0.inp already exists; create gimic.$last.inp
     start_last=$( awk -v xstart=$xstart -v delta=$delta -v nsteps=$nsteps 'BEGIN{ last = xstart + delta*nsteps; print last }')
     checkIfEmpty start_last $start_last
-    echo "start_last = " $start_last
 
     end_last=$( awk -v start_last=$start_last -v delta=$delta 'BEGIN{ end = start_last + delta; print end }')
     checkIfEmpty xend_last $end_last
-    echo "end_last = " $end_last
 
     lstring="s/@up@/$up/; s/@down@/$down/; s/@start@/$start_last/; s/@end@/$end_last/"
     sed -e "$lstring" ./$dirname/gimic.Inp > ./$dirname/gimic.last.inp
@@ -404,7 +407,8 @@ do
 
     if  [ -z $accept ]
     then
-	echo "skipping further plane checks and dry runs"
+	echo "Skipping further plane checks and dry runs"
+	printSummary 
 	checkPlane=""
 	doDryRun=""
     elif [ $accept == "y" ]
