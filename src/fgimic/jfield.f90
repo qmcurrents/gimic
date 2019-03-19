@@ -198,13 +198,17 @@ contains
         real(DP), dimension(3) :: bar=(/D1,D1,D1/)
         real(DP), dimension(3) :: foobar
         real(DP), parameter :: SC=0.25d0
+        real(4) :: hours_per_sec = 1.0/3600.0
+        real(4) :: days_per_hour = 1.0/24.0
+        real(4) :: hours_per_day = 24.0
+        integer :: no_tests = 100
 
         call get_grid_size(this%grid, p1, p2, p3)
 
         call new_jtensor(jt, mol, xdens)
         call etime(times, tim1)
         tim1=times(1)
-        do i=1,100
+        do i=1,no_tests
             call jtensor(jt, (/i*SC, i*SC, i*SC/), foo, spin_a)
             foobar=matmul(bar,reshape(foo,(/3,3/)))
         end do
@@ -215,10 +219,10 @@ contains
         delta_t=tim2-tim1
         if ( present(fac) ) delta_t=delta_t*fac
         write(str_g, '(a,f11.2,a,a,f6.1,a)') 'Estimated CPU time for single core &
-            &calculation: ', delta_t*real(p1*p2*p3)/100.d0, ' sec', &
-            ' (',  delta_t*real(p1*p2*p3)/3600.d0, ' h )'
-        if ( delta_t*real(p1*p2*p3)/3600.d0 .gt. 48 ) then
-            write(str_g, '(a,f4.1,a)') '(', delta_t*real(p1*p2*p3)/3600.d0/24, ' days )' 
+            calculation: ', delta_t*real(p1*p2*p3)/real(no_tests), ' sec', &
+            ' (',  delta_t*real(p1*p2*p3)/real(no_tests) * hours_per_sec, ' h )'
+        if ( delta_t*real(p1*p2*p3)/real(no_tests) * hours_per_sec .gt. 2*hours_per_day ) then ! will take more than two days?
+            write(str_g, '(a,f4.1,a)') '(', delta_t*real(p1*p2*p3)/real(no_tests) * hours_per_sec*days_per_hour, ' days )' 
         end if
         call msg_info(str_g)
         call nl
