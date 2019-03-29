@@ -3,6 +3,24 @@
 Installation
 ============
 
+Before compiling GIMIC you need to make sure that you have installed
+ideally all of the packages collected in
+the ``requirements.txt`` file.
+You need minimum the ones listed below. ::
+
+* cython
+* numpy
+* runtest == 2.2.0
+
+A convenient way to install the packages listed in ``requirements.txt``
+is to install the 
+Anaconda2 (https://www.anaconda.com/distribution/) Python distribution
+first. 
+Then you can simply install all the packages listed in the file
+``requirements.txt`` by using:: 
+
+  $ conda install name-of-package
+
 GIMIC requires CMake to configure and build. CMake is invoked via a front-end script called ``setup``::
 
   $ ./setup
@@ -25,7 +43,12 @@ GIMIC requires CMake to configure and build.::
 
 Test the installation with::
 
+  $ cd build
   $ make test
+
+Note, some tests may require Valgrind and will fail if this
+debugger is not available. However, this is no need to worry if all
+other tests pass. 
 
 
 Parallelization
