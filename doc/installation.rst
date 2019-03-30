@@ -89,3 +89,36 @@ With GNU compilers use::
 With Intel compilers and MKL use::
 
   $ ./setup --fc=ifort --cc=icc --cxx=icpc --cmake-options="-D ENABLE_MKL_FLAG=ON"
+
+
+Installation on a Mac
+------------------------------
+
+The main problem with installing GIMIC on a Mac is setting the
+correct paths and force the program to find all libraries. 
+Here we share some recommendations but 
+can not guaratee that GIMIC will for sure work on your Mac. GIMIC has
+been developed on a Ubuntu/Linux operating system. 
+Note, there are for sure more elegant ways to get GIMIC installed
+on a Mac. If you figure them out, please share. 
+
+*   Install git and cmake. 
+*   Install Anaconda2 then you should be able to install most of the
+    recommended packages listed in "requirements.txt". 
+*   For installing the C++ (gcc) and Fortran (gfortran) compilers you
+    can use Xcode, Brew or MacPorts. You just need to make sure that
+    GIMIC is able to find them. A way to solve this is editing the
+    ".bashrc" file. 
+*   Check if you have the following paths in your ".bashrc". If not
+    add them. 
+        * export PATH=/Users/your_username:/Users/your_username/anaconda/bin:$PATH 
+        * PATH="/Applications/CMake.app/Contents/bin":"$PATH"
+        * export PATH=/Users/your_username/gimic/build/bin:$PATH
+        * export PATH="/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
+
+
+
+
+
+
+
