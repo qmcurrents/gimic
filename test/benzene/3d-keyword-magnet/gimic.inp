@@ -30,4 +30,5 @@ Advanced {
 
 Essential {
     acid=on
+    jmod=on
 }
