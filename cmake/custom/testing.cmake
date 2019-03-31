@@ -8,18 +8,4 @@ if (VALGRIND_EXECUTABLE)
 endif()
 mark_as_advanced(VALGRIND_EXECUTABLE)
 
-if (EXISTS ${CMAKE_SOURCE_DIR}/CTestConfig.cmake)
-    include(CTest)
-endif()
-
-if (EXISTS ${CMAKE_SOURCE_DIR}/CTestCustom.cmake.in)
-    configure_file(${CMAKE_SOURCE_DIR}/CTestCustom.cmake.in
-        ${CMAKE_BINARY_DIR}/CTestCustom.cmake @ONLY)
-endif()
-
 enable_testing()
-
-set(BUILDNAME ${BUILDNAME}
-    CACHE STRING "Name of build on the dashboard"
-    )
-
