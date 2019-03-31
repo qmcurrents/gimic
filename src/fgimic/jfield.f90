@@ -362,10 +362,12 @@ contains
             call acid_vtkplot(this)
           end if
           ! put modulus info on file
-          if (present(tag)) then
-            call jmod2_vtkplot(this, tag)
-          else
-            call jmod2_vtkplot(this)
+          if (settings%jmod) then
+            if (present(tag)) then
+              call jmod2_vtkplot(this, tag)
+            else
+              call jmod2_vtkplot(this)
+            end if
           end if
         end if
         ! put jvec information on vti file
