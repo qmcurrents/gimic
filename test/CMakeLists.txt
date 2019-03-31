@@ -33,6 +33,11 @@ gimic_test(c4h4/integration)
 gimic_test(c4h4/read-grid)
 gimic_test(open-shell/3d)
 gimic_test(open-shell/integration)
-gimic_test(benzene/valgrind-integral)
-gimic_test(benzene/valgrind-2d)
 gimic_test(benzene/skip-jmod-integration)
+
+
+option(ENABLE_VALGRIND_TESTS "Enable Valgrind tests" OFF)
+if(ENABLE_VALGRIND_TESTS)
+  gimic_test(benzene/valgrind-integral)
+  gimic_test(benzene/valgrind-2d)
+endif()
