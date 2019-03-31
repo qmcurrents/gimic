@@ -27,3 +27,8 @@ Advanced {
     screening=on        # use screening to speed up 
     screening_thrs=1.d-8   # Screening threshold
 }
+
+Essential {
+    acid=off
+    jmod=on
+}
