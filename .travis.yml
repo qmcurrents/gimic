@@ -50,7 +50,7 @@ script:
     fi
   - if [ "$DEBUG_BUILD" = 1 ];
     then 
-       ./setup --type=debug build-debug &&
+       ./setup --cmake-options="-DENABLE_VALGRIND_TESTS=ON" --type=debug build-debug &&
        cd build-debug &&
        make -j2 &&
        make install &&
