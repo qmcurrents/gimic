@@ -1,4 +1,4 @@
-#!/usr/bin/python 
+#!/usr/bin/env python
 import sys, os
 import argparse
 from itertools import islice
