@@ -11,11 +11,11 @@ class GimicDriver:
         self.kw = inkeys
 
     def run(self):
-        print "This is F-GIMIC."
+        print("This is F-GIMIC.")
 
         infile='GIMIC.in' + str(os.getpid())
         fd=open(infile,'w')
-        print >>fd, self.kw
+        fd.write(str(self.kw))
 
         fd.close()
 
