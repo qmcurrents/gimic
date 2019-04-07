@@ -26,29 +26,24 @@ var = args.atoms.split(',')
 idx = [int(x) for x in var]
 if args.fix != "F":
     fixatom = args.fix
-    #print fixatom
     idxfix = int(args.fix)
-    print "fixatom", fixatom
-    #print idxfix
-#print args.up, args.down
+    print( "fixatom", fixatom)
+
 height = [args.down,args.up]
 width = [args.ins,args.out]
-print height
-print width
+print( height) 
+print( width) 
 
 # assume height is kept fixed and vary only width
 step = 0.1
 length = np.abs(width[0]) + width[1]
-print "length =", length
+print( "length =", length )
 nstep = length/0.1
-print "number of steps", nstep
+print( "number of steps", nstep)
 imax = int(nstep)
-print imax
+print( imax )
 start=width[0]
 end=width[1]
-#for i in range(0,imax):
-#    print start, start+step
-#    start = start + step
 
 for i in range(0,imax):
     workdir = "sc"+"_%04d"%(i)
@@ -65,7 +60,7 @@ for i in range(0,imax):
     l3 =" --ins "+str(start)+" --out "+str(start+step)
 #   l3 =" --ins "+str(width[0])+" --out "+str(width[1])
     line = l0+l1+l1f+l2+l3
-    print line
+    print( line)
     start = start + step
     os.system(line) 
     runcalc = "gimic > gimic_h"+"_%04d"%(i)

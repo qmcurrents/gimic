@@ -26,16 +26,12 @@ parser.add_argument('--batch', type=str)
 args = parser.parse_args() 
 var = args.atoms.split(',')
 idx = [int(x) for x in var]
-# print args.fix
 if args.fix != "F":
     fixatom = args.fix
-    # print fixatom
     idxfix = int(args.fix)
     print("fixatom", fixatom)
-    #print idxfix
 else:
     print("no fixatom set")
-#print args.up, args.down
 height = [args.down,args.up]
 width = [args.ins,args.out]
 print(height)
@@ -48,10 +44,6 @@ def mk_sbatch(string,filename):
     f1.write("#!/bin/bash\n")
     f1.write(string + "\n")
     f1.write(" \n")
-    # old python 2 
-    # print >> f1, "#!/bin/bash"
-    # print >> f1, string 
-    # print >> f1, " "
     f1.close()
 
 
@@ -93,19 +85,8 @@ with open(fin) as f:
         coord_z.append(float(l[3]))
 
 print("Number of atoms:", natom)
-# var = raw_input("Please enter atom numbers for bond ")
-# print "You entered: ", var
-# create a list for the entered atom numbers
-# idx = [int(x) for x in var.split()]
-# print "idx", idx
 print("Bond defined by atoms: ", idx[0], idx[1])
-#var = raw_input("Please enter height as -X,Y; ")
-#print "You entered: ", var
-#height = [float(x) for x in var.split()]
 print("height is: ", height)
-# var = raw_input("Please enter width as -X,Y; ")
-# print "You entered: ", var
-# width = [float(x) for x in var.split()]
 print("width is: ", width)
 
 # A
@@ -151,14 +132,10 @@ coord_z.append(fzz)
 f1 = open(fout,'w')
 f1.write(str(natom+1)+"\n")
 f1.write(" \n")
-# print >> f1, natom + 1
-# print >> f1, " "
 for i in range(natom + 1):
     f1.write(str(element[i]) + " "+ str(coord_x[i]) + " " + str(coord_y[i]) + " " + str(coord_z[i]) + "\n")
-#   print >> f1, element[i], coord_x[i], coord_y[i], coord_z[i]
 
 f1.close()
-# call(["ls", "-l"])
 # sbatch logic
 if logic=="T":
     print("running calc...")
