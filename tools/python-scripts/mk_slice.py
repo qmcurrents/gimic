@@ -26,9 +26,11 @@ var = args.atoms.split(',')
 idx = [int(x) for x in var]
 if args.fix != "F":
     fixatom = args.fix
+    #print fixatom
     idxfix = int(args.fix)
     print "fixatom", fixatom
-#
+    #print idxfix
+#print args.up, args.down
 height = [args.down,args.up]
 width = [args.ins,args.out]
 print height
@@ -44,6 +46,9 @@ imax = int(nstep)
 print imax
 start=width[0]
 end=width[1]
+#for i in range(0,imax):
+#    print start, start+step
+#    start = start + step
 
 for i in range(0,imax):
     workdir = "sc"+"_%04d"%(i)
@@ -58,12 +63,14 @@ for i in range(0,imax):
     l1f =" --fix "+str(idxfix)
     l2 =" --down "+str(height[0])+" --up "+str(height[1])
     l3 =" --ins "+str(start)+" --out "+str(start+step)
+#   l3 =" --ins "+str(width[0])+" --out "+str(width[1])
     line = l0+l1+l1f+l2+l3
     print line
     start = start + step
     os.system(line) 
     runcalc = "gimic > gimic_h"+"_%04d"%(i)
     os.system(runcalc)
+#   os.system("gimic > gimic.out")
     os.system("cp gimic_h* ../")
     os.system("rm coord.xyz")
     os.system("rm show_fixpoint.xyz")
@@ -71,5 +78,6 @@ for i in range(0,imax):
     print("--- %s seconds ---" % (time.time() - start_time))
 
 os.system("rm -r sc* ")
+
 
 
