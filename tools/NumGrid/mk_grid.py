@@ -62,9 +62,9 @@ with open(fin) as f:
 
         l = f.readline().strip().split() 
         element.append(l[0])
-        x_coordinates_bohr.append(l[2])
-        y_coordinates_bohr.append(l[3])
-        z_coordinates_bohr.append(l[4])
+        x_coordinates_bohr.append(float(l[2]))
+        y_coordinates_bohr.append(float(l[3]))
+        z_coordinates_bohr.append(float(l[4]))
     
         # print("idxb = ", idxb)
 
@@ -105,6 +105,11 @@ with open(fin) as f:
 
 # now calculate the grid after all input has been extracted from MOL
 
+fout_grid = "grid_in.xyz"
+fout_weights = "grid_w.txt" 
+f1 = open(fout_grid, "w")
+f2 = open(fout_weights, "w")
+
 for n in range(num_centers):
     print("n", n)
     print("proton_charges[n]", proton_charges[n])
@@ -119,7 +124,31 @@ for n in range(num_centers):
 
     num_points = numgrid.get_num_grid_points(context)
     print("number of points", num_points)
+    # generate an atomic grid in the molecular environment
+    x, y, z, w = numgrid.get_grid(context, num_centers, n, 
+            x_coordinates_bohr, y_coordinates_bohr, 
+            z_coordinates_bohr, proton_charges)
 
+    # np.save('grid_xyz.npy', x, y, z) 
+    # np.save('grid_w.npy', w)
+
+    for k in range(num_points):
+        f1.write(str(x[k]) + " " + str(y[k]) + " " + str(z[k]) + "\n")
+        f2.write(str(w[k]) + "\n")
+
+    # num_radial_points = numgrid.get_num_radial_grid_points(context)
+    # print("number of radial points", num_radial_points)
+
+    # generate an isolated radial grid
+    # r, w = numgrid.get_radial_grid(context)
+
+    numgrid.free_atom_grid(context)
+
+    # generate an isolated angular grid
+    # x, y, z, w = numgrid.get_angular_grid(num_angular_grid_points=14)
+
+f1.close()
+f2.close()
 
 
 
