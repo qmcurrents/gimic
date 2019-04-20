@@ -49,7 +49,9 @@ with open(fin) as f:
         # print("read center", n+1) 
         l = f.readline().strip().split() 
         # print(l)
-        proton_charges.append(l[0])
+        # proton_charges.append(l[0])
+        tmp = float(l[0])
+        proton_charges.append(int(tmp))
         lmax_plus_one = int(l[2])
         max_l_quantum_numbers.append(lmax_plus_one -1)
         # print(max_l_quantum_numbers)
@@ -78,7 +80,7 @@ with open(fin) as f:
                 # print("nfunc =", nfunc)
                 for k in range(nfunc):
                     l = f.readline().strip().split()
-                    alpha.append(l[0])
+                    alpha.append(float(l[0]))
                     # print("k", k)
                     idxk = idxk + 1
             alpha_min_tmp.append(alpha[idxk-1])
