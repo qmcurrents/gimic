@@ -102,11 +102,17 @@ with open(fin) as f:
 # print("alpha_min for center 7", alpha_min[6])
 # print(x_coordinates_bohr, y_coordinates_bohr, z_coordinates_bohr)
 # print("max L", max_l_quantum_numbers) 
+fout = "coord.au"
+f1 = open(fout,"w")
+for n in range(num_centers):
+    f1.write(str(x_coordinates_bohr[n])+" "+str(y_coordinates_bohr[n])+" "+str(z_coordinates_bohr[n])+"\n")
+
+f1.close()
 
 # now calculate the grid after all input has been extracted from MOL
 
-fout_grid = "grid_in.xyz"
-fout_weights = "grid_w.txt" 
+fout_grid = "gridfile.grd"
+fout_weights = "grid_w.grd" 
 f1 = open(fout_grid, "w")
 f2 = open(fout_weights, "w")
 
