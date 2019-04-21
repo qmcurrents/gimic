@@ -5,4 +5,3 @@ pyyaml
 sphinx
 sphinx_rtd_theme
 runtest == 2.2.0
-numgrid
