@@ -41,24 +41,18 @@ with open(fin) as f:
         next(f)
     l = f.readline().strip().split() 
     num_centers = int(l[0])
-    # print("number of centers = ", num_centers)
     # skip one line
     for _ in range(1):
         next(f)
     for n in range(num_centers):
-        # print("read center", n+1) 
         l = f.readline().strip().split() 
-        # print(l)
-        # proton_charges.append(l[0])
         tmp = float(l[0])
         proton_charges.append(int(tmp))
         lmax_plus_one = int(l[2])
         max_l_quantum_numbers.append(lmax_plus_one -1)
-        # print(max_l_quantum_numbers)
         for i in range(lmax_plus_one):
             block.append(int(l[3+i]))
             idxb = idxb + 1
-        # print("idxb", idxb)
 
         l = f.readline().strip().split() 
         element.append(l[0])
@@ -66,26 +60,17 @@ with open(fin) as f:
         y_coordinates_bohr.append(float(l[3]))
         z_coordinates_bohr.append(float(l[4]))
     
-        # print("idxb = ", idxb)
-
         idxk = 0
         for j in range(idxb):
-            # print("j", j)
             for i in range(block[j]):
-                # print("block[j]", block[j])
                 l = f.readline().strip().split()
-                # print(l)
                 nfunc = int(l[0]) 
-                # print("i", i)
-                # print("nfunc =", nfunc)
                 for k in range(nfunc):
                     l = f.readline().strip().split()
                     alpha.append(float(l[0]))
-                    # print("k", k)
                     idxk = idxk + 1
             alpha_min_tmp.append(alpha[idxk-1])
 
-#       print("alpa", alpha)
         alpha_max.append(alpha[0])
         alpha_min.append(alpha_min_tmp[:])
         # clean up for new element
@@ -94,20 +79,10 @@ with open(fin) as f:
         alpha[:] = []
         alpha_min_tmp[:] = []
 
-# print("alpa_max", alpha_max)
-# print("alpa_min", alpha_min)
-# print("")
-# print("alpha_min for center 1", alpha_min[0])
-# print("")
-# print("alpha_min for center 7", alpha_min[6])
-# print(x_coordinates_bohr, y_coordinates_bohr, z_coordinates_bohr)
-# print("max L", max_l_quantum_numbers) 
-fout = "coord.au"
-f1 = open(fout,"w")
-for n in range(num_centers):
-    f1.write(str(x_coordinates_bohr[n])+" "+str(y_coordinates_bohr[n])+" "+str(z_coordinates_bohr[n])+"\n")
-
-f1.close()
+# save coordinates in au
+with open('coord.au', 'w') as f1:
+    for n in range(num_centers):
+        f1.write(str(x_coordinates_bohr[n])+" "+str(y_coordinates_bohr[n])+" "+str(z_coordinates_bohr[n])+"\n")
 
 # now calculate the grid after all input has been extracted from MOL
 
@@ -135,23 +110,11 @@ for n in range(num_centers):
             x_coordinates_bohr, y_coordinates_bohr, 
             z_coordinates_bohr, proton_charges)
 
-    # np.save('grid_xyz.npy', x, y, z) 
-    # np.save('grid_w.npy', w)
-
     for k in range(num_points):
         f1.write(str(x[k]) + " " + str(y[k]) + " " + str(z[k]) + "\n")
         f2.write(str(w[k]) + "\n")
 
-    # num_radial_points = numgrid.get_num_radial_grid_points(context)
-    # print("number of radial points", num_radial_points)
-
-    # generate an isolated radial grid
-    # r, w = numgrid.get_radial_grid(context)
-
     numgrid.free_atom_grid(context)
-
-    # generate an isolated angular grid
-    # x, y, z, w = numgrid.get_angular_grid(num_angular_grid_points=14)
 
 f1.close()
 f2.close()
