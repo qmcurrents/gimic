@@ -91,6 +91,7 @@ contains
 
         call getkw(input, 'Essential.acid', settings%acid)
         call getkw(input, 'Essential.jmod', settings%jmod)
+        call getkw(input, 'Essential.prop', settings%prop)
 
         ierr=hostnm(sys)
         if (mpi_rank == 0) then

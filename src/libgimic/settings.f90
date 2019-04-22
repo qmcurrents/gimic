@@ -27,6 +27,7 @@ module settings_module
         logical :: use_paramag=.true.
         logical :: acid=.false.
         logical :: jmod=.false.
+        logical :: prop=.false.
         real(DP) :: screen_thrs
         logical :: use_screening
         integer(I4), dimension(2) :: morange

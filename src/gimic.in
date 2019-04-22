@@ -85,7 +85,7 @@ def parse_keywords(args):
     ess=getkw.Section('Essential')
     ess.add_kw('acid', 'BOOL', (False,))
     ess.add_kw('jmod', 'BOOL', (False,))
-#   ess.add_kw('jav', 'BOOL', (False,))
+    ess.add_kw('prop', 'BOOL', (False,))
 
     grid=getkw.Section('Grid', callback=check_grid)
     grid.set_arg('STR', ('std',))

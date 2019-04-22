@@ -370,10 +370,15 @@ contains
             end if
           end if
         end if
+        ! case external 3D grid - numgrid
+        if (settings%prop) then
+            call get_property(this)
+        end if
+
         ! put jvec information on vti file
-        if (this%grid%gauss) then
+        if (this%grid%gauss.or.settings%prop) then
           write(*,*) "VTK files are only printed for even grids"
-        else
+        else 
           if (present(tag)) then
             call write_vtk_vector_imagedata('jvec'// tag // '.vti', this%grid, jval)
           else
@@ -521,6 +526,101 @@ contains
         end do
         call write_vtk_imagedata('acid.vti', this%grid, val)
         deallocate(val)
+    end subroutine
+
+    subroutine get_property(this)
+        ! assume external grid is read in correctly via read grid 
+        ! assume grid_w.grd, coord.au, gridfile.grd are in the same directory
+        type(jfield_t) :: this
+        real(DP), dimension(:,:), pointer :: jtens
+        real(DP), allocatable :: wg(:), coord(:,:), grd(:,:) 
+        real(DP), dimension(3) :: d, bb, jvec, sigma, chi
+        real(DP) :: f, tmp
+        integer :: i, j, k, npts, natoms
+
+        jtens => this%tens
+
+        ! get atom coordinates in bohr
+        open(unit=15, file="coord.au")
+        natoms = getnlines(15)
+        allocate(coord(natoms,3))
+        do i=1, natoms
+          read(15,*) coord(i,1:3)
+        end do
+        close(15)
+
+        ! get weights from numgrid files (external)
+        open(unit=15, file="grid_w.grd")
+        open(unit=16, file="gridfile.grd")
+        npts = getnlines(15)
+        write(*,*) "npts", npts
+        allocate(wg(npts),grd(npts,3))
+
+        do i=1, npts
+          read(15,*) wg(i)
+          read(16,*) grd(i, 1:3)
+        end do
+        close(15)
+        close(16)
+
+        ! assume jtens has been calculated in the same order
+        ! loope atoms
+        do k=1, natoms
+          ! loop grid points
+          sigma = 0.0d0
+          chi = 0.0d0
+          do i=1, npts
+            ! loop xyz
+            do j = 1, 3
+              d(j) = grd(i,j) - coord(k,j)   
+            end do
+            f = -1.0d0/((d(1)*d(1) + d(2)*d(2) + d(3)*d(3))**1.5d0)/(137.0359998d0**2.0d0)
+            ! contract with Bx
+            bb(1) = -1.0d0
+            bb(2) = 0.0d0
+            bb(3) = 0.0d0
+            jvec = matmul(reshape(jtens(:,i),(/3,3/)),bb) 
+            ! sigma_xx
+            sigma(1) = sigma(1) + 1.0d6*wg(i)*f*(d(2)*jvec(3) - d(3)*jvec(2))
+            ! chi_xx
+            chi(1) = chi(1) + wg(i)*0.5d0*(grd(i,2)*jvec(3) - grd(i,3)*jvec(2))
+            ! contract with By
+            bb(1) = 0.0d0
+            bb(2) = -1.0d0
+            bb(3) = 0.0d0
+            jvec = matmul(reshape(jtens(:,i),(/3,3/)),bb) 
+            ! sigma_yy
+            sigma(2) = sigma(2) + 1.0d6*wg(i)*f*(d(3)*jvec(1) - d(1)*jvec(3))
+            ! chi_yy
+            chi(2) = chi(2) + wg(i)*0.5d0*(grd(i,3)*jvec(1) - grd(i,1)*jvec(3))
+            ! contract with Bz
+            bb(1) = 0.0d0
+            bb(2) = 0.0d0
+            bb(3) = -1.0d0
+            jvec = matmul(reshape(jtens(:,i),(/3,3/)),bb) 
+            ! sigma_zz
+            sigma(3) = sigma(3) + 1.0d6*wg(i)*f*(d(1)*jvec(2) - d(2)*jvec(1))
+            ! chi_zz
+            chi(3) = chi(3) + wg(i)*0.5d0*(grd(i,1)*jvec(2) - grd(i,2)*jvec(1))
+          end do
+          write(*,*) "atom ",k 
+          write(*,*) "sigma_xx ", sigma(1) 
+          write(*,*) "sigma_yy ", sigma(2) 
+          write(*,*) "sigma_zz ", sigma(3) 
+          tmp = (sigma(1) + sigma(2) + sigma(3))/3.0d0  
+          write(*,*) "shielding constant sigma = ", tmp 
+
+        end do
+        write(*,*) "" 
+        write(*,*) "chi_xx ", chi(1) 
+        write(*,*) "chi_yy ", chi(2) 
+        write(*,*) "chi_zz ", chi(3) 
+        tmp = (chi(1) + chi(2) + chi(3))/3.0d0  
+        write(*,*) "isotropic magnetizability chi = ", tmp 
+
+        ! clean up 
+        deallocate(wg, coord)
+
     end subroutine
 end module
 
