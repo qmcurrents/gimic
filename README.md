@@ -42,4 +42,7 @@ ACID:
 
 * H. Fliegl, J. Jusélius, D. Sundholm, Gauge-Origin Independent Calculations of the Anisotropy of the Magnetically Induced Current Densities, J. Phys. Chem. A, 120, 2016, 5658-5664  
 
+When using the G09 interface:
+
+* M. Rauhalahti, S. Taubert, D. Sundholm, V. Liegeois, Calculations of current densities for neutral and doubly charged persubstituted benzenes using ective core potentials. Phys. Chem. Chem. Phys. 2017, 19, 7124-7131
 
