@@ -2,34 +2,19 @@
 
 import os
 import sys
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
+import subprocess
 
-from runtest import version_info, get_filter, cli, run
-from runtest_config import configure
+os.environ["GIMIC_LAUNCHER"] = "valgrind --tool=memcheck --leak-check=summary --show-reachable=yes"
 
-assert version_info.major == 2
+assert len(sys.argv) > 1, "you have to give the launcher as argument"
+launcher = sys.argv[-1]
 
-os.environ["GIMIC_LAUNCHER"] = "valgrind --tool=memcheck --log-file=valgrind-summary.dat --leak-check=summary --show-reachable=yes"
+proc = subprocess.Popen([launcher, 'gimic.inp'],
+                        stdin=subprocess.PIPE,
+                        stdout=subprocess.PIPE,
+                        stderr=subprocess.PIPE,
+                        )
+stdout, stderr = proc.communicate()
 
-options = cli()
-
-# checking the valgrind report
-f = [
-     get_filter(from_string='in use at exit',
-                num_lines=1,
-                rel_tolerance=0),
-     get_filter(from_string='ERROR SUMMARY',
-               to_string='errors from',
-               rel_tolerance=0)
-     ]
-# checking the jvec file
-acc = [get_filter(rel_tolerance=1.0e-8)]
-ierr = run(options,
-           configure,
-           input_files=['gimic.inp'],
-	   filters={'jvec.vti': acc, 
-	        'valgrind-summary.dat': f} )
-
-sys.exit(ierr)
-
-os.environ["GIMIC_LAUNCHER"] = ""
+assert 'no leaks are possible' in stderr
+assert 'ERROR SUMMARY: 0 errors from 0 contexts' in stderr
