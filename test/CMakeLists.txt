@@ -38,6 +38,20 @@ gimic_test(benzene/skip-jmod-integration)
 
 option(ENABLE_VALGRIND_TESTS "Enable Valgrind tests" OFF)
 if(ENABLE_VALGRIND_TESTS)
-  gimic_test(benzene/valgrind-integral)
-  gimic_test(benzene/valgrind-2d)
+  add_test(
+    NAME
+      benzene/valgrind-integral
+    COMMAND
+      ./test ${PROJECT_BINARY_DIR}/bin/gimic
+    WORKING_DIRECTORY
+      ${PROJECT_SOURCE_DIR}/test/benzene/valgrind-integral
+    )
+  add_test(
+    NAME
+      benzene/valgrind-2d
+    COMMAND
+      ./test ${PROJECT_BINARY_DIR}/bin/gimic
+    WORKING_DIRECTORY
+      ${PROJECT_SOURCE_DIR}/test/benzene/valgrind-2d
+    )
 endif()
