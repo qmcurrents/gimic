@@ -46,3 +46,7 @@ When using the G09 interface:
 
 * M. Rauhalahti, S. Taubert, D. Sundholm, V. Liegeois, Calculations of current densities for neutral and doubly charged persubstituted benzenes using ective core potentials. Phys. Chem. Chem. Phys. 2017, 19, 7124-7131
 
+When using the NumGrid libary:
+
+* https://github.com/dftlibs/numgrid#citation
+
