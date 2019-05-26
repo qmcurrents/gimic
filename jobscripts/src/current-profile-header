@@ -10,13 +10,11 @@ function createInpTemplate()
 
     string1="s/@bond@/$bond/; s/@distance@/$distance/; s/@spacingX@/$spacingX/; s/@spacingY@/$spacingY/; s/@spacingZ@/$spacingZ/ "
     string2="s/@rotX@/$rotX/;  s/@rotY@/$rotY/;  s/@rotZ@/$rotZ/; s/@origX@/$origX/; s/@origY@/$origY/; s/@origZ@/$origZ/ "
-    string3="s/@MFx@/$MFx/; s/@MFy@/$MFy/; s/@MFz@/$MFz/; s/@FX@/$Fx/; s/@FY@/$Fy/; s/@FZ@/$Fz/ "
-    fixedstring="s/@fixed@/$fixed/;"
-    sed -i "$fixedstring" ./$dirname/gimic.Inp
+    string3="s/@Bx@/$Bx/; s/@By@/$By/; s/@Bz@/$Bz/; s/@FX@/$Fx/; s/@FY@/$Fy/; s/@FZ@/$Fz/; s/@fixed@/$fixed/;"
 
-    sed -i "$string1" ./$dirname/gimic.Inp
+    sed -i -e "$string1" ./$dirname/gimic.Inp
     sed -i -e "$string2" ./$dirname/gimic.Inp
-    sed -i "$string3" ./$dirname/gimic.Inp
+    sed -i -e "$string3" ./$dirname/gimic.Inp
 
     if [ ! -z $enableRotationerigin ] &&  [ $enableRotationerigin == "y" ]
     then
@@ -26,7 +24,7 @@ function createInpTemplate()
     if [ ! -z $enableMF_X ] &&  [ $enableMF_X == "y" ]
     then
 	sed -i -e '/s/magnet=/#magnet=/' ./$dirname/gimic.Inp
-	sed -i -e '/s/#magnet_axis=/magnet_axis=/' ./$dirname/gimic.Inp
+	sed -i -e '/s/#magnet_axis=/magnet_axis=X/' ./$dirname/gimic.Inp
     fi
 }
 
@@ -39,8 +37,8 @@ echo in=$start out=$out up=$up down=$down  >> ./$dirname/calculation.dat
 echo fixed point: Fx=$Fx Fy=$Fy Fz=$Fz  >> ./$dirname/calculation.dat
 echo delta=$delta nsteps=$nsteps >> ./$dirname/calculation.dat
 #echo spacing: spacingX=$spacingX spacingY=$spacingY spacingZ=$spacingZ  >> ./$dirname/calculation.dat
+echo magnetic field: Bx=$Bx By=$By Bz=$Bz  >> ./$dirname/calculation.dat
 echo spacing: spacingX=$spacingX spacingY=$spacingY  >> ./$dirname/calculation.dat
-echo magnetic field: MFx=$MFx MFy=$MFy MFz=$MFz  >> ./$dirname/calculation.dat
 echo rotation angles: rotX=$rotX rotY=$rotY rotZ=$rotZ >> ./$dirname/calculation.dat
 
 ################################################################################
@@ -51,7 +49,7 @@ echo "Integration plane coordinates"
 printf "in = $start  out = $out  up = $up  down = $down \n"
 printf "Split into $nsteps slices with width $delta and grid spacing [$spacingX; $spacingY] \n"
 printf "Fixed coordinate: ( $Fx; $Fy; $Fz )\n"
-printf "Magnetic field direction: ( $MFx; $MFy; $MFz ) \n"
+printf "Magnetic field direction: ( $Bx; $By; $Bz ) \n"
 printf "Rotation angles: ( $rotX; $rotY; $rotZ ) \n\n"
 
 printf "\n*****************************************************************************\n\n"
@@ -104,12 +102,12 @@ valueDimInp distance $distance "bohr"
 bond=$atom1","$atom2
 BOND=$(centroid $atom1 $atom2)
 
-Bx=$( echo $BOND | awk '{print $1} ' )
-By=$( echo $BOND | awk '{print $2} ' )
-Bz=$( echo $BOND | awk '{print $3} ' )
+bx=$( echo $BOND | awk '{print $1} ' )
+by=$( echo $BOND | awk '{print $2} ' )
+bz=$( echo $BOND | awk '{print $3} ' )
 
 #echo "Bond centre coordinates:"
-#printf "("$Bx";"$By";"$Bz")\n"
+#printf "("$bx";"$by";"$bz")\n"
 #echo
 
 printf "\n\nSTARTING POINT OF THE INTEGRATION\n"
@@ -162,13 +160,13 @@ fi
 printf "\nMAGNETIC FIELD DIRECTION\n\n"
 
 # default along the Z axis
-MFx=0.0
-MFy=0.0
-MFz=-1.0
+Bx=0.0
+By=0.0
+Bz=-1.0
 enableMF_X=n # do not use MF=X unless asked for
 
-echo "Do you accept the default MF orientation along the Z axis (0, 0, -1)?"
-echo "Press [a] to calculate the direction automatically, [m] to enter manually or [X] for the MF=X option."
+echo "Do you accept the default B orientation along the Z axis (0, 0, -1)?"
+echo "Press [a] to calculate the direction automatically, [m] to enter manually or [X] for the B=X option."
 
 read accept;
 checkMaxProj="installed"
@@ -183,19 +181,19 @@ then
 	then
 	    echo "The program for orienting with respect a plane is not found. Switching to manual input of the magnetic field components."
 	else
-	    echo "Enter the indices of the atoms defining a plane perpendicular to the MF"
+	    echo "Enter the indices of the atoms defining a plane perpendicular to the magnetic field."
 	    echo "Due to a known bug, the last atom in the coord file may not be used."
 	    read MFatoms
 	    echo $MFatoms > ./$dirname/MF_idx.dat
 	    echo
 	    MFcoords=$( /homeappl/home/mariavd/scripts/normalise_plane coord.xyz ./$dirname/MF_idx.dat 2>&1 > /dev/null | awk '{ if (NR ==2) {print $2, $3, $4} }')
 	    echo "MFcoords: " $MFcoords
-	    MFx=$(echo $MFcoords | awk '{print $1}')
-	    MFy=$(echo $MFcoords | awk '{print $2}')
-	    MFz=$(echo $MFcoords | awk '{print $3}')
-	    checkIfEmpty MFx $MFx
-	    checkIfEmpty MFy $MFy
-	    checkIfEmpty MFz $MFz
+	    Bx=$(echo $MFcoords | awk '{print $1}')
+	    By=$(echo $MFcoords | awk '{print $2}')
+	    Bz=$(echo $MFcoords | awk '{print $3}')
+	    checkIfEmpty Bx $Bx
+	    checkIfEmpty By $By
+	    checkIfEmpty Bz $Bz
 	fi
     fi
     # LUKAS'S MAX PROJECTION
@@ -205,20 +203,20 @@ then
     #	echo "The program maximise_projection is not found. Switching to manual input of the magnetic field components."
     #    else
     #	maximise_projection coord.xyz > $dirname/field.dat
-    #	MFx=$( cat $dirname/field.dat | sed -e 's#{#_#g; s#}#_#g; s#,#_#g' | awk -F [_] '{ {print -$2} }')
-    #	MFy=$( cat $dirname/field.dat | sed -e 's#{#_#g; s#}#_#g; s#,#_#g' | awk -F [_] '{ {print -$3} }')
-    #	MFz=$( cat $dirname/field.dat | sed -e 's#{#_#g; s#}#_#g; s#,#_#g' | awk -F [_] '{ {print -$4} }')
+    #	Bx=$( cat $dirname/field.dat | sed -e 's#{#_#g; s#}#_#g; s#,#_#g' | awk -F [_] '{ {print -$2} }')
+    #	By=$( cat $dirname/field.dat | sed -e 's#{#_#g; s#}#_#g; s#,#_#g' | awk -F [_] '{ {print -$3} }')
+    #	Bz=$( cat $dirname/field.dat | sed -e 's#{#_#g; s#}#_#g; s#,#_#g' | awk -F [_] '{ {print -$4} }')
     #    fi
     #fi
     #if [ $accept == "m" ] || [ -z $checkMaxProj ]
     if  [ $accept == "m" ] || [ -z $checkPlaneDir ]
     then
 	echo "Please enter numeric values."
-	valueDimInp MFx $MFx "bohr"
-	valueDimInp MFy $MFy "bohr"
-	valueDimInp MFz $MFz "bohr"
+	valueDimInp Bx $Bx "bohr"
+	valueDimInp By $By "bohr"
+	valueDimInp Bz $Bz "bohr"
     fi
-    echo "Magnetic field vector coordinates: ($MFx; $MFy; $MFz)"
+    echo "Magnetic field vector coordinates: ($Bx; $By; $Bz)"
     echo
 fi
 
@@ -226,13 +224,12 @@ if [ ! -z $accept ] && [ $accept == "X" ]
 then
     enableMF_X="y"
     sed -i '/s/magnet=/#magnet=/' ./$dirname/gimic.Inp
-    sed -i '/s/#magnet_axis=/magnet_axis=/' ./$dirname/gimic.Inp
+    sed -i '/s/#magnet_axis=/magnet_axis=X/' ./$dirname/gimic.Inp
 fi
-
 
 printf "\nFIXED COORDINATE\n"
 
-# Calculating the fixed point depends on the MF direction. If X is selected, then there is no MF defined.
+# Calculating the fixed point depends on the B direction. If X is selected, then there is no B defined.
 if [ ! -z $enableMF_X ] && [ $enableMF_X == "n" ]
 then
 
@@ -244,13 +241,13 @@ then
     #Fz=$( awk -v A1z=$A1z -v A2z=$A2z 'BEGIN{ print (A1z+A2z)*0.5 }')
     #Fz=$( awk -v A1z=$A1z -v A2z=$A2z 'BEGIN{ print A2z }')
 
-    # use the coords of atom 1 and the MF vector
+    # use the coords of atom 1 and the B vector
     # vector OA and OF defined with the coords of atom1 and the fixed point
-    # vector AB.MF = 0
-    #Fz=$( awk -v A1x=$A1x -v A2x=$A2x -v A1y=$A1y -v A2y=$A2y -v A1z=$A1z -v A2z=$A2z -v mx=$MFx -v my=$MFy -v mz=$MFz 'BEGIN{ print( ( (mx*(A2x-A1x) + my*(A2y-A1y) + mz*(A2z-A1z) ))) }')
+    # vector AB.B = 0
+    #Fz=$( awk -v A1x=$A1x -v A2x=$A2x -v A1y=$A1y -v A2y=$A2y -v A1z=$A1z -v A2z=$A2z -v bx=$Bx -v by=$By -v mz=$Bz 'BEGIN{ print( ( (bx*(A2x-A1x) + by*(A2y-A1y) + mz*(A2z-A1z) ))) }')
     # previous HEAD
-    #Fz=$( awk -v Ax=$A2x -v Fx=$Fx -v Ay=$A2y -v Fy=$Fy -v Az=$A2z -v mx=$MFx -v my=$MFy -v mz=$MFz 'BEGIN{ print( ( (mx*(Fx-Ax) + my*(Fy-Ay)) / mz) + Az )}')
-    #Fz=$( awk -v Ax=$A2x -v Fx=$Fx -v Ay=$A2y -v Fy=$Fy -v Az=$A2z -v mx=$MFx -v my=$MFy -v mz=$MFz 'BEGIN{ print( ( (mx*(Fx-Ax) + my*(Fy-Ay)) / mz) + Az )}')
+    #Fz=$( awk -v Ax=$A2x -v Fx=$Fx -v Ay=$A2y -v Fy=$Fy -v Az=$A2z -v bx=$Bx -v by=$By -v mz=$Bz 'BEGIN{ print( ( (bx*(Fx-Ax) + by*(Fy-Ay)) / mz) + Az )}')
+    #Fz=$( awk -v Ax=$A2x -v Fx=$Fx -v Ay=$A2y -v Fy=$Fy -v Az=$A2z -v bx=$Bx -v by=$By -v mz=$Bz 'BEGIN{ print( ( (bx*(Fx-Ax) + by*(Fy-Ay)) / mz) + Az )}')
     #
     # eq of a plane: a*(x-x0) + b*(y-y0) + c*(z-z0) = 0
     #	<=>	ax + by + cz - (a*x0 + b*y0 + c*z0) = 0
@@ -258,20 +255,33 @@ then
     # where the normal to the plane n(a,b,c) = A1 - B (vectors)
     # and P(x0,y0,z0) = A2
     # Fx and Fy are any two points and Fz is what fixes the "fixed point" onto the plane
-    #Fz=$( awk -v A1x=$A1x -v A2x=$A2x -v Fx=$Fx -v A1y=$A1y -v A2y=$A2y -v Fy=$Fy -v A1z=$A1z -v A2z=$A2z -v mx=$MFx -v my=$MFy -v mz=$MFz 'BEGIN{ Bx = mx + A1x; By = my + A1y; Bz = mz + A1z;  a = A1x - Bx; b = A1y - By; c = A1z - Bz; D = a*A2x + b*A2y + c*A2z; Fz = D/(a*Fx + b*Fy ); print Fz }')
+    #Fz=$( awk -v A1x=$A1x -v A2x=$A2x -v Fx=$Fx -v A1y=$A1y -v A2y=$A2y -v Fy=$Fy -v A1z=$A1z -v A2z=$A2z -v bx=$Bx -v by=$By -v mz=$Bz 'BEGIN{ Bx = bx + A1x; By = by + A1y; Bz = mz + A1z;  a = A1x - Bx; b = A1y - By; c = A1z - Bz; D = a*A2x + b*A2y + c*A2z; Fz = D/(a*Fx + b*Fy ); print Fz }')
     #
     # Plane defined by A1, A2 and B
     # Vectors u = A1B and v = A1A2
     # Use: n = u x v
     # The fixed point is the normal 
-    #Fcoords=$( awk -v A1x=$A1x -v A2x=$A2x -v A1y=$A1y -v A2y=$A2y -v A1z=$A1z -v A2z=$A2z -v mx=$MFx -v my=$MFy -v mz=$MFz -v my=$MFy -v mz=$MFz 'BEGIN{ Bx = A1x + mx; By = A1y + my; Bz = A1z + mz; ux = Bx - A1x; uy = By - A1y; uz = Bz - A1z; vx = A2x - A1x; vy = A2y - A1y; vz = A2z - A1z; nx = uy*vz - uz*vy; ny = uz*vx - ux*vz; nz = ux*vy - uy*vx; print nx + A2x, ny + A2y, nz + A2z }' )
+    #Fcoords=$( awk -v A1x=$A1x -v A2x=$A2x -v A1y=$A1y -v A2y=$A2y -v A1z=$A1z -v A2z=$A2z -v bx=$Bx -v by=$By -v mz=$Bz -v by=$By -v mz=$Bz 'BEGIN{ Bx = A1x + bx; By = A1y + by; Bz = A1z + mz; ux = Bx - A1x; uy = By - A1y; uz = Bz - A1z; vx = A2x - A1x; vy = A2y - A1y; vz = A2z - A1z; nx = uy*vz - uz*vy; ny = uz*vx - ux*vz; nz = ux*vy - uy*vx; print nx + A2x, ny + A2y, nz + A2z }' )
     #Fx=$(echo $Fcoords | awk '{print $1}')
     #Fy=$(echo $Fcoords | awk '{print $2}')
     #Fz=$(echo $Fcoords | awk '{print $3}')
 
-    Fx=$( awk -v A1x=$A1x -v A2x=$A2x -v A1y=$A1y -v A2y=$A2y -v A1z=$A1z -v A2z=$A2z -v mx=$MFx -v my=$MFy -v mz=$MFz 'BEGIN{ Fx = (my*(A2z-A1z) - mz*(A2y-A1y)); print Fx  }' )
-    Fy=$( awk -v A1x=$A1x -v A2x=$A2x -v A1y=$A1y -v A2y=$A2y -v A1z=$A1z -v A2z=$A2z -v mx=$MFx -v my=$MFy -v mz=$MFz 'BEGIN{ Fy = (mz*(A2x-A1x) - mx*(A2z-A1z)); print Fy  }' )
-    Fz=$( awk -v A1x=$A1x -v A2x=$A2x -v A1y=$A1y -v A2y=$A2y -v A1z=$A1z -v A2z=$A2z -v mx=$MFx -v my=$MFy -v mz=$MFz 'BEGIN{ Fz = (mx*(A2y-A1y) - my*(A2x-A1x)); print Fz  }' )
+    # cross product of the basis vectors v3 and v1 (we want v1 colinear to B)
+    # beware the sign! v1 ~ -B
+    # v3 = A1 - A2
+    #Fx=$( awk -v A1x=$A1x -v A2x=$A2x -v A1y=$A1y -v A2y=$A2y -v A1z=$A1z -v A2z=$A2z -v bx=$Bx -v by=$By -v mz=$Bz 'BEGIN{ Fx = (by*(A2z-A1z) - mz*(A2y-A1y)); print -(Fx)+A2x  }' )
+    #Fy=$( awk -v A1x=$A1x -v A2x=$A2x -v A1y=$A1y -v A2y=$A2y -v A1z=$A1z -v A2z=$A2z -v bx=$Bx -v by=$By -v mz=$Bz 'BEGIN{ Fy = (mz*(A2x-A1x) - bx*(A2z-A1z)); print -(Fy)+A2y  }' )
+    #Fz=$( awk -v A1x=$A1x -v A2x=$A2x -v A1y=$A1y -v A2y=$A2y -v A1z=$A1z -v A2z=$A2z -v bx=$Bx -v by=$By -v mz=$Bz 'BEGIN{ Fz = (bx*(A2y-A1y) - by*(A2x-A1x)); print -(Fz)+A2z  }' )
+
+    ## cross product but set Fz as the average of the z coords of A1 and A2 
+    #Fx=$( awk -v A1x=$A1x -v A2x=$A2x -v A1y=$A1y -v A2y=$A2y -v A1z=$A1z -v A2z=$A2z -v bx=$Bx -v by=$By -v mz=$Bz 'BEGIN{ Fx = (by*(A2z-A1z) - mz*(A2y-A1y)); print -(Fx)+A1x  }' )
+    #Fy=$( awk -v A1x=$A1x -v A2x=$A2x -v A1y=$A1y -v A2y=$A2y -v A1z=$A1z -v A2z=$A2z -v bx=$Bx -v by=$By -v mz=$Bz 'BEGIN{ Fy = (mz*(A2x-A1x) - bx*(A2z-A1z)); print -(Fy)+A1y  }' )
+    #Fz=$( awk -v A1x=$A1x -v A2x=$A2x -v A1y=$A1y -v A2y=$A2y -v A1z=$A1z -v A2z=$A2z -v bx=$Bx -v by=$By -v mz=$Bz 'BEGIN{ av_z = 0.5*(A1z+A2z); Fz = (bx*(A2y-A1y) - by*(A2x-A1x)); print -(Fz)+av_z }' )
+
+    # use average z coords for A1 and A2 for the calculation of the cross product
+    Fx=$( awk -v A1x=$A1x -v A2x=$A2x -v A1y=$A1y -v A2y=$A2y -v A1z=$A1z -v A2z=$A2z -v bx=$Bx -v by=$By -v mz=$Bz 'BEGIN{ Az = 0.5*(A1z+A2z); A1z = Az; A2z = Az; Fx = (by*(A2z-A1z) - mz*(A2y-A1y)); print -(Fx) + Ax }' )
+    Fy=$( awk -v A1x=$A1x -v A2x=$A2x -v A1y=$A1y -v A2y=$A2y -v A1z=$A1z -v A2z=$A2z -v bx=$Bx -v by=$By -v mz=$Bz 'BEGIN{ Az = 0.5*(A1z+A2z); A1z = Az; A2z = Az; Fy = (mz*(A2x-A1x) - bx*(A2z-A1z)); print -(Fy) + Ay }' )
+    Fz=$( awk -v A1x=$A1x -v A2x=$A2x -v A1y=$A1y -v A2y=$A2y -v A1z=$A1z -v A2z=$A2z -v bx=$Bx -v by=$By -v mz=$Bz 'BEGIN{ Az = 0.5*(A1z+A2z); A1z = Az; A2z = Az; Fz = (bx*(A2y-A1y) - by*(A2x-A1x)); print -(Fz) + Az }' )
 
     echo
     echo "Fixed coordinate: ($Fx; $Fy; $Fz)"
@@ -376,7 +386,7 @@ do
     if [ ! -z $doDryRun ] &&  [ $doDryRun == "1" ]
     then
 	dryRun 'gimic.0.inp'
-	echo dryrun done >> calculation.dat
+	echo dryrun done >> $dirname/calculation.dat
     fi
 
     # sanity check for the integration plane

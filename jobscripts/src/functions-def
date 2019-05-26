@@ -106,7 +106,7 @@ function userInp()
      Cz=$( echo $CENTROID | awk '{print $3} ' )
      #echo "Centroid:"; printf "("$Cx"; "$Cy"; "$Cz")\n"
 
-     __varValue=$( awk -v Cx=$Cx -v Cy=$Cy -v Cz=$Cz -v Bx=$Bx -v By=$By -v Bz=$Bz BEGIN'{dist=sqrt( (Bx-Cx)*(Bx-Cx) + (By-Cy)*(By-Cy) + (Bz-Cz)*(Bz-Cz) ); print dist}' )
+     __varValue=$( awk -v Cx=$Cx -v Cy=$Cy -v Cz=$Cz -v bx=$bx -v by=$by -v bz=$bz BEGIN'{dist=sqrt( (bx-Cx)*(bx-Cx) + (by-Cy)*(by-Cy) + (bz-Cz)*(bz-Cz) ); print dist}' )
      
      printf  "\nDo you accept $__resultVar = $__varValue bohr?\nPress [n] to change\n"
      read accept;
@@ -190,7 +190,7 @@ function checkIfPreviousCalculationExists() {
     then
 	echo "Directory $dirname already exists"
 	#        printf "\nDirectory already exists.\nCalculation parameters:\n"
-	#        grep "bond=\|in=\|out=\|up=\|down=\|MF=" $dirname/gimic.inp
+	#        grep "bond=\|in=\|out=\|up=\|down=\|B=" $dirname/gimic.inp
 	echo "Enter [y] to overwrite or any other key to exit."; read accept
 	if [ -z $accept ] || [ ! $accept == "y" ]  # if the variable is empty or different from "y", exit 
 	then 
@@ -276,8 +276,6 @@ compareSmaller() {
 
 function planeSanityCheck() {
 # sanity check for the integration plane
-
-    echo starting sanity check
     dirname="$@"
 
     printf "\nPreparing the plane...\n"
@@ -293,16 +291,31 @@ function planeSanityCheck() {
 
     # take the coords of the end of the int plane
     grep X ./$dirname/grid.xyz  | awk '{ if (NR <=2) {print $0} }' >> ./$dirname/grid.check.xyz
-    # copy the MF direction "Be" atom
+    # copy the B direction "Be" atom
     #grep Be ./$dirname/grid.xyz  >> ./$dirname/grid.check.xyz
-    readParameter MFx $dirname
-    readParameter MFy $dirname
-    readParameter MFz $dirname
-    printf "Be\t$MFx\t$MFy\t$MFz\n"  >> ./$dirname/grid.check.xyz
+    readParameter Bx $dirname
+    readParameter By $dirname
+    readParameter Bz $dirname
+
+    readParameter Fx $dirname
+    readParameter Fy $dirname
+    readParameter Fz $dirname
+
+    checkIfEmpty Bx $Bx
+    checkIfEmpty By $By
+    checkIfEmpty Bz $Bz
+    printf "Be\t$Bx\t$By\t$Bz\n"  >> ./$dirname/grid.check.xyz
+
     # for debugging the fixed coord:
-    # fixedCrd=$(awk -v x=$Fx -v y=$Fy -v z=$Fz 'BEGIN{bohr=0.5291772490; printf("U\t%f%f%f\n", bohr*x, bohr*y, bohr*z); }')
+
+    #fixedCrd=$(awk -v x="$Fx" -v y="$Fy" -v z="$Fz" 'BEGIN{bohr=0.5291772490; printf("U \t %.4f \t %.4f \t %.4f \n", bohr*x, bohr*y, bohr*z); }')
     #echo "fixed coord U: " $fixedCrd
     #echo $fixedCrd  >> ./$dirname/grid.check.xyz
+    #nAtoms=$(head -n 1 ./#$dirname/grid.xyz)
+    #sedstring=$(echo "1s/$nAtoms/$(($nAtoms+1))/")
+    #echo sedstring:
+    #echo $sedstring
+    #sed -i -e "$sedstring" ./$dirname/grid.check.xyz
 
     echo
     echo "The file grid.check.xyz created."
@@ -340,7 +353,7 @@ then
     # take the coords of the end of the int plane
     grep X ./$dirname/grid.xyz  | awk '{ if (NR ==1) {print $0} }' >> ./$dirname/grid.check.xyz
     grep X ./$dirname/grid.xyz  | awk '{ if (NR ==4) {print $0} }' >> ./$dirname/grid.check.xyz
-    # copy the MF direction "Be" atom
+    # copy the B direction "Be" atom
     grep Be ./$dirname/grid.xyz  >> ./$dirname/grid.check.xyz
 
     echo
@@ -382,7 +395,7 @@ then
     grep X ./$dirname/gimic.$idxH/grid.xyz  | awk '{ if (NR ==4) {print $0} }' >> ./$dirname/grid.check.xyz
 
 
-    # copy the MF direction "Be" atom
+    # copy the B direction "Be" atom
     grep Be ./$dirname/grid.xyz  >> ./$dirname/grid.check.xyz
 
     echo
@@ -424,7 +437,7 @@ then
     grep X ./$dirname/gimic.$idxH/grid.xyz  | awk '{ if (NR ==4) {print $0} }' >> ./$dirname/grid.check.xyz
 
 
-    # copy the MF direction "Be" atom
+    # copy the B direction "Be" atom
     grep Be ./$dirname/grid.xyz  >> ./$dirname/grid.check.xyz
 
     echo

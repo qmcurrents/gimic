@@ -8,7 +8,7 @@ debug=1           # debug print level
 openshell=false 
 #show_axis=true   # mark "up" axis in .xyz files
 #magnet_axis=X  # @MF@ #[-] i,j,k || x,y,z -> align magnet along axis
-magnet=[ @MFx@, @MFy@, @MFz@ ]   # magnet vector
+magnet=[ @Bx@, @By@, @Bz@ ]   # magnet vector
 #scale_vectors=1.0
 
 Grid(bond) {                    # define grid orthogonal to a bond 
@@ -42,5 +42,5 @@ Advanced {
 }
 
 Essential {
-#jmod=off
+    jmod=off
 }
