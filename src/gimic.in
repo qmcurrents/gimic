@@ -43,19 +43,13 @@ def parse_cmdline():
     parser.add_argument('-b','--backend',
             action='store',
             dest='backend',
-            choices=('pygimic','fgimic', 'london', 'gimlet'),
+            choices=('pygimic','fgimic','gimlet'),
             default='fgimic',
             help='backend library [default: %(default)s]')
     parser.add_argument('-d','--debug', action='store', type=int, dest='debug',
             help='debug level')
     parser.add_argument('-o','--output', action='store', dest='outfile',
             help='base name for output file(s)')
-    parser.add_argument('-D','--debug-file', action='store', dest='debug_file',
-            help='debug file name')
-    parser.add_argument('-v','--verbose', action='store_true', dest='verbose',
-           help='be verbose')
-    parser.add_argument('-q','--quiet', action='store_false', dest='verbose',
-           help='be quiet')
     parser.add_argument('-y','--dryrun', action='store_true', dest='dryrun',
            help='dryrun without actually calculating anything')
 
@@ -66,7 +60,6 @@ def parse_keywords(args):
     top=getkw.Section('top', callback=check_top)
     top.set_status(True)
     top.add_kw('title', 'STR', ('',))
-    top.add_kw('debug_file', 'STR', ('DEBUG.out',))
     top.add_kw('debug', 'INT', (0,))
     top.add_kw('calc', 'STR', None)
     top.add_kw('backend', 'STR', 'gimic')
@@ -91,7 +84,8 @@ def parse_keywords(args):
 
     ess=getkw.Section('Essential')
     ess.add_kw('acid', 'BOOL', (False,))
-#   ess.add_kw('jav', 'BOOL', (False,))
+    ess.add_kw('jmod', 'BOOL', (False,))
+    ess.add_kw('prop', 'BOOL', (False,))
 
     grid=getkw.Section('Grid', callback=check_grid)
     grid.set_arg('STR', ('std',))
@@ -108,6 +102,7 @@ def parse_keywords(args):
     grid.add_kw("fixcoord", 'DBL_ARRAY', 3)
     grid.add_kw("distance", 'DBL', 1)
     grid.add_kw("rotation", 'DBL_ARRAY', (0.0,0.0,0.0))
+    grid.add_kw("rotation_origin", 'DBL_ARRAY', (0.0,0.0,0.0))
     grid.add_kw("spacing", 'DBL_ARRAY', 3)
     grid.add_kw("height", 'DBL_ARRAY', 2)
     grid.add_kw("width", 'DBL_ARRAY', 2)
@@ -115,6 +110,7 @@ def parse_keywords(args):
     grid.add_kw("gridplot", 'INT', 1)
     grid.add_kw("grid_points", 'INT_ARRAY', 3)
     grid.add_kw("gauss_order", 'INT', (7,))
+
     gimlet=getkw.Section('Gimlet')
     gimlet.add_kw('teletype', 'BOOL', True)
     gimlet.add_kw('printlevel', 'INT', 3)
@@ -144,8 +140,6 @@ def parse_keywords(args):
         inkw.setkw('dryrun', args.dryrun)
     if args.outfile:
         inkw.setkw('outfile', args.outfile)
-    if args.debug_file:
-        inkw.setkw('debug_file', args.debugf)
     if args.backend:
         inkw.setkw('backend', args.backend)
 
@@ -195,7 +189,7 @@ def check_grid(grid):
     elif arg == 'file':
         required=('file',)
         ignore=('ivec', 'jvec', 'bond', 'fixpoint',
-                'origin', 'rotation',
+                'origin', 'rotation', 'rotation_origin',
                 'radius', 'lengths','distance', 'spacing')
         for i in required:
             if not check_opt(grid,i):
@@ -206,10 +200,8 @@ def check_grid(grid):
                 print(warn % (i,arg))
         return
     elif arg == 'bond':
-#        required=('in', 'out', 'up', 'down', 'distance')
         required=('distance',)
         ignore=('file','ivec', 'jvec', 'lengths')
-        inoutupdown=0
         wdthgt=0
         for i in required:
             if not check_opt(grid,i):
@@ -226,16 +218,8 @@ def check_grid(grid):
             wdthgt=wdthgt+1
         if check_opt(grid,'height'):
             wdthgt=wdthgt+1
-        if (wdthgt != 0 and wdthgt != 2):
-            print("Error: incomplete specification for width and height")
-            sys.exit(1)
-
-        if (wdthgt != 0 and inoutupdown != 0):
-            print("Error: both width/height and in/out/up/down specified")
-            sys.exit(1)
-
-        if (wdthgt == 0 and inoutupdown == 0):
-            print("Error: either width/height or in/out/up/down must be specified")
+        if (wdthgt != 2):
+            print("Error: missing or incomplete specification for width and height")
             sys.exit(1)
 
         if check_opt(grid,'bond'):

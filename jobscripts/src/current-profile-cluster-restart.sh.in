@@ -1,0 +1,42 @@
+#!/bin/bash
+
+# Function definitions:
+source  @SCRIPTS_DIR@/src/functions-def
+
+
+echo "Restart and continue the current profile calculation"
+
+wrkdir=$(pwd)
+checkIfEmpty wrkdir $wrkdir
+dirname=$( echo ${wrkdir##*/} ) # removes everything before the backslash
+checkIfEmpty dirname $dirname
+
+echo "Working directory:"; echo $wrkdir; echo
+
+#echo "Running Gimic calculations..."
+
+filenum=$( (cd $wrkdir && find . -maxdepth 1 -type f -name '*.inp' | wc -l ))
+checkIfEmpty filenum $filenum
+
+parallel=16
+echo "How many parallel tasks to execute?"
+read parallel
+checkIfEmpty parallel $parallel
+
+nsteps=$( sed -n -e 's/^.*nsteps=//p' $wrkdir/calculation.dat | awk '{print $1}')
+checkIfEmpty nsteps $nsteps
+
+# check if too many parallel tasks are called
+if [ $parallel -gt $nsteps ]
+then
+    $parallel=$($nsteps)
+fi
+
+# job duration:
+echo "Enter the time limit for the execution of the batch job in hours"
+read duration
+checkIfEmpty duration $duration
+
+sbatch --ntasks="$parallel" --job-name="$dirname" --time="$duration":00:00 @SCRIPTS_DIR@/jobscript "$wrkdir" "$parallel" 
+echo
+

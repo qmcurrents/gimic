@@ -1,0 +1,9 @@
+
+This is a collection of old bash and gnuplot scripts for
+doing an integration scan and for visualizing the results. 
+
+Albeit being replaced by more fancy jobscripts they might 
+still be helpful for some user to write either their own 
+scripts or to understand the idea behind the currently 
+used more advanced jobscripts.
+

@@ -12,22 +12,50 @@ matrix:
       addons: &gcc49
         apt:
           sources: ['ubuntu-toolchain-r-test']
-          packages: ['g++', 'gcc', 'gfortran']
+          packages: ['g++', 'gcc', 'gfortran', 'valgrind']
       env:
         - CXX='g++'
         - CC='gcc'
         - FC='gfortran'
         - TRAVIS_TEST=1  # this is a workaround to trigger include in src/CMakeLists.txt
+        - CTEST_OUTPUT_ON_FAILURE=1
+        - DEBUG_BUILD=0
+    - os: linux
+      compiler: gcc
+      python: 2.7
+      addons: &gcc49
+        apt:
+          sources: ['ubuntu-toolchain-r-test']
+          packages: ['g++', 'gcc', 'gfortran', 'valgrind']
+      env:
+        - CXX='g++'
+        - CC='gcc'
+        - FC='gfortran'
+        - TRAVIS_TEST=1  # this is a workaround to trigger include in src/CMakeLists.txt
+        - CTEST_OUTPUT_ON_FAILURE=1
+        - DEBUG_BUILD=1
+
 
 install:
   - pip install -r requirements.txt
 
 script:
-  - ./setup
-  - cd build
-  - make -j2
-  - make install
-  - ctest -j2
+  - if [ "$DEBUG_BUILD" = 0 ]; 
+    then 
+       ./setup  &&
+       cd build &&
+       make -j2 &&
+       make install &&
+       ctest -j2 -E valgrind; 
+    fi
+  - if [ "$DEBUG_BUILD" = 1 ];
+    then 
+       ./setup --cmake-options="-DENABLE_VALGRIND_TESTS=ON" --type=debug build-debug &&
+       cd build-debug &&
+       make -j2 &&
+       make install &&
+       ctest -j2 -R valgrind;
+    fi
 
 notifications:
   email: false

@@ -1,7 +1,7 @@
 
  ****************************************************************
  ***                                                          ***
- ***           GIMIC 2.1.4 (aeaf64c)                          ***
+ ***           GIMIC 2.1.4 (2c4e9e3)                          ***
  ***              Written by Jonas Juselius                   ***
  ***                                                          ***
  ***  This software is copyright (c) 2003-2011 by             ***
@@ -13,7 +13,7 @@
  ***  A Pretty Advanced 'Hello World!' Program                ***
  ****************************************************************
 
- Thu Dec  7 12:28:53 2017
+ Wed Jan 10 14:35:22 2018
   TITLE:
 
  INFO: Detected TURBOMOLE input
@@ -55,11 +55,11 @@
  *** Integrating |J|
 
  ************************************************************
- Induced mod current (au)   :     0.414961
-       Positive contribution:     0.659905  (  18.595734 )
-       Negative contribution:    -0.244944  (  -6.902371 )
+ Induced mod current (au)   :     0.617198
+       Positive contribution:     0.814612  (  22.955289 )
+       Negative contribution:    -0.197414  (  -5.563000 )
 
- Induced mod current (nA/T) :    11.693363
+ Induced mod current (nA/T) :    17.392289
        (conversion factor)  :    28.179409
  ************************************************************
 
@@ -67,11 +67,11 @@
  *** Integrating current
 
  ************************************************************
-    Induced current (au)    :     0.414977
-       Positive contribution:     0.659766  (  18.591827 )
-       Negative contribution:    -0.244789  (  -6.898012 )
+    Induced current (au)    :     0.476346
+       Positive contribution:     0.594324  (  16.747688 )
+       Negative contribution:    -0.117977  (  -3.324535 )
 
-    Induced current (nA/T)  :    11.693815
+    Induced current (nA/T)  :    13.423153
        (conversion factor)  :    28.179409
  ************************************************************
 
@@ -80,11 +80,11 @@
  INFO: Deallocated basis set and atom data
 
  ----------------------------------------------------------------------
-    wall time:     3.60sec
-         user:     3.58sec
-          sys:     0.02sec
+    wall time:     3.93sec
+         user:     3.90sec
+          sys:     0.03sec
  ----------------------------------------------------------------------
- Thu Dec  7 12:28:56 2017
+ Wed Jan 10 14:35:26 2018
  Hello World! (tm)
 
  done.

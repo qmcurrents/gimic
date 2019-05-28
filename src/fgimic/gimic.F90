@@ -56,7 +56,7 @@ program gimic
 
 contains
     subroutine initialize()
-        integer(I4) :: i, hostnm, rank, ierr
+        integer(I4) :: i, hostnm, ierr
         integer(I4) :: chdir, system
         character(BUFLEN) :: title, fdate, sys
         real(DP), dimension(3) :: magnet
@@ -74,7 +74,6 @@ contains
         call getkw(input, 'magnet', settings%magnet)
         call getkw(input, 'openshell', settings%is_uhf)
         call getkw(input, 'dryrun', settings%dryrun)
-        ! call getkw(input, 'show_axis', settings%show_axis)
         call getkw(input, 'calc', settings%calc)
         call getkw(input, 'xdens', settings%xdens)
         call getkw(input, 'density', settings%density)
@@ -89,18 +88,18 @@ contains
         call getkw(input, 'Advanced.paramag',settings%use_paramag)
         call getkw(input, 'Advanced.screening', settings%use_screening)
         call getkw(input, 'Advanced.screening_thrs', settings%screen_thrs)
-!        call getkw(input, 'Advanced.lip_order', settings%lip_order)
 
         call getkw(input, 'Essential.acid', settings%acid)
-       ! call getkw(input, 'Essential.jav', settings%jav)
+        call getkw(input, 'Essential.jmod', settings%jmod)
+        call getkw(input, 'Essential.prop', settings%prop)
 
         ierr=hostnm(sys)
         if (mpi_rank == 0) then
-            write(str_g, '(a,i3,a,a)') 'MPI master', rank,' on ', trim(sys)
+            write(str_g, '(a,i3,a,a)') 'MPI master', mpi_rank,' on ', trim(sys)
             call msg_debug(str_g,2)
         else
             call set_teletype_unit(DEVNULL)
-            write(str_g, '(a,i3,a,a)') 'MPI slave', rank,' on ', trim(sys)
+            write(str_g, '(a,i3,a,a)') 'MPI slave', mpi_rank,' on ', trim(sys)
             call msg_debug(str_g,2)
         end if
 
@@ -146,13 +145,15 @@ contains
             call new_basis(mol, settings%basis, -1.d0)
         end if
 
-        if (settings%use_spherical) then
-            call new_c2sop(c2s,mol)
-            call set_c2sop(mol, c2s)
-        end if
+        if (.not. settings%dryrun) then
+            if (settings%use_spherical) then
+                call new_c2sop(c2s,mol)
+                call set_c2sop(mol, c2s)
+            end if
 
-        call new_dens(xdens, mol)
-        call read_dens(xdens, settings%xdens)
+            call new_dens(xdens, mol)
+            call read_dens(xdens, settings%xdens)
+        end if
 
         call new_grid(grid, input, mol)
         if (mpi_rank == 0) then
@@ -169,7 +170,7 @@ contains
         call nl
 
         if (settings%dryrun) then
-            call msg_note('Dry run, not calculating...')
+            call msg_note('Dry run, not calculating ...')
             call nl
         end if
 
@@ -177,18 +178,16 @@ contains
             call run_cdens(jf,mol,xdens)
         else if (settings%calc(1:8) == 'integral') then
             call run_integral()
-        else if (settings%calc(1:4) == 'divj') then
-            call run_divj()
-        else if (settings%calc(1:5) == 'edens') then
-            call run_edens()
         else
             call msg_error('gimic(): Unknown operation!')
         end if
 
-        if (settings%use_spherical) then
-            call del_c2sop(c2s)
+        if (.not. settings%dryrun) then
+            if (settings%use_spherical) then
+                call del_c2sop(c2s)
+            end if
+            call del_dens(xdens)
         end if
-        call del_dens(xdens)
         call del_grid(grid)
     end subroutine
 
@@ -203,17 +202,17 @@ contains
         if (settings%dryrun) return
 
         call calc_jvectors(jf, mol, xdens)
-        call jvector_plots(jf,mol,'')
+        call jvector_plots(jf,'')
 
         if (settings%is_uhf) then
             call calc_jvectors(jf, mol, xdens, 'alpha')
-            call jvector_plots(jf,mol, 'alpha')
+            call jvector_plots(jf, 'alpha')
 
             call calc_jvectors(jf, mol, xdens, 'beta')
-            call jvector_plots(jf,mol, 'beta')
+            call jvector_plots(jf, 'beta')
 
             call calc_jvectors(jf, mol, xdens, 'spindens')
-            call jvector_plots(jf,mol, 'spindens')
+            call jvector_plots(jf, 'spindens')
         endif
         call del_jfield(jf)
     end subroutine
@@ -228,14 +227,18 @@ contains
 
         if (settings%dryrun) return
 
-        call msg_note('Integrating |J|')
-        call integrate_modulus(it, mol, xdens)
-        if (settings%is_uhf) then
-            call integrate_modulus(it, mol, xdens, 'alpha')
-            call integrate_modulus(it, mol, xdens, 'beta')
-            call integrate_modulus(it, mol, xdens, 'spindens')
+        if (settings%jmod) then
+          call msg_note('Integrating |J|')
+          call integrate_modulus(it, mol, xdens)
+          if (settings%is_uhf) then
+              call integrate_modulus(it, mol, xdens, 'alpha')
+              call integrate_modulus(it, mol, xdens, 'beta')
+              call integrate_modulus(it, mol, xdens, 'spindens')
+          end if
+          call nl
+        else
+          write(*,*) "Jmod integration skipped."
         end if
-        call nl
 
         call msg_note('Integrating current')
         call integrate_current(it, mol, xdens)
@@ -252,50 +255,7 @@ contains
            call nl
         end if
 
-!        call msg_note('Integrating current tensor')
-!        call int_t_direct(it)  ! tensor integral
-!        call write_integral(it)
         call del_integral(it)
-    end subroutine
-
-    subroutine run_divj
-        use divj_field_class
-        type(divj_field_t) :: dj
-        call msg_out('Calculating divergence')
-        call msg_out('*****************************************')
-        call new_divj_field(dj, grid, magnet)
-        if (settings%dryrun) return
-        call divj_field(dj)
-        if (mpi_rank == 0) then
-            call divj_plot(dj, 'divj')
-        end if
-        call del_divj_field(dj)
-    end subroutine
-
-    subroutine run_edens
-        use edens_field_class
-        type(edens_field_t) :: ed
-        type(dens_t) :: modens
-        call msg_out('Calculating charge density')
-        call msg_out('*****************************************')
-        ! do some allocation stuff !
-        call new_dens(modens, mol, .true.)
-        ! read all information in !
-        ! print *, "morange default", settings%morange
-        ! this is 0 0
-        print *, 'DEBUG'
-        print *, 'morange', settings%morange
-        !                             edens             mos   0,0
-        call read_modens(modens, settings%density, settings%mofile, &
-            settings%morange)
-        call new_edens_field(ed, mol, modens, grid, 'edens.bin')
-        if (settings%dryrun) return
-        call edens_field(ed)
-        if (mpi_rank == 0) then
-            call edens_plot(ed, "edens")
-        end if
-        call del_edens_field(ed)
-        call del_dens(modens)
     end subroutine
 
     subroutine program_header
@@ -318,7 +278,7 @@ call nl
 call msg_out('****************************************************************')
 call msg_out('***                                                          ***')
 call msg_out('***           GIMIC '// PROJECT_VERSION // &
-                       ' (' // GIT_REVISION // ')                          ***')
+                       ' (' // GIT_HASH // ')                              ***')
 call msg_out('***              Written by Jonas Juselius                   ***')
 call msg_out('***                                                          ***')
 call msg_out('***  This software is copyright (c) 2003-2011 by             ***')
@@ -335,7 +295,7 @@ call nl
     subroutine program_footer
         real(DP) :: rnd
         character(*), dimension(5), parameter :: raboof=(/ &
-            'GIMIC - Grossly Irrelevant Magnetically Incuced Currents', &
+            'GIMIC - Grossly Irrelevant Magnetically Induced Currents', &
             'GIMIC - Gone Interrailing, My Inspiration Croaked       ', &
             'GIMIC - Galenskap I Miniatyr, Ingen Censur              ', &
             'GIMIC - Gone Insane, My Indifferent Cosmos              ', &

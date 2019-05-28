@@ -13,12 +13,6 @@ cdef class GimicConnector:
     cpdef jtensor(self, r):
         raise NotAvailable('jtensor()')
 
-    cpdef divj(self, r):
-        raise NotAvailable('divj()')
-
-    cpdef rho(self, r):
-        raise NotAvailable('rho()')
-
     cpdef set_property(self, prop, val):
         pass
 

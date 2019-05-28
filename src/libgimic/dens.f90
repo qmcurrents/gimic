@@ -59,7 +59,7 @@ contains
 
         integer(I4) :: b, mo, ispin, s
         type(reorder_t) :: bofh
-        real(DP), dimension(:,:), allocatable :: kusse
+        real(DP), dimension(:,:), allocatable :: array
 
         if ( .not.associated(this%da) ) then
             call msg_error('read_dens(): dens not allocated!')
@@ -74,22 +74,22 @@ contains
 
         dens=>this%da
         s=size(this%da(:,1,1))
-        allocate(kusse(s,s))
+        allocate(array(s,s))
 
         do ispin=1,this%spin
             if (ispin == 2) dens=>this%db
             if (this%pdens_p) then
                 do b=0,3
-                    read(XDFD,*) kusse
-                    dens(:,:,b)=kusse
+                    call read_array(XDFD,s*s,array)
+                    dens(:,:,b)=array
                 end do
             else
-                read(XDFD,*) kusse
-                dens(:,:,0)=kusse
+                call read_array(XDFD,s*s,array)
+                dens(:,:,0)=array
             end if
         end do
 
-        deallocate(kusse)
+        deallocate(array)
 
         if (settings%is_uhf) then
             call  msg_info('scaling perturbed densities by 0.d5')
@@ -124,6 +124,14 @@ contains
                 dens(:,:,b)=1.d0
             end do
         end do
+    end subroutine
+
+    subroutine read_array(iunit,n,array)
+      integer iunit, n, i
+      double precision array(n)
+      do i = 1, n
+        read (iunit,*) array(i)
+      enddo
     end subroutine
 
     subroutine del_dens(this)

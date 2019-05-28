@@ -71,10 +71,10 @@ contains
         endif
         if (present(db)) then
             call mkdbop(this, r)
-            call dfdb(this, r, bf, db)
+            call dfdb(this, bf, db)
         endif
         if (present(d2)) then
-            call d2fdrdb(this, r,  bf, dr, d2)
+            call d2fdrdb(this, bf, dr, d2)
         endif
     end subroutine
 
@@ -188,9 +188,8 @@ contains
         end do
     end subroutine
 
-    subroutine d2fdrdb(this, r,  bfvec, drvec, thisv)
+    subroutine d2fdrdb(this, bfvec, drvec, thisv)
         type(bfeval_t) :: this
-        real(DP), dimension(:), intent(in) :: r
         real(DP), dimension(:), intent(in) :: bfvec
         real(DP), dimension(:,:), intent(in) :: drvec
         real(DP), dimension(:,:), pointer :: thisv
@@ -269,9 +268,8 @@ contains
         end do
     end subroutine
 
-    subroutine dfdb(this, r, bfvec, dbv)
+    subroutine dfdb(this, bfvec, dbv)
         type(bfeval_t) :: this
-        real(DP), dimension(:), intent(in) :: r
         real(DP), dimension(:), intent(in) :: bfvec
         real(DP), dimension(:,:), pointer :: dbv
 

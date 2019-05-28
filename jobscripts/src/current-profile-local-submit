@@ -1,0 +1,90 @@
+
+# Submit the calculation
+
+wrkdir=$(pwd)
+wrkdir=$(echo $wrkdir/$dirname)
+echo "Working directory:"; echo $wrkdir; echo
+checkIfEmpty wrkdir $wrkdir
+
+echo "Running Gimic calculations..."
+
+filenum=$(cd $wrkdir && find . -maxdepth 1 -type f -name '*.inp' | wc -l)
+checkIfEmpty filenum $filenum
+
+nsteps=$( sed -n -e 's/^.*nsteps=//p' $wrkdir/calculation.dat | awk '{print $1}')
+
+parallel=4
+echo "Enter the number of parallel jobs"
+read parallel
+checkIfEmpty parallel $parallel
+valueDimInp parallel $parallel "tasks"
+
+
+# check if too many parallel tasks are called
+if [ $parallel -gt $nsteps ]
+then
+    $parallel=$($nsteps)
+fi
+
+# clean up possible previous calculations
+rm -rf *dat *eps GIMIC.*
+
+date
+echo "Running $parallel out of $filenum GIMIC calculations at a time..."; echo 
+
+whole=$( awk -v filenum=$filenum -v parallel=$parallel 'BEGIN{printf "%d\n", filenum/parallel}'  )
+remain=$(awk -v whole=$whole -v filenum=$filenum -v parallel=$parallel 'BEGIN{printf "%d\n", (filenum-whole*parallel) }')
+
+checkIfEmpty whole $whole
+checkIfEmpty remain $remain
+
+completed=0
+
+for ((i=0; i<$whole; i++)) 
+do 
+    for ((j=0; j<$parallel; j++))
+    do  
+        index=$(($i+$j*$whole))
+        grepstring=""
+        if [ -f "$wrkdir/gimic.$index.out" ]
+        then
+            echo "The file $wrkdir/gimic.$index.out already exists."
+            grepstring=$(grep "wall" $wrkdir/gimic.$index.out)
+            echo "$grepstring"
+        fi
+
+        if [ -z "$grepstring" ]
+        then
+            cd $wrkdir && gimic gimic.$index.inp > $wrkdir/gimic.$index.out & 
+        fi
+    done 
+    wait
+    completed=$(( $completed+$parallel ))
+    date
+    echo "$completed of $filenum completed"; echo
+done
+
+if [ "$remain" -gt 0 ]; then
+    for ((i=0; i<$remain; i++))
+    do  
+        (cd $wrkdir && gimic $wrkdir/gimic.$(($parallel*$whole+$i)).inp >  $wrkdir/gimic.$(($parallel*$whole+$i)).out &) 
+    done
+fi
+echo "$filenum of $filenum completed"
+echo
+
+rm -rf GIMIC* 
+
+###################################################################################
+
+#Calculating the gradient
+(cd $wrkdir && @SCRIPTS_DIR@/gradient.sh)
+
+# Find the zeroes on the current profile plot
+(cd $wrkdir && @SCRIPTS_DIR@/crit_pts.sh > profile-points.out )
+
+cat $wrkdir/profile-points.out
+
+###################################################################################
+
+echo

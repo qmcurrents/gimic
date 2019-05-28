@@ -11,14 +11,20 @@ class GimicDriver:
         self.kw = inkeys
 
     def run(self):
-        print "This is F-GIMIC."
+        print("This is F-GIMIC.")
 
         infile='GIMIC.in' + str(os.getpid())
         fd=open(infile,'w')
-        print >>fd, self.kw
+        fd.write(str(self.kw))
 
         fd.close()
-        os.system(GIMIC_EXECUTABLE + ' < ' + infile)
+
+        # launcher can be e.g. "mpirun -np 4" or "valgrind", etc.
+        launcher = os.getenv('GIMIC_LAUNCHER', '')
+
+        command = '{0} {1} < {2}'.format(launcher, GIMIC_EXECUTABLE, infile)
+        os.system(command)
+
         os.unlink(infile)
 
 # vim:et:ts=4:sw=4

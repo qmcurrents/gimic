@@ -57,6 +57,10 @@ contains
         integer(I4), dimension(3) :: ngp
         integer(I4) :: i, j
 
+        real(DP) :: out_length, down_length
+        real(DP), dimension(3) :: ref
+        real(DP), dimension(2) :: hgt,wdt
+
         input=>inp
 
         this%step=1.d0
@@ -72,7 +76,7 @@ contains
                 call extgrid(this)
                 return
             case ('std','base')
-                call setup_std_grid(this,mol)
+                call setup_std_grid(this)
             case ('bond')
                 call setup_bond_grid(this,mol)
             case default
@@ -88,7 +92,25 @@ contains
         ! rotate basis vectors if needed
         if (keyword_is_set(input, 'Grid.rotation')) then
             call getkw(input, 'Grid.rotation', angle)
-            call rotate(this, angle)
+            ! recalculate the rotation reference
+
+            if (keyword_is_set(input, 'Grid.rotation_origin')) then
+                call getkw(input, 'Grid.rotation_origin', ref)
+            else
+                !            call getkw(input, 'Grid.out', out_length)
+                !            call getkw(input, 'Grid.down', down_length)
+                if (keyword_is_set(input, 'Grid.height')) then
+                    call getkw(input, 'Grid.height', hgt)
+                    call getkw(input, 'Grid.width', wdt)
+                    down_length=hgt(2)
+                    out_length=wdt(2)
+                else
+                    call getkw(input, 'Grid.out', out_length)
+                    call getkw(input, 'Grid.down', down_length)
+                end if
+                ref = this%origin + out_length*this%basv(:,2) + down_length*this%basv(:,1)
+            end if
+            call rotate(this, angle, ref)
         end if
 
         ! calculate distibution of grid points
@@ -99,6 +121,8 @@ contains
                 call setup_even_grid(this)
             case ('gauss')
                 call setup_gauss_grid(this, 'gauss')
+            case ('lobatto')
+                call setup_gauss_grid(this, 'lobatto')
             case default
                 call msg_error('Unknown grid type: ' // trim(this%gtype))
                 stop
@@ -113,15 +137,13 @@ contains
         call nl
     end subroutine
 
-    subroutine setup_std_grid(this,mol)
+    subroutine setup_std_grid(this)
         type(grid_t) :: this
-        type(molecule_t) :: mol
         type(atom_t), pointer :: atom
 
         integer(I4) :: i
         integer(I4), dimension(3) :: atoms
         real(DP), dimension(3) :: normv
-        real(DP), dimension(2,3) :: refbond
 
         call getkw(input, 'Grid.origin', this%origin)
         call getkw(input, 'Grid.ivec', this%basv(:,1))
@@ -150,7 +172,6 @@ contains
         real(DP), dimension(3) :: normv
         integer(I4), dimension(3) :: atoms
         real(DP), dimension(3) :: v1, v2, v3, oo
-        !real(DP), dimension(2,3) :: refbond
         real(DP), dimension(2) :: hgt, wdt
         real(DP) :: l3
 
@@ -273,9 +294,9 @@ contains
 
         integer(I4) ::  i, rem, order
         real(DP), dimension(3) :: spc
-        logical :: flag
+        logical :: no_of_points_fixed
 
-        flag=.false.
+        no_of_points_fixed=.false.
 
         call msg_info('Integration grid selected.')
         call getkw(input, 'Grid.gauss_order', this%gauss_order)
@@ -300,11 +321,11 @@ contains
             rem=mod(this%npts(i),order)
             if (rem /= 0) then
                 this%npts(i)=this%npts(i)-rem+order
-                flag=.true.
+                no_of_points_fixed=.true.
             end if
         end do
 
-        if (flag) then
+        if (no_of_points_fixed) then
             write(str_g, '(a,3i5)') &
             'Adjusted number of grid points for quadrature: ', this%npts
             call msg_info(str_g)
@@ -335,7 +356,7 @@ contains
         this%gauss=.false.
         this%npts(1)=nint(this%l(1)/this%step(1))+1
         this%npts(2)=nint(this%l(2)/this%step(2))+1
-        if (this%l(3) == 0.d0 .or. this%step(3) == 0.d0) then
+        if (abs(this%l(3)) < tiny(0.0d0) .or. abs(this%step(3)) < tiny(0.d0)) then
             this%npts(3)=1
         else
             this%npts(3)=nint(this%l(3)/this%step(3))+1
@@ -406,7 +427,7 @@ contains
             call nl
             return
         end if
-99		format(a,3f12.8,a)
+99      format(a,3f12.8,a)
     end subroutine
 
     subroutine get_grid_size(this, i, j, k)
@@ -672,9 +693,10 @@ contains
     end function
 
     ! rotate basis vectors (prior to grid setup)
-    subroutine rotate(this, angle)
+    subroutine rotate(this, angle, reference)
         type(grid_t) :: this
         real(DP), dimension(3), intent(in) :: angle
+        real(DP), dimension(3), intent(in) :: reference
 
         real(DP) :: x
         real(DP), dimension(3) :: rad
@@ -698,8 +720,8 @@ contains
         !jj rot(2,1)=-sin(x)
 
         !ol begin
-        rot(1,2)=-sin(x)
-    rot(2,1)=sin(x)
+        rot(1,2)=sin(x)
+        rot(2,1)=-sin(x)
         !ol end
 
 ! y-mat
@@ -711,8 +733,8 @@ contains
         !jj euler(3,1)=sin(x)
 
         !ol begin
-        euler(1,3)=sin(x)
-        euler(3,1)=-sin(x)
+        euler(1,3)=-sin(x)
+        euler(3,1)=sin(x)
         !ol end
 
         euler=matmul(euler,rot)
@@ -730,16 +752,20 @@ contains
         rot(1,1)=1.d0
         rot(2,2)=cos(x)
         rot(3,3)=cos(x)
-        rot(2,3)=-sin(x)
-        rot(3,2)=sin(x)
+        rot(2,3)=sin(x)
+        rot(3,2)=-sin(x)
         !ol end
 
 
         euler=matmul(rot,euler)
 
+        this%origin=this%origin-reference
+
         this%basv=matmul(euler,this%basv)
         this%origin=matmul(euler,this%origin)
-    end subroutine
+
+        this%origin=this%origin+reference
+   end subroutine
 
     subroutine get_basv3(this, i, j, k)
         type(grid_t) :: this

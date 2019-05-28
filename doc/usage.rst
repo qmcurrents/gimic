@@ -65,11 +65,13 @@ with GIMIC) in the same directory to produce the ``MOL`` and ``XDENS`` files.
 Running LSDalton
 ******************
 
-The scripts/input needed can be found in ``/tools/lsdalton2gimic``. 
+The scripts/input needed can be found in ``tools/lsdalton2gimic``. 
 
 Written by C. Kumar, University of Oslo, chandan.kumar@kjemi.uio.no.
 
 ``.GIMIC`` needs to be added in ``LSDALTON.INP``.
+
+Note that open-shell calculations are not supported.
 
 Run in the same directory:
 
@@ -100,7 +102,6 @@ The general structure of the input file looks like this:
     <charge> <multiplicity>
     <coordinates> 
     <empty line>
-
 
 In the above, the lines with the ``<`` ``>`` symbols are supposed to be modified. These bracket symbols are not part of the actual input file. 
 
@@ -329,3 +330,4 @@ Convert the symmetry-adapted ``MOL`` file to C1 symmetry:
     $ MOL2mol.sh
 
 The new ``MOL`` file is now called ``mol``.
+

@@ -1,0 +1,524 @@
+#!/bin/bash
+
+# Function definitions:
+source  @SCRIPTS_DIR@/src/functions-def
+
+function createInpTemplate() 
+{
+    # create the template file gimic.Inp -> everything but up, down, in, out
+    cp @SCRIPTS_DIR@/src/gimic.Inp ./$dirname/gimic.Inp
+
+    string1="s/@bond@/$bond/; s/@distance@/$distance/; s/@spacingX@/$spacingX/; s/@spacingY@/$spacingY/; s/@spacingZ@/$spacingZ/ "
+    string2="s/@rotX@/$rotX/;  s/@rotY@/$rotY/;  s/@rotZ@/$rotZ/; s/@origX@/$origX/; s/@origY@/$origY/; s/@origZ@/$origZ/ "
+    string3="s/@Bx@/$Bx/; s/@By@/$By/; s/@Bz@/$Bz/; s/@FX@/$Fx/; s/@FY@/$Fy/; s/@FZ@/$Fz/; s/@fixed@/$fixed/;"
+
+    sed -i -e "$string1" ./$dirname/gimic.Inp
+    sed -i -e "$string2" ./$dirname/gimic.Inp
+    sed -i -e "$string3" ./$dirname/gimic.Inp
+
+    if [ ! -z $enableRotationerigin ] &&  [ $enableRotationerigin == "y" ]
+    then
+	sed -i -e 's/#rotation_origin*/rotation_origin/' ./$dirname/gimic.Inp
+    fi
+
+    if [ ! -z $enableMF_X ] &&  [ $enableMF_X == "y" ]
+    then
+	sed -i -e '/s/magnet=/#magnet=/' ./$dirname/gimic.Inp
+	sed -i -e '/s/#magnet_axis=/magnet_axis=X/' ./$dirname/gimic.Inp
+    fi
+}
+
+function printSummary() {
+cat /dev/null > ./$dirname/calculation.dat
+echo atom1=$atom1  >> ./$dirname/calculation.dat
+echo atom2=$atom2 >> ./$dirname/calculation.dat
+echo distance=$distance >> ./$dirname/calculation.dat
+echo in=$start out=$out up=$up down=$down  >> ./$dirname/calculation.dat
+echo fixed point: Fx=$Fx Fy=$Fy Fz=$Fz  >> ./$dirname/calculation.dat
+echo delta=$delta nsteps=$nsteps >> ./$dirname/calculation.dat
+#echo spacing: spacingX=$spacingX spacingY=$spacingY spacingZ=$spacingZ  >> ./$dirname/calculation.dat
+echo magnetic field: Bx=$Bx By=$By Bz=$Bz  >> ./$dirname/calculation.dat
+echo spacing: spacingX=$spacingX spacingY=$spacingY  >> ./$dirname/calculation.dat
+echo rotation angles: rotX=$rotX rotY=$rotY rotZ=$rotZ >> ./$dirname/calculation.dat
+
+################################################################################
+
+printf "\n\n*****************************************************************************\n\nSUMMARY\n\n"
+printf "Bond: ["$bond"], distance = $distance\n\n"
+echo "Integration plane coordinates"
+printf "in = $start  out = $out  up = $up  down = $down \n"
+printf "Split into $nsteps slices with width $delta and grid spacing [$spacingX; $spacingY] \n"
+printf "Fixed coordinate: ( $Fx; $Fy; $Fz )\n"
+printf "Magnetic field direction: ( $Bx; $By; $Bz ) \n"
+printf "Rotation angles: ( $rotX; $rotY; $rotZ ) \n\n"
+
+printf "\n*****************************************************************************\n\n"
+}
+
+checkGimic 
+
+checkIfInputExists
+
+printf "\nSTARTING CURRENT PROFILE ANALYSIS\n"
+printf "\nUsing atomic units of length\n\n"
+
+echo "Define the bond perpendicular to which to integrate"; echo
+echo "Enter the indices of the atoms according to the coord file"
+printf "Atom 1:  "; read atom1; 
+validateInput atom1 $atom1
+printf "Atom 2:  "; read atom2
+validateInput atom2 $atom2
+
+# Read the coordinates of atom1:
+A1x=$( awk -v atom1=$atom1 '{ if (NR==(atom1+1)) {print $1} }' coord  )
+A1y=$( awk -v atom1=$atom1 '{ if (NR==(atom1+1)) {print $2} }' coord  )
+A1z=$( awk -v atom1=$atom1 '{ if (NR==(atom1+1)) {print $3} }' coord  )
+
+# Read the coordinates of atom2:
+A2x=$( awk -v atom2=$atom2 '{ if (NR==(atom2+1)) {print $1} }' coord  )
+A2y=$( awk -v atom2=$atom2 '{ if (NR==(atom2+1)) {print $2} }' coord  )
+A2z=$( awk -v atom2=$atom2 '{ if (NR==(atom2+1)) {print $3} }' coord  )
+
+echo "Optionally enter a suffix for the directory name"
+read suffix
+if [ -z $suffix ]
+then
+    suffix=""
+else
+    suffix=$(printf _$suffix)
+fi
+dirname=current_profile_$atom1.$atom2$suffix
+
+checkIfPreviousCalculationExists "$dirname"
+#cp @SCRIPTS_DIR@/src/gimic.Inp ./$dirname/gimic.Inp
+
+# Calculate the distance between the atoms
+echo "Define where between the two atoms the integration plane passes"
+echo "Default: through the midpoint"
+distance=$( halfDistance $atom1 $atom2 )
+valueDimInp distance $distance "bohr"
+
+# Coordinates of the centre:
+bond=$atom1","$atom2
+BOND=$(centroid $atom1 $atom2)
+
+bx=$( echo $BOND | awk '{print $1} ' )
+by=$( echo $BOND | awk '{print $2} ' )
+bz=$( echo $BOND | awk '{print $3} ' )
+
+#echo "Bond centre coordinates:"
+#printf "("$bx";"$by";"$bz")\n"
+#echo
+
+printf "\n\nSTARTING POINT OF THE INTEGRATION\n"
+userInp start $start
+while [ -z "$start" ]
+do 
+    userInp start $start
+done
+
+printf "\nEND POINT OF THE INTEGRATION\n"
+out=8
+printf "\nDo you accept out=$out bohr?" # ask about the default value 
+userInp out $out
+
+printf "\n\nUPPER AND LOWER BOUNDS OF THE INTEGRATION\n"
+up=8 
+down=8 
+valueDimInp up $up "bohr"
+valueDimInp down $down "bohr"
+
+printf "\n\nWIDTH OF THE SLICES\n"
+delta=0.02
+valueDimInp delta $delta "bohr"
+
+nsteps=$( awk -v start=$start -v out=$out -v delta=$delta 'BEGIN{if (start > 0) {start = -start}; nsteps=(out-start)/delta; if (nsteps > 0) {printf("%d",nsteps)} else {printf("%d",-nsteps);}; }'   )
+checkIfEmpty nsteps $nsteps
+
+
+printf "\n\nGRID POINT SPACING\n"
+#Practice has shown that for delta=0.1, the spacing value should be 0.02 in order to have at least 9 Gaussian points per slice
+# If the delta is smaller than 0.1, recalculate:
+# spacingFactor=$( awk -v delta=$delta 'BEGIN{ printf("%.4f",delta/0.02) }' )    # how many times smaller the chosen delta value is
+# spacing=$( awk -v f=$spacingFactor 'BEGIN{ printf("%.3f",0.013*f) }' )
+spacingX=$( awk -v delta=$delta 'BEGIN{ f=delta/0.02; printf("%.3f",0.025*f); }' )
+spacingY=$( awk -v delta=$delta 'BEGIN{ f=delta/0.02; printf("%.3f",0.01*f); }' )
+#spacingZ=$( awk -v delta=$delta 'BEGIN{ f=delta/0.02; printf("%.3f",0.01*f); }' )
+spacingZ=1 # needs to have a value in the input file
+
+#printf  "\nDo you accept spacing=[$spacingX, $spacingY, $spacingZ]?\nPress [n] to change\n"
+printf  "\nDo you accept spacing=[$spacingX, $spacingY]?\nPress [n] to change\n"
+read accept;
+if [ ! -z $accept ] && [ $accept == "n" ]
+then
+    valueDimInp spacingX $spacingX "bohr" 
+    valueDimInp spacingY $spacingY "bohr" 
+#    valueDimInp spacingZ $spacingZ "bohr" 
+fi
+
+
+printf "\nMAGNETIC FIELD DIRECTION\n\n"
+
+# default along the Z axis
+Bx=0.0
+By=0.0
+Bz=-1.0
+enableMF_X=n # do not use MF=X unless asked for
+
+echo "Do you accept the default B orientation along the Z axis (0, 0, -1)?"
+echo "Press [a] to calculate the direction automatically, [m] to enter manually or [X] for the B=X option."
+
+read accept;
+checkMaxProj="installed"
+checkPlaneDir="1"
+if [ ! -z $accept ] 
+then
+    if [ $accept == "a" ]
+    then
+	#RAUL'S PLANE
+	checkPlaneDir=$(command -v normalise_plane)
+	if [ ! -e $checkPlaneDir ]
+	then
+	    echo "The program for orienting with respect a plane is not found. Switching to manual input of the magnetic field components."
+	else
+	    echo "Enter the indices of the atoms defining a plane perpendicular to the magnetic field."
+	    echo "Due to a known bug, the last atom in the coord file may not be used."
+	    read MFatoms
+	    echo $MFatoms > ./$dirname/MF_idx.dat
+	    echo
+	    MFcoords=$( /homeappl/home/mariavd/scripts/normalise_plane coord.xyz ./$dirname/MF_idx.dat 2>&1 > /dev/null | awk '{ if (NR ==2) {print $2, $3, $4} }')
+	    echo "MFcoords: " $MFcoords
+	    Bx=$(echo $MFcoords | awk '{print $1}')
+	    By=$(echo $MFcoords | awk '{print $2}')
+	    Bz=$(echo $MFcoords | awk '{print $3}')
+	    checkIfEmpty Bx $Bx
+	    checkIfEmpty By $By
+	    checkIfEmpty Bz $Bz
+	fi
+    fi
+    # LUKAS'S MAX PROJECTION
+    #    checkMaxProj=$(command -v maximise_projection) #  command -> returns the path of the binary if it is found
+    #    if [ ! -e $checkMaxProj ]
+    #    then
+    #	echo "The program maximise_projection is not found. Switching to manual input of the magnetic field components."
+    #    else
+    #	maximise_projection coord.xyz > $dirname/field.dat
+    #	Bx=$( cat $dirname/field.dat | sed -e 's#{#_#g; s#}#_#g; s#,#_#g' | awk -F [_] '{ {print -$2} }')
+    #	By=$( cat $dirname/field.dat | sed -e 's#{#_#g; s#}#_#g; s#,#_#g' | awk -F [_] '{ {print -$3} }')
+    #	Bz=$( cat $dirname/field.dat | sed -e 's#{#_#g; s#}#_#g; s#,#_#g' | awk -F [_] '{ {print -$4} }')
+    #    fi
+    #fi
+    #if [ $accept == "m" ] || [ -z $checkMaxProj ]
+    if  [ $accept == "m" ] || [ -z $checkPlaneDir ]
+    then
+	echo "Please enter numeric values."
+	valueDimInp Bx $Bx "bohr"
+	valueDimInp By $By "bohr"
+	valueDimInp Bz $Bz "bohr"
+    fi
+    echo "Magnetic field vector coordinates: ($Bx; $By; $Bz)"
+    echo
+fi
+
+if [ ! -z $accept ] && [ $accept == "X" ]
+then
+    enableMF_X="y"
+    sed -i '/s/magnet=/#magnet=/' ./$dirname/gimic.Inp
+    sed -i '/s/#magnet_axis=/magnet_axis=X/' ./$dirname/gimic.Inp
+fi
+
+printf "\nFIXED COORDINATE\n"
+
+# Calculating the fixed point depends on the B direction. If X is selected, then there is no B defined.
+if [ ! -z $enableMF_X ] && [ $enableMF_X == "n" ]
+then
+
+    # fixed point (Ax, Ay and Az are the coords of the bond atoms 1 and 2)
+    #Fx=$(calculateFixedCoord $A2x $A2y $A2z | awk '{print $1}')
+    #Fy=$(calculateFixedCoord $A2x $A2y $A2z | awk '{print $2}')
+
+
+    #Fz=$( awk -v A1z=$A1z -v A2z=$A2z 'BEGIN{ print (A1z+A2z)*0.5 }')
+    #Fz=$( awk -v A1z=$A1z -v A2z=$A2z 'BEGIN{ print A2z }')
+
+    # use the coords of atom 1 and the B vector
+    # vector OA and OF defined with the coords of atom1 and the fixed point
+    # vector AB.B = 0
+    #Fz=$( awk -v A1x=$A1x -v A2x=$A2x -v A1y=$A1y -v A2y=$A2y -v A1z=$A1z -v A2z=$A2z -v bx=$Bx -v by=$By -v mz=$Bz 'BEGIN{ print( ( (bx*(A2x-A1x) + by*(A2y-A1y) + mz*(A2z-A1z) ))) }')
+    # previous HEAD
+    #Fz=$( awk -v Ax=$A2x -v Fx=$Fx -v Ay=$A2y -v Fy=$Fy -v Az=$A2z -v bx=$Bx -v by=$By -v mz=$Bz 'BEGIN{ print( ( (bx*(Fx-Ax) + by*(Fy-Ay)) / mz) + Az )}')
+    #Fz=$( awk -v Ax=$A2x -v Fx=$Fx -v Ay=$A2y -v Fy=$Fy -v Az=$A2z -v bx=$Bx -v by=$By -v mz=$Bz 'BEGIN{ print( ( (bx*(Fx-Ax) + by*(Fy-Ay)) / mz) + Az )}')
+    #
+    # eq of a plane: a*(x-x0) + b*(y-y0) + c*(z-z0) = 0
+    #	<=>	ax + by + cz - (a*x0 + b*y0 + c*z0) = 0
+    #		ax + by + cz = D
+    # where the normal to the plane n(a,b,c) = A1 - B (vectors)
+    # and P(x0,y0,z0) = A2
+    # Fx and Fy are any two points and Fz is what fixes the "fixed point" onto the plane
+    #Fz=$( awk -v A1x=$A1x -v A2x=$A2x -v Fx=$Fx -v A1y=$A1y -v A2y=$A2y -v Fy=$Fy -v A1z=$A1z -v A2z=$A2z -v bx=$Bx -v by=$By -v mz=$Bz 'BEGIN{ Bx = bx + A1x; By = by + A1y; Bz = mz + A1z;  a = A1x - Bx; b = A1y - By; c = A1z - Bz; D = a*A2x + b*A2y + c*A2z; Fz = D/(a*Fx + b*Fy ); print Fz }')
+    #
+    # Plane defined by A1, A2 and B
+    # Vectors u = A1B and v = A1A2
+    # Use: n = u x v
+    # The fixed point is the normal 
+    #Fcoords=$( awk -v A1x=$A1x -v A2x=$A2x -v A1y=$A1y -v A2y=$A2y -v A1z=$A1z -v A2z=$A2z -v bx=$Bx -v by=$By -v mz=$Bz -v by=$By -v mz=$Bz 'BEGIN{ Bx = A1x + bx; By = A1y + by; Bz = A1z + mz; ux = Bx - A1x; uy = By - A1y; uz = Bz - A1z; vx = A2x - A1x; vy = A2y - A1y; vz = A2z - A1z; nx = uy*vz - uz*vy; ny = uz*vx - ux*vz; nz = ux*vy - uy*vx; print nx + A2x, ny + A2y, nz + A2z }' )
+    #Fx=$(echo $Fcoords | awk '{print $1}')
+    #Fy=$(echo $Fcoords | awk '{print $2}')
+    #Fz=$(echo $Fcoords | awk '{print $3}')
+
+    # cross product of the basis vectors v3 and v1 (we want v1 colinear to B)
+    # beware the sign! v1 ~ -B
+    # v3 = A1 - A2
+    #Fx=$( awk -v A1x=$A1x -v A2x=$A2x -v A1y=$A1y -v A2y=$A2y -v A1z=$A1z -v A2z=$A2z -v bx=$Bx -v by=$By -v mz=$Bz 'BEGIN{ Fx = (by*(A2z-A1z) - mz*(A2y-A1y)); print -(Fx)+A2x  }' )
+    #Fy=$( awk -v A1x=$A1x -v A2x=$A2x -v A1y=$A1y -v A2y=$A2y -v A1z=$A1z -v A2z=$A2z -v bx=$Bx -v by=$By -v mz=$Bz 'BEGIN{ Fy = (mz*(A2x-A1x) - bx*(A2z-A1z)); print -(Fy)+A2y  }' )
+    #Fz=$( awk -v A1x=$A1x -v A2x=$A2x -v A1y=$A1y -v A2y=$A2y -v A1z=$A1z -v A2z=$A2z -v bx=$Bx -v by=$By -v mz=$Bz 'BEGIN{ Fz = (bx*(A2y-A1y) - by*(A2x-A1x)); print -(Fz)+A2z  }' )
+
+    ## cross product but set Fz as the average of the z coords of A1 and A2 
+    #Fx=$( awk -v A1x=$A1x -v A2x=$A2x -v A1y=$A1y -v A2y=$A2y -v A1z=$A1z -v A2z=$A2z -v bx=$Bx -v by=$By -v mz=$Bz 'BEGIN{ Fx = (by*(A2z-A1z) - mz*(A2y-A1y)); print -(Fx)+A1x  }' )
+    #Fy=$( awk -v A1x=$A1x -v A2x=$A2x -v A1y=$A1y -v A2y=$A2y -v A1z=$A1z -v A2z=$A2z -v bx=$Bx -v by=$By -v mz=$Bz 'BEGIN{ Fy = (mz*(A2x-A1x) - bx*(A2z-A1z)); print -(Fy)+A1y  }' )
+    #Fz=$( awk -v A1x=$A1x -v A2x=$A2x -v A1y=$A1y -v A2y=$A2y -v A1z=$A1z -v A2z=$A2z -v bx=$Bx -v by=$By -v mz=$Bz 'BEGIN{ av_z = 0.5*(A1z+A2z); Fz = (bx*(A2y-A1y) - by*(A2x-A1x)); print -(Fz)+av_z }' )
+
+    # use average z coords for A1 and A2 for the calculation of the cross product
+    Fx=$( awk -v A1x=$A1x -v A2x=$A2x -v A1y=$A1y -v A2y=$A2y -v A1z=$A1z -v A2z=$A2z -v bx=$Bx -v by=$By -v mz=$Bz 'BEGIN{ Az = 0.5*(A1z+A2z); A1z = Az; A2z = Az; Fx = (by*(A2z-A1z) - mz*(A2y-A1y)); print -(Fx) + Ax }' )
+    Fy=$( awk -v A1x=$A1x -v A2x=$A2x -v A1y=$A1y -v A2y=$A2y -v A1z=$A1z -v A2z=$A2z -v bx=$Bx -v by=$By -v mz=$Bz 'BEGIN{ Az = 0.5*(A1z+A2z); A1z = Az; A2z = Az; Fy = (mz*(A2x-A1x) - bx*(A2z-A1z)); print -(Fy) + Ay }' )
+    Fz=$( awk -v A1x=$A1x -v A2x=$A2x -v A1y=$A1y -v A2y=$A2y -v A1z=$A1z -v A2z=$A2z -v bx=$Bx -v by=$By -v mz=$Bz 'BEGIN{ Az = 0.5*(A1z+A2z); A1z = Az; A2z = Az; Fz = (bx*(A2y-A1y) - by*(A2x-A1x)); print -(Fz) + Az }' )
+
+    echo
+    echo "Fixed coordinate: ($Fx; $Fy; $Fz)"
+
+    echo "Do you want to modify the coordinates of the fixed point?"
+
+fi 
+
+echo "Press [a] to enter an atomic index or [c] enter Cartesian coordinates" 
+
+read accept;
+if [ ! -z $accept ] && [ $accept == "a" ]
+then
+    echo "Enter the index of the fixed atom: "
+    read fixed_atom
+    validateInput fixed_atom $fixed_atom
+
+    # Read the coordinates of the fixed atom
+    Fx=$( awk -v atom=$fixed_atom '{ if (NR==(atom+1)) {print $1} }' coord  )
+    Fy=$( awk -v atom=$fixed_atom '{ if (NR==(atom+1)) {print $2} }' coord  )
+    Fz=$( awk -v atom=$fixed_atom '{ if (NR==(atom+1)) {print $3} }' coord  )
+    echo "Fixed coordinate: ($Fx, $Fy, $Fz)"
+elif [ ! -z $accept ] && [ $accept == "c" ]
+then
+    valueDimInp Fx $Fx "bohr"
+    valueDimInp Fy $Fy "bohr"
+    valueDimInp Fz $Fz "bohr"
+
+    echo "Fixed coordinate: ($Fx, $Fy, $Fz)"
+fi
+
+
+printf "\nROTATION OF THE PLANE\n\n"
+
+# rotation is done with respect to the midpoint of the bond unless a rotation origin is specified
+rotX=0.0
+rotY=0.0
+rotZ=0.0
+
+origX=0.0
+origY=0.0
+origZ=0.0
+
+enableRotationerigin="n"
+
+echo "Do you want to rotate the integration plane?"
+echo "Press [y] to enter rotation angles and origin" 
+
+read accept;
+if [ ! -z $accept ] && [ $accept == "y" ]
+then
+    valueDimInp rotX $rotX "degrees"
+    valueDimInp rotY $rotY "degrees"
+    valueDimInp rotZ $rotZ "degrees"
+
+    echo "Rotation angles: ($rotX, $rotY, $rotZ)"
+
+    printf "\nDo you accept the rotation origin to be at the bond midpoint?\n"
+    echo "Press [n] to enter Cartesian coordinates." 
+
+    read enableRotationerigin;
+    if [ ! -z $enableRotationOrigin ] && [ $enableRotationOrigin == "n" ]
+    then
+	valueDimInp origX $origX "bohr" 
+	valueDimInp origY $origY "bohr"
+	valueDimInp origZ $origZ "bohr"
+    fi
+fi
+
+printSummary # print to stdout and to calculation.dat
+
+
+# Preparing the input files
+
+downInp=$(echo $down)
+checkIfEmpty downInp $downInp
+
+checkPlane="y"
+doDryRun=1
+while [ ! -z $checkPlane ] && [ $checkPlane == "y" ]
+do
+    createInpTemplate   
+
+    # check the whole down value 
+    down=$( awk -v down=$downInp 'BEGIN{printf "%.3f\n", -down }' )   
+    compareEqual down up 
+    compareSmaller down up 
+    checkIfEmpty up $up
+    checkIfEmpty down $down
+
+    # calculate the first slice length
+    xstart=$( awk -v start=$start 'BEGIN{printf "%.3f\n", -start }' )   
+    xend=$( awk -v delta=$delta -v xstart=$xstart 'BEGIN{ printf "%.3f\n", xstart+delta }' ) 
+    compareSmaller xstart xend
+    checkIfEmpty xstart $xstart
+    checkIfEmpty xend $xend
+
+    # Create the first and the last slice input file
+    xstring="s/@up@/$up/; s/@down@/$down/; s/@start@/$xstart/; s/@end@/$xend/"
+    sed "$xstring" ./$dirname/gimic.Inp > ./$dirname/gimic.0.inp
+
+    if [ ! -z $doDryRun ] &&  [ $doDryRun == "1" ]
+    then
+	dryRun 'gimic.0.inp'
+	echo dryrun done >> $dirname/calculation.dat
+    fi
+
+    # sanity check for the integration plane
+    echo "Creating integration plane end points"
+    # gimic.0.inp already exists; create gimic.$last.inp
+    start_last=$( awk -v xstart=$xstart -v delta=$delta -v nsteps=$nsteps 'BEGIN{ last = xstart + delta*nsteps; print last }')
+    checkIfEmpty start_last $start_last
+
+    end_last=$( awk -v start_last=$start_last -v delta=$delta 'BEGIN{ end = start_last + delta; print end }')
+    checkIfEmpty xend_last $end_last
+
+    lstring="s/@up@/$up/; s/@down@/$down/; s/@start@/$start_last/; s/@end@/$end_last/"
+    sed -e "$lstring" ./$dirname/gimic.Inp > ./$dirname/gimic.last.inp
+
+    echo
+    echo "Do you want to preview the integration plane in XYZ format?"
+    echo "Press [y] or any other key to skip"; read checkPlane
+    if  [ ! -z $checkPlane ] && [ $checkPlane == "y" ]
+    then
+	planeSanityCheck "$dirname"
+    else
+	checkPlane=""
+    fi
+
+    # ask if it's necessary to change a parameter - without restarting the script
+    echo "Do you want to modify the integration plane parameters?"
+    echo "Press [y] to list the options."; read accept
+
+    if  [ -z $accept ]
+    then
+	echo "Skipping further plane checks and dry runs"
+	printSummary 
+	checkPlane=""
+	doDryRun=""
+    elif [ $accept == "y" ]
+    then
+	#    printf "\nParameters for the calculation:\n"
+	echo
+	echo "[1] distance "
+	echo "[2] in value"
+	echo "[3] out value"
+	echo "[4] up value"
+	echo "[5] down value"
+	echo "[6] fixed point"
+	echo "[7] rotation"
+	entry="0"
+	printf "\n\nEnter the number of the entry to change it or press [ENTER] to continue\n"
+	read entry
+	while [ ! -z $entry ] # while it has a value
+	do
+	    if  [ $entry == "1" ]
+	    then
+		valueDimInp distance $distance "bohr"
+	    elif  [ $entry == "2" ]
+	    then
+		userInp start $start
+		while [ -z "$start" ]
+		do 
+		    userInp start $start
+		done
+	    elif [ $entry == "3" ]
+	    then
+		userInp out $out
+	    elif [ $entry == "4" ]
+	    then
+		valueDimInp up $up "bohr"
+		doDryRun=1
+	    elif [ $entry == "5" ]
+	    then
+		valueDimInp down $down "bohr"
+		doDryRun=1
+	    elif [ $entry == "6" ]
+	    then
+		echo "Enter the index of the fixed atom: "
+		read fixed_atom
+		validateInput fixed_atom $fixed_atom
+
+		# Read the coordinates of the fixed atom
+		Fx=$( awk -v atom=$fixed_atom '{ if (NR==(atom+1)) {print $1} }' coord  )
+		Fy=$( awk -v atom=$fixed_atom '{ if (NR==(atom+1)) {print $2} }' coord  )
+		Fz=$( awk -v atom=$fixed_atom '{ if (NR==(atom+1)) {print $3} }' coord  )
+		echo "Fixed coordinate: ($Fx, $Fy, $Fz)"
+
+		doDryRun=1
+	    elif [ $entry == "7" ]
+	    then
+		echo "Enter the rotation angles"
+		valueDimInp rotX $rotX "degrees"
+		valueDimInp rotY $rotY "degrees"
+		valueDimInp rotZ $rotZ "degrees"
+
+		echo "Rotation angles: ($rotX, $rotY, $rotZ)"
+
+		printf "\nDo you accept the rotation origin to be at the bond midpoint?\n"
+		echo "Press [n] to enter Cartesian coordinates." 
+
+		read enableRotationerigin;
+		if [ ! -z $enableRotationOrigin ] && [ $enableRotationOrigin == "n" ]
+		then
+		    valueDimInp origX $origX "bohr" 
+		    valueDimInp origY $origY "bohr"
+		    valueDimInp origZ $origZ "bohr"
+		fi
+
+		doDryRun=1
+	    else
+		echo "Invalid entry. Enter a number again."
+		read entry
+	    fi
+	    printf "\n\nEnter the number of the entry to change it or press [ENTER] to continue\n"
+	    read entry
+	done
+    fi
+done
+
+# create the final gimic.Inp template
+createInpTemplate
+upDownString="s/@up@/$up/; s/@down@/$down/"
+sed -i "$upDownString" ./$dirname/gimic.Inp
+
+# prepare all files 
+
+echo "Preparing input files..."
+for (( i=1; i<$nsteps; i++ ))
+do
+    xstart=$( awk -v xstart=$xstart -v delta=$delta 'BEGIN{printf "%.3f\n", xstart+delta }' )
+    xend=$( awk -v delta=$delta -v xstart=$xstart 'BEGIN{ printf "%.3f\n", xstart+delta }' ) 
+    string=" s/@start@/$xstart/; s/@end@/$xend/"
+    sed "$string" $dirname/gimic.Inp > $dirname/gimic.$i.inp
+done    
+echo "done"
+echo
+
+
+

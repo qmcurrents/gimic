@@ -122,23 +122,8 @@ contains
     end subroutine
 
     ! Calculate the normalization factor for SGTO_lm
-    function nslm(l,m) result(q)
-        integer(I4), intent(in) :: l, m
-
-        real(DP) :: q, fac
-
-        q=1.d0/(2.d0**am)
-        q=q/dble(fact(l))
-        fac=2.d0*dble(fact(l+am)*fact(l-am))
-        if (am == 0) then
-            fac=fac/2.d0
-        end if
-        q=q*sqrt(fac)
-    end function
-
-    ! Calculate the normalization factor for SGTO_lm
-    function nslm2(l,m) result(q)
-        integer(I4), intent(in) :: l, m
+    function nslm(l) result(q)
+        integer(I4), intent(in) :: l
 
         real(DP) :: q, fac
 
@@ -152,8 +137,8 @@ contains
     end function
 
     ! Calculate the expansion coefficient for SGTO_lm
-    function clmtuv(l,m,t,u,v) result(q)
-        integer(I4), intent(in) :: l, m, t, u
+    function clmtuv(l,t,u,v) result(q)
+        integer(I4), intent(in) :: l, t, u
         real(DP) :: v
         integer(I4) :: iq
 
@@ -187,7 +172,7 @@ contains
             am=abs(m)
             vm=0.0
             if ( m < 0 ) vm=0.5d0
-            xnslm=nslm(l,m)
+            xnslm=nslm(l)
             do t=0,(l-am)/2
                 do u=0,t
                     do v=0,int(am*0.5d0-vm)
@@ -196,7 +181,7 @@ contains
                         j=int(2.d0*(dble(u)+vr))
                         k=l-2*t-am
                         n=gtomap(i,j,k)
-                        xop(idx,n)=clmtuv(l,m,t,u,vr)*xnslm
+                        xop(idx,n)=clmtuv(l,t,u,vr)*xnslm
                     end do
                 end do
             end do

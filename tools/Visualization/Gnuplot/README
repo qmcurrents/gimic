@@ -1,0 +1,9 @@
+
+This is a gnuplot script for visualizing jmod.txt as a contour plot.
+
+- It is inteded as a quick check if the integration plane dimensions
+  have been chosen correctly. This is useful for planar molecules
+  when an integration scan is not needed. However, in case of doubt a
+  scan is always recommended.  
+- This type of visualization is also helpful in case the radius option
+  is needed.  

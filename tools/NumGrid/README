@@ -1,0 +1,75 @@
+
+Assume MOL, XDENS, mk_grid.py and gimic.inp are all in the same
+directory.
+This is example is based on the benzene/3D example (MOL, XDENS). 
+
+1. run python mk_grid.py
+   - you get the files gridfile.grd, grid_w.grd and coord.au 
+2. run gimic 
+   - you will get the following results 
+
+ atom            1
+ sigma_xx   -38.310166871145249     
+ sigma_yy    13.688272267356670     
+ sigma_zz    173.39271371171270     
+ shielding constant sigma =    49.590273035974711     
+ atom            2
+ sigma_xx   -38.310166871146777     
+ sigma_yy    13.688272267356034     
+ sigma_zz    173.39271371171276     
+ shielding constant sigma =    49.590273035974008     
+ atom            3
+ sigma_xx    39.687540638166915     
+ sigma_yy   -64.309406450190934     
+ sigma_zz    173.39286295523300     
+ shielding constant sigma =    49.590332381069658     
+ atom            4
+ sigma_xx   -38.310166871145150     
+ sigma_yy    13.688272267356705     
+ sigma_zz    173.39271371171995     
+ shielding constant sigma =    49.590273035977170     
+ atom            5
+ sigma_xx   -38.310166871146507     
+ sigma_yy    13.688272267356059     
+ sigma_zz    173.39271371172163     
+ shielding constant sigma =    49.590273035977056     
+ atom            6
+ sigma_xx    39.687540638165743     
+ sigma_yy   -64.309406450192967     
+ sigma_zz    173.39286295523934     
+ shielding constant sigma =    49.590332381070709     
+ atom            7
+ sigma_xx    24.619108509485585     
+ sigma_yy    26.740982935165590     
+ sigma_zz    21.454751054886955     
+ shielding constant sigma =    24.271614166512709     
+ atom            8
+ sigma_xx    24.619108509485464     
+ sigma_yy    26.740982935165540     
+ sigma_zz    21.454751054887183     
+ shielding constant sigma =    24.271614166512730     
+ atom            9
+ sigma_xx    27.801989611326615     
+ sigma_yy    23.558296596759813     
+ sigma_zz    21.454853846807236     
+ shielding constant sigma =    24.271713351631220     
+ atom           10
+ sigma_xx    24.619108509485194     
+ sigma_yy    26.740982935166258     
+ sigma_zz    21.454751054887470     
+ shielding constant sigma =    24.271614166512975     
+ atom           11
+ sigma_xx    24.619108509485365     
+ sigma_yy    26.740982935166326     
+ sigma_zz    21.454751054887929     
+ shielding constant sigma =    24.271614166513206     
+ atom           12
+ sigma_xx    27.801989611326931     
+ sigma_yy    23.558296596760474     
+ sigma_zz    21.454853846808017     
+ shielding constant sigma =    24.271713351631806     
+ 
+ chi_xx   -7.2714562789039503     
+ chi_yy   -7.2714041307513799     
+ chi_zz   -20.842947554843089     
+ isotropic magnetizability chi =   -11.795269321499473     

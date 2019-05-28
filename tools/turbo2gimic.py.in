@@ -105,6 +105,7 @@ def readbasis(file):
     clist=[]
     i=0
     atm=-1
+    target = "0.0000000000"
     while i < len(ll):
         mob=elmt_def.match(ll[i])
         if mob:
@@ -122,6 +123,9 @@ def readbasis(file):
             for j in range(i,ncomp+i):
                 (xp1,cc1)=string.split(ll[j])
                 xp.append(xp1)
+                # avoid zero entries
+                if (cc1 == target):
+	 	    cc1 = "1.0000000000" 
                 cc.append(cc1)
             xp=map(float,xp)
             cc=map(float,cc)

@@ -1,0 +1,92 @@
+# This jobscript takes three arguments: 
+# $1 is the working directory for the calculation
+# $2 is the number of tasks to execute at the same time
+#
+# check for their correct number:
+# if [ ! $# == 2 ]; then
+#   echo "Usage: $0 wrkdir ntasks duration"
+#   exit
+# fi
+
+function checkIfEmpty() {
+# usage: validateInput variable $variable 
+local __inputVar=$1
+local __inputValue="$2"
+while [ -z "$__inputValue" ]
+do
+    printf "*** Variable \"$__inputVar\" empty ***\nPlease restart the script.\n"
+    echo "If the error persists, file a bug report to maria.dimitrova@helsinki.fi or https://github.com/mariavd/gimic"; echo
+    exit;
+done
+
+}
+
+
+echo "SLURM_JOB_ID is" $SLURM_JOB_ID
+echo 
+echo "Current profile calculation"
+
+wrkdir=$( echo $1 )
+checkIfEmpty wrkdir $wrkdir
+
+dirname=$( echo ${wrkdir##*/} ) # removes everything before the backslash
+checkIfEmpty dirname $dirname
+
+filenum=$(cd $wrkdir/gimic.0 && find . -maxdepth 1 -type f -name '*.inp' | wc -l) # holds the number of files in a row of the squares
+checkIfEmpty filenum $filenum
+
+nstepsH=$( sed -n -e 's/^.*nstepsH=//p' $wrkdir/calculation.dat | awk '{print $1}')
+#nstepsV=$( sed -n -e 's/^.*nstepsV=//p' $wrkdir/calculation.dat | awk '{print $1}')
+checkIfEmpty nstepsH $nstepsH
+#checkIfEmpty nstepsV $nstepsV
+
+# clean up possible previous calculations
+rm -rf *eps GIMIC.*
+
+parallel=$2
+checkIfEmpty parallel $parallel
+
+date
+echo "Running $parallel out of $filenum GIMIC calculations at a time..."; echo 
+
+for (( row=0; row<$nstepsH; row++ ))
+do
+    filesList=$( ( cd $wrkdir/gimic.0/ && find . -maxdepth 1 -type f -name "*.$col.inp" ) )
+    checkIfEmpty filesList $filesList
+
+    counter=0
+    for file in $filesList
+    do
+	counter=$(( $counter+1 ))
+	idxH=$(echo $file | sed -e "s#\.# #g" | awk '{ print $2}' )
+	idxV=$(echo $file | sed -e "s#\.# #g" | awk '{ print $3}' )
+	cd $wrkdir/gimic.$row && gimic gimic.$idxH.$idxV.inp > $wrkdir/gimic.$row/gimic.$idxH.$idxV.out &
+	if [ $counter -eq $parallel ]
+	then
+	    wait
+	    counter=0
+	    completed=$(( $completed+$parallel ))
+	    date
+	    echo "$completed out of " $(($filenum*$nstepsH)) " jobs completed"; echo
+	fi
+    done
+done
+
+
+rm -rf GIMIC* 
+
+###################################################################################
+
+# Calculating the gradient:
+(cd $wrkdir && @SCRIPTS_DIR@/gradient-square.sh)
+
+# Find the zeroes on the current profile plot
+#@SCRIPTS_DIR@/crit_pts.sh $wrkdir 
+
+#######################################################################
+
+# print some info like used time, disk, reserved memory and actual used memory
+sacct -j $SLURM_JOB_ID --format=jobid,jobname,AllocNodes,AllocCPUs,CPUTime,MaxDiskRead,MaxDiskWrite
+#sacct -a --format=elapsed,maxdiskwrite,reqmem,maxrss  -j $SLURM_JOB_ID
+
+echo

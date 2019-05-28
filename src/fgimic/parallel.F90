@@ -35,9 +35,9 @@ contains
         mpirank = 0
 #endif
         if (mpi_world_size == 1) then
-            settings%is_mpirun = .false.
+            is_mpirun = .false.
         else
-            settings%is_mpirun = .true.
+            is_mpirun = .true.
         end if
     end function
 
@@ -92,17 +92,9 @@ contains
             return
         end if
 #ifdef HAVE_MPI
-!        call mpi_barrier(MPI_COMM_WORLD, ierr)
-
         call mpi_gather(source, size(source), MPI_DOUBLE_PRECISION, &
             dest, size(source), MPI_DOUBLE_PRECISION, 0, &
             MPI_COMM_WORLD, ierr)
-!        call mpi_gather(dest, n, MPI_DOUBLE_PRECISION, &
-!            MPI_IN_PLACE, n, MPI_DOUBLE_PRECISION, 0, &
-!            MPI_COMM_WORLD, ierr)
-        if (ierr /= 0) then
-            stop 'MPI error in gather_data()'
-        end if
 #endif
     end subroutine
 

@@ -1,0 +1,46 @@
+# NEW INPUT
+
+calc=integral        # cdens, integral, edens, divj
+title=""
+basis="../MOL"
+xdens="../XDENS"
+debug=1           # debug print level
+openshell=false 
+#show_axis=true   # mark "up" axis in .xyz files
+#magnet_axis=X  # @MF@ #[-] i,j,k || x,y,z -> align magnet along axis
+magnet=[ @Bx@, @By@, @Bz@ ]   # magnet vector
+#scale_vectors=1.0
+
+Grid(bond) {                    # define grid orthogonal to a bond 
+     type=gauss                  # gauss distribution of grid points
+     bond=[@bond@]           
+#     coord1=[@COORD1@]
+#     coord2=[@COORD2@]
+#     fixpoint=@fixed@
+     fixcoord=[ @FX@, @FY@, @FZ@ ]
+     distance=@distance@               # place grid 'distance' between atoms
+     gauss_order=9               # order for gauss quadrature
+     spacing=[ @spacingX@, @spacingY@, @spacingZ@ ]
+#     in=@start@
+#     out=@end@
+#     up=@up@
+#     down=@down@
+     height=[@down@,@up@]
+     width=[@start@,@end@]
+     rotation=[ @rotX@, @rotY@, @rotZ@ ]      # Rotation of (i,j,k) -> (i',j',k') degrees
+     #rotation_origin=[ @origX@, @origY@, @origZ@ ]      
+}
+
+Advanced {
+    lip_order=5      # order of Lagrange Interpolating Polynominals to use
+    spherical=off     # don't touch, unless you REALLY know what you are doing
+    diamag=on           # turn on/off diamagnetic contributions
+    paramag=on          # turn on/off paramagnetic contributions
+    GIAO=on             # turn on/off GIAOs. Don't change unless you know why.
+    screening=on        # use screening to speed up 
+    screening_thrs=1.d-8   # Screening threshold
+}
+
+Essential {
+    jmod=off
+}

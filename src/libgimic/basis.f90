@@ -56,9 +56,9 @@ contains
 !        do i=1,natoms
 !            call print_atom_data(atoms(i),i)
 !        end do
-        write(str_g, 77) '  Total number of primitive  GTO''s ', this%ngto
+        write(str_g, '(a, i6)') '  Total number of primitive  GTO''s ', this%ngto
         call msg_out(str_g)
-        write(str_g, 77) '  Total number of contracted GTO''s ', this%ncgto
+        write(str_g, '(a, i6)') '  Total number of contracted GTO''s ', this%ncgto
         call msg_out(str_g)
         call nl
 
@@ -82,7 +82,7 @@ contains
         end if
 
         call write_xyz(this, 'mol.xyz')
-77		format(a,i4)
+77              format(a,i4)
     end subroutine
 !
 ! Loop over ctr and set up screening thresholds
@@ -205,8 +205,8 @@ contains
             write(tun, 21, advance='no') ctr%cc(i),' (',ctr%ncc(i),') '
             call nl
         end do
-20		format(f20.10)
-21		format(f13.10,a,f13.10,a)
+20              format(f20.10)
+21              format(f13.10,a,f13.10,a)
     end subroutine
 
 !
@@ -284,17 +284,17 @@ contains
                 !print *
                 k=k+1
             end do
-            write(str_g, 55) npf,' GTO''s and ', ncf, ' CGTO''s of ''',&
+            write(str_g, '(i5,a,i5,a,i5,a)') npf,' GTOs and ', ncf, ' CGTOs of ''',&
                 & shell_names(i-1),''' type.'
             call msg_out(str_g)
         end do
         call nl
 
 55      format(i3,a,i3,a,a1,a)
-66		format(a,i3,a2,2a1)
-77		format(a,f8.4)
-88		format(a,i4,a,a2,a)
-99		format(a)
+66              format(a,i3,a2,2a1)
+77              format(a,f8.4)
+88              format(a,i4,a,a2,a)
+99              format(a)
     end subroutine
 
 !
@@ -469,21 +469,21 @@ contains
     end function
 
     ! integrate s-funcs for debugging purpouses...
-!	subroutine s_int(Ctr)
-!		type(contraction_t), intent(in) :: Ctr
+!       subroutine s_int(Ctr)
+!               type(contraction_t), intent(in) :: Ctr
 !
-!		real(DP) :: qq
-!		integer(I4) :: i,j
+!               real(DP) :: qq
+!               integer(I4) :: i,j
 !
-!		qq=0.d0
-!		do i=1,Ctr%npf
-!			do j=1,Ctr%npf
-!				qq=qq+Ctr%ncc(i)*Ctr%ncc(j)*(PI/(Ctr%xp(i)+Ctr%xp(j)))**1.5
-!			end do
-!		end do
-!		print *, 's type integral:', qq
+!               qq=0.d0
+!               do i=1,Ctr%npf
+!                       do j=1,Ctr%npf
+!                               qq=qq+Ctr%ncc(i)*Ctr%ncc(j)*(PI/(Ctr%xp(i)+Ctr%xp(j)))**1.5
+!                       end do
+!               end do
+!               print *, 's type integral:', qq
 !
-!	end subroutine
+!       end subroutine
     subroutine write_xyz(mol, fname)
         type(molecule_t) :: mol
         character(*), intent(in) :: fname

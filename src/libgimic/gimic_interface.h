@@ -15,8 +15,6 @@ extern "C" {
     void gimic_calc_jtensor(const double *, double *);
     void gimic_calc_jvector(const double *, double *);
     void gimic_calc_modj(const double *, double *);
-    void gimic_calc_divj(const double *, double *);
-    void gimic_calc_edens(const double *, double *);
 #ifdef __cplusplus
 }
 #endif

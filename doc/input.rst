@@ -91,7 +91,7 @@ Grid(type) {
 }
 
 
-Keywords
+Bond grid
 ~~~~~~~~~~~
 
 The keywords specific to the **bond** type grid employed in the integration of the 
@@ -123,18 +123,21 @@ distance=r
     between which the integration plane will cross. 
     
 height=[-a, b]
-    Specify the distance ``a`` between the bottom vertex of the integration plane 
-    and the bond using the number ``-a``. Specify the distance ``b`` between the top 
-    vertex of the integration plane and the bond using the number ``b``.
+    Specify the distance *a* between the bottom vertex of the integration plane 
+    and the bond using the number *-a*. Specify the distance *b* between the top 
+    vertex of the integration plane and the bond using the number *b*.
     
 width=[-a,b]
-    Specify the lengths ``a`` and ``b`` on both sides of the chemical bond.
+    Specify the lengths *a* and *b* on both sides of the chemical bond.
 
 type=gauss                  
     Use Gauss distribution of grid points for the Gauss quadrature
     
 gauss_order=9               
     The order of the Gauss quadrature
+
+Base grid
+~~~~~~~~~~~~~~
 
 The keywords for the **base** type grid employed in current-density calculations are:
 
@@ -153,7 +156,10 @@ jvec=[x, y, z]
 length=[a, b, c] 
     The length of each side of the plane or cube. 
 
-Universal keywords valid for all grid types:
+Universal keywords
+~~~~~~~~~~~~~~~~~~~~
+
+The following keywords are valid for both base and bond grids.
 
 spacing=[a, b, c] 
     The distance between the grid points in the three directions (the basis 
@@ -229,12 +235,15 @@ integration grid is sensible in “tricky” molecules.
 jmod=off
     Unless necessary, it should be turned off to save computational time.
 
-Current density calculations
+Current-density calculations
 ------------------------------
 
 Current density calculations are specified using the keyword ``calc = cdens``. 
 
-ACID calculations can be performed. 
+ACID calculations can be performed in the current-density cal
+
+acid=on
+    Turn on/off ACID calculation
 
 The produced files can be visualised in ParaView:
 

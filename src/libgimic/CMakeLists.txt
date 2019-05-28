@@ -10,13 +10,11 @@ set(sources
     cao2sao.f90
     caos.f90
     dens.f90
-    divj.f90
-    edens.f90
     factorial.f90
     gaussint.f90
     gtodefs.f90
     intgrl.f90
-    jtensor.f90
+    jtensor.F90
     kinds.f90
     lip.f90
     reorder.f90
@@ -39,6 +37,23 @@ add_library( gimic2
     ${sources}
     )
 set_property( TARGET gimic2 PROPERTY POSITION_INDEPENDENT_CODE ON )
+
+if(ENABLE_BLAS)
+    target_compile_options(
+        gimic2
+        PRIVATE
+            -DHAVE_BLAS
+        )
+endif()
+
+option(ENABLE_MKL_FLAG "Enable MKL compile flag" OFF)
+if(ENABLE_MKL_FLAG)
+    target_compile_options(
+        gimic2
+        PRIVATE
+            -DHAVE_BLAS
+        )
+endif()
 
 if (CYTHON_FOUND)
     set_source_files_properties(

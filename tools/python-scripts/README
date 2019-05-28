@@ -1,0 +1,28 @@
+
+This is a collection of python scripts to perform integration
+scans. There is for sure room for improvement and contributions
+are welcome. I wrote them to train python.    
+
+Requirements:
+
+- XDENS, MOL and coord.xyz have to be in the same directory
+- working version of a molecular viewer eg. Molden
+
+Usage:
+
+python get_input.py --atoms atom1,atom2 --fix fixatom or F --down -val --up
+val --ins -val --out val --batch T or F 
+
+get_input.py calls later on mkslice.py 
+
+Example:
+
+./get_input.py --atoms 2,3 --fix 1 --down -8.0 --up 8.0 --ins -2.5 --out 8.0
+--batch T 
+
+Note: 
+- slices of 0.1 bohr width 
+- spacing of 0.02 
+- if you want to change this you have to do it by hand and
+  modify the script
+

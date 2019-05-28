@@ -1,0 +1,31 @@
+
+# Submit the calculation
+
+wrkdir=$(pwd)
+wrkdir=$(echo $wrkdir/$dirname)
+echo "Working directory:"; echo $wrkdir; echo
+
+#echo "Running Gimic calculations..."
+
+filenum=$(ls $wrkdir/*inp | wc -l)
+checkIfEmpty filenum $filenum
+
+parallel=4
+echo "Enter the number of parallel jobs"
+read parallel
+checkIfEmpty parallel $parallel
+
+# check if too many parallel tasks are called
+if [ $parallel -gt $nsteps ]
+then
+    $parallel=$($nsteps)
+fi
+
+# job duration:
+echo "Enter the time limit for the execution of the batch job in hours"
+read duration
+checkIfEmpty duration $duration
+
+sbatch --ntasks="$parallel" --job-name="$dirname" --time="$duration":00:00 @SCRIPTS_DIR@/jobscript-squares "$wrkdir" "$parallel" 
+echo
+
