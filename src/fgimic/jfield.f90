@@ -376,8 +376,8 @@ contains
         end if
 
         ! put jvec information on vti file
-        if (this%grid%gauss.or.settings%prop) then
-          write(*,*) "VTK files are only printed for even grids"
+        if (this%grid%gauss .or. trim(this%grid%mode)=='file') then
+          write(*,*) "VTK files are only written for even grids"
         else 
           if (present(tag)) then
             call write_vtk_vector_imagedata('jvec'// tag // '.vti', this%grid, jval)
@@ -386,7 +386,6 @@ contains
           end if
         end if
         deallocate(jval)
-
 
     end subroutine
 

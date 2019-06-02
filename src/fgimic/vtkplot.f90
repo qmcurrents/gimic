@@ -82,7 +82,6 @@ contains
         write(fd, *) '</VTKFile>'
 
         call closefd(fd)
-
     end subroutine
 
     subroutine write_vtk_vector_imagedata(fname, grid, pdata)
@@ -95,6 +94,7 @@ contains
         integer(I4), dimension(3) :: npts
         real(DP), dimension(2) :: qrange
         real(DP), dimension(3) :: qmin, qmax, step
+        real(DP) :: avg_x, avg_y, avg_z
         real(DP) :: norm
 
         call getfd(fd)
@@ -158,8 +158,7 @@ contains
                       !l=l+1
                     !end do
                     !l=l+1
-                    write(fd,'(3e14.6)') pdata(i,j,k,1), &
-                    pdata(i,j,k,2), pdata(i,j,k,3)
+                    write(fd,'(3e14.6)') pdata(i,j,k,1), pdata(i,j,k,2), pdata(i,j,k,3)
                 end do
             end do
         end do
@@ -169,16 +168,60 @@ contains
 
         write(fd, *) '   <CellData Scalars="foo">'
 
-        do k=1,npts(3)
-            do j=1,npts(2)
-                do i=1,npts(1)
-                    norm = sqrt(pdata(i,j,k,1)**2       &
-                    + pdata(i,j,k,2)**2                 &
-                    + pdata(i,j,k,3)**2)
+        ! Assign the norm of the current vector to each cell.
+        ! A cell is a volume which is---for ImageData---implicitly defined as little cubes and bounded by eight points,
+        ! so we average the current vectors of the eight adjacent points, and take the norm of the result.
+        ! In the special case of a cube of zero-thickness, cells are not volumes but rather areas, so we average over four vectors.
+        ! https://lorensen.github.io/VTKExamples/site/VTKFileFormats/#imagedata
+        if(npts(1) > 1 .and. npts(2) > 1 .and. npts(3) > 1) then
+            do k=1,npts(3)-1
+                do j=1,npts(2)-1
+                    do i=1,npts(1)-1
+                        avg_x = (pdata(i,j,k,1) + pdata(i+1,j,k,1) + pdata(i,j+1,k,1) + pdata(i,j,k+1,1) &
+                              + pdata(i+1,j+1,k,1) + pdata(i+1,j,k+1,1) + pdata(i,j+1,k+1,1) + pdata(i+1,j+1,k+1,1))/8.0
+                        avg_y = (pdata(i,j,k,2) + pdata(i+1,j,k,2) + pdata(i,j+1,k,2) + pdata(i,j,k+1,2) &
+                              + pdata(i+1,j+1,k,2) + pdata(i+1,j,k+1,2) + pdata(i,j+1,k+1,2) + pdata(i+1,j+1,k+1,2))/8.0
+                        avg_z = (pdata(i,j,k,3) + pdata(i+1,j,k,3) + pdata(i,j+1,k,3) + pdata(i,j,k+1,3) &
+                              + pdata(i+1,j+1,k,3) + pdata(i+1,j,k+1,3) + pdata(i,j+1,k+1,3) + pdata(i+1,j+1,k+1,3))/8.0
+                        norm = sqrt( avg_x**2 + avg_y**2 + avg_z**2 )
+                        write(fd,'(e14.6)') norm
+                    end do
+                end do
+            end do
+        else if(npts(1) > 1 .and. npts(2) > 1 .and. npts(3) == 1) then
+            k=1
+            do j=1,npts(2)-1
+                do i=1,npts(1)-1
+                    avg_x = (pdata(i,j,k,1) + pdata(i+1,j,k,1) + pdata(i,j+1,k,1) + pdata(i+1,j+1,k,1))/4.0
+                    avg_y = (pdata(i,j,k,2) + pdata(i+1,j,k,2) + pdata(i,j+1,k,2) + pdata(i+1,j+1,k,2))/4.0
+                    avg_z = (pdata(i,j,k,3) + pdata(i+1,j,k,3) + pdata(i,j+1,k,3) + pdata(i+1,j+1,k,3))/4.0
+                    norm = sqrt( avg_x**2 + avg_y**2 + avg_z**2 )
                     write(fd,'(e14.6)') norm
                 end do
             end do
-        end do
+        else if(npts(1) > 1 .and. npts(2) == 1 .and. npts(3) > 1) then
+            j=1
+            do k=1,npts(3)-1
+                do i=1,npts(1)-1
+                    avg_x = (pdata(i,j,k,1) + pdata(i+1,j,k,1) + pdata(i,j,k+1,1) + pdata(i+1,j,k+1,1))/4.0
+                    avg_y = (pdata(i,j,k,2) + pdata(i+1,j,k,2) + pdata(i,j,k+1,2) + pdata(i+1,j,k+1,2))/4.0
+                    avg_z = (pdata(i,j,k,3) + pdata(i+1,j,k,3) + pdata(i,j,k+1,3) + pdata(i+1,j,k+1,3))/4.0
+                    norm = sqrt( avg_x**2 + avg_y**2 + avg_z**2 )
+                    write(fd,'(e14.6)') norm
+                end do
+            end do
+        else if(npts(1) == 1 .and. npts(2) > 1 .and. npts(3) > 1) then
+            i=1
+            do k=1,npts(3)-1
+                do j=1,npts(2)-1
+                    avg_x = (pdata(i,j,k,1) + pdata(i,j+1,k,1) + pdata(i,j,k+1,1) + pdata(i,j+1,k+1,1))/4.0
+                    avg_y = (pdata(i,j,k,2) + pdata(i,j+1,k,2) + pdata(i,j,k+1,2) + pdata(i,j+1,k+1,2))/4.0
+                    avg_z = (pdata(i,j,k,3) + pdata(i,j+1,k,3) + pdata(i,j,k+1,3) + pdata(i,j+1,k+1,3))/4.0
+                    norm = sqrt( avg_x**2 + avg_y**2 + avg_z**2 )
+                    write(fd,'(e14.6)') norm
+                end do
+            end do
+        end if
 
         write(fd, *) '   </CellData>'
 
@@ -187,7 +230,6 @@ contains
         write(fd, *) '</VTKFile>'
 
         call closefd(fd)
-
     end subroutine
 
 end module
