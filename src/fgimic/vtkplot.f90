@@ -5,6 +5,7 @@ module vtkplot_module
     use globals_module
     use settings_module
     use grid_class
+    use ISO_FORTRAN_ENV
 
     implicit none
 
@@ -232,6 +233,72 @@ contains
         call closefd(fd)
     end subroutine
 
+
+    ! fname: output filename
+    ! grid: grid point coordinates
+    ! pdata: vectors at grid points
+    ! cell definitions
+    subroutine write_vtk_vector_unstructuredgrid(fname, grid, pdata, cells)
+    ! for writing vtu files:
+    ! https://lorensen.github.io/VTKExamples/site/VTKFileFormats/#unstructuredgrid
+        character(*), intent(in)   :: fname
+        real(real64), intent(in)   :: grid(:, :)  ! which is (3, npoints)
+        real(real64), intent(in)   :: pdata(:, :) ! which is (3, npoints)
+        integer(int32), intent(in) :: cells(:, :) ! which is (4, ncells)
+
+        integer(int32) :: fd
+        integer(int32) :: p, c
+        integer(int32) :: npoints, ncells
+      
+        call getfd(fd)
+        open(fd, file=trim(fname), form='formatted', status='unknown')
+
+        write(fd, *) '<?xml version="1.0"?>'
+        write(fd, *) '<VTKFile type="UnstructuredGrid" version="0.1" byte_order="LittleEndian">'
+        write(fd, *) '  <UnstructuredGrid>'
+        write(fd, *) '    <Piece NumberOfPoints="', npoints, '" NumberOfCells="', ncells, '">'
+        write(fd, *) '      <Points>'
+        write(fd, *) '        <DataArray type="Float32" NumberOfComponents="3" Format="ascii">'
+        do p=1, npoints ! loop over points, write coords
+            write(fd, *) '        ', grid(1,p), '  ',  grid(2,p), '  ', grid(3,p)
+        end do
+        write(fd, *) '        </DataArray>'
+        write(fd, *) '      </Points>'
+        write(fd, *) '      <PointData Scalars="scalars">'
+        write(fd, *) '        <DataArray Name="vectors" type="Float64" NumberOfComponents="3" Format="ascii">'
+        do p=1, npoints ! loop over points, write vectors
+            write(fd, *) '        ', pdata(1,c), '  ',  pdata(2,c), '  ', pdata(3,c)
+        end do
+        write(fd, *) '        </DataArray>'
+        write(fd, *) '      </PointData>'
+        write(fd, *) '      <Cells>'
+        write(fd, *) '        <DataArray type="Int32" Name="connectivity" Format="ascii">'
+        do c=1, ncells ! loop over cells, print node indices (base 0)
+            write(fd, *) '        ', cells(1,c)-1, '  ',  cells(2,c)-1, '  ', cells(3,c)-1, '  ', cells(4,c)-1
+        end do
+        write(fd, *) '        </DataArray>'
+        write(fd, *) '        <DataArray type="Int32" Name="offsets" Format="ascii">'
+        do c=1, ncells ! loop over cells, print offsets, which are effectively the index of the last element in each tetrahedron (base 1)
+            write(fd, *) '        ', 4*c
+        end do
+        write(fd, *) '        </DataArray>'
+        write(fd, *) '        <DataArray type="Int32" Name="types" Format="ascii">'
+        do c=1, ncells ! loop over cells, print cell type.  tetrahedra have type '10'
+            write(fd, *) '        ', 10
+        end do
+        write(fd, *) '        </DataArray>'
+        write(fd, *) '      </Cells>'
+        write(fd, *) '      <CellData Scalars="foo">'
+        do c=1, ncells ! loop over cells, print a value ... what about 0.0?
+            write(fd, *) '        ', 0.0
+        end do
+        write(fd, *) '      </CellData>'
+        write(fd, *) '    </Piece>'
+        write(fd, *) '  </UnstructuredGrid>'
+        write(fd, *) '</VTKFile>'
+
+        call closefd(fd)
+    end subroutine
+
 end module
 
-! vim:et:sw=4:ts=4

@@ -22,6 +22,7 @@ module globals_module
     integer, parameter :: GOPFD=55
     integer, parameter :: GOPFD2=56
     integer, parameter :: GRIDFD=57
+    integer, parameter :: GRIDELE=58 ! the tetrahedral mesh
     integer, parameter :: JTFD=70
     integer, parameter :: JVECFD=30
 

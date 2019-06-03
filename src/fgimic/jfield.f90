@@ -256,13 +256,17 @@ contains
         integer(I4) :: i, j, k, p1, p2, p3
         integer(I4) :: fd1, fd2, fd4, fd5
         integer(I4) :: idx, ptf
-        real(DP), dimension(3) :: v, rr
-        real(DP), dimension(3) :: center, normal
-        real(DP), dimension(:,:), pointer :: jv
-        real(DP), dimension(:,:), pointer :: jtens
-        real(DP), dimension(:,:,:,:), allocatable :: jval
+        real(DP), dimension(3)               :: v, rr
+        real(DP), dimension(3)               :: center, normal
+        real(DP), dimension(:,:), pointer    :: jv
+        real(DP), dimension(:,:), pointer    :: jtens
+        real(DP), allocatable                :: jval_regular(:, :, :, :)
+        real(real64), allocatable            :: jval_unstructured(:, :)
+        integer(int32), allocatable          :: cells(:, :) ! ncells x 4
+        
         real(DP) :: val
         real(DP) :: bound, r
+        integer(int32) :: dummy, ncells
 
         if (mpi_rank > 0) return
         ! get rid of print out of txt files but keep them for debugging
@@ -278,6 +282,7 @@ contains
               fd2 = open_plot('jmod.txt')
           end if
         end if
+
         ! print only jmod.txt for gauss type grid
         if (this%grid%gauss) then
           if (present(tag)) then
@@ -312,42 +317,46 @@ contains
         normal=get_grid_normal(this%grid)
         normal = normal*AU2A
 
-        allocate(jval(p1,p2,p3,3))
+        if( trim(this%grid%mode)=='file') then
+          allocate(jval_unstructured(this%grid%npts(1), 3))
+        else if ( .not. this%grid%gauss) then
+          allocate(jval_regular(p1,p2,p3,3))
+        end if
 
         jv=>this%vec
         do k=1,p3
-            do j=1,p2
-                do i=1,p1
-                    rr=gridpoint(this%grid, i,j,k)*AU2A
-                    if (circle_log) then
-                       ! for radius option
-                       r = sqrt(sum((rr-center)**2))
-                       if (r > bound) then
-                           v = 0.0d0
-                       else
-                           v = jv(:,i+(j-1)*p1+(k-1)*p1*p2)
-                       end if
-                    else
-                        v = jv(:,i+(j-1)*p1+(k-1)*p1*p2)
-                    end if
-                    ! collect jv vec information to put it on vti file
-                    jval(i,j,k,1:3) = v
-                    if (debug) then
-                      call wrt_jvec(rr,v,fd1)
-                      call wrt_jmod(rr,v,fd2)
-                    end if
-                    if (this%grid%gauss) then
-                      call wrt_jmod(rr,v,fd2)
-                    end if
-                end do
-                    if (debug) then
-                      if (fd1 /= 0) write(fd1, *)
-                      if (fd2 /= 0) write(fd2, *)
-                    end if
-                    if (this%grid%gauss) then
-                      if (fd2 /= 0) write(fd2, *)
-                    end if
+          do j=1,p2
+            do i=1,p1
+              rr=gridpoint(this%grid, i,j,k)*AU2A
+              if (circle_log) then
+                ! for radius option
+                r = sqrt(sum((rr-center)**2))
+                if (r > bound) then
+                  v = 0.0d0
+                else
+                  v = jv(:,i+(j-1)*p1+(k-1)*p1*p2)
+                end if
+              else
+                v = jv(:,i+(j-1)*p1+(k-1)*p1*p2)
+              end if
+              ! collect jv vec information to put it on vti file
+              jval_regular(i,j,k,1:3) = v
+              if (debug) then
+                call wrt_jvec(rr,v,fd1)
+                call wrt_jmod(rr,v,fd2)
+              end if
+              if (this%grid%gauss) then
+                call wrt_jmod(rr,v,fd2)
+              end if
             end do
+              if (debug) then
+                if (fd1 /= 0) write(fd1, *)
+                if (fd2 /= 0) write(fd2, *)
+              end if
+              if (this%grid%gauss) then
+                if (fd2 /= 0) write(fd2, *)
+              end if
+          end do
         end do
         if (debug) then
           call closefd(fd1)
@@ -372,20 +381,31 @@ contains
         end if
         ! case external 3D grid - numgrid
         if (settings%prop) then
-            call get_property(this)
+          call get_property(this)
         end if
 
         ! put jvec information on vti file
         if (this%grid%gauss .or. trim(this%grid%mode)=='file') then
-          write(*,*) "VTK files are only written for even grids"
+
+          ! real element file: first number in first line is number of lines
+          open(GRIDELE, file='grid.ele')
+          read(GRIDELE, '(i5)') ncells
+          write(*,*) ncells
+          allocate(cells(4,ncells))
+          read(GRIDELE,*) dummy, cells
+          close(GRIDELE)
+          write(*,*) cells
+          
+          call write_vtk_vector_unstructuredgrid("jvec.vtu", this%grid%xdata, jval_unstructured, cells)
+          deallocate(jval_unstructured)
         else 
           if (present(tag)) then
-            call write_vtk_vector_imagedata('jvec'// tag // '.vti', this%grid, jval)
+            call write_vtk_vector_imagedata('jvec'// tag // '.vti', this%grid, jval_regular)
           else
-            call write_vtk_vector_imagedata("jvec.vti", this%grid, jval)
+            call write_vtk_vector_imagedata("jvec.vti", this%grid, jval_regular)
           end if
+          deallocate(jval_regular)
         end if
-        deallocate(jval)
 
     end subroutine
 

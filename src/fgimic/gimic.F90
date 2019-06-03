@@ -202,7 +202,7 @@ contains
         if (settings%dryrun) return
 
         call calc_jvectors(jf, mol, xdens)
-        call jvector_plots(jf,'')
+        call jvector_plots(jf)
 
         if (settings%is_uhf) then
             call calc_jvectors(jf, mol, xdens, 'alpha')
