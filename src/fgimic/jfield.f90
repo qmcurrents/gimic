@@ -327,7 +327,8 @@ contains
        
         if ( (trim(this%grid%mode)=='std' .or. trim(this%grid%mode)=='base') .and. this%grid%gtype=='even' ) then  ! base + even
           allocate(jval_regular(p1,p2,p3,3))
-        else if( trim(this%grid%mode)=='file' ) then ! file only
+        else if ( ((trim(this%grid%mode)=='base' .or. trim(this%grid%mode)=='std') .and. this%grid%gauss) &
+              .or. trim(this%grid%mode)=='file') then ! file or non-even base
           allocate(jval_unstructured(this%grid%npts(1), 3))
         end if
 
