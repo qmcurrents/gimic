@@ -1,0 +1,5 @@
+#!/bin/sh
+
+
+wc -l < $1 > grid.node
+awk '{print NR, $1, $2, $3}' $1  >> grid.node 

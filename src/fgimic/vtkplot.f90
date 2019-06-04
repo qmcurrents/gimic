@@ -252,16 +252,16 @@ contains
 
         npoints = size(grid, 2)
         ncells = size(cells, 2)
-        write(*,*) npoints, ncells
-      
+        ! write(*,*) npoints, ncells
+
         call getfd(fd)
         open(fd, file=trim(fname), form='formatted', status='unknown')
-        write(*,*) fname, " opened"
+        ! write(*,*) fname, " opened"
 
         write(fd, '(a)') '<?xml version="1.0"?>'
         write(fd, '(a)') '<VTKFile type="UnstructuredGrid" version="0.1" byte_order="LittleEndian">'
         write(fd, '(a)') '  <UnstructuredGrid>'
-        write(fd, '(a, i5, a, i5, a)') '    <Piece NumberOfPoints="', npoints, '" NumberOfCells="', ncells, '">'
+        write(fd, '(a, i10, a, i10, a)') '    <Piece NumberOfPoints="', npoints, '" NumberOfCells="', ncells, '">'
         write(fd, '(a)') '      <Points>'
         write(fd, '(a)') '        <DataArray type="Float32" NumberOfComponents="3" Format="ascii">'
         do p=1, npoints ! loop over points, write coords
@@ -283,20 +283,26 @@ contains
         end do
         write(fd, '(a)') '        </DataArray>'
         write(fd, '(a)') '        <DataArray type="Int32" Name="offsets" Format="ascii">'
+        write(fd, '(a)', advance="no") '        '
         do c=1, ncells ! loop over cells, print offsets, which are effectively the index of the last element in each tetrahedron (base 1)
-            write(fd, '(a,i4)') '        ', 4*c
+            write(fd, '(i10)', advance="no") 4*c
         end do
+        write(fd, '(a)') ''
         write(fd, '(a)') '        </DataArray>'
         write(fd, '(a)') '        <DataArray type="Int32" Name="types" Format="ascii">'
+        write(fd, '(a)', advance="no") '        '
         do c=1, ncells ! loop over cells, print cell type.  tetrahedra have type '10'
-            write(fd, '(a,i3)') '        ', 10
+            write(fd, '(i5)', advance="no") 10
         end do
+        write(fd, '(a)') ''
         write(fd, '(a)') '        </DataArray>'
         write(fd, '(a)') '      </Cells>'
         write(fd, '(a)') '      <CellData Scalars="foo">'
+        write(fd, '(a)', advance="no") '        '
         do c=1, ncells ! loop over cells, print a value ... what about 0.0?
-            write(fd, '(a,f4.1)') '        ', 0.0
+            write(fd, '(f4.1)', advance="no") 0.0
         end do
+        write(fd, '(a)') ''
         write(fd, '(a)') '      </CellData>'
         write(fd, '(a)') '    </Piece>'
         write(fd, '(a)') '  </UnstructuredGrid>'

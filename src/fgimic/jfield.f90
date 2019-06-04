@@ -336,8 +336,8 @@ contains
           do k=1,p3
             do j=1,p2
               do i=1,p1
+                rr=gridpoint(this%grid, i,j,k)*AU2A
                 if (circle_log) then
-                  rr=gridpoint(this%grid, i,j,k)*AU2A
                   ! for radius option
                   r = sqrt(sum((rr-center)**2))
                   if (r > bound) then
@@ -354,9 +354,9 @@ contains
 !                  call wrt_jvec(rr,v,fd1)
 !                  call wrt_jmod(rr,v,fd2)
 !                end if
-!                if (this%grid%gauss) then
-!                  call wrt_jmod(rr,v,fd2)
-!                end if
+                if (this%grid%gauss) then
+                  call wrt_jmod(rr,v,fd2)
+                end if
               end do
 !              if (debug) then
 !                if (fd1 /= 0) write(fd1, *)
@@ -376,9 +376,9 @@ contains
 !        if (debug) then
 !          call closefd(fd1)
 !        end if
-!        if (this%grid%gauss .and. debug) then
-!          call closefd(fd2)
-!        end if
+        if (this%grid%gauss .or. debug) then
+          call closefd(fd2)
+        end if
 
         ! case 3D grid
         if (grid_is_3d(this%grid)) then ! FIXME: why not "std or base"?
@@ -401,21 +401,24 @@ contains
         end if
 
         ! put jvec information on vti file
-        if (this%grid%gauss .or. trim(this%grid%mode)=='file') then
+        if ( ((trim(this%grid%mode)=='base' .or. trim(this%grid%mode)=='std') .and. this%grid%gauss) &
+              .or. trim(this%grid%mode)=='file') then
 
           ! read element file: first number in first line is number of lines
-          open(GRIDELE, file='grid.ele')
-          read(GRIDELE, '(3i4)') ncells, dummy, dummy
+          open(GRIDELE, file='grid.1.ele')
+          ! read(GRIDELE, '(3i4)') ncells, dummy, dummy
+          read(GRIDELE, *) ncells, dummy, dummy
           ! write(*,*) "ncells ", ncells
           allocate(cells(4,ncells))
           do i=1,ncells
-            read(GRIDELE,'(5i7)') dummy, cells(1:4, i)
+            ! read(GRIDELE,'(5i7)') dummy, cells(1:4, i)
+            read(GRIDELE, *) dummy, cells(1:4, i)
           end do
           close(GRIDELE)
           
           call write_vtk_vector_unstructuredgrid("jvec.vtu", this%grid%xdata, jval_unstructured, cells)
           deallocate(jval_unstructured)
-        else 
+        else if ( (trim(this%grid%mode)=='base' .or. trim(this%grid%mode)=='std') .and. this%grid%gtype=='even' ) then
           if (present(tag)) then
             call write_vtk_vector_imagedata('jvec'// tag // '.vti', this%grid, jval_regular)
           else
