@@ -1,0 +1,114 @@
+#!@PYTHON_EXECUTABLE@
+import re, subprocess 
+
+def main():
+    lastline = ""
+    lastwords = list()
+    lastwords.append("")
+    lastletter = ""
+    sbffer = list()
+    pbffer = list()
+    dbffer = list()
+    fbffer = list()
+    gbffer = list()
+    hbffer = list()
+    ibffer = list()
+    bffer = list()
+
+    with open("basis", "r") as f:
+        lines = f.readlines()
+
+    for line in lines:
+        words = line.split()
+        pregexp = re.compile('   [0-9]  [a-z]')
+        m = pregexp.match(line)
+        mlast = pregexp.match(lastline)
+        qregexp = re.compile(' *[0-9]')
+        n = qregexp.match(line)
+        nlast = qregexp.match(lastline)
+
+
+#if the last line was data and this line is a star:
+#write each of the letter buffers to the main buffer
+#in desired order
+        if nlast and words[0]=='*':
+            for line in sbffer:
+                bffer.append(line)
+            sbffer = list()
+            for line in pbffer:
+                bffer.append(line)
+            pbffer = list()
+            for line in dbffer:
+                bffer.append(line)
+            dbffer = list()
+            for line in fbffer:
+                bffer.append(line)
+            fbffer = list()
+            for line in gbffer:
+                bffer.append(line)
+            gbffer = list()
+            for line in hbffer:
+                bffer.append(line)
+            hbffer = list()
+            for line in ibffer:
+                bffer.append(line)
+            ibffer = list()
+            bffer.append("*\n")
+
+#if this line is for example "   3  s":
+#append this line to the letter buffer
+        elif m:
+            lastletter=words[1]
+            if lastletter=='s':
+                sbffer.append(line)
+            if lastletter=='p':
+                pbffer.append(line)
+            if lastletter=='d':
+                dbffer.append(line)
+            if lastletter=='f':
+                fbffer.append(line)
+            if lastletter=='g':
+                gbffer.append(line)
+            if lastletter=='h':
+                hbffer.append(line)
+            if lastletter=='i':
+                ibffer.append(line)
+
+#if this line is data:
+#append the data to letter buffer
+        elif n:
+            if lastletter=='s':
+                sbffer.append(line)
+            if lastletter=='p':
+                pbffer.append(line)
+            if lastletter=='d':
+                dbffer.append(line)
+            if lastletter=='f':
+                fbffer.append(line)
+            if lastletter=='g':
+                gbffer.append(line)
+            if lastletter=='h':
+                hbffer.append(line)
+            if lastletter=='i':
+                ibffer.append(line)
+
+#if this line is something else (for example file header):
+#append to main buffer
+        else:
+            bffer.append(line)
+
+
+        lastline = line
+        lastwords = words
+
+    subprocess.run(['cp','basis','basis-backup'])
+
+    with open("basis", "w") as f:
+        for line in bffer:
+            f.write(line)
+
+    return 0
+
+if __name__ == '__main__':
+    main()
+
