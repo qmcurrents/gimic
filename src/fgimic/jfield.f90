@@ -250,6 +250,8 @@ contains
     subroutine jvector_plots(this,tag)
         use vtkplot_module
 
+        implicit none
+
         type(jfield_t), intent(inout) :: this
         character(*), optional :: tag
         logical :: circle_log
@@ -334,8 +336,8 @@ contains
           do k=1,p3
             do j=1,p2
               do i=1,p1
-                rr=gridpoint(this%grid, i,j,k)*AU2A
                 if (circle_log) then
+                  rr=gridpoint(this%grid, i,j,k)*AU2A
                   ! for radius option
                   r = sqrt(sum((rr-center)**2))
                   if (r > bound) then
@@ -366,7 +368,9 @@ contains
             end do
           end do
         else if(trim(this%grid%mode)=='file') then
-! FIXME
+          do i=1, p1 ! which is the total number of points
+            jval_unstructured(i, 1:3) = jv(:, i)
+          end do
         end if
 
 !        if (debug) then
@@ -401,12 +405,13 @@ contains
 
           ! read element file: first number in first line is number of lines
           open(GRIDELE, file='grid.ele')
-          read(GRIDELE, '(i5)') ncells
-          write(*,*) ncells
+          read(GRIDELE, '(3i4)') ncells, dummy, dummy
+          ! write(*,*) "ncells ", ncells
           allocate(cells(4,ncells))
-          read(GRIDELE,*) dummy, cells
+          do i=1,ncells
+            read(GRIDELE,'(5i7)') dummy, cells(1:4, i)
+          end do
           close(GRIDELE)
-          write(*,*) cells
           
           call write_vtk_vector_unstructuredgrid("jvec.vtu", this%grid%xdata, jval_unstructured, cells)
           deallocate(jval_unstructured)
@@ -420,6 +425,7 @@ contains
         end if
 
     end subroutine
+
 
     subroutine jmod2_vtkplot(this, tag)
     ! based on jmod_vtkplot
