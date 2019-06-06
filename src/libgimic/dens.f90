@@ -58,7 +58,7 @@ contains
         character(80), intent(in) :: xdens_file
 
         integer(I4) :: b, mo, ispin, s
-        type(reorder_t) :: bofh
+        type(reorder_t) :: order
         real(DP), dimension(:,:), allocatable :: array
 
         if ( .not.associated(this%da) ) then
@@ -98,18 +98,17 @@ contains
         end if
 
         if (is_turbomole) then
-            call new_reorder(bofh, this%mol)
+            call new_reorder(order, this%mol)
             call msg_info('Reordering densities [TURBOMOLE]')
-            call turbo_reorder(bofh)
-            call reorder_dens(bofh, this)
-            call del_reorder(bofh)
+            call turbo_reorder(order)
+            call reorder_dens(order, this)
+            call del_reorder(order)
         end if
 
         close(XDFD)
         return
 
-42      bert_is_evil=.true.
-        call get_debug_level(b)
+42      call get_debug_level(b)
         if (debug_level < 10) then
             call msg_critical('Density file not found!')
             stop
@@ -207,8 +206,8 @@ contains
         dens(:,:,b)=a
     end subroutine
 
-    subroutine reorder_dens(bofh, this)
-        type(reorder_t) :: bofh
+    subroutine reorder_dens(order, this)
+        type(reorder_t) :: order
         type(dens_t) :: this
 
         integer(I4) :: i,b,p,ncgto,  ispin
@@ -223,11 +222,11 @@ contains
         do ispin=1,this%spin
             if (ispin == 2) dens=>this%db
             do b=0,p
-                call reorder_cols(bofh, dens(:,:,b))
+                call reorder_cols(order, dens(:,:,b))
             end do
             do i=1,ncgto
                 do b=0,p
-                    call reorder_vec(bofh, dens(:,i,b))
+                    call reorder_vec(order, dens(:,i,b))
                 end do
             end do
         end do
@@ -291,7 +290,7 @@ contains
 
         integer(4) :: n, i,j
         real(DP), dimension(:,:), allocatable :: mos
-        type(reorder_t) :: bofh
+        type(reorder_t) :: order
 
         if (.not.is_turbomole) then
             call read_dens(this, dens_file)
@@ -332,17 +331,16 @@ contains
             call moco(this, mos)
         end if
 
-        call new_reorder(bofh, this%mol)
+        call new_reorder(order, this%mol)
         call msg_info('Reordering densities [TURBOMOLE]')
-        call turbo_reorder(bofh)
-        call reorder_dens(bofh, this)
-        call del_reorder(bofh)
+        call turbo_reorder(order)
+        call reorder_dens(order, this)
+        call del_reorder(order)
 
         deallocate(mos)
         return
 
-42      bert_is_evil=.true.
-        if (debug_level < 10) then
+42      if (debug_level < 10) then
             call msg_critical('MO file not found!')
             stop
         end if
