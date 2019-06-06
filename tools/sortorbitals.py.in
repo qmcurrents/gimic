@@ -1,118 +1,81 @@
 #!@PYTHON_EXECUTABLE@
 import re, subprocess, os 
 
+def orbsorter(blockbuff):
+
+    orbletter=blockbuff[0].split()[1]
+
+    if 's' in orbletter:
+        return 0
+    if 'p' in orbletter:
+        return 1
+    if 'd' in orbletter:
+        return 2
+    if 'f' in orbletter:
+        return 3
+    if 'g' in orbletter:
+        return 4
+    if 'h' in orbletter:
+        return 5
+    if 'i' in orbletter:
+        return 6
+    else:
+        print("There seems to be something wrong with the basis file...")
+        return 100
+
 def main():
 
     if os.path.isfile('basis-backup'):
         print ("File 'basis-backup' already exists. Maybe the orbitals are already ordered? Nothing has been done.")
         return 0
 
+    subprocess.run(['cp','basis','basis-backup'])
+
     ecpfound = 0
     lastline = ""
-    lastwords = list()
-    lastwords.append("")
-    lastletter = ""
-    sbffer = list()
-    pbffer = list()
-    dbffer = list()
-    fbffer = list()
-    gbffer = list()
-    hbffer = list()
-    ibffer = list()
-    bffer = list()
+    mainbuffer = list()
+    blockbuffer = list()
+    orbbuffer = list()
 
     with open("basis", "r") as f:
         lines = f.readlines()
+        nameregexp = re.compile('   [0-9]  [a-z]')
+        dataregexp = re.compile(' *[0-9]')
 
     for line in lines:
-        words = line.split()
-        pregexp = re.compile('   [0-9]  [a-z]')
-        m = pregexp.match(line)
-        mlast = pregexp.match(lastline)
-        qregexp = re.compile(' *[0-9]')
-        n = qregexp.match(line)
-        nlast = qregexp.match(lastline)
-
+        name = nameregexp.match(line)
+        data = dataregexp.match(line)
+        datalast = dataregexp.match(lastline)
 
         if ecpfound == 1:
-            bffer.append(line)
-
+            mainbuffer.append(line)
         elif '$ecp' in line:
             ecpfound = 1
-            bffer.append(line)
-        
-        elif nlast and words[0]=='*':
-            for line in sbffer:
-                bffer.append(line)
-            sbffer = list()
-            for line in pbffer:
-                bffer.append(line)
-            pbffer = list()
-            for line in dbffer:
-                bffer.append(line)
-            dbffer = list()
-            for line in fbffer:
-                bffer.append(line)
-            fbffer = list()
-            for line in gbffer:
-                bffer.append(line)
-            gbffer = list()
-            for line in hbffer:
-                bffer.append(line)
-            hbffer = list()
-            for line in ibffer:
-                bffer.append(line)
-            ibffer = list()
-            bffer.append("*\n")
-
-        elif m:
-            lastletter=words[1]
-            if lastletter=='s':
-                sbffer.append(line)
-            if lastletter=='p':
-                pbffer.append(line)
-            if lastletter=='d':
-                dbffer.append(line)
-            if lastletter=='f':
-                fbffer.append(line)
-            if lastletter=='g':
-                gbffer.append(line)
-            if lastletter=='h':
-                hbffer.append(line)
-            if lastletter=='i':
-                ibffer.append(line)
-
-        elif n:
-            if lastletter=='s':
-                sbffer.append(line)
-            if lastletter=='p':
-                pbffer.append(line)
-            if lastletter=='d':
-                dbffer.append(line)
-            if lastletter=='f':
-                fbffer.append(line)
-            if lastletter=='g':
-                gbffer.append(line)
-            if lastletter=='h':
-                hbffer.append(line)
-            if lastletter=='i':
-                ibffer.append(line)
-
+            mainbuffer.append(line)
+        elif '*' in lastline and name:
+            orbbuffer.append(line)
+        elif name:
+            blockbuffer.append(orbbuffer)
+            orbbuffer=list()
+            orbbuffer.append(line)
+        elif data:
+            orbbuffer.append(line)
+        elif '*' in line and datalast:
+            blockbuffer.append(orbbuffer)
+            sortedorbs=sorted(blockbuffer, key=orbsorter)
+            for orbital in sortedorbs:
+                for orbline in orbital:
+                    mainbuffer.append(orbline)
+            blockbuffer=list()
         else:
-            bffer.append(line)
-
-
+            mainbuffer.append(line)
         lastline = line
-        lastwords = words
-
-
-    subprocess.run(['cp','basis','basis-backup'])
 
     with open("basis", "w") as f:
-        for line in bffer:
+        for line in mainbuffer:
             f.write(line)
-
-    return 0
+       
+    return 0 
 
 if __name__ == '__main__':
     main()
