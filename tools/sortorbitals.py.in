@@ -52,7 +52,8 @@ def main():
         elif '$ecp' in line:
             ecpfound = 1
             mainbuffer.append(line)
-        elif '*' in lastline and name:
+        elif name and '*' in lastline:
+            orbbuffer=list()
             orbbuffer.append(line)
         elif name:
             blockbuffer.append(orbbuffer)
@@ -66,6 +67,7 @@ def main():
             for orbital in sortedorbs:
                 for orbline in orbital:
                     mainbuffer.append(orbline)
+            mainbuffer.append(line)
             blockbuffer=list()
         else:
             mainbuffer.append(line)
