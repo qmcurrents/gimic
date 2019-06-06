@@ -1,5 +1,14 @@
 #!/bin/sh
 
+# 2019, Lukas Wirz
+# a short script for preparing the input for 'tetgen' which is a simple
+# tetrahedral mesh generator.  The input to this script is a file with grid
+# points (no header, one set of xyz per line, ie the number of line is the
+# number of grid points).  The output of this script (tetgen's .node format) is
+# a very similar file where the first line contains the number of points (and
+# ideally/optionally followed by the data tuple length) and every subsequent
+# line contains the index of the grid point in the first column followed by
+# xyz.
 
 wc -l < $1 > grid.node
 awk '{print NR, $1, $2, $3}' $1  >> grid.node 
