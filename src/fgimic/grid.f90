@@ -494,10 +494,11 @@ contains
         k = k + 1
     end subroutine
 
+    ! retrieve the coordinate of a gridpoint
     function gridpoint(this, i, j, k) result(r)
         type(grid_t), intent(in) :: this
-        integer(I4), intent(in) :: i, j, k
-        real(DP), dimension(3) :: r
+        integer(I4), intent(in)  :: i, j, k
+        real(DP), dimension(3)   :: r
 
         if (this%gtype == 'file') then
             r=this%xdata(:,i)
