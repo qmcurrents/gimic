@@ -73,7 +73,7 @@ module globals_module
 
     integer(4), dimension(100), private, save :: afd=0
     logical :: is_turbomole = .false.
-    logical :: bert_is_evil = .false.
+    logical :: your_results_are_questionable = .false.
     integer :: mpi_world_size = 1
     integer :: mpi_rank = -1
 

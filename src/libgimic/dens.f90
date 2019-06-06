@@ -108,7 +108,8 @@ contains
         close(XDFD)
         return
 
-42      call get_debug_level(b)
+42      your_results_are_questionable = .true.
+        call get_debug_level(b)
         if (debug_level < 10) then
             call msg_critical('Density file not found!')
             stop
@@ -340,7 +341,8 @@ contains
         deallocate(mos)
         return
 
-42      if (debug_level < 10) then
+42      your_results_are_questionable = .true.
+        if (debug_level < 10) then
             call msg_critical('MO file not found!')
             stop
         end if
