@@ -5,21 +5,23 @@
 Grids
 =====
 
-There are two principal types of grids; the simple ’std (or base)’ grid,
-which is defined by a pair of (orthogonal) basis vectors, and the ’bond’
-grid which is mostly useful for defining cut-planes through bonds for
-integration. There is also a third grid type ’file’, which specifies a
-file containing gridpoints For the exact format of this file please
-refer to the source in grid.f90. Furthermore there are two types of
-grids, evenly spaced or with grid points distributed for Gauss-Legendre
-or Gauss-Lobatto quadrature. This is specified with the
-’type=even\|gauss\|lobatto’ keyword. When a quadrature grid is specified
-the order of the quadrature must also be specified with the
-’gauss\_order’ keyword. The number of grid points in each direction is
-specified either explicitly using either of the array keywords
-’grid\_points’ or ’spacing’. If the chosen grid is not a simple even
-spaced grid, the actual number of grid points will be adjusted upwards
-to fit the requirements of the chosen quadrature.
+There are three possible grid topologies in gimic: 'std (or base)' which is
+3-dimensional (although the extend in one direction may be zero), 'bond' which
+is 2-dimensional, and 'file' which is an arbitrary set of points read from a
+file. 'std' grids are especially useful for visualisations of an entire current
+voctor field. 'bond' grid are used to integrate the current that flows through
+the grid.
+
+For an 'std' or 'bond' grid one can specify the spacing (type) of points in
+each dimension. The choices are 'even' for an equidistant grid, 'gauss' for a
+Gauss grid and 'lobatto' for a Gauss-Lobatto grid.  The recommended choices are
+'even' for 'std' and 'gauss' for 'bond'.  When a quadrature grid is specified
+the order of the quadrature must also be specified with the ’gauss\_order’
+keyword. The number of grid points in each direction is specified either
+explicitly using either of the array keywords ’grid\_points’ or ’spacing’. If
+the chosen grid is not a simple even spaced grid, the actual number of grid
+points will be adjusted upwards to fit the requirements of the chosen
+quadrature.
 
 The shape of the grid can also be modified by the ’radius’ key, which
 specifies a cutoff radius. This can be useful for integration. Sometimes
@@ -29,7 +31,7 @@ rotation according to the x->y->z convention. Note that the magnetic
 field is not rotated, unless it is specified with ’magnet\_axis=i,j or
 k’.
 
-GIMIC automatically output a number of .xyz files containing dummy
+GIMIC automatically outputs a number of .xyz files containing dummy
 points to show how the grids defined actually are laid out in space.
 
 Basic grids
@@ -95,7 +97,7 @@ component is positive.
     width=[-1.5, 5.0]
     height=[-5.0, 5.0]
 
-grid(std):
+grid(bond):
 ~~~~~~~~~~
 
 type=gauss\|lobatto
