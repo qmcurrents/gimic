@@ -3,10 +3,10 @@ Vector plots
 ------------
 
 The information needed for vector plots is in the
-file "jvec.{vti,vtu}" and can be visualized using 
+file "jvec.{vti,vtu}" and can be visualised using 
 ParaView (https://www.paraview.org/). 
 
-For the visualization of the current vector field we use two different file
+For the visualisation of the current vector field we use two different file
 formats.  'vti'/ImageData for grids that consist of orthogonal basis vectors in
 two or three dimensions and evenly spaced grid points, and
 'vtu'/UnstructuredGrid for arbitrary sets of points.  vti/vtu files consist of
@@ -15,7 +15,7 @@ a range and spacing in each dimension and the (cuboid) cells are defined
 implicitly.  In vtu files, the grid point coordinates are given explicitly and
 each cell is defined by a cell type (10 for tetrahedral) and the indices of the
 defining nodes.   For each node we write down a vector (the induced current)
-while the cells are not assigned a value for typical visualizations (ie, the
+while the cells are not assigned a value for typical visualisations (ie, the
 value can be set to 0.0).  However, cells need to be defined---paraview
 interpolates the values given at grid points within each cell.
 

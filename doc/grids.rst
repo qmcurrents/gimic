@@ -9,7 +9,7 @@ There are three possible grid topologies in gimic: 'std (or base)' which is
 3-dimensional (although the extend in one direction may be zero), 'bond' which
 is 2-dimensional, and 'file' which is an arbitrary set of points read from a
 file. 'std' grids are especially useful for visualisations of an entire current
-voctor field. 'bond' grid are used to integrate the current that flows through
+vector field. 'bond' grid are used to integrate the current that flows through
 the grid.
 
 For an 'std' or 'bond' grid one can specify the spacing (type) of points in
