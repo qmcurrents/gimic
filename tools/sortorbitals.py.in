@@ -3,33 +3,23 @@ import re, subprocess, os
 
 def orbsorter(blockbuff):
 
+    orbitals = {"s":0, "p":1, "d":2, "f":3, "g":4, "h":5, "i":6}
     orbletter=blockbuff[0].split()[1]
 
-    if 's' in orbletter:
-        return 0
-    if 'p' in orbletter:
-        return 1
-    if 'd' in orbletter:
-        return 2
-    if 'f' in orbletter:
-        return 3
-    if 'g' in orbletter:
-        return 4
-    if 'h' in orbletter:
-        return 5
-    if 'i' in orbletter:
-        return 6
+    if orbletter in orbitals:
+        return orbitals[orbletter]
     else:
-        print("There seems to be something wrong with the basis file...")
-        return 100
+        print("There seems to be something wrong with the basis file... Nothing was done.")
+        quit()
 
 def main():
 
     if os.path.isfile('basis-backup'):
         print ("File 'basis-backup' already exists. Maybe the orbitals are already ordered? Nothing has been done.")
-        return 0
+        quit()
 
     subprocess.run(['cp','basis','basis-backup'])
+
 
     ecpfound = 0
     lastline = ""
