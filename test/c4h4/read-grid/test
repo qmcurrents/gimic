@@ -17,6 +17,6 @@ f = [get_filter(rel_tolerance=1.0e-8)]
 ierr = run(options,
            configure,
            input_files=['gimic.inp'],
-           filters={'stdout': f})
+           filters={'jvec.vtu': f})
 
 sys.exit(ierr)

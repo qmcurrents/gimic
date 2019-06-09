@@ -219,12 +219,12 @@ contains
         ! annihilate paramagnetic contribution
         if (.not.settings%use_paramag) then
             ct=D0
-            bert_is_evil=.true.
+            your_results_are_questionable = .true.
         end if
         ! annihilate diamagnetic  contribution
         if (.not.settings%use_diamag) then
             dpd=D0
-            bert_is_evil=.true.
+            your_results_are_questionable = .true.
         end if
 
         ct(1,2)=ct(1,2)+dpd(3)

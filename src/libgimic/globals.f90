@@ -22,6 +22,7 @@ module globals_module
     integer, parameter :: GOPFD=55
     integer, parameter :: GOPFD2=56
     integer, parameter :: GRIDFD=57
+    integer, parameter :: GRIDELE=58 ! the tetrahedral mesh
     integer, parameter :: JTFD=70
     integer, parameter :: JVECFD=30
 
@@ -72,7 +73,7 @@ module globals_module
 
     integer(4), dimension(100), private, save :: afd=0
     logical :: is_turbomole = .false.
-    logical :: bert_is_evil = .false.
+    logical :: your_results_are_questionable = .false.
     integer :: mpi_world_size = 1
     integer :: mpi_rank = -1
 

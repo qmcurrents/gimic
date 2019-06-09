@@ -11,48 +11,48 @@ module reorder_class
     end type
 
 contains
-    subroutine reorder_vec(bofh, vec)
-        type(reorder_t), intent(inout) :: bofh
+    subroutine reorder_vec(this, vec)
+        type(reorder_t), intent(inout) :: this
         real(DP), dimension(:), intent(inout) :: vec
 
         integer(I4) :: i, ncgto
 
-        ncgto=get_ncgto(bofh%mol)
+        ncgto=get_ncgto(this%mol)
         do i=1,ncgto
-            bofh%tmp(bofh%sv(i),1)=vec(i)
+            this%tmp(this%sv(i),1)=vec(i)
         end do
-        vec=bofh%tmp(:,1)
+        vec=this%tmp(:,1)
     end subroutine
 
-    subroutine reorder_cols(bofh, vec)
-        type(reorder_t), intent(inout) :: bofh
+    subroutine reorder_cols(this, vec)
+        type(reorder_t), intent(inout) :: this
         real(DP), dimension(:,:), intent(inout) :: vec
 
         integer(I4) :: i, ncgto
 
-        ncgto=get_ncgto(bofh%mol)
+        ncgto=get_ncgto(this%mol)
         do i=1,ncgto
-            bofh%tmp(:,bofh%sv(i))=vec(:,i)
+            this%tmp(:,this%sv(i))=vec(:,i)
         end do
-        vec=bofh%tmp
+        vec=this%tmp
     end subroutine
 
-    subroutine new_reorder(bofh, mol)
-        type(reorder_t) :: bofh
+    subroutine new_reorder(this, mol)
+        type(reorder_t) :: this
         type(molecule_t), target :: mol
 
         integer(I4) :: ncgto
 
-        bofh%mol=>mol
+        this%mol=>mol
 
-        ncgto=get_ncgto(bofh%mol)
+        ncgto=get_ncgto(this%mol)
 
-        allocate(bofh%sv(ncgto))
-        allocate(bofh%tmp(ncgto,ncgto))
+        allocate(this%sv(ncgto))
+        allocate(this%tmp(ncgto,ncgto))
     end subroutine
 
-    subroutine turbo_reorder(bofh)
-        type(reorder_t) :: bofh
+    subroutine turbo_reorder(this)
+        type(reorder_t) :: this
 
         integer(I4) :: i, j, k, l, m, c, q, natoms, ncgto
         type(atom_t),  pointer :: atom
@@ -60,14 +60,14 @@ contains
         type(contraction_t), pointer :: ctr
         integer(I4), dimension(:), allocatable :: lvec
 
-        natoms=get_natoms(bofh%mol)
-        ncgto=get_ncgto(bofh%mol)
+        natoms=get_natoms(this%mol)
+        ncgto=get_ncgto(this%mol)
 
         allocate(lvec(ncgto))
 
         q=1
         do i=1,natoms
-            call get_atom(bofh%mol, i, atom)
+            call get_atom(this%mol, i, atom)
             call get_basis(atom,aob)
             k=1
             do l=1,aob%nshells
@@ -86,7 +86,7 @@ contains
         do while (q <= ncgto)
             do i=1,ncgto
                 if (lvec(i) == l) then
-                    bofh%sv(q)=i
+                    this%sv(q)=i
                     q=q+1
                 end if
             end do
@@ -95,37 +95,37 @@ contains
         deallocate(lvec)
     end subroutine
 
-    subroutine degeneralize(bofh)
-        type(reorder_t) :: bofh
+    subroutine degeneralize(this)
+        type(reorder_t) :: this
 
         integer(I4) :: i, j, k, l, m, base, q, natoms, ncgto
         type(atom_t),  pointer :: atom
         type(basis_t), pointer :: aob
         type(contraction_t), pointer :: ctr
 
-        natoms=get_natoms(bofh%mol)
-        ncgto=get_ncgto(bofh%mol)
+        natoms=get_natoms(this%mol)
+        ncgto=get_ncgto(this%mol)
 
-        bofh%sv=0
+        this%sv=0
         q=1
         do i=1,natoms
-            call get_atom(bofh%mol, i, atom)
+            call get_atom(this%mol, i, atom)
             call get_basis(atom,aob)
             j=1
             do while (j <= aob%nctr)
                 base=q
                 ctr=>aob%ctr(j)
                 if (ctr%l == 0) then
-                    bofh%sv(q)=q
-!                    print *, q, base, bofh%sv(q)
+                    this%sv(q)=q
+!                    print *, q, base, this%sv(q)
                     q=q+1
                     j=j+1
                     cycle
                 end if
                 do k=1,ctr%ncf
                     do m=0,ctr%ncomp-1
-                        bofh%sv(q)=base+ctr%ncf*m
-!                        print *, q, base, bofh%sv(q)
+                        this%sv(q)=base+ctr%ncf*m
+!                        print *, q, base, this%sv(q)
                         q=q+1
                     end do
                     base=base+1
@@ -135,34 +135,34 @@ contains
         end do
     end subroutine
 
-    subroutine del_reorder(bofh)
-        type(reorder_t) :: bofh
+    subroutine del_reorder(this)
+        type(reorder_t) :: this
 
-        deallocate(bofh%sv)
-        deallocate(bofh%tmp)
+        deallocate(this%sv)
+        deallocate(this%tmp)
     end subroutine
 
-!    subroutine ugly_reorder_hack(bofh, vec)
-!        type(reorder_t), intent(inout) :: bofh
+!    subroutine ugly_reorder_hack(this, vec)
+!        type(reorder_t), intent(inout) :: this
 !        real(DP), dimension(:), intent(inout) :: vec
 !
 !        integer(I4) :: curl, ncgto, pos, i
 !
 !        ncgto=get_ncgto()
-!        bofh%tmp=0.d0
+!        this%tmp=0.d0
 !        curl=0
 !        pos=1
 !        do while (pos <= ncgto)
 !            do i=1,ncgto
-!                if (bofh%vec(i) == curl) then
-!                    bofh%tmp(pos)=vec(i)
-!                    bofh%tmp(i)=vec(pos)
+!                if (this%vec(i) == curl) then
+!                    this%tmp(pos)=vec(i)
+!                    this%tmp(i)=vec(pos)
 !                    pos=pos+1
 !                end if
 !            end do
 !            curl=curl+1
 !        end do
-!        vec=bofh%tmp
+!        vec=this%tmp
 !    end subroutine
 
 
