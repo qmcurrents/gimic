@@ -94,6 +94,7 @@ necessarily) the first component of both ranges is negative and the second
 component is positive.
 
 ::
+
     width=[-1.5, 5.0]
     height=[-5.0, 5.0]
 
