@@ -49,8 +49,8 @@ program gimic
     call msg_out('Hello World! (tm)')
     call program_footer()
 
-    if (bert_is_evil) then
-        call msg_error('Bert is evil, and your results are wicked.')
+    if (your_results_are_questionable) then
+        call msg_error('Your results are questionable.')
         call nl
     end if
 
@@ -202,7 +202,7 @@ contains
         if (settings%dryrun) return
 
         call calc_jvectors(jf, mol, xdens)
-        call jvector_plots(jf,'')
+        call jvector_plots(jf)
 
         if (settings%is_uhf) then
             call calc_jvectors(jf, mol, xdens, 'alpha')

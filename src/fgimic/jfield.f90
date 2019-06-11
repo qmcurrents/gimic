@@ -33,7 +33,9 @@ module jfield_class
 
     real(DP) :: vec_scale=D1
     character(BUFLEN) :: jmod_plt, jvec_plt
+
 contains
+
     subroutine new_jfield(this, g, magnet)
         type(jfield_t) :: this
         type(grid_t), target :: g
@@ -66,7 +68,7 @@ contains
 
         integer(I4) :: i, j, k, p1, p2, p3
         integer :: n, m
-        real(DP), dimension(3) :: rr
+        real(DP), dimension(3) :: coord
         real(DP), dimension(:,:), pointer :: tens
         character(8) :: spincase
         integer(I4) :: lo, hi, npts, first, last, fd2
@@ -110,16 +112,16 @@ contains
         call jfield_eta(this, mol, xdens)
 
         !$omp parallel default(none) &
-        !$omp private(jt,rr,n,i,j,k) &
+        !$omp private(jt,coord,n,i,j,k) &
         !$omp shared(this,mol,xdens,spincase,tens,lo,hi)
         call new_jtensor(jt, mol, xdens)
 
         !$omp do schedule(static)
         do n=lo,hi
             call get_grid_index(this%grid, n, i, j, k)
-            rr = gridpoint(this%grid, i, j, k)
+            coord = gridpoint(this%grid, i, j, k)
             ! here the ACID T tensor is calculated and put on tens
-            call ctensor(jt, rr, tens(:,n-lo+1), spincase)
+            call ctensor(jt, coord, tens(:,n-lo+1), spincase)
         end do
         !$omp end do
 
@@ -222,7 +224,7 @@ contains
             calculation: ', delta_t*real(p1*p2*p3)/real(no_tests), ' sec', &
             ' (',  delta_t*real(p1*p2*p3)/real(no_tests) * hours_per_sec, ' h )'
         if ( delta_t*real(p1*p2*p3)/real(no_tests) * hours_per_sec .gt. 2*hours_per_day ) then ! will take more than two days?
-            write(str_g, '(a,f4.1,a)') '(', delta_t*real(p1*p2*p3)/real(no_tests) * hours_per_sec*days_per_hour, ' days )' 
+            write(str_g, '(a,f4.1,a)') '(', delta_t*real(p1*p2*p3)/real(no_tests) * hours_per_sec*days_per_hour, ' days )'
         end if
         call msg_info(str_g)
         call nl
@@ -248,36 +250,45 @@ contains
     subroutine jvector_plots(this,tag)
         use vtkplot_module
 
+        implicit none
+
         type(jfield_t), intent(inout) :: this
         character(*), optional :: tag
         logical :: circle_log
-        logical :: debug 
+        logical :: debug
 
         integer(I4) :: i, j, k, p1, p2, p3
         integer(I4) :: fd1, fd2, fd4, fd5
         integer(I4) :: idx, ptf
-        real(DP), dimension(3) :: v, rr
-        real(DP), dimension(3) :: center, normal
-        real(DP), dimension(:,:), pointer :: jv
-        real(DP), dimension(:,:), pointer :: jtens
-        real(DP), dimension(:,:,:,:), allocatable :: jval
+        real(DP), dimension(3)             :: v, coord
+        real(DP), dimension(3)             :: center, normal
+        real(DP), dimension(:,:), pointer  :: jv
+        real(DP), dimension(:,:), pointer  :: jtens
+        real(DP), allocatable              :: jval_regular(:, :, :, :)
+        real(real64), allocatable          :: jval_unstructured(:, :)
+        integer(int32), allocatable        :: cells(:, :) ! ncells x 4
+
         real(DP) :: val
         real(DP) :: bound, r
+        integer(int32) :: dummy, ncells
+        logical                            :: fd2_isopen = .false.
 
         if (mpi_rank > 0) return
         ! get rid of print out of txt files but keep them for debugging
         ! keep also jmod.txt for 2D case to check integration planes
 
         debug = .false.
-        if (debug) then
-          if (present(tag)) then
-              fd1 = open_plot('jvec' // tag // '.txt')
-              fd2 = open_plot('jmod' // tag // '.txt')
-          else
-              fd1 = open_plot('jvec.txt')
-              fd2 = open_plot('jmod.txt')
-          end if
-        end if
+! lnw: outcommented because inactive anyway
+!        if (debug) then
+!          if (present(tag)) then
+!              fd1 = open_plot('jvec' // tag // '.txt')
+!              fd2 = open_plot('jmod' // tag // '.txt')
+!          else
+!              fd1 = open_plot('jvec.txt')
+!              fd2 = open_plot('jmod.txt')
+!          end if
+!        end if
+
         ! print only jmod.txt for gauss type grid
         if (this%grid%gauss) then
           if (present(tag)) then
@@ -285,77 +296,94 @@ contains
           else
               fd2 = open_plot('jmod.txt')
           end if
+          fd2_isopen = .true.
         end if
 
         ! print out magnetic field
         write(*,*) "magnetic field"
         write(*,*) this%b
         write(*,*) ""
-        ! 
-        call get_grid_size(this%grid, p1, p2, p3)
-        ! this is for cdens visualization when radius option is used
-        call grid_center(this%grid,center)
-        bound=1.d+10
-        bound=this%grid%radius
-        circle_log = .false.
-        ! this only applies for grid base
-        if (grid_is_3d(this%grid)) then
-            circle_log = .false.
-        else
-            if (trim(this%grid%mode) .eq. 'bond') then
-                if (this%grid%radius.gt.0.1d0) then
-                    circle_log = .true.
-                end if
-            end if
-        end if
-        ! get grid normal vector n
-        normal=get_grid_normal(this%grid)
-        normal = normal*AU2A
 
-        allocate(jval(p1,p2,p3,3))
+        call get_grid_size(this%grid, p1, p2, p3)
+
+        if(trim(this%grid%mode) == 'bond' .or. trim(this%grid%mode) == 'base' .or. trim(this%grid%mode) == 'std') then ! bond+base only, not file
+          ! this is for cdens visualization when radius option is used
+          call grid_center(this%grid,center)
+          bound=1.d+10
+          bound=this%grid%radius
+          circle_log = .false.
+          ! this only applies for grid base
+          if (grid_is_3d(this%grid)) then
+              circle_log = .false.
+          else
+              if (trim(this%grid%mode) .eq. 'bond') then
+                  if (this%grid%radius.gt.0.1d0) then
+                      circle_log = .true.
+                  end if
+              end if
+          end if
+          ! get grid normal vector n
+          normal=get_grid_normal(this%grid)
+          normal = normal*AU2A  ! FIXME: normal is never used
+        end if
 
         jv=>this%vec
-        do k=1,p3
+        if ( ((trim(this%grid%mode)=='std' .or. trim(this%grid%mode)=='base') .and. this%grid%gtype=='even') &
+             .or. trim(this%grid%mode)=='bond') then ! (base && even) || bond
+          allocate(jval_regular(p1,p2,p3,3))
+          do k=1,p3
             do j=1,p2
-                do i=1,p1
-                    rr=gridpoint(this%grid, i,j,k)*AU2A
-                    if (circle_log) then
-                       ! for radius option
-                       r = sqrt(sum((rr-center)**2))
-                       if (r > bound) then
-                           v = 0.0d0
-                       else
-                           v = jv(:,i+(j-1)*p1+(k-1)*p1*p2)
-                       end if
-                    else
-                        v = jv(:,i+(j-1)*p1+(k-1)*p1*p2)
-                    end if
-                    ! collect jv vec information to put it on vti file
-                    jval(i,j,k,1:3) = v
-                    if (debug) then
-                      call wrt_jvec(rr,v,fd1)
-                      call wrt_jmod(rr,v,fd2)
-                    end if
-                    if (this%grid%gauss) then
-                      call wrt_jmod(rr,v,fd2)
-                    end if
-                end do
-                    if (debug) then
-                      if (fd1 /= 0) write(fd1, *)
-                      if (fd2 /= 0) write(fd2, *)
-                    end if
-                    if (this%grid%gauss) then
-                      if (fd2 /= 0) write(fd2, *)
-                    end if
+              do i=1,p1
+                coord=gridpoint(this%grid, i,j,k)*AU2A
+                if (circle_log) then
+                  ! for radius option
+                  r = sqrt(sum((coord-center)**2))
+                  if (r > bound) then
+                    v = 0.0d0
+                  else
+                    v = jv(:,i+(j-1)*p1+(k-1)*p1*p2)
+                  end if
+                else
+                  v = jv(:,i+(j-1)*p1+(k-1)*p1*p2)
+                end if
+                ! collect jv vec information to put it on vti file
+                jval_regular(i,j,k,1:3) = v
+!                if (debug) then
+!                  call write_jvec(coord,v,fd1)
+!                  call write_jmod(coord,v,fd2)
+!                end if
+                if (this%grid%gauss) then
+                  call write_jmod(coord,v,fd2)
+                end if
+              end do
+!              if (debug) then
+!                if (fd1 /= 0) write(fd1, *)
+!                if (fd2 /= 0) write(fd2, *)
+!              end if
+              if (fd2_isopen) write(fd2, *)
             end do
-        end do
-        if (debug) then
-          call closefd(fd1)
+          end do
+        else if ( ((trim(this%grid%mode)=='base' .or. trim(this%grid%mode)=='std') .and. this%grid%gauss) &
+              .or. trim(this%grid%mode)=='file' ) then ! (base && gauss) || file
+          allocate(jval_unstructured(this%grid%npts(1), 3))
+          dummy = 0
+          do i=1, p1 ! which is the total number of points
+            v = jv(:, i)
+            if ( (trim(this%grid%mode)=='base' .or. trim(this%grid%mode)=='std') .and. this%grid%gauss) then ! write jmod file for base && gauss
+              coord=gridpoint(this%grid, i, dummy, dummy)*AU2A
+              call write_jmod(coord,v,fd2)
+            end if
+            jval_unstructured(i, 1:3) = v
+          end do
+        end if
+
+!        if (debug) then
+!          call closefd(fd1)
+!        end if
+        if (fd2_isopen) then
           call closefd(fd2)
         end if
-        if (this%grid%gauss) then
-          call closefd(fd2)
-        end if
+
         ! case 3D grid
         if (grid_is_3d(this%grid)) then
           if (settings%acid) then
@@ -370,25 +398,44 @@ contains
             end if
           end if
         end if
+
         ! case external 3D grid - numgrid
         if (settings%prop) then
-            call get_property(this)
+          call get_property(this)
         end if
 
-        ! put jvec information on vti file
-        if (this%grid%gauss.or.settings%prop) then
-          write(*,*) "VTK files are only printed for even grids"
-        else 
+        ! write jvec information to vti file
+        if ( (trim(this%grid%mode)=='base' .or. trim(this%grid%mode)=='std' .or. trim(this%grid%mode)=='bond') &
+                  .and. this%grid%gtype=='even' ) then
           if (present(tag)) then
-            call write_vtk_vector_imagedata('jvec'// tag // '.vti', this%grid, jval)
+            call write_vtk_vector_imagedata('jvec'// tag // '.vti', this%grid, jval_regular)
           else
-            call write_vtk_vector_imagedata("jvec.vti", this%grid, jval)
+            call write_vtk_vector_imagedata("jvec.vti", this%grid, jval_regular)
           end if
-        end if
-        deallocate(jval)
+          deallocate(jval_regular)
+        ! write jvec information to vtu file
+        else if ( ((trim(this%grid%mode)=='base' .or. trim(this%grid%mode)=='std') .and. this%grid%gauss) &
+              .or. trim(this%grid%mode)=='file' ) then
 
+          ! read element file: first number in first line is number of lines
+          open(GRIDELE, file='grid.1.ele')
+          ! read(GRIDELE, '(3i4)') ncells, dummy, dummy
+          read(GRIDELE, *) ncells, dummy, dummy
+          ! write(*,*) "ncells ", ncells
+          allocate(cells(4,ncells))
+          do i=1,ncells
+            ! read(GRIDELE,'(5i7)') dummy, cells(1:4, i)
+            read(GRIDELE, *) dummy, cells(1:4, i)
+          end do
+          close(GRIDELE)
+
+          call write_vtk_vector_unstructuredgrid("jvec.vtu", this%grid%xdata, jval_unstructured, cells)
+          deallocate(jval_unstructured)
+          deallocate(cells)
+        end if
 
     end subroutine
+
 
     subroutine jmod2_vtkplot(this, tag)
     ! based on jmod_vtkplot
@@ -399,7 +446,7 @@ contains
 
         integer(I4) :: p1, p2, p3
         integer(I4) :: i, j, k
-        real(DP), dimension(3) :: norm, mag, v, rr
+        real(DP), dimension(3) :: norm, mag, v, coord
         real(DP) :: sgn
         real(DP), dimension(:,:), pointer :: buf
         real(DP), dimension(:,:,:), allocatable :: val
@@ -416,10 +463,10 @@ contains
             do j=1,p2
                 do i=1,p1
                     v = buf(:,i+(j-1)*p1+(k-1)*p1*p2)
-                    rr=gridpoint(this%grid,i,j,k)
+                    coord=gridpoint(this%grid,i,j,k)
                     val(i,j,k)=(sqrt(sum(v**2)))
-                    rr=rr-dot_product(mag,rr)*mag
-                    norm=cross_product(mag,rr)
+                    coord=coord-dot_product(mag,coord)*mag
+                    norm=cross_product(mag,coord)
                     sgn=dot_product(norm,v)
                     if (sgn.lt.0.0d0) then
                         val(i,j,k) = -1.0d0*val(i,j,k)
@@ -435,48 +482,48 @@ contains
         deallocate(val)
     end subroutine
 
-    subroutine wrt_jvec(rr,v,fd)
-        real(DP), dimension(:), intent(in) :: rr, v
-        integer(I4), intent(in) :: fd
+    subroutine write_jvec(coord, v, fd)
+        real(DP), dimension(:), intent(in) :: coord, v
+        integer(I4), intent(in)            :: fd
 
         if (fd == 0) return
 
-        write(fd, '(6f11.7)')  rr, v
+        write(fd, '(6f11.7)')  coord, v
     end subroutine
 
-    subroutine wrt_njvec(rr,v,fd)
-        real(DP), dimension(:), intent(in) :: rr, v
-        integer(I4), intent(in) :: fd
+!    subroutine write_njvec(coord,v,fd)
+!        real(DP), dimension(:), intent(in) :: coord, v
+!        integer(I4), intent(in) :: fd
+!
+!        real(DP) :: nfac
+!
+!        if (fd == 0) return
+!
+!        nfac=sqrt(sum(v(:)**2))
+!        if (nfac < 1.d-15) then
+!            write(fd, '(6f11.7)')  coord, 0.d0, 0.d0, 0.d0
+!        else
+!            write(fd, '(6f11.7)')  coord, v/nfac
+!        end if
+!    end subroutine
 
-        real(DP) :: nfac
+!    subroutine write_jproj(coord,v,grid,fd)
+!        real(DP), dimension(:), intent(in) :: coord, v
+!        type(grid_t) :: grid
+!        integer(I4), intent(in) :: fd
+!
+!        real(DP) :: jprj
+!        real(DP), dimension(3) :: norm
+!
+!        if (fd == 0) return
+!        norm=get_grid_normal(grid)
+!
+!        jprj=dot_product(norm,v)
+!        write(fd, '(3e19.12)') coord, jprj
+!    end subroutine
 
-        if (fd == 0) return
-
-        nfac=sqrt(sum(v(:)**2))
-        if (nfac < 1.d-15) then
-            write(fd, '(6f11.7)')  rr, 0.d0, 0.d0, 0.d0
-        else
-            write(fd, '(6f11.7)')  rr, v/nfac
-        end if
-    end subroutine
-
-    subroutine wrt_jproj(rr,v,grid,fd)
-        real(DP), dimension(:), intent(in) :: rr, v
-        type(grid_t) :: grid
-        integer(I4), intent(in) :: fd
-
-        real(DP) :: jprj
-        real(DP), dimension(3) :: norm
-
-        if (fd == 0) return
-        norm=get_grid_normal(grid)
-
-        jprj=dot_product(norm,v)
-        write(fd, '(3e19.12)') rr, jprj
-    end subroutine
-
-    subroutine wrt_jmod(rr,v,fd)
-        real(DP), dimension(:), intent(in) :: rr, v
+    subroutine write_jmod(coord,v,fd)
+        real(DP), dimension(:), intent(in) :: coord, v
         integer(I4), intent(in) :: fd
 
         real(DP) :: jmod
@@ -484,16 +531,16 @@ contains
         if (fd == 0) return
 
         jmod=sqrt(sum(v**2))
-        write(fd, '(6f11.7)')  rr, jmod
+        write(fd, '(6f11.7)')  coord, jmod
     end subroutine
 
-    subroutine print_jt(rr, jt)
-        real(DP), dimension(3), intent(in) :: rr
+    subroutine print_jt(coord, jt)
+        real(DP), dimension(3), intent(in)   :: coord
         real(DP), dimension(3,3), intent(in) :: jt
 
         integer(I4) :: l
         print *
-        print '(a,3f12.8)', 'Current tensor at ', rr
+        print '(a,3f12.8)', 'Current tensor at ', coord
         print *, '======================================='
         print '(3e19.12)', (jt(l,:), l=1,3)
         print *
@@ -506,7 +553,7 @@ contains
 
         integer(I4) :: p1, p2, p3, idx
         integer(I4) :: i, j, k
-        real(DP), dimension(:,:), pointer :: jtens
+        real(DP), dimension(:,:), pointer       :: jtens
         real(DP), dimension(:,:,:), allocatable :: val
 
         if (mpi_rank > 0) return
@@ -529,11 +576,11 @@ contains
     end subroutine
 
     subroutine get_property(this)
-        ! assume external grid is read in correctly via read grid 
+        ! assume external grid is read in correctly via read grid
         ! assume grid_w.grd, coord.au, gridfile.grd are in the same directory
         type(jfield_t) :: this
         real(DP), dimension(:,:), pointer :: jtens
-        real(DP), allocatable :: wg(:), coord(:,:), grd(:,:) 
+        real(DP), allocatable :: wg(:), coord(:,:), grd(:,:)
         real(DP), dimension(3) :: d, bb, jvec, sigma, chi
         real(DP) :: f, tmp
         integer :: i, j, k, npts, natoms
@@ -572,14 +619,14 @@ contains
           do i=1, npts
             ! loop xyz
             do j = 1, 3
-              d(j) = grd(i,j) - coord(k,j)   
+              d(j) = grd(i,j) - coord(k,j)
             end do
             f = -1.0d0/((d(1)*d(1) + d(2)*d(2) + d(3)*d(3))**1.5d0)/(137.0359998d0**2.0d0)
             ! contract with Bx
             bb(1) = -1.0d0
             bb(2) = 0.0d0
             bb(3) = 0.0d0
-            jvec = matmul(reshape(jtens(:,i),(/3,3/)),bb) 
+            jvec = matmul(reshape(jtens(:,i),(/3,3/)),bb)
             ! sigma_xx
             sigma(1) = sigma(1) + 1.0d6*wg(i)*f*(d(2)*jvec(3) - d(3)*jvec(2))
             ! chi_xx
@@ -588,7 +635,7 @@ contains
             bb(1) = 0.0d0
             bb(2) = -1.0d0
             bb(3) = 0.0d0
-            jvec = matmul(reshape(jtens(:,i),(/3,3/)),bb) 
+            jvec = matmul(reshape(jtens(:,i),(/3,3/)),bb)
             ! sigma_yy
             sigma(2) = sigma(2) + 1.0d6*wg(i)*f*(d(3)*jvec(1) - d(1)*jvec(3))
             ! chi_yy
@@ -597,28 +644,28 @@ contains
             bb(1) = 0.0d0
             bb(2) = 0.0d0
             bb(3) = -1.0d0
-            jvec = matmul(reshape(jtens(:,i),(/3,3/)),bb) 
+            jvec = matmul(reshape(jtens(:,i),(/3,3/)),bb)
             ! sigma_zz
             sigma(3) = sigma(3) + 1.0d6*wg(i)*f*(d(1)*jvec(2) - d(2)*jvec(1))
             ! chi_zz
             chi(3) = chi(3) + wg(i)*0.5d0*(grd(i,1)*jvec(2) - grd(i,2)*jvec(1))
           end do
-          write(*,*) "atom ",k 
-          write(*,*) "sigma_xx ", sigma(1) 
-          write(*,*) "sigma_yy ", sigma(2) 
-          write(*,*) "sigma_zz ", sigma(3) 
-          tmp = (sigma(1) + sigma(2) + sigma(3))/3.0d0  
-          write(*,*) "shielding constant sigma = ", tmp 
+          write(*,*) "atom ",k
+          write(*,*) "sigma_xx ", sigma(1)
+          write(*,*) "sigma_yy ", sigma(2)
+          write(*,*) "sigma_zz ", sigma(3)
+          tmp = (sigma(1) + sigma(2) + sigma(3))/3.0d0
+          write(*,*) "shielding constant sigma = ", tmp
 
         end do
-        write(*,*) "" 
-        write(*,*) "chi_xx ", chi(1) 
-        write(*,*) "chi_yy ", chi(2) 
-        write(*,*) "chi_zz ", chi(3) 
-        tmp = (chi(1) + chi(2) + chi(3))/3.0d0  
-        write(*,*) "isotropic magnetizability chi = ", tmp 
+        write(*,*) ""
+        write(*,*) "chi_xx ", chi(1)
+        write(*,*) "chi_yy ", chi(2)
+        write(*,*) "chi_zz ", chi(3)
+        tmp = (chi(1) + chi(2) + chi(3))/3.0d0
+        write(*,*) "isotropic magnetizability chi = ", tmp
 
-        ! clean up 
+        ! clean up
         deallocate(wg, coord)
 
     end subroutine

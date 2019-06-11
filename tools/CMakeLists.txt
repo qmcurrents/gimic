@@ -10,6 +10,7 @@ endif()
 configure_file(MOL2mol.sh.in MOL2mol.sh)
 
 configure_file(qgimic.sh.in qgimic.sh)
+configure_file(grd2node.sh.in grd2node.sh)
 
 configure_file(quesys.sh.in quesys.sh) 
 configure_file(turbo2gimic.py.in turbo2gimic.py)
