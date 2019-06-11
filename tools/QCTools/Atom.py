@@ -1,7 +1,7 @@
 import string
 import math
-import Elements
-import Const
+from . import Elements
+from . import Const
 
 _cfact={'au2m' : Const.au2m, 'au2nm' : Const.au2nm, 
 	'au2a' : Const.au2a, 'au2pm' : Const.au2pm, 
@@ -64,12 +64,12 @@ class Atom:
 		return s
 		
 	def _setelement(self, s):
-		s=string.lower(s)
+		s=str.lower(s)
 		#s=string.capitalize(s)
 		try:
 			self.element=Elements.PeriodicTable[s]
-		except KeyError, x:
-			print "Invalid element:", x;
+		except KeyError as x:
+			print(("Invalid element:", x));
 
 	def setconv(self, conv='None'):
 		self.conv=_cfact[conv]
@@ -77,9 +77,10 @@ class Atom:
 class TurboAtom(Atom):
 	def __init__(self, str="0 0 0 q"):
 		"Initialze an Atom from a line from a TM coord file"
-		str=string.split(str)
-		atof=string.atof
-		self.coord=(atof(str[0]), atof(str[1]), atof(str[2]))
+		str=str.split()
+		#atof=float(str)
+		#print(atof[0])
+		self.coord=(float(str[0]), float(str[1]), float(str[2]))
 		self._setelement(str[3])
 
 class XYZAtom(Atom):

@@ -1,14 +1,14 @@
 import re
 import string
 import sys
-import Atom
+from . import Atom
 
 def readAtoms(file, fmt=None):
 	fmts={'coord' : readCoord, 'xyz' : readXYZ}
 	try:
 		func=fmts[fmt]
-	except KeyError, x:
-		print "Unknown format", x
+	except KeyError as x: #formerly "KeyError, x"
+		print(("Unknown format", x))
 		sys.exit()
 	
 	return func(file)
@@ -20,8 +20,8 @@ def readCoord(file):
 	
 	try:
 		f=open(file, 'r')
-	except IOError, x:
-		print '%s: %s' % (x[1], infile)
+	except IOError as x: #formerly "IOError, x"
+		print(('%s: %s' % (x[1], infile)))
 		sys.exit(1)
 	
 	blankline=re.compile('[ \t]*$')
@@ -42,7 +42,8 @@ def readCoord(file):
 			try:
 				atoms.append(Atom.TurboAtom(line))
 			except:
-				print "Error in file", file
+				print(("Error in file :o(", file))
+				print(line)
 				sys.exit()
 
 	f.close()
@@ -56,8 +57,8 @@ def readXYZ(file):
 	
 	try:
 		f=open(file, 'r')
-	except IOError, x:
-		print '%s: %s' % (x[1], infile)
+	except IOError as x: #formerly "IOError, x"
+		print(('%s: %s' % (x[1], infile)))
 		sys.exit(1)
 	
 	blankline=re.compile('[ \t]*$')
@@ -75,7 +76,7 @@ def readXYZ(file):
 			try:
 				n=string.atoi(line)
 			except:
-				print "Error in file", file
+				print(("Error in file", file))
 				sys.exit()
 			f.readline()
 			break
@@ -92,7 +93,7 @@ def readXYZ(file):
 			try:
 				atoms.append(Atom.XYZAtom(line))
 			except:
-				print "Error in file", file
+				print(("Error in file", file))
 				sys.exit()
 	f.close()	
 	return atoms
@@ -105,8 +106,8 @@ def readData(file, cols=(1, 2)):
 	
 	try:
 		f=open(file, 'r')
-	except IOError, x:
-		print '%s: %s' % (x[1], infile)
+	except IOError as x: #formerly IOError, x
+		print(('%s: %s' % (x[1], infile)))
 		sys.exit(1)
 	
 	blankline=re.compile('[ \t]*$')
@@ -130,12 +131,12 @@ def readData(file, cols=(1, 2)):
 					try:
 						tmpdata.append(string.atof(line[i-1]))
 					except:
-						print "Error in data!"
+						print ("Error in data!")
 				else:
 					try:
 						tmpdata.append(string.atoi(line[i-1]))
 					except:
-						print "Error in data!"
+						print ("Error in data!")
 
 			data.append(tmpdata)
 	f.close()
@@ -143,6 +144,6 @@ def readData(file, cols=(1, 2)):
 
 def basename(name):
 	"Split name at first '.'"
-	name=string.strip(name)
-	name=string.split(name, '.')
+	name=str.strip(name)
+	name=str.split(name, '.')
 	return name[0]

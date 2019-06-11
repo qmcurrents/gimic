@@ -1,0 +1,74 @@
+#!@PYTHON_EXECUTABLE@
+import re, subprocess, os 
+
+def orbsorter(blockbuff):
+
+    orbitals = {"s":0, "p":1, "d":2, "f":3, "g":4, "h":5, "i":6}
+    orbletter=blockbuff[0].split()[1]
+
+    if orbletter in orbitals:
+        return orbitals[orbletter]
+    else:
+        print("There seems to be something wrong with the basis file... Nothing was done.")
+        quit()
+
+def main():
+
+    if os.path.isfile('basis-backup'):
+        print ("File 'basis-backup' already exists. Maybe the orbitals are already ordered? Nothing has been done.")
+        quit()
+
+    subprocess.run(['cp','basis','basis-backup'])
+
+
+    ecpfound = 0
+    lastline = ""
+    mainbuffer = list()
+    blockbuffer = list()
+    orbbuffer = list()
+
+    with open("basis", "r") as f:
+        lines = f.readlines()
+        nameregexp = re.compile('   [0-9]  [a-z]')
+        dataregexp = re.compile(' *[0-9]')
+
+    for line in lines:
+        name = nameregexp.match(line)
+        data = dataregexp.match(line)
+        datalast = dataregexp.match(lastline)
+
+        if ecpfound == 1:
+            mainbuffer.append(line)
+        elif '$ecp' in line:
+            ecpfound = 1
+            mainbuffer.append(line)
+        elif name and '*' in lastline:
+            orbbuffer=list()
+            orbbuffer.append(line)
+        elif name:
+            blockbuffer.append(orbbuffer)
+            orbbuffer=list()
+            orbbuffer.append(line)
+        elif data:
+            orbbuffer.append(line)
+        elif '*' in line and datalast:
+            blockbuffer.append(orbbuffer)
+            sortedorbs=sorted(blockbuffer, key=orbsorter)
+            for orbital in sortedorbs:
+                for orbline in orbital:
+                    mainbuffer.append(orbline)
+            mainbuffer.append(line)
+            blockbuffer=list()
+        else:
+            mainbuffer.append(line)
+        lastline = line
+
+    with open("basis", "w") as f:
+        for line in mainbuffer:
+            f.write(line)
+       
+    return 0 
+
+if __name__ == '__main__':
+    main()
+

@@ -2,20 +2,20 @@ import string
 
 class Element:
 	def __init__(self, l):
-		self.radius   = string.atof(l[0])
-		self.covalent = string.atof(l[1])
-		self.number   = string.atoi(l[2])
-		self.mass     = string.atof(l[3])
+		self.radius   = float(l[0])
+		self.covalent = float(l[1])
+		self.number   = int(l[2])
+		self.mass     = float(l[3])
 		self.symbol   = l[4]
-		self.bpt      = string.atof(l[5])
-		self.mpt      = string.atof(l[6])
-		self.density  = string.atof(l[7])
-		self.volume   = string.atof(l[8])
+		self.bpt      = float(l[5])
+		self.mpt      = float(l[6])
+		self.density  = float(l[7])
+		self.volume   = float(l[8])
 		self.name     = l[9]
-		self.debye    = string.atof(l[10])
-		self.a        = string.atof(l[11])
+		self.debye    = float(l[10])
+		self.a        = float(l[11])
 		self.crystal  = l[12]
-		self.cpera    = string.atof(l[13])
+		self.cpera    = float(l[13])
 		self.conf     = l[14]
 	
 	def __repr__(self):
