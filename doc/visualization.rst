@@ -29,7 +29,7 @@ mesh.  One choice for such a program is TetGen
 1. obtain a grid of your choice.  The file format should be: no header entries,
 each line contains xyz of a grid point.  That is, the number of lines equals
 the number of grid points.  A grid can for example be obtained from the numgrid
-library (but those grids will typically be more expensive that necessary for
+library (but those grids will typically be more expensive than necessary for
 visualisation purposes), or by writing a short script to generate a custom grid
 for a class of molecules.  A universal way of generating acceptable grids for
 visualisation is to first generate a full regular cube, and prune all points
