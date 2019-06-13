@@ -3,12 +3,9 @@
 #
 
 import sys
-import string
-import re
 import math
 sys.path.append('@PYTHON_INSTDIR@')
 from QCTools import QCTools
-from QCTools.Elements import PeriodicTable as PTab
 from argparse import ArgumentParser
 
 def parseCommandline():
@@ -20,19 +17,22 @@ def parseCommandline():
     parser.add_argument("--grid-spacing", help="[a_0]", nargs=1, dest="spacing",    action="store", type=float,  required=False, default=0.5 )
     argparse = parser.parse_args()
     argparse.spacing /= math.sqrt(3)/2.0
-    print(argparse.coord_file)
+    # print(argparse.coord_file)
     return argparse
 
-def logical_xor(str1, str2):
-    return bool(str1) ^ bool(str2)
+def write_coord(grid, outfile):
+    with open(outfile, "w") as f:
+      for coord in grid:
+        line = '{:f} {:f} {:f}\n'.format(coord[0], coord[1], coord[2])
+        f.write(line)
 
 def main():
     args = parseCommandline()
-    print(args)  
+    print(args)
 
     atoms = QCTools.readCoord(args.coord_file[0])
     atoms = atoms[1:]
-    print(atoms)
+    print('number of atoms:', len(atoms))
 
     # find min/max x/y/z
     min_x = sys.maxsize
@@ -41,25 +41,25 @@ def main():
     max_x = -sys.maxsize
     max_y = -sys.maxsize
     max_z = -sys.maxsize
-    print(min_x, max_x, min_y, max_y, min_z, max_z)
+    # print(min_x, max_x, min_y, max_y, min_z, max_z)
 
     for atom in atoms:
-        print(atom)
+        # print(atom)
         min_x = min(atom.coord[0], min_x)
         min_y = min(atom.coord[1], min_y)
         min_z = min(atom.coord[2], min_z)
         max_x = max(atom.coord[0], max_x)
         max_y = max(atom.coord[1], max_y)
         max_z = max(atom.coord[2], max_z)
-    print(min_x, max_x, min_y, max_y, min_z, max_z)
-    
+    print('bounding box (+/- cutoff): x: ', min_x-args.cutoff, max_x+args.cutoff, '; y: ', min_y-args.cutoff, max_y+args.cutoff, '; z: ', min_z-args.cutoff, max_z+args.cutoff)
+
     # number of layers in each direction
     x_layers = 2 * (max_x - min_x + 2*args.cutoff) / float(args.spacing)
     y_layers = 2 * (max_y - min_y + 2*args.cutoff) / float(args.spacing)
     z_layers = 2 * (max_z - min_z + 2*args.cutoff) / float(args.spacing)
-    print(x_layers, y_layers, z_layers)
-    
-    grid = [] 
+    # print(x_layers, y_layers, z_layers)
+
+    grid = []
     for z in range(0, math.ceil(z_layers)):
       z_coord = z * float(args.spacing) / 2.0 + (min_z - args.cutoff)
       z_even = (z%2 == 0)
@@ -75,19 +75,13 @@ def main():
             # print (dist, args.cutoff)
             if( dist < args.cutoff):
               grid.append([x_coord, y_coord, z_coord])
-              print('X', x_coord, y_coord, z_coord)
+              # print('X', x_coord, y_coord, z_coord)
               break
-          
-    write_xyz(grid)
 
-    # for i in range(1,len(atoms)):
-    #     a=atoms[i]
-    #     sym=str.upper(a.element.symbol)
-    #     if sym == 'Q':
-    #         sys.stderr.write("\n*** ERROR ***\nAtoms without basis functions should be removed from the control file \n\n")
-    #         sys.exit(1)
-    #     print(("%2s%2i%20.12f%20.12f%20.12f" % \
-    #         (sym, 1, a.coord[0], a.coord[1], a.coord[2])))
+    print('number of grid points: ', len(grid))
+    print('grid written to \'grid\'')
+    print('next call: \'grd2node grid\'')
+    write_coord(grid, 'grid')
 
 
 if __name__ == '__main__':
