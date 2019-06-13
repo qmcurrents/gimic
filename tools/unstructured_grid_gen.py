@@ -9,14 +9,11 @@ from argparse import ArgumentParser
 
 def parseCommandline():
     parser = ArgumentParser(prog="unstructured_grid_gen.py", description="first create a body centred cubic lattice, then prune using atomic coordinates", add_help=True)
-    parser.add_argument("--coord-file",   help="",      nargs=1, dest="coord_file", action="store", type=str, required=False, default=['coord'])
-    parser.add_argument("--cutoff",       help="[a_0]", nargs=1, dest="cutoff",   action="store", type=float,  required=False, default=5.0)
-    # parser.add_argument("--cutoff-perpB", help="[a_0]", nargs=1, dest="cutoff_pB",  action="store", type=float,  required=False, default=8.0 )
-    # parser.add_argument("--B",            help="",      nargs=3, dest="B",          action="store", type=float,  required=False, default=[0, 0, 1] )
+    parser.add_argument("--coord-file",   help="",      nargs=1, dest="coord_file", action="store", type=str,    required=False, default=['coord'])
+    parser.add_argument("--cutoff",       help="[a_0]", nargs=1, dest="cutoff",     action="store", type=float,  required=False, default=5.0)
     parser.add_argument("--grid-spacing", help="[a_0]", nargs=1, dest="spacing",    action="store", type=float,  required=False, default=0.5 )
     argparse = parser.parse_args()
     argparse.spacing /= math.sqrt(3)/2.0
-    # print(argparse.coord_file)
     return argparse
 
 def write_coord(grid, outfile):
@@ -40,7 +37,6 @@ def main():
     max_x = -sys.maxsize
     max_y = -sys.maxsize
     max_z = -sys.maxsize
-    # print(min_x, max_x, min_y, max_y, min_z, max_z)
 
     for atom in atoms:
         # print(atom)
@@ -56,7 +52,6 @@ def main():
     x_layers = 2 * (max_x - min_x + 2*args.cutoff) / float(args.spacing)
     y_layers = 2 * (max_y - min_y + 2*args.cutoff) / float(args.spacing)
     z_layers = 2 * (max_z - min_z + 2*args.cutoff) / float(args.spacing)
-    # print(x_layers, y_layers, z_layers)
 
     grid = []
     for z in range(0, math.ceil(z_layers)):
@@ -71,10 +66,8 @@ def main():
             dist = math.sqrt( math.pow((atom.coord[0] - x_coord),2) +
                               math.pow((atom.coord[1] - y_coord),2) +
                               math.pow((atom.coord[2] - z_coord),2) )
-            # print (dist, args.cutoff)
             if( dist < args.cutoff):
               grid.append([x_coord, y_coord, z_coord])
-              # print('X', x_coord, y_coord, z_coord)
               break
 
     print('number of grid points: ', len(grid))
