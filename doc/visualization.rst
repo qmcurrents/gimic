@@ -31,10 +31,8 @@ each line contains xyz of a grid point.  That is, the number of lines equals
 the number of grid points.  A grid can for example be obtained from the numgrid
 library (but those grids will typically be more expensive than necessary for
 visualisation purposes), or by writing a short script to generate a custom grid
-for a class of molecules.  A universal way of generating acceptable grids for
-visualisation is to first generate a full regular cube, and prune all points
-that are further away from any atom than some threshold (we ought to provide a
-script for that).
+for a class of molecules.  A universally useful grid can be generated with the
+provided script 'unstructured_grid_gen.py'.
 
 2. run 'grd2node.sh <grid file>' to obtain 'grid.node' which can be read by
 tetgen.
