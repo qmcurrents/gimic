@@ -12,3 +12,5 @@
 
 wc -l < $1 > grid.node
 awk '{print NR, $1, $2, $3}' $1  >> grid.node 
+echo done.
+echo next you might want to say: \'tetgen grid.node\' to obtain \'grid.1.ele\'
