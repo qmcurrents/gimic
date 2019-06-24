@@ -9,10 +9,10 @@ from argparse import ArgumentParser
 
 def parseCommandline():
     parser = ArgumentParser(prog="unstructured_grid_gen.py", description="first create a body centred cubic lattice, then prune using atomic coordinates", add_help=True)
-    parser.add_argument("--coord-file",   help="",      nargs=1, dest="coord_file", action="store", type=str,    required=False, default=['coord'])
-    parser.add_argument("--cutoff",       help="maximum distance from a grid point to an atom [a_0]", nargs=1, dest="cutoff",     action="store", type=float,  required=False, default=5.0)
-    parser.add_argument("--grid-spacing", help="distance between grid points in the direction of the main axes [a_0].  The minimum distance between gridpoints is slightly smaller.", nargs=1, dest="spacing",    action="store", type=float,  required=False, default=0.5 )
-    parser.add_argument("--bounding-box", help="the bb can be used for truncation. default: none", nargs=6, dest="bb",    action="store", type=float,  required=False, default=[0.0, 0.0, 0.0, 0.0, 0.0, 0.0] )
+    parser.add_argument("--coord-file",   help="input file name", dest="coord_file", action="store", type=str, required=False, default='coord')
+    parser.add_argument("--cutoff",       help="maximum distance from a grid point to an atom [a_0]", dest="cutoff", action="store", type=float,  required=False, default=5.0)
+    parser.add_argument("--grid-spacing", help="distance between grid points in the direction of the main axes [a_0].  The minimum distance between gridpoints is slightly smaller.", dest="spacing",    action="store", type=float,  required=False, default=0.5 )
+    parser.add_argument("--bounding-box", help="the bb can be used for truncation. default: none", nargs=6, dest="bb", action="store", type=float, required=False, default=[0.0, 0.0, 0.0, 0.0, 0.0, 0.0] )
     argparse = parser.parse_args()
     argparse.spacing /= math.sqrt(3)/2.0
     return argparse
@@ -27,7 +27,7 @@ def main():
     args = parseCommandline()
     print(args)
 
-    atoms = QCTools.readCoord(args.coord_file[0])
+    atoms = QCTools.readCoord(args.coord_file)
     atoms = atoms[1:]
     print('number of atoms:', len(atoms))
 
