@@ -12,7 +12,7 @@ assert version_info.major == 2
 options = cli()
 
 # we check entire files
-f = [get_filter(rel_tolerance=1.0e-8)]
+f = [get_filter(rel_tolerance=1.0e-8, skip_below=1.0e-14)]
 
 ierr = run(options,
            configure,
