@@ -272,6 +272,7 @@ contains
         real(DP) :: bound, r
         integer(int32) :: dummy, ncells
         logical                            :: fd2_isopen = .false.
+        logical                            :: elements_exists
 
         if (mpi_rank > 0) return
         ! get rid of print out of txt files but keep them for debugging
@@ -418,20 +419,25 @@ contains
               .or. trim(this%grid%mode)=='file' ) then
 
           ! read element file: first number in first line is number of lines
-          open(GRIDELE, file='grid.1.ele')
-          ! read(GRIDELE, '(3i4)') ncells, dummy, dummy
-          read(GRIDELE, *) ncells, dummy, dummy
-          ! write(*,*) "ncells ", ncells
-          allocate(cells(4,ncells))
-          do i=1,ncells
-            ! read(GRIDELE,'(5i7)') dummy, cells(1:4, i)
-            read(GRIDELE, *) dummy, cells(1:4, i)
-          end do
-          close(GRIDELE)
+          inquire(FILE='grid.1.ele', EXIST=elements_exists)
+          if(elements_exists) then
+            open(GRIDELE, file='grid.1.ele')
+            ! read(GRIDELE, '(3i4)') ncells, dummy, dummy
+            read(GRIDELE, *) ncells, dummy, dummy
+            ! write(*,*) "ncells ", ncells
+            allocate(cells(4,ncells))
+            do i=1,ncells
+              ! read(GRIDELE,'(5i7)') dummy, cells(1:4, i)
+              read(GRIDELE, *) dummy, cells(1:4, i)
+            end do
+            close(GRIDELE)
 
-          call write_vtk_vector_unstructuredgrid("jvec.vtu", this%grid%xdata, jval_unstructured, cells)
+            call write_vtk_vector_unstructuredgrid("jvec.vtu", this%grid%xdata, jval_unstructured, cells)
+            deallocate(cells)
+          else
+            write(*,*) 'not writing a vtu file, because the file grid.1.ele was not found.'
+          endif
           deallocate(jval_unstructured)
-          deallocate(cells)
         end if
 
     end subroutine
@@ -584,6 +590,16 @@ contains
         real(DP), dimension(3) :: d, bb, jvec, sigma, chi
         real(DP) :: f, tmp
         integer :: i, j, k, npts, natoms
+        logical :: coords_exists, points_exists, weights_exists
+
+        inquire(FILE='coord.au',     EXIST=coords_exists)
+        inquire(FILE='gridfile.grd', EXIST=points_exists)
+        inquire(FILE='grid_w.grd',   EXIST=weights_exists)
+        if(.not. (coords_exists .and. points_exists .and. weights_exists)) then
+          write(*,*) 'at least one of the files coord.au, gridfile.grd, and grid_w.grd is missing.',&
+                     'Therefore any property calculation is skipped.'
+          return
+        endif
 
         jtens => this%tens
 
