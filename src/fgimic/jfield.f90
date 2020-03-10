@@ -24,6 +24,7 @@ module jfield_class
         real(DP), dimension(3) :: b
         real(DP), dimension(:,:), pointer :: tens
         real(DP), dimension(:,:), pointer :: vec
+        real(DP), dimension(:,:), allocatable  :: sigmaval
         type(grid_t), pointer :: grid
     end type
 
@@ -367,6 +368,7 @@ contains
         else if ( ((trim(this%grid%mode)=='base' .or. trim(this%grid%mode)=='std') .and. this%grid%gauss) &
               .or. trim(this%grid%mode)=='file' ) then ! (base && gauss) || file
           allocate(jval_unstructured(this%grid%npts(1), 3))
+          allocate(this%sigmaval(this%grid%npts(1), 3))
           dummy = 0
           do i=1, p1 ! which is the total number of points
             v = jv(:, i)
@@ -374,6 +376,7 @@ contains
               coord=gridpoint(this%grid, i, dummy, dummy)*AU2A
               call write_jmod(coord,v,fd2)
             end if
+            this%sigmaval(i , 1:3) = v
             jval_unstructured(i, 1:3) = v
           end do
         end if
@@ -433,7 +436,8 @@ contains
             close(GRIDELE)
 
             call write_vtk_vector_unstructuredgrid("jvec.vtu", this%grid%xdata, jval_unstructured, cells)
-            deallocate(cells)
+            call write_vtk_vector_unstructuredgrid("sigma.vtu", this%grid%xdata,this%sigmaval, cells)
+           deallocate(cells)
           else
             write(*,*) 'not writing a vtu file, because the file grid.1.ele was not found.'
           endif
@@ -645,6 +649,7 @@ contains
             jvec = matmul(reshape(jtens(:,i),(/3,3/)),bb)
             ! sigma_xx
             sigma(1) = sigma(1) + 1.0d6*wg(i)*f*(d(2)*jvec(3) - d(3)*jvec(2))
+            this%sigmaval(i,1) = 1.0d6*f*(d(2)*jvec(3) - d(3)*jvec(2))
             ! chi_xx
             chi(1) = chi(1) + wg(i)*0.5d0*(grd(i,2)*jvec(3) - grd(i,3)*jvec(2))
             ! contract with By
@@ -654,6 +659,7 @@ contains
             jvec = matmul(reshape(jtens(:,i),(/3,3/)),bb)
             ! sigma_yy
             sigma(2) = sigma(2) + 1.0d6*wg(i)*f*(d(3)*jvec(1) - d(1)*jvec(3))
+            this%sigmaval(i,2) = 1.0d6*f*(d(3)*jvec(1) - d(1)*jvec(3))
             ! chi_yy
             chi(2) = chi(2) + wg(i)*0.5d0*(grd(i,3)*jvec(1) - grd(i,1)*jvec(3))
             ! contract with Bz
@@ -663,6 +669,7 @@ contains
             jvec = matmul(reshape(jtens(:,i),(/3,3/)),bb)
             ! sigma_zz
             sigma(3) = sigma(3) + 1.0d6*wg(i)*f*(d(1)*jvec(2) - d(2)*jvec(1))
+            this%sigmaval(i,3) = 1.0d6*f*(d(1)*jvec(2) - d(2)*jvec(1))
             ! chi_zz
             chi(3) = chi(3) + wg(i)*0.5d0*(grd(i,1)*jvec(2) - grd(i,2)*jvec(1))
           end do
