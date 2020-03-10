@@ -376,7 +376,6 @@ contains
               coord=gridpoint(this%grid, i, dummy, dummy)*AU2A
               call write_jmod(coord,v,fd2)
             end if
-            this%sigmaval(i , 1:3) = v
             jval_unstructured(i, 1:3) = v
           end do
         end if
