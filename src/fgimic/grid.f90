@@ -25,6 +25,7 @@ module grid_class
         integer(I4), dimension(3) :: npts
         type(gdata_t), dimension(3) :: gdata
         character(BUFLEN) :: mode, gtype
+        integer(I4), allocatable        :: cells(:, :) ! ncells x 4
         real(DP), dimension(:,:), pointer :: xdata
         integer(I4) :: gauss_order
         real(DP) :: radius

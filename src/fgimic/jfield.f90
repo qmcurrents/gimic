@@ -267,7 +267,6 @@ contains
         real(DP), dimension(:,:), pointer  :: jtens
         real(DP), allocatable              :: jval_regular(:, :, :, :)
         real(real64), allocatable          :: jval_unstructured(:, :)
-        integer(int32), allocatable        :: cells(:, :) ! ncells x 4
 
         real(DP) :: val
         real(DP) :: bound, r
@@ -427,16 +426,14 @@ contains
             ! read(GRIDELE, '(3i4)') ncells, dummy, dummy
             read(GRIDELE, *) ncells, dummy, dummy
             ! write(*,*) "ncells ", ncells
-            allocate(cells(4,ncells))
+            allocate( this%grid%cells(4,ncells))
             do i=1,ncells
-              ! read(GRIDELE,'(5i7)') dummy, cells(1:4, i)
-              read(GRIDELE, *) dummy, cells(1:4, i)
+              read(GRIDELE, *) dummy,  this%grid%cells(1:4, i)
             end do
             close(GRIDELE)
 
-            call write_vtk_vector_unstructuredgrid("jvec.vtu", this%grid%xdata, jval_unstructured, cells)
-            call write_vtk_vector_unstructuredgrid("sigma.vtu", this%grid%xdata,this%sigmaval, cells)
-           deallocate(cells)
+            call write_vtk_vector_unstructuredgrid("jvec.vtu", this%grid%xdata, jval_unstructured,  this%grid%cells)
+           deallocate( this%grid%cells)
           else
             write(*,*) 'not writing a vtu file, because the file grid.1.ele was not found.'
           endif
@@ -587,6 +584,7 @@ contains
     subroutine get_property(this)
         ! assume external grid is read in correctly via read grid
         ! assume grid_w.grd, coord.au, gridfile.grd are in the same directory
+        use vtkplot_module
         type(jfield_t) :: this
         real(DP), dimension(:,:), pointer :: jtens
         real(DP), allocatable :: wg(:), coord(:,:), grd(:,:)
@@ -594,6 +592,8 @@ contains
         real(DP) :: f, tmp
         integer :: i, j, k, npts, natoms
         logical :: coords_exists, points_exists, weights_exists
+        
+        character(len=13) :: filename
 
         inquire(FILE='coord.au',     EXIST=coords_exists)
         inquire(FILE='gridfile.grd', EXIST=points_exists)
@@ -672,14 +672,24 @@ contains
             ! chi_zz
             chi(3) = chi(3) + wg(i)*0.5d0*(grd(i,1)*jvec(2) - grd(i,2)*jvec(1))
           end do
+! Script to write the filename during runtime
+          filename(1:5) = "sigma"
+          filename(10:13) = ".vtu"
+          if (k.LE.9) then
+             filename(6:9)=char(48+k)    
+          else if (k.GE.10) then
+             filename(6:9)=char(48+(k/10))// char(48-10*(k/10)+k)    
+          endif
+         call write_vtk_vector_unstructuredgrid(filename,this%grid%xdata,this%sigmaval,this%grid%cells)
+         deallocate(this%sigmaval) 
           write(*,*) "atom ",k
           write(*,*) "sigma_xx ", sigma(1)
           write(*,*) "sigma_yy ", sigma(2)
           write(*,*) "sigma_zz ", sigma(3)
           tmp = (sigma(1) + sigma(2) + sigma(3))/3.0d0
           write(*,*) "shielding constant sigma = ", tmp
-
         end do
+        
         write(*,*) ""
         write(*,*) "chi_xx ", chi(1)
         write(*,*) "chi_yy ", chi(2)
