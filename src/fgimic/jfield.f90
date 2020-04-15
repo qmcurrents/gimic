@@ -588,9 +588,10 @@ contains
         real(DP), dimension(:,:), pointer :: jtens
         real(DP), allocatable :: wg(:), coord(:,:), grd(:,:)
         real(DP), dimension(3) :: d, bb, jvec, sigma, chi
-        real(DP) :: f, tmp
+        real(DP) :: f, tmp, si_tmp
         integer :: i, j, k, npts, natoms
         logical :: coords_exists, points_exists, weights_exists
+        real(DP), parameter :: fac_au2simag = 7.89104d-29
 
         inquire(FILE='coord.au',     EXIST=coords_exists)
         inquire(FILE='gridfile.grd', EXIST=points_exists)
@@ -671,7 +672,7 @@ contains
           write(*,*) "sigma_yy ", sigma(2)
           write(*,*) "sigma_zz ", sigma(3)
           tmp = (sigma(1) + sigma(2) + sigma(3))/3.0d0
-          write(*,*) "shielding constant sigma = ", tmp
+          write(*,*) "shielding constant sigma in ppm= ", tmp
 
         end do
         write(*,*) ""
@@ -679,7 +680,10 @@ contains
         write(*,*) "chi_yy ", chi(2)
         write(*,*) "chi_zz ", chi(3)
         tmp = (chi(1) + chi(2) + chi(3))/3.0d0
-        write(*,*) "isotropic magnetizability chi = ", tmp
+        write(*,*) "isotropic magnetizability chi in au = ", tmp
+        si_tmp = tmp*fac_au2simag 
+        write(*,*) "in SI units J/T^2 = ", si_tmp 
+        write(*,*) "conversion factor: 7.89104*10^-29 J/T^2 " 
 
         ! clean up
         deallocate(wg, coord)
