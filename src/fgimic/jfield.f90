@@ -401,11 +401,6 @@ contains
           end if
         end if
 
-        ! case external 3D grid - numgrid
-        if (settings%prop) then
-          call get_property(this)
-        end if
-
         ! write jvec information to vti file
         if ( (trim(this%grid%mode)=='base' .or. trim(this%grid%mode)=='std' .or. trim(this%grid%mode)=='bond') &
                   .and. this%grid%gtype=='even' ) then
@@ -433,11 +428,22 @@ contains
             close(GRIDELE)
 
             call write_vtk_vector_unstructuredgrid("jvec.vtu", this%grid%xdata, jval_unstructured,  this%grid%cells)
-           deallocate( this%grid%cells)
+
+            if (settings%prop) then
+                call get_property(this)
+            end if
+
+            deallocate(jval_unstructured)
+            deallocate(this%sigmaval)
+            deallocate( this%grid%cells)
+
           else
             write(*,*) 'not writing a vtu file, because the file grid.1.ele was not found.'
           endif
-          deallocate(jval_unstructured)
+
+          ! Maria: moved this call here since the cells are needed when printing
+          ! the vtu file with the shielding constant contributions per cell
+          ! case external 3D grid - numgrid
         end if
 
     end subroutine
@@ -672,16 +678,9 @@ contains
             ! chi_zz
             chi(3) = chi(3) + wg(i)*0.5d0*(grd(i,1)*jvec(2) - grd(i,2)*jvec(1))
           end do
-! Script to write the filename during runtime
-          filename(1:5) = "sigma"
-          filename(10:13) = ".vtu"
-          if (k.LE.9) then
-             filename(6:9)=char(48+k)    
-          else if (k.GE.10) then
-             filename(6:9)=char(48+(k/10))// char(48-10*(k/10)+k)    
-          endif
+
+          write (filename, "(A6,I0,A4)") "sigma_", k, ".vtu"
          call write_vtk_vector_unstructuredgrid(filename,this%grid%xdata,this%sigmaval,this%grid%cells)
-         deallocate(this%sigmaval) 
           write(*,*) "atom ",k
           write(*,*) "sigma_xx ", sigma(1)
           write(*,*) "sigma_yy ", sigma(2)
