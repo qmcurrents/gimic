@@ -594,10 +594,10 @@ contains
         type(jfield_t) :: this
         real(DP), dimension(:,:), pointer :: jtens
         real(DP), allocatable :: wg(:), coord(:,:), grd(:,:)
-        real(DP), dimension(3) :: d, bb, jvec, sigma, chi
+        real(DP), dimension(3) :: d, bb, jvec, sigma, chi, sigmapos, sigmaneg
         real(DP) :: f, tmp
         integer :: i, j, k, npts, natoms
-        logical :: coords_exists, points_exists, weights_exists
+        logical :: coords_exists, points_exists, weights_exists, elements_exists
         
         character(len=13) :: filename
 
@@ -607,6 +607,12 @@ contains
         if(.not. (coords_exists .and. points_exists .and. weights_exists)) then
           write(*,*) 'at least one of the files coord.au, gridfile.grd, and grid_w.grd is missing.',&
                      'Therefore any property calculation is skipped.'
+          return
+        endif
+
+        inquire(FILE='grid.1.ele',     EXIST=elements_exists)
+        if(.not. elements_exists) then
+          write(*,*) 'not writing vtu files because the file grid.1.ele was not found.'
           return
         endif
 
@@ -636,9 +642,11 @@ contains
         close(16)
 
         ! assume jtens has been calculated in the same order
-        ! loope atoms
+        ! loop atoms
         do k=1, natoms
           ! loop grid points
+          sigmapos = 0.0d0
+          sigmaneg = 0.0d0
           sigma = 0.0d0
           chi = 0.0d0
           do i=1, npts
@@ -653,8 +661,8 @@ contains
             bb(3) = 0.0d0
             jvec = matmul(reshape(jtens(:,i),(/3,3/)),bb)
             ! sigma_xx
-            sigma(1) = sigma(1) + 1.0d6*wg(i)*f*(d(2)*jvec(3) - d(3)*jvec(2))
             this%sigmaval(i,1) = 1.0d6*f*(d(2)*jvec(3) - d(3)*jvec(2))
+            sigma(1) = sigma(1) + this%sigmaval(i,1)*wg(i) 
             ! chi_xx
             chi(1) = chi(1) + wg(i)*0.5d0*(grd(i,2)*jvec(3) - grd(i,3)*jvec(2))
             ! contract with By
@@ -663,8 +671,8 @@ contains
             bb(3) = 0.0d0
             jvec = matmul(reshape(jtens(:,i),(/3,3/)),bb)
             ! sigma_yy
-            sigma(2) = sigma(2) + 1.0d6*wg(i)*f*(d(3)*jvec(1) - d(1)*jvec(3))
             this%sigmaval(i,2) = 1.0d6*f*(d(3)*jvec(1) - d(1)*jvec(3))
+            sigma(2) = sigma(2) + this%sigmaval(i,2)*wg(i)
             ! chi_yy
             chi(2) = chi(2) + wg(i)*0.5d0*(grd(i,3)*jvec(1) - grd(i,1)*jvec(3))
             ! contract with Bz
@@ -673,19 +681,33 @@ contains
             bb(3) = -1.0d0
             jvec = matmul(reshape(jtens(:,i),(/3,3/)),bb)
             ! sigma_zz
-            sigma(3) = sigma(3) + 1.0d6*wg(i)*f*(d(1)*jvec(2) - d(2)*jvec(1))
             this%sigmaval(i,3) = 1.0d6*f*(d(1)*jvec(2) - d(2)*jvec(1))
+            sigma(3) = sigma(3) + this%sigmaval(i,3)*wg(i) 
             ! chi_zz
             chi(3) = chi(3) + wg(i)*0.5d0*(grd(i,1)*jvec(2) - grd(i,2)*jvec(1))
-          end do
+                  
+            if (( this%sigmaval(i,1) + this%sigmaval(i,2) + this%sigmaval(i,3)) > 0) then
+                  sigmapos(1) = sigmapos(1) + wg(i)*this%sigmaval(i,1)
+                  sigmapos(2) = sigmapos(2) + wg(i)*this%sigmaval(i,2)
+                  sigmapos(3) = sigmapos(3) + wg(i)*this%sigmaval(i,3) 
+            else 
+                  sigmaneg(1) = sigmaneg(1) + wg(i)*this%sigmaval(i,1) 
+                  sigmaneg(2) = sigmaneg(2) + wg(i)*this%sigmaval(i,2) 
+                  sigmaneg(3) = sigmaneg(3) + wg(i)*this%sigmaval(i,3) 
+            end if
+          end do ! over npts
 
           write (filename, "(A6,I0,A4)") "sigma_", k, ".vtu"
-         call write_vtk_vector_unstructuredgrid(filename,this%grid%xdata,this%sigmaval,this%grid%cells)
+          call write_vtk_vector_unstructuredgrid(filename,this%grid%xdata,this%sigmaval,this%grid%cells)
           write(*,*) "atom ",k
           write(*,*) "sigma_xx ", sigma(1)
           write(*,*) "sigma_yy ", sigma(2)
           write(*,*) "sigma_zz ", sigma(3)
-          tmp = (sigma(1) + sigma(2) + sigma(3))/3.0d0
+          tmp = (sigmapos(1) + sigmapos(2) + sigmapos(3))/3.0d0
+          write(*,*) "positive contribution to shielding constant = ", tmp
+          tmp = (sigmaneg(1) + sigmaneg(2) + sigmaneg(3))/3.0d0
+          write(*,*) "negative contribution to shielding constant = ", tmp
+          tmp = (sigma(1) + sigma(2) + sigma(3))/3.0d0 
           write(*,*) "shielding constant sigma = ", tmp
         end do
         
