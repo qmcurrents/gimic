@@ -582,16 +582,24 @@ contains
     end subroutine
 
     subroutine get_property(this)
+      use vtkplot_module
         ! assume external grid is read in correctly via read grid
         ! assume grid_w.grd, coord.au, gridfile.grd are in the same directory
+        ! for visualization of unstructured grid file grid.1.ele is needed
+        ! assume this has been generated with tetgen and is in the same directory
         type(jfield_t) :: this
         real(DP), dimension(:,:), pointer :: jtens
         real(DP), allocatable :: wg(:), coord(:,:), grd(:,:)
+        real(DP), allocatable :: intchi(:,:), pdata(:), intsigma(:,:)  
         real(DP), dimension(3) :: d, bb, jvec, sigma, chi
         real(DP) :: f, tmp, si_tmp
-        integer :: i, j, k, npts, natoms
+        integer :: i, j, k, npts, natoms, dummy, ncells
+        integer(int32), allocatable :: cells(:,:) ! for vtu file
         logical :: coords_exists, points_exists, weights_exists
+        logical :: elements_exists
         real(DP), parameter :: fac_au2simag = 7.89104d-29
+        character(len=70) :: filename
+        character(len=70) :: formatstring
 
         inquire(FILE='coord.au',     EXIST=coords_exists)
         inquire(FILE='gridfile.grd', EXIST=points_exists)
@@ -627,12 +635,25 @@ contains
         close(15)
         close(16)
 
+        ! get cell information for printing vtu file
+        inquire(FILE='grid.1.ele', EXIST=elements_exists)
+        if(elements_exists) then
+          open(GRIDELE, file='grid.1.ele')
+          read(GRIDELE, *) ncells, dummy, dummy
+          allocate(cells(4,ncells))
+          do i=1,ncells
+            read(GRIDELE, *) dummy, cells(1:4, i)
+          end do
+          close(GRIDELE)
+        end if 
+
         ! assume jtens has been calculated in the same order
-        ! loope atoms
+        ! calculate shielding tensor diagonal elements
+        allocate(intsigma(npts,3),pdata(npts))
+        ! loop  atoms
         do k=1, natoms
           ! loop grid points
           sigma = 0.0d0
-          chi = 0.0d0
           do i=1, npts
             ! loop xyz
             do j = 1, 3
@@ -645,27 +666,25 @@ contains
             bb(3) = 0.0d0
             jvec = matmul(reshape(jtens(:,i),(/3,3/)),bb)
             ! sigma_xx
+            intsigma(i,1) =  1.0d6*f*(d(2)*jvec(3) - d(3)*jvec(2))
             sigma(1) = sigma(1) + 1.0d6*wg(i)*f*(d(2)*jvec(3) - d(3)*jvec(2))
-            ! chi_xx
-            chi(1) = chi(1) + wg(i)*0.5d0*(grd(i,2)*jvec(3) - grd(i,3)*jvec(2))
             ! contract with By
             bb(1) = 0.0d0
             bb(2) = -1.0d0
             bb(3) = 0.0d0
             jvec = matmul(reshape(jtens(:,i),(/3,3/)),bb)
             ! sigma_yy
+            intsigma(i,2) =  1.0d6*f*(d(3)*jvec(1) - d(1)*jvec(3))
             sigma(2) = sigma(2) + 1.0d6*wg(i)*f*(d(3)*jvec(1) - d(1)*jvec(3))
-            ! chi_yy
-            chi(2) = chi(2) + wg(i)*0.5d0*(grd(i,3)*jvec(1) - grd(i,1)*jvec(3))
             ! contract with Bz
             bb(1) = 0.0d0
             bb(2) = 0.0d0
             bb(3) = -1.0d0
             jvec = matmul(reshape(jtens(:,i),(/3,3/)),bb)
             ! sigma_zz
+            intsigma(i,3) = 1.0d6*f*(d(1)*jvec(2) - d(2)*jvec(1))
             sigma(3) = sigma(3) + 1.0d6*wg(i)*f*(d(1)*jvec(2) - d(2)*jvec(1))
-            ! chi_zz
-            chi(3) = chi(3) + wg(i)*0.5d0*(grd(i,1)*jvec(2) - grd(i,2)*jvec(1))
+            pdata(i) = (intsigma(i,1) + intsigma(i,2) + intsigma(i,3)) 
           end do
           write(*,*) "atom ",k
           write(*,*) "sigma_xx ", sigma(1)
@@ -674,6 +693,65 @@ contains
           tmp = (sigma(1) + sigma(2) + sigma(3))/3.0d0
           write(*,*) "shielding constant sigma in ppm= ", tmp
 
+          if(elements_exists) then
+            if (k < 10) then
+              formatstring = "(A5,I1,A4)"
+            else
+              formatstring = "(A5,I2,A4)"
+            endif
+            write (filename,formatstring) "sigma", k, ".vtu"
+            ! print *, trim(filename)
+            call write_vtk_scalar_unstructuredgrid(trim(filename), this%grid%xdata, pdata, cells)
+            if (k < 10) then
+              formatstring = "(A8,I1,A4)"
+            else
+              formatstring = "(A8,I2,A4)"
+            endif
+            write (filename,formatstring) "sigma_xx", k, ".vtu"
+            print *, filename 
+            call write_vtk_scalar_unstructuredgrid(trim(filename), this%grid%xdata, intsigma(:,1), cells)
+            write (filename,formatstring) "sigma_yy", k, ".vtu"
+            print *, filename 
+            call write_vtk_scalar_unstructuredgrid(trim(filename), this%grid%xdata, intsigma(:,2), cells)
+            write (filename,formatstring) "sigma_zz", k, ".vtu"
+            print *, filename 
+            call write_vtk_scalar_unstructuredgrid(trim(filename), this%grid%xdata, intsigma(:,3), cells)
+          end if
+        end do !loop atoms
+        write(*,*) ""
+        
+        ! calculate diagonal elements of magnetizabilitz tensor
+        ! for magnetizability no loop over coords is needed 
+        allocate(intchi(npts,3)) 
+        chi = 0.0d0
+        do i=1, npts
+          ! loop xyz
+          ! contract with Bx
+          bb(1) = -1.0d0
+          bb(2) = 0.0d0
+          bb(3) = 0.0d0
+          jvec = matmul(reshape(jtens(:,i),(/3,3/)),bb)
+          ! chi_xx
+          intchi(i,1) = 0.5d0*(grd(i,2)*jvec(3) - grd(i,3)*jvec(2))
+          chi(1) = chi(1) + wg(i)*0.5d0*(grd(i,2)*jvec(3) - grd(i,3)*jvec(2))
+          ! contract with By
+          bb(1) = 0.0d0
+          bb(2) = -1.0d0
+          bb(3) = 0.0d0
+          jvec = matmul(reshape(jtens(:,i),(/3,3/)),bb)
+          ! chi_yy
+          intchi(i,2) = 0.5d0*(grd(i,3)*jvec(1) - grd(i,1)*jvec(3))
+          chi(2) = chi(2) + wg(i)*0.5d0*(grd(i,3)*jvec(1) - grd(i,1)*jvec(3))
+          ! contract with Bz
+          bb(1) = 0.0d0
+          bb(2) = 0.0d0
+          bb(3) = -1.0d0
+          jvec = matmul(reshape(jtens(:,i),(/3,3/)),bb)
+          ! chi_zz
+          intchi(i,3) = 0.5d0*(grd(i,1)*jvec(2) - grd(i,2)*jvec(1))
+          chi(3) = chi(3) + wg(i)*0.5d0*(grd(i,1)*jvec(2) - grd(i,2)*jvec(1))
+          ! calculate sum of integrands
+          pdata(i) = (intchi(i,1) + intchi(i,2) + intchi(i,3)) 
         end do
         write(*,*) ""
         write(*,*) "chi_xx ", chi(1)
@@ -685,8 +763,21 @@ contains
         write(*,*) "in SI units J/T^2 = ", si_tmp 
         write(*,*) "conversion factor: 7.89104*10^-29 J/T^2 " 
 
+        ! plot integrand intchi 
+        if(elements_exists) then
+          call write_vtk_scalar_unstructuredgrid("intchi.vtu", this%grid%xdata, pdata, cells)
+          call write_vtk_scalar_unstructuredgrid("intchi_xx.vtu", this%grid%xdata, intchi(:,1), cells)
+          call write_vtk_scalar_unstructuredgrid("intchi_yy.vtu", this%grid%xdata, intchi(:,2), cells)
+          call write_vtk_scalar_unstructuredgrid("intchi_zz.vtu", this%grid%xdata, intchi(:,3), cells)
+        end if 
+
+
         ! clean up
         deallocate(wg, coord)
+        deallocate(intchi, pdata, intsigma)
+        if(elements_exists) then
+          deallocate(cells)
+        end if 
 
     end subroutine
 end module
