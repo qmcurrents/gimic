@@ -1,5 +1,4 @@
-#!@PYTHON_EXECUTABLE@
-#
+#!@Python3_EXECUTABLE@
 #
 
 import sys, string, re

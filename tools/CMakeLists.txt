@@ -8,11 +8,11 @@ if (NOT DEFINED CFOUR_ROOT)
 endif()
 
 configure_file(MOL2mol.sh.in MOL2mol.sh)
-
 configure_file(qgimic.sh.in qgimic.sh)
 configure_file(grd2node.sh.in grd2node.sh)
-
 configure_file(quesys.sh.in quesys.sh) 
+
+configure_file(jfilter.py.in jfilter.py) 
 configure_file(turbo2gimic.py.in turbo2gimic.py)
 configure_file(sortorbitals.py.in sortorbitals.py)
 configure_file(unstructured_grid_gen.py.in unstructured_grid_gen.py)

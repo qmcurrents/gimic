@@ -1,4 +1,4 @@
-#!@PYTHON_EXECUTABLE@
+#!@Python3_EXECUTABLE@
 import re, subprocess, os 
 
 def orbsorter(blockbuff):

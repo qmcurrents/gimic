@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!@Python3_EXECUTABLE@
 
 import string, math, sys, re
 from getopt import getopt

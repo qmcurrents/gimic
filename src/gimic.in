@@ -1,4 +1,4 @@
-#!@PYTHON_EXECUTABLE@
+#!@Python3_EXECUTABLE@
 # -*- coding: utf-8 -*-
 # vim:filetype=python:
 #

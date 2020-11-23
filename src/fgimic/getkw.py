@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!@Python3_EXECUTABLE@
 # -*- coding: utf-8 -*-
 #
 # getkw -- a simple input parser for Fortran 95
