@@ -88,8 +88,10 @@ with open('coord.au', 'w') as f1:
 
 fout_grid = "gridfile.grd"
 fout_weights = "grid_w.grd" 
+fout_nelpts = "nelpts.info" 
 f1 = open(fout_grid, "w")
 f2 = open(fout_weights, "w")
+f3 = open(fout_nelpts, "w")
 
 for n in range(num_centers):
     print("n", n)
@@ -105,6 +107,8 @@ for n in range(num_centers):
 
     num_points = numgrid.get_num_grid_points(context)
     print("number of points", num_points)
+    # collect center index and related number of points
+    f3.write(str(n+1) + " " + str(num_points) + "\n")
     # generate an atomic grid in the molecular environment
     x, y, z, w = numgrid.get_grid(context, num_centers, n, 
             x_coordinates_bohr, y_coordinates_bohr, 
@@ -118,6 +122,7 @@ for n in range(num_centers):
 
 f1.close()
 f2.close()
+f3.close()
 
 
 
