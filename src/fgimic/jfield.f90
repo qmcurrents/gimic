@@ -694,6 +694,7 @@ contains
                 sneg = sneg + pdata(i)*wg(i)
             end if
           end do ! loop npts
+          !
           write(*,*) "atom ",k
           write(*,*) "in ppm" 
           write(*,"(X,A10,2X,F14.6)") "sigma_xx ", sigma(1)
@@ -731,6 +732,41 @@ contains
             call write_vtk_scalar_unstructuredgrid(trim(filename), this%grid%xdata, intsigma(:,3), cells)
           end if
         end do !loop atoms
+        write(*,*) ""
+        
+        ! calculate diagonal elements of magnetizabilitz tensor
+        ! for magnetizability no loop over coords is needed 
+        allocate(intchi(npts,3)) 
+        chi = 0.0d0
+        do i=1, npts
+          ! loop xyz
+          ! contract with Bx
+          bb(1) = -1.0d0
+          bb(2) = 0.0d0
+          bb(3) = 0.0d0
+          jvec = matmul(reshape(jtens(:,i),(/3,3/)),bb)
+          ! chi_xx
+          intchi(i,1) = 0.5d0*(grd(i,2)*jvec(3) - grd(i,3)*jvec(2))
+          chi(1) = chi(1) + wg(i)*0.5d0*(grd(i,2)*jvec(3) - grd(i,3)*jvec(2))
+          ! contract with By
+          bb(1) = 0.0d0
+          bb(2) = -1.0d0
+          bb(3) = 0.0d0
+          jvec = matmul(reshape(jtens(:,i),(/3,3/)),bb)
+          ! chi_yy
+          intchi(i,2) = 0.5d0*(grd(i,3)*jvec(1) - grd(i,1)*jvec(3))
+          chi(2) = chi(2) + wg(i)*0.5d0*(grd(i,3)*jvec(1) - grd(i,1)*jvec(3))
+          ! contract with Bz
+          bb(1) = 0.0d0
+          bb(2) = 0.0d0
+          bb(3) = -1.0d0
+          jvec = matmul(reshape(jtens(:,i),(/3,3/)),bb)
+          ! chi_zz
+          intchi(i,3) = 0.5d0*(grd(i,1)*jvec(2) - grd(i,2)*jvec(1))
+          chi(3) = chi(3) + wg(i)*0.5d0*(grd(i,1)*jvec(2) - grd(i,2)*jvec(1))
+          ! calculate sum of integrands
+          pdata(i) = (intchi(i,1) + intchi(i,2) + intchi(i,3)) 
+        end do
         write(*,*) ""
         
         ! calculate diagonal elements of magnetizabilitz tensor
@@ -795,6 +831,15 @@ contains
         write(*,"(A30,2X,E14.6)") "sum ", ((spos + sneg)/3.0d0)*fac_au2simag
         write(*,*) "****************************************************"
         write(*,*) ""
+
+        ! plot integrand intchi 
+        if(elements_exists) then
+          call write_vtk_scalar_unstructuredgrid("intchi.vtu", this%grid%xdata, pdata, cells)
+          call write_vtk_scalar_unstructuredgrid("intchi_xx.vtu", this%grid%xdata, intchi(:,1), cells)
+          call write_vtk_scalar_unstructuredgrid("intchi_yy.vtu", this%grid%xdata, intchi(:,2), cells)
+          call write_vtk_scalar_unstructuredgrid("intchi_zz.vtu", this%grid%xdata, intchi(:,3), cells)
+        end if 
+
 
         ! plot integrand intchi 
         if(elements_exists) then
