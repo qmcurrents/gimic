@@ -740,6 +740,7 @@ contains
           write(*,*) " "
           write(*,*) "atom contributions, total, positive, negative" 
           csum = 0.0d0
+          tmpscont = 0.0d0
           do l=1, natoms
             if (l==1) then
               write(*,"(A5,I5,3F14.6)") "atom ", l, scont(l,1),scont(l,2),scont(l,3)
@@ -759,6 +760,7 @@ contains
           write(*,"(A10, 3F14.6)") "sum ", csum(1), csum(2), csum(3)
           write(*,*) "****************************************************"
 
+          ! plot integrand intsigma
           if(elements_exists) then
             if (k < 10) then
               formatstring = "(A5,I1,A4)"
@@ -792,6 +794,9 @@ contains
         chi = 0.0d0
         spos = 0.0d0
         sneg = 0.0d0
+        iatom = 1
+        scont = 0.0d0
+        iatom_npts = nelpts(iatom,2)
         do i=1, npts
           ! loop xyz
           ! contract with Bx
@@ -826,7 +831,20 @@ contains
           else 
               sneg = sneg + pdata(i)*wg(i)
           end if
+          ! collect atom contributions 
+          if (i == iatom_npts) then
+              scont(iatom,1) = (chi(1)+chi(2)+chi(3))/3.0d0  
+              scont(iatom,2) = (spos)/3.0d0  
+              scont(iatom,3) = (sneg)/3.0d0  
+              !write(*,*) scont(iatom, 1), scont(iatom, 2), scont(iatom,3)
+              iatom = iatom + 1 
+              if (iatom.le.natoms) then
+                iatom_npts = iatom_npts + nelpts(iatom,2) 
+              end if 
+          end if
+          !
         end do !npts
+        ! 
         write(*,*) ""
         write(*,"(X,A7,2X,F14.8)") "chi_xx ", chi(1)
         write(*,"(X,A7,2X,F14.8)") "chi_yy ", chi(2)
@@ -848,15 +866,27 @@ contains
         write(*,"(A30,2X,E14.6)") "sum ", ((spos + sneg)/3.0d0)*fac_au2simag
         write(*,*) "****************************************************"
         write(*,*) ""
-
-        ! plot integrand intchi 
-        if(elements_exists) then
-          call write_vtk_scalar_unstructuredgrid("intchi.vtu", this%grid%xdata, pdata, cells)
-          call write_vtk_scalar_unstructuredgrid("intchi_xx.vtu", this%grid%xdata, intchi(:,1), cells)
-          call write_vtk_scalar_unstructuredgrid("intchi_yy.vtu", this%grid%xdata, intchi(:,2), cells)
-          call write_vtk_scalar_unstructuredgrid("intchi_zz.vtu", this%grid%xdata, intchi(:,3), cells)
-        end if 
-
+        write(*,*) "atom contributions, total, positive, negative" 
+        csum = 0.0d0
+        tmpscont = 0.0d0
+        do l=1, natoms
+          if (l==1) then
+            write(*,"(A5,I5,3F14.6)") "atom ", l, scont(l,1),scont(l,2),scont(l,3)
+            csum(1) = csum(1) + scont(l,1) 
+            csum(2) = csum(2) + scont(l,2) 
+            csum(3) = csum(3) + scont(l,3) 
+          else 
+            tmpscont(1) = scont(l,1) - scont(l-1,1) 
+            tmpscont(2) = scont(l,2) - scont(l-1,2) 
+            tmpscont(3) = scont(l,3) - scont(l-1,3) 
+            write(*,"(A5,I5,3F14.6)") "atom ", l, tmpscont(1), tmpscont(2), tmpscont(3)  
+            csum(1) = csum(1) + tmpscont(1) 
+            csum(2) = csum(2) + tmpscont(2) 
+            csum(3) = csum(3) + tmpscont(3) 
+          end if
+        end do
+        write(*,"(A10, 3F14.6)") "sum ", csum(1), csum(2), csum(3)
+        write(*,*) "****************************************************"
 
         ! plot integrand intchi 
         if(elements_exists) then
