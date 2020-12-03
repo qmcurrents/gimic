@@ -591,12 +591,16 @@ contains
         real(DP), dimension(:,:), pointer :: jtens
         real(DP), allocatable :: wg(:), coord(:,:), grd(:,:)
         real(DP), allocatable :: intchi(:,:), pdata(:), intsigma(:,:)  
-        real(DP), dimension(3) :: d, bb, jvec, sigma, chi
-        real(DP) :: f, tmp, si_tmp
+        real(DP), allocatable :: scont(:,:) 
+        real(DP), dimension(3) :: d, bb, jvec, sigma, chi, csum
+        real(DP), dimension(3) :: tmpscont 
+        real(DP) :: f, tmp, si_tmp, spos, sneg
         integer :: i, j, k, npts, natoms, dummy, ncells
+        integer :: iatom, iatom_npts, l
         integer(int32), allocatable :: cells(:,:) ! for vtu file
+        integer(int32), allocatable :: nelpts(:,:) 
         logical :: coords_exists, points_exists, weights_exists
-        logical :: elements_exists
+        logical :: elements_exists, nelpts_exists
         real(DP), parameter :: fac_au2simag = 7.89104d-29
         character(len=70) :: filename
         character(len=70) :: formatstring
@@ -604,6 +608,7 @@ contains
         inquire(FILE='coord.au',     EXIST=coords_exists)
         inquire(FILE='gridfile.grd', EXIST=points_exists)
         inquire(FILE='grid_w.grd',   EXIST=weights_exists)
+        inquire(FILE='nelpts.info',  EXIST=nelpts_exists)
         if(.not. (coords_exists .and. points_exists .and. weights_exists)) then
           write(*,*) 'at least one of the files coord.au, gridfile.grd, and grid_w.grd is missing.',&
                      'Therefore any property calculation is skipped.'
@@ -611,6 +616,17 @@ contains
         endif
 
         jtens => this%tens
+
+        ! get atom number X and generated grid points for X
+        ! needed for atom decomposition of contributions
+        open(unit=15, file="nelpts.info")
+        natoms = getnlines(15)
+        allocate(nelpts(natoms,2)) 
+        do i = 1, natoms
+          read(15,*) nelpts(i,1:2)
+          ! write(*,*) nelpts(i,1:2)
+        end do
+        close(15)
 
         ! get atom coordinates in bohr
         open(unit=15, file="coord.au")
@@ -650,10 +666,16 @@ contains
         ! assume jtens has been calculated in the same order
         ! calculate shielding tensor diagonal elements
         allocate(intsigma(npts,3),pdata(npts))
+        allocate(scont(natoms,3))
         ! loop  atoms
         do k=1, natoms
           ! loop grid points
           sigma = 0.0d0
+          spos  = 0.0d0
+          sneg  = 0.0d0
+          iatom = 1
+          scont = 0.0d0
+          iatom_npts = nelpts(iatom,2)
           do i=1, npts
             ! loop xyz
             do j = 1, 3
@@ -685,14 +707,60 @@ contains
             intsigma(i,3) = 1.0d6*f*(d(1)*jvec(2) - d(2)*jvec(1))
             sigma(3) = sigma(3) + 1.0d6*wg(i)*f*(d(1)*jvec(2) - d(2)*jvec(1))
             pdata(i) = (intsigma(i,1) + intsigma(i,2) + intsigma(i,3)) 
-          end do
+            ! collect positive and negative contributions
+            if (pdata(i).ge.0.0d0) then
+                spos = spos + pdata(i)*wg(i)
+            else 
+                sneg = sneg + pdata(i)*wg(i)
+            end if
+            ! collect atom contributions 
+            if (i == iatom_npts) then
+                scont(iatom,1) = (sigma(1)+sigma(2)+sigma(3))/3.0d0  
+                scont(iatom,2) = (spos)/3.0d0  
+                scont(iatom,3) = (sneg)/3.0d0  
+                !write(*,*) scont(iatom, 1), scont(iatom, 2), scont(iatom,3)
+                iatom = iatom + 1 
+                if (iatom.le.natoms) then
+                  iatom_npts = iatom_npts + nelpts(iatom,2) 
+                end if 
+            end if
+            !
+          end do ! loop npts
+          !
           write(*,*) "atom ",k
-          write(*,*) "sigma_xx ", sigma(1)
-          write(*,*) "sigma_yy ", sigma(2)
-          write(*,*) "sigma_zz ", sigma(3)
+          write(*,*) "in ppm" 
+          write(*,"(X,A10,2X,F14.6)") "sigma_xx ", sigma(1)
+          write(*,"(X,A10,2X,F14.6)") "sigma_yy ", sigma(2)
+          write(*,"(X,A10,2X,F14.6)") "sigma_zz ", sigma(3)
           tmp = (sigma(1) + sigma(2) + sigma(3))/3.0d0
-          write(*,*) "shielding constant sigma in ppm= ", tmp
+          write(*,"(A30,2X,F14.6)") "shielding constant    = ", tmp
+          write(*,"(A30,2X,F14.6)") "positive contribution = ", spos/3.0d0
+          write(*,"(A30,2X,F14.6)") "negative contribution = ", sneg/3.0d0
+          write(*,"(A30,2X,F14.6)") "sum = ", (spos + sneg)/3.0d0
+          write(*,*) " "
+          write(*,*) "atom contributions, total, positive, negative" 
+          csum = 0.0d0
+          tmpscont = 0.0d0
+          do l=1, natoms
+            if (l==1) then
+              write(*,"(A5,I5,3F14.6)") "atom ", l, scont(l,1),scont(l,2),scont(l,3)
+              csum(1) = csum(1) + scont(l,1) 
+              csum(2) = csum(2) + scont(l,2) 
+              csum(3) = csum(3) + scont(l,3) 
+            else 
+              tmpscont(1) = scont(l,1) - scont(l-1,1) 
+              tmpscont(2) = scont(l,2) - scont(l-1,2) 
+              tmpscont(3) = scont(l,3) - scont(l-1,3) 
+              write(*,"(A5,I5,3F14.6)") "atom ", l, tmpscont(1), tmpscont(2), tmpscont(3)  
+              csum(1) = csum(1) + tmpscont(1) 
+              csum(2) = csum(2) + tmpscont(2) 
+              csum(3) = csum(3) + tmpscont(3) 
+            end if
+          end do
+          write(*,"(A10, 3F14.6)") "sum ", csum(1), csum(2), csum(3)
+          write(*,*) "****************************************************"
 
+          ! plot integrand intsigma
           if(elements_exists) then
             if (k < 10) then
               formatstring = "(A5,I1,A4)"
@@ -722,8 +790,13 @@ contains
         
         ! calculate diagonal elements of magnetizabilitz tensor
         ! for magnetizability no loop over coords is needed 
-        allocate(intchi(npts,3)) 
+        allocate(intchi(npts,3))
         chi = 0.0d0
+        spos = 0.0d0
+        sneg = 0.0d0
+        iatom = 1
+        scont = 0.0d0
+        iatom_npts = nelpts(iatom,2)
         do i=1, npts
           ! loop xyz
           ! contract with Bx
@@ -752,16 +825,68 @@ contains
           chi(3) = chi(3) + wg(i)*0.5d0*(grd(i,1)*jvec(2) - grd(i,2)*jvec(1))
           ! calculate sum of integrands
           pdata(i) = (intchi(i,1) + intchi(i,2) + intchi(i,3)) 
-        end do
+          ! collect positive and negative contributions
+          if (pdata(i).ge.0.0d0) then
+              spos = spos + pdata(i)*wg(i)
+          else 
+              sneg = sneg + pdata(i)*wg(i)
+          end if
+          ! collect atom contributions 
+          if (i == iatom_npts) then
+              scont(iatom,1) = (chi(1)+chi(2)+chi(3))/3.0d0  
+              scont(iatom,2) = (spos)/3.0d0  
+              scont(iatom,3) = (sneg)/3.0d0  
+              !write(*,*) scont(iatom, 1), scont(iatom, 2), scont(iatom,3)
+              iatom = iatom + 1 
+              if (iatom.le.natoms) then
+                iatom_npts = iatom_npts + nelpts(iatom,2) 
+              end if 
+          end if
+          !
+        end do !npts
+        ! 
         write(*,*) ""
-        write(*,*) "chi_xx ", chi(1)
-        write(*,*) "chi_yy ", chi(2)
-        write(*,*) "chi_zz ", chi(3)
+        write(*,"(X,A7,2X,F14.8)") "chi_xx ", chi(1)
+        write(*,"(X,A7,2X,F14.8)") "chi_yy ", chi(2)
+        write(*,"(X,A7,2X,F14.8)") "chi_zz ", chi(3)
         tmp = (chi(1) + chi(2) + chi(3))/3.0d0
-        write(*,*) "isotropic magnetizability chi in au = ", tmp
+        write(*,*) "in au"
+        write(*,"(X,A30,2X,F14.6)") "isotropic magnetizability chi = ", tmp
+        write(*,"(X,A30,2X,F14.6)") "positive contribution         = ", spos/3.0d0
+        write(*,"(X,A30,2X,F14.6)") "negative contribution         = ", sneg/3.0d0
+        write(*,"(X,A30,2X,F14.6)") "sum ", (spos + sneg)/3.0d0
+        write(*,*) ""
         si_tmp = tmp*fac_au2simag 
-        write(*,*) "in SI units J/T^2 = ", si_tmp 
+        write(*,*) "in SI units J/T^2 " 
         write(*,*) "conversion factor: 7.89104*10^-29 J/T^2 " 
+        write(*,*) ""
+        write(*,"(A30,2X,E14.6)") "isotropic magnetizability = ", si_tmp 
+        write(*,"(A30,2X,E14.6)") "positive contribution     = ", (spos/3.0d0)*fac_au2simag
+        write(*,"(A30,2X,E14.6)") "negative contribution     = ", (sneg/3.0d0)*fac_au2simag
+        write(*,"(A30,2X,E14.6)") "sum ", ((spos + sneg)/3.0d0)*fac_au2simag
+        write(*,*) "****************************************************"
+        write(*,*) ""
+        write(*,*) "atom contributions, total, positive, negative" 
+        csum = 0.0d0
+        tmpscont = 0.0d0
+        do l=1, natoms
+          if (l==1) then
+            write(*,"(A5,I5,3F14.6)") "atom ", l, scont(l,1),scont(l,2),scont(l,3)
+            csum(1) = csum(1) + scont(l,1) 
+            csum(2) = csum(2) + scont(l,2) 
+            csum(3) = csum(3) + scont(l,3) 
+          else 
+            tmpscont(1) = scont(l,1) - scont(l-1,1) 
+            tmpscont(2) = scont(l,2) - scont(l-1,2) 
+            tmpscont(3) = scont(l,3) - scont(l-1,3) 
+            write(*,"(A5,I5,3F14.6)") "atom ", l, tmpscont(1), tmpscont(2), tmpscont(3)  
+            csum(1) = csum(1) + tmpscont(1) 
+            csum(2) = csum(2) + tmpscont(2) 
+            csum(3) = csum(3) + tmpscont(3) 
+          end if
+        end do
+        write(*,"(A10, 3F14.6)") "sum ", csum(1), csum(2), csum(3)
+        write(*,*) "****************************************************"
 
         ! plot integrand intchi 
         if(elements_exists) then
@@ -773,7 +898,7 @@ contains
 
 
         ! clean up
-        deallocate(wg, coord)
+        deallocate(wg, coord, nelpts)
         deallocate(intchi, pdata, intsigma)
         if(elements_exists) then
           deallocate(cells)
