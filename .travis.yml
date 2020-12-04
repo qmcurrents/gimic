@@ -12,7 +12,7 @@ matrix:
       addons: &gcc49
         apt:
           sources: ['ubuntu-toolchain-r-test']
-          packages: ['g++', 'gcc', 'gfortran', 'valgrind']
+          packages: ['g++', 'gcc', 'gfortran', 'valgrind', 'libpython3.8-dev', 'python3.8-dev']
       env:
         - CXX='g++'
         - CC='gcc'
@@ -26,7 +26,7 @@ matrix:
       addons: &gcc49
         apt:
           sources: ['ubuntu-toolchain-r-test']
-          packages: ['g++', 'gcc', 'gfortran', 'valgrind']
+          packages: ['g++', 'gcc', 'gfortran', 'valgrind', 'libpython3.8-dev', 'python3.8-dev']
       env:
         - CXX='g++'
         - CC='gcc'
