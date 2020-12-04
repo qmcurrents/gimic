@@ -1,6 +1,6 @@
 language: python
 python:
- - 3.8
+ - 3.5
 
 sudo: false
 
@@ -8,11 +8,11 @@ matrix:
   include:
     - os: linux
       compiler: gcc
-      python: 3.8
+      python: 3.5
       addons: &gcc49
         apt:
           sources: ['ubuntu-toolchain-r-test']
-          packages: ['g++', 'gcc', 'gfortran', 'valgrind', 'libpython3.8-dev', 'python3.8-dev']
+          packages: ['g++', 'gcc', 'gfortran', 'valgrind', 'libpython3-dev', 'python3-dev']
       env:
         - CXX='g++'
         - CC='gcc'
@@ -22,11 +22,11 @@ matrix:
         - DEBUG_BUILD=0
     - os: linux
       compiler: gcc
-      python: 3.8
+      python: 3.5
       addons: &gcc49
         apt:
           sources: ['ubuntu-toolchain-r-test']
-          packages: ['g++', 'gcc', 'gfortran', 'valgrind', 'libpython3.8-dev', 'python3.8-dev']
+          packages: ['g++', 'gcc', 'gfortran', 'valgrind', 'libpython3-dev', 'python3-dev']
       env:
         - CXX='g++'
         - CC='gcc'
