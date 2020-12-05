@@ -1,0 +1,30 @@
+# NEW INPUT
+
+calc=cdens          # cdens, integral, edens, divj
+title=""
+basis="MOL"
+xdens="XDENS"
+debug=1           # debug print level
+openshell=false
+magnet=[0.0, 0.0, 1.0]
+
+# Read in grid from external file. 
+Grid(file) {   
+     file=gridfile.grd
+}
+
+Advanced {
+    lip_order=5     # order of Lagrange Interpolating Polynominals to use
+    spherical=off   # don't touch, unless you REALLY know what you are doing
+    diamag=on       # turn on/off diamagnetic contributions
+    paramag=on      # turn on/off paramagnetic contributions
+    GIAO=on         # turn on/off GIAOs. Don't change unless you know why.
+    screening=on    # use screening to speed up
+    screening_thrs=1.d-8   # Screening threshold
+}
+
+Essential {
+    prop=on  # makes only sense when numgrid is integrated
+    acid=off
+    jmod=off
+}
