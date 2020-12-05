@@ -15,6 +15,9 @@ f = [
     get_filter(from_string=' isotropic magnetizability chi',
                num_lines=4,
                rel_tolerance=1.0e-8),
+    get_filter(from_string='      shielding constant    =',
+               num_lines=4,
+               rel_tolerance=1.0e-8),
 ]
 
 ierr = run(options,
