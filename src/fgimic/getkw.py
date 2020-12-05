@@ -268,10 +268,10 @@ class Section:
 		else:
 			s=s+"ARG F KW %d\n" % (nkw)
 
-		for i in self.kw.values():
+		for i in list(self.kw.values()):
 			for j in i:
 				s=s+str(j)
-		for i in self.sect.values():
+		for i in list(self.sect.values()):
 			for j in i:
 				s=s+str(j)
 		return s
@@ -321,7 +321,7 @@ class Keyword:
 
 		if self.nargs > 0:
 			if len(arg) != self.nargs:
-				print("keyword lenght mismatsh %s(%i): %i" % (self.name, self.nargs, len(arg)) )
+				print("keyword length mismatch %s(%i): %i" % (self.name, self.nargs, len(arg)) )
 				sys.exit(1)
 		# store everyting as strings internally
 		self.arg=[]

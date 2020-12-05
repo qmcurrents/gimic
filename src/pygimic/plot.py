@@ -6,15 +6,15 @@
 import numpy as np
 import math
 from copy import deepcopy
-from gimic_exceptions import NotImplemented
-from grid import Grid
-from field import ScalarField, VectorField
+from .gimic_exceptions import NotImplemented
+from .grid import Grid
+from .field import ScalarField, VectorField
 
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib import cm
 from matplotlib.ticker import LinearLocator, FormatStrFormatter
 import matplotlib.pyplot as plt
-from streamplot import streamplot
+from .streamplot import streamplot
 
 class BasePlot:
     def __init__(self, field):

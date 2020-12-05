@@ -4,8 +4,8 @@
 
 import numpy as np
 from copy import deepcopy
-from grid import Grid, GridIterator
-from gimic_exceptions import NotReached
+from .grid import Grid, GridIterator
+from .gimic_exceptions import NotReached
 
 class Field(GridIterator):
     def __init__(self, grid):
@@ -132,8 +132,8 @@ if __name__ == '__main__':
     f = ScalarField(grid)
     f.calc(stest)
     for i in f:
-        print i
-    print f.get_field()
+        print(i)
+    print(f.get_field())
 
 #    f = VectorField(grid)
 #    f.calc(vtest)

@@ -5,8 +5,8 @@
 #
 import numpy as np
 import math
-from grid import Grid
-from field import ScalarField
+from .grid import Grid
+from .field import ScalarField
 
 class FieldQuadrature:
     def integrate(self, field):
@@ -38,7 +38,7 @@ if __name__ == '__main__':
     f = ScalarField(grid)
     f.calc(gau)
     x = q.integrate(f)
-    print 'int(exp(-r^2) = ', x, math.sqrt(math.pi)**3
+    print('int(exp(-r^2) = ', x, math.sqrt(math.pi)**3)
 
     grid = Grid(l=(2.0*math.pi, 0, 0), origin=(-math.pi, 0, 0), npts=40,
             distribution='gauss')
@@ -46,7 +46,7 @@ if __name__ == '__main__':
     f = ScalarField(grid)
     f.calc(fsin)
     x = q.integrate(f)
-    print 'int(sin(r)) =', x
+    print('int(sin(r)) =', x)
 
 
 

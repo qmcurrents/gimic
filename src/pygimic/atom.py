@@ -1,8 +1,8 @@
 import string
 import math
 import numpy as np
-import atomic_units as au
-from elements import Element, PeriodicTable
+from . import atomic_units as au
+from .elements import Element, PeriodicTable
 
 class Atom:
     _cfact={'au2m' : au.au2m, 'au2nm' : au.au2nm,
@@ -43,8 +43,8 @@ class Atom:
         s=string.lower(s)
         try:
             self.element=PeriodicTable[s]
-        except KeyError, x:
-            print "Invalid element:", x;
+        except KeyError as x:
+            print("Invalid element:", x);
 
     def change_units(self, conv):
         self.coord *= self._cfact[conv]
@@ -52,7 +52,7 @@ class Atom:
 if __name__ == '__main__':
     a1 = Atom((10,10,10))
     a2 = Atom((9,9,9))
-    print a1 - a2
-    print a1.bond_distance(a2)
+    print(a1 - a2)
+    print(a1.bond_distance(a2))
 
 # vim:et:ts=4:sw=4

@@ -1,6 +1,6 @@
 from connector import GimicConnector
 import numpy as np
-import current
+from . import current
 
 class London(GimicConnector):
     def __init__(self, xdens):
