@@ -1,0 +1,396 @@
+
+ ****************************************************************
+ ***                                                          ***
+ ***           GIMIC 2.1.4 (9f72a28)                              ***
+ ***              Written by Jonas Juselius                   ***
+ ***                                                          ***
+ ***  This software is copyright (c) 2003-2011 by             ***
+ ***  Jonas Juselius,  University of Tromso.                  ***
+ ***                                                          ***
+ ***  You are free to distribute this software under the      ***
+ ***  terms of the GNU General Public License                 ***
+ ***                                                          ***
+ ***  A Pretty Advanced 'Hello World!' Program                ***
+ ****************************************************************
+
+ Sat Dec  5 11:16:36 2020
+  TITLE:
+
+ INFO: Detected TURBOMOLE input
+
+ Number of atoms =  12
+
+ Normalizing basis
+
+   Total number of primitive  GTO's    354
+   Total number of contracted GTO's    252
+
+ *** Calculating screening coefficients
+ INFO: Screening threshold:   0.1000E-07
+
+ INFO: Reordering densities [TURBOMOLE]
+   Total number of grid points  :    202692
+
+ *** Grid plot in grid.xyz
+    Magnetic field <x,y,z> =   0.00000   0.00000   1.00000
+
+ INFO: Closed-shell calculation
+
+ Calculating current density
+ *****************************************
+ INFO: Estimated CPU time for single core calculation:      330.48 sec (   0.1 h )
+
+ magnetic field
+   0.0000000000000000        0.0000000000000000        1.0000000000000000     
+ 
+ npts      202692
+ atom            1
+ in ppm
+  sigma_xx       -38.310167
+  sigma_yy        13.688272
+  sigma_zz       173.392714
+      shielding constant    =        49.590273
+      positive contribution =       126.107238
+      negative contribution =       -76.516964
+                        sum =        49.590273
+  
+ atom contributions, total, positive, negative
+atom     1     34.865288    106.916789    -72.051501
+atom     2      3.491677      4.960734     -1.469056
+atom     3      1.038347      1.561811     -0.523463
+atom     4      0.735955      1.188211     -0.452257
+atom     5      1.038271      1.561365     -0.523094
+atom     6      3.491647      4.958264     -1.466617
+atom     7      2.801344      2.811541     -0.010197
+atom     8      0.646598      0.655761     -0.009163
+atom     9      0.295439      0.296453     -0.001014
+atom    10      0.243669      0.244094     -0.000426
+atom    11      0.295439      0.296464     -0.001025
+atom    12      0.646598      0.655749     -0.009151
+      sum      49.590273    126.107238    -76.516964
+ ****************************************************
+ atom            2
+ in ppm
+  sigma_xx       -38.310167
+  sigma_yy        13.688272
+  sigma_zz       173.392714
+      shielding constant    =        49.590273
+      positive contribution =       126.107238
+      negative contribution =       -76.516964
+                        sum =        49.590273
+  
+ atom contributions, total, positive, negative
+atom     1      3.491677      4.960734     -1.469056
+atom     2     34.865288    106.916789    -72.051501
+atom     3      3.491647      4.958264     -1.466617
+atom     4      1.038271      1.561365     -0.523094
+atom     5      0.735955      1.188211     -0.452257
+atom     6      1.038347      1.561811     -0.523463
+atom     7      0.646598      0.655761     -0.009163
+atom     8      2.801344      2.811541     -0.010197
+atom     9      0.646598      0.655749     -0.009151
+atom    10      0.295439      0.296464     -0.001025
+atom    11      0.243669      0.244094     -0.000426
+atom    12      0.295439      0.296453     -0.001014
+      sum      49.590273    126.107238    -76.516964
+ ****************************************************
+ atom            3
+ in ppm
+  sigma_xx        39.687541
+  sigma_yy       -64.309406
+  sigma_zz       173.392863
+      shielding constant    =        49.590332
+      positive contribution =       126.105275
+      negative contribution =       -76.514943
+                        sum =        49.590332
+  
+ atom contributions, total, positive, negative
+atom     1      1.038393      1.561678     -0.523285
+atom     2      3.491538      4.957286     -1.465748
+atom     3     34.865399    106.917369    -72.051970
+atom     4      3.491538      4.957286     -1.465748
+atom     5      1.038393      1.561678     -0.523285
+atom     6      0.735984      1.189801     -0.453817
+atom     7      0.295439      0.296464     -0.001025
+atom     8      0.646598      0.655785     -0.009187
+atom     9      2.801344      2.811582     -0.010238
+atom    10      0.646598      0.655785     -0.009187
+atom    11      0.295439      0.296464     -0.001025
+atom    12      0.243669      0.244097     -0.000428
+      sum      49.590332    126.105275    -76.514943
+ ****************************************************
+ atom            4
+ in ppm
+  sigma_xx       -38.310167
+  sigma_yy        13.688272
+  sigma_zz       173.392714
+      shielding constant    =        49.590273
+      positive contribution =       126.107238
+      negative contribution =       -76.516964
+                        sum =        49.590273
+  
+ atom contributions, total, positive, negative
+atom     1      0.735955      1.188211     -0.452257
+atom     2      1.038271      1.561365     -0.523094
+atom     3      3.491647      4.958264     -1.466617
+atom     4     34.865288    106.916789    -72.051501
+atom     5      3.491677      4.960734     -1.469056
+atom     6      1.038347      1.561811     -0.523463
+atom     7      0.243669      0.244094     -0.000426
+atom     8      0.295439      0.296464     -0.001025
+atom     9      0.646598      0.655749     -0.009151
+atom    10      2.801344      2.811541     -0.010197
+atom    11      0.646598      0.655761     -0.009163
+atom    12      0.295439      0.296453     -0.001014
+      sum      49.590273    126.107238    -76.516964
+ ****************************************************
+ atom            5
+ in ppm
+  sigma_xx       -38.310167
+  sigma_yy        13.688272
+  sigma_zz       173.392714
+      shielding constant    =        49.590273
+      positive contribution =       126.107238
+      negative contribution =       -76.516964
+                        sum =        49.590273
+  
+ atom contributions, total, positive, negative
+atom     1      1.038271      1.561365     -0.523094
+atom     2      0.735955      1.188211     -0.452257
+atom     3      1.038347      1.561811     -0.523463
+atom     4      3.491677      4.960734     -1.469056
+atom     5     34.865288    106.916789    -72.051501
+atom     6      3.491647      4.958264     -1.466617
+atom     7      0.295439      0.296464     -0.001025
+atom     8      0.243669      0.244094     -0.000426
+atom     9      0.295439      0.296453     -0.001014
+atom    10      0.646598      0.655761     -0.009163
+atom    11      2.801344      2.811541     -0.010197
+atom    12      0.646598      0.655749     -0.009151
+      sum      49.590273    126.107238    -76.516964
+ ****************************************************
+ atom            6
+ in ppm
+  sigma_xx        39.687541
+  sigma_yy       -64.309406
+  sigma_zz       173.392863
+      shielding constant    =        49.590332
+      positive contribution =       126.105275
+      negative contribution =       -76.514943
+                        sum =        49.590332
+  
+ atom contributions, total, positive, negative
+atom     1      3.491538      4.957286     -1.465748
+atom     2      1.038393      1.561678     -0.523285
+atom     3      0.735984      1.189801     -0.453817
+atom     4      1.038393      1.561678     -0.523285
+atom     5      3.491538      4.957286     -1.465748
+atom     6     34.865399    106.917369    -72.051970
+atom     7      0.646598      0.655785     -0.009187
+atom     8      0.295439      0.296464     -0.001025
+atom     9      0.243669      0.244097     -0.000428
+atom    10      0.295439      0.296464     -0.001025
+atom    11      0.646598      0.655785     -0.009187
+atom    12      2.801344      2.811582     -0.010238
+      sum      49.590332    126.105275    -76.514943
+ ****************************************************
+ atom            7
+ in ppm
+  sigma_xx        24.619109
+  sigma_yy        26.740983
+  sigma_zz        21.454751
+      shielding constant    =        24.271614
+      positive contribution =        31.822301
+      negative contribution =        -7.550687
+                        sum =        24.271614
+  
+ atom contributions, total, positive, negative
+atom     1      1.471827      5.238837     -3.767010
+atom     2      0.642152      1.426756     -0.784605
+atom     3      0.523567      0.769246     -0.245678
+atom     4      0.423584      0.636579     -0.212995
+atom     5      0.523543      0.769466     -0.245923
+atom     6      0.642091      1.426547     -0.784456
+atom     7     18.973393     20.332793     -1.359400
+atom     8      0.290053      0.363524     -0.073471
+atom     9      0.171292      0.173020     -0.001728
+atom    10      0.148769      0.149018     -0.000250
+atom    11      0.171292      0.173016     -0.001724
+atom    12      0.290053      0.363500     -0.073447
+      sum      24.271614     31.822301     -7.550687
+ ****************************************************
+ atom            8
+ in ppm
+  sigma_xx        24.619109
+  sigma_yy        26.740983
+  sigma_zz        21.454751
+      shielding constant    =        24.271614
+      positive contribution =        31.822301
+      negative contribution =        -7.550687
+                        sum =        24.271614
+  
+ atom contributions, total, positive, negative
+atom     1      0.642152      1.426756     -0.784605
+atom     2      1.471827      5.238837     -3.767010
+atom     3      0.642091      1.426547     -0.784456
+atom     4      0.523543      0.769466     -0.245923
+atom     5      0.423584      0.636579     -0.212995
+atom     6      0.523567      0.769246     -0.245678
+atom     7      0.290053      0.363524     -0.073471
+atom     8     18.973393     20.332793     -1.359400
+atom     9      0.290053      0.363500     -0.073447
+atom    10      0.171292      0.173016     -0.001724
+atom    11      0.148769      0.149018     -0.000250
+atom    12      0.171292      0.173020     -0.001728
+      sum      24.271614     31.822301     -7.550687
+ ****************************************************
+ atom            9
+ in ppm
+  sigma_xx        27.801990
+  sigma_yy        23.558297
+  sigma_zz        21.454854
+      shielding constant    =        24.271713
+      positive contribution =        31.818417
+      negative contribution =        -7.546704
+                        sum =        24.271713
+  
+ atom contributions, total, positive, negative
+atom     1      0.523586      0.769674     -0.246088
+atom     2      0.642068      1.426732     -0.784663
+atom     3      1.471965      5.236490     -3.764525
+atom     4      0.642068      1.426732     -0.784663
+atom     5      0.523586      0.769674     -0.246088
+atom     6      0.423588      0.636950     -0.213362
+atom     7      0.171292      0.173012     -0.001720
+atom     8      0.290053      0.363502     -0.073449
+atom     9     18.973393     20.330119     -1.356726
+atom    10      0.290053      0.363502     -0.073449
+atom    11      0.171292      0.173012     -0.001720
+atom    12      0.148769      0.149020     -0.000252
+      sum      24.271713     31.818417     -7.546704
+ ****************************************************
+ atom           10
+ in ppm
+  sigma_xx        24.619109
+  sigma_yy        26.740983
+  sigma_zz        21.454751
+      shielding constant    =        24.271614
+      positive contribution =        31.822301
+      negative contribution =        -7.550687
+                        sum =        24.271614
+  
+ atom contributions, total, positive, negative
+atom     1      0.423584      0.636579     -0.212995
+atom     2      0.523543      0.769466     -0.245923
+atom     3      0.642091      1.426547     -0.784456
+atom     4      1.471827      5.238837     -3.767010
+atom     5      0.642152      1.426756     -0.784605
+atom     6      0.523567      0.769246     -0.245678
+atom     7      0.148769      0.149018     -0.000250
+atom     8      0.171292      0.173016     -0.001724
+atom     9      0.290053      0.363500     -0.073447
+atom    10     18.973393     20.332793     -1.359400
+atom    11      0.290053      0.363524     -0.073471
+atom    12      0.171292      0.173020     -0.001728
+      sum      24.271614     31.822301     -7.550687
+ ****************************************************
+ atom           11
+ in ppm
+  sigma_xx        24.619109
+  sigma_yy        26.740983
+  sigma_zz        21.454751
+      shielding constant    =        24.271614
+      positive contribution =        31.822301
+      negative contribution =        -7.550687
+                        sum =        24.271614
+  
+ atom contributions, total, positive, negative
+atom     1      0.523543      0.769466     -0.245923
+atom     2      0.423584      0.636579     -0.212995
+atom     3      0.523567      0.769246     -0.245678
+atom     4      0.642152      1.426756     -0.784605
+atom     5      1.471827      5.238837     -3.767010
+atom     6      0.642091      1.426547     -0.784456
+atom     7      0.171292      0.173016     -0.001724
+atom     8      0.148769      0.149018     -0.000250
+atom     9      0.171292      0.173020     -0.001728
+atom    10      0.290053      0.363524     -0.073471
+atom    11     18.973393     20.332793     -1.359400
+atom    12      0.290053      0.363500     -0.073447
+      sum      24.271614     31.822301     -7.550687
+ ****************************************************
+ atom           12
+ in ppm
+  sigma_xx        27.801990
+  sigma_yy        23.558297
+  sigma_zz        21.454854
+      shielding constant    =        24.271713
+      positive contribution =        31.818417
+      negative contribution =        -7.546704
+                        sum =        24.271713
+  
+ atom contributions, total, positive, negative
+atom     1      0.642068      1.426732     -0.784663
+atom     2      0.523586      0.769674     -0.246088
+atom     3      0.423588      0.636950     -0.213362
+atom     4      0.523586      0.769674     -0.246088
+atom     5      0.642068      1.426732     -0.784663
+atom     6      1.471965      5.236490     -3.764525
+atom     7      0.290053      0.363502     -0.073449
+atom     8      0.171292      0.173012     -0.001720
+atom     9      0.148769      0.149020     -0.000252
+atom    10      0.171292      0.173012     -0.001720
+atom    11      0.290053      0.363502     -0.073449
+atom    12     18.973393     20.330119     -1.356726
+      sum      24.271713     31.818417     -7.546704
+ ****************************************************
+ 
+ 
+ chi_xx      -7.27145628
+ chi_yy      -7.27140413
+ chi_zz     -20.84294755
+ in au
+ isotropic magnetizability chi       -11.795269
+ positive contribution                 1.367857
+ negative contribution               -13.163126
+                           sum       -11.795269
+ 
+ in SI units J/T^2 
+ conversion factor: 7.89104*10^-29 J/T^2 
+ 
+  isotropic magnetizability =    -0.930769E-27
+  positive contribution     =     0.107938E-27
+  negative contribution     =    -0.103871E-26
+                          sum    -0.930769E-27
+ ****************************************************
+ 
+ atom contributions, total, positive, negative
+atom     1     -1.167098      0.227366     -1.394464
+atom     2     -1.167098      0.227366     -1.394464
+atom     3     -1.167108      0.227549     -1.394656
+atom     4     -1.167098      0.227366     -1.394464
+atom     5     -1.167098      0.227366     -1.394464
+atom     6     -1.167108      0.227549     -1.394656
+atom     7     -0.798777      0.000550     -0.799327
+atom     8     -0.798777      0.000550     -0.799327
+atom     9     -0.798777      0.000548     -0.799325
+atom    10     -0.798777      0.000550     -0.799327
+atom    11     -0.798777      0.000550     -0.799327
+atom    12     -0.798777      0.000548     -0.799325
+      sum     -11.795269      1.367857    -13.163126
+ ****************************************************
+ not writing a vtu file, because the file grid.1.ele was not found.
+ *** Deallocated grid data
+ INFO: Deallocated basis set and atom data
+
+ ----------------------------------------------------------------------
+    wall time:   344.44sec (   0.1 h )
+         user:   343.45sec (   0.1 h )
+          sys:     0.99sec (   0.0 h )
+ ----------------------------------------------------------------------
+ Sat Dec  5 11:19:42 2020
+ Hello World! (tm)
+
+ done.
+
+This is F-GIMIC.
