@@ -6,8 +6,8 @@
 import numpy as np
 import math
 from copy import deepcopy
-from atom import Atom
-from gimic_exceptions import NotImplemented
+from .atom import Atom
+from .gimic_exceptions import NotImplemented
 import gengauss
 
 class GridAxis:
@@ -105,7 +105,7 @@ class GridIterator:
     def __iter__(self):
         return self
 
-    def next(self):
+    def __next__(self):
         'Iterator to return data points in normal order'
         if self.iteridx is None:
             self.iteridx = [0, 0, 0]
@@ -125,10 +125,10 @@ class GridIterator:
 
     def reverse(self, k=None):
         'Iterator to return  data points in reverse order'
-        a = range(self.npts[0])
-        b = range(self.npts[1])
+        a = list(range(self.npts[0]))
+        b = list(range(self.npts[1]))
         if k is None:
-            c = range(self.npts[2])
+            c = list(range(self.npts[2]))
         else:
             c = (k,)
         for i in a:
@@ -138,10 +138,10 @@ class GridIterator:
 
     def range(self, k=None):
         'Iterator to return grid indeces in normal order'
-        a = range(self.npts[0])
-        b = range(self.npts[1])
+        a = list(range(self.npts[0]))
+        b = list(range(self.npts[1]))
         if k is None:
-            c = range(self.npts[2])
+            c = list(range(self.npts[2]))
         else:
             c = (k,)
         for k in c:
@@ -151,10 +151,10 @@ class GridIterator:
 
     def rrange(self, k=None):
         'Iterator to return grid indeces in reverse order'
-        a = range(self.npts[0])
-        b = range(self.npts[1])
+        a = list(range(self.npts[0]))
+        b = list(range(self.npts[1]))
         if k is None:
-            c = range(self.npts[2])
+            c = list(range(self.npts[2]))
         else:
             c = (k,)
         for i in a:
@@ -400,15 +400,15 @@ class BondGrid(Grid):
 
 if __name__ == '__main__':
     g = Grid(l=(4, 5, 6), npts=(7,3,2))
-    print g
+    print(g)
     a1 = Atom((-1.0, 0.0, 0.0))
     a2 = Atom((1.0, 0.0, 0.0))
     bg = BondGrid((a1, a2), height=(5,5), width=(2,2), npts=(2,3,2),
             fixpoint=(0,0,1))
-    print bg
-    print bg.get_axis(0).get_points()
-    print bg.get_axis(1).get_points()
-    print bg.get_axis(2).get_points()
+    print(bg)
+    print(bg.get_axis(0).get_points())
+    print(bg.get_axis(1).get_points())
+    print(bg.get_axis(2).get_points())
 
 #    for i, j, k in g.range(0):
 #        print i, j, k

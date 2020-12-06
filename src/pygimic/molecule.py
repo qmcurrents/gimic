@@ -4,8 +4,8 @@
 # TODO: Read atom data from MOL files
 #       Add classes for XYZMolecule, MOLMolecule, etc...
 #
-from atom import Atom
-from elements import Element
+from .atom import Atom
+from .elements import Element
 
 class Molecule:
     def __init__(self, atoms):
@@ -40,7 +40,7 @@ class Molecule:
             for i in f:
                 data = i.split()
                 sym = data[0]
-                coord = map(float, data[1:])
+                coord = list(map(float, data[1:]))
                 atoms.append(Atom(coord, sym))
         if len(atoms) != natoms:
             raise RuntimeError('Atom number mismatch in XYZ file.')
@@ -51,10 +51,10 @@ class Molecule:
         "Write a XYZ file of atoms indexes"
         self.change_units('au2a')
         with open(file, 'w') as f:
-            print >> f, len(self.atoms)
-            print >> f
+            print(len(self.atoms), file=f)
+            print(file=f)
             for i in self.atoms:
-                print >> f, i
+                print(i, file=f)
         self.change_units('a2au')
 
     def change_units(self, conv):
@@ -63,4 +63,4 @@ class Molecule:
 
 if __name__ == '__main__':
     mol = Molecule('coord.xyz')
-    print mol[0]
+    print(mol[0])

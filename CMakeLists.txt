@@ -2,7 +2,7 @@
 # Copyright (c) 2015-2018 by Radovan Bast, Roberto Di Remigio, Jonas Juselius, and contributors.
 
 # set minimum cmake version
-cmake_minimum_required(VERSION 2.8 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.12 FATAL_ERROR)
 
 # project name
 project(gimic Fortran C CXX)
@@ -87,8 +87,10 @@ endmacro()
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/custom)
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/downloaded)
 
+find_package(Python3 COMPONENTS Interpreter Development NumPy)
+include_directories(${Python3_INCLUDE_DIRS})
+
 # included cmake modules
-include(python-discovery)
 include(rpath-workaround)
 include(autocmake_fc)
 include(autocmake_cc)

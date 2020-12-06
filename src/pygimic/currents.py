@@ -4,8 +4,8 @@
 #
 import numpy as np
 import math
-from grid import Grid
-from field import VectorField, ScalarField
+from .grid import Grid
+from .field import VectorField, ScalarField
 
 class CurrentField(VectorField):
     def __init__(self, grid, gimic):
@@ -61,10 +61,10 @@ if __name__ == '__main__':
     f = CurrentField(grid, foo)
     nf = f.get_normal_flow('+')
     for i in nf:
-        print i
+        print(i)
     nf = f.get_modulus()
     for i in nf:
-        print i
+        print(i)
 
 
 # vim:et:ts=4:sw=4

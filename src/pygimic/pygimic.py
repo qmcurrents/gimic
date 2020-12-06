@@ -3,21 +3,21 @@
 #
 import numpy as np
 from copy import deepcopy
-from gimic_exceptions import NotImplemented
-from grid import Grid, BondGrid
-from magnet import Magnet
-from atom import Atom
-from molecule import Molecule
-from field import VectorField, ScalarField
-from currents import CurrentField
-from plot import MatPlot
-from quadrature import FieldQuadrature
+from .gimic_exceptions import NotImplemented
+from .grid import Grid, BondGrid
+from .magnet import Magnet
+from .atom import Atom
+from .molecule import Molecule
+from .field import VectorField, ScalarField
+from .currents import CurrentField
+from .plot import MatPlot
+from .quadrature import FieldQuadrature
 from london import london
 import gimic
 
 class GimicDriver:
     def __init__(self, args, inkeys):
-        print "This is PyGIMIC."
+        print("This is PyGIMIC.")
         self.args = args
         self.kw = inkeys
         self.debug = self.kw.getkw('debug')
@@ -26,7 +26,7 @@ class GimicDriver:
         self.magnet = None
         title = self.kw.getkw('title')
         if len(title) > 0:
-            print 'TITLE:', title[0]
+            print(('TITLE:', title[0]))
 
         xdens = self.kw.getkw('xdens')[0]
         if self.kw.getkw('backend') == 'london':
@@ -44,9 +44,9 @@ class GimicDriver:
             raise NotImplemented
         else:
             self.init_grid()
-        print "Grid info:"
-        print "=========="
-        print self.grid
+        print("Grid info:")
+        print("==========")
+        print((self.grid))
         self.write_grid_xyz()
 
         self.init_magnet()
@@ -61,9 +61,9 @@ class GimicDriver:
         if calc == 'cdens':
             j = CurrentField(self.grid, self.gimic)
             p = MatPlot(j)
-            print "Writing vector plot in 'vectors.pdf'"
+            print("Writing vector plot in 'vectors.pdf'")
             p.vector_plot('vectors.pdf')
-            print "Writing stream plot in 'stream.pdf'"
+            print("Writing stream plot in 'stream.pdf'")
             p.stream_plot('stream.pdf')
         elif calc == 'rho':
             f = ScalarField(self.grid)
@@ -79,9 +79,9 @@ class GimicDriver:
             Ip = q.integrate(jp)
             In = q.integrate(jn)
             c = self.au2nat()
-            print 'Current in a.u.: {0} (+{1} / {2})'.format(Ip + In, Ip, In)
-            print 'Current in nA/T: {0} (+{1} / {2})'.format(
-                    (Ip + In) * c, Ip * c, In * c)
+            print(('Current in a.u.: {0} (+{1} / {2})'.format(Ip + In, Ip, In)))
+            print(('Current in nA/T: {0} (+{1} / {2})'.format(
+                    (Ip + In) * c, Ip * c, In * c)))
         else:
             raise NotImplemented
 
@@ -89,13 +89,13 @@ class GimicDriver:
         sect = self.kw.getsect('Grid')
         distr = sect.getkw('type')[0]
 
-        bond = map(int, sect.getkw('bond'))
+        bond = list(map(int, sect.getkw('bond')))
         distance = float(sect.getkw('distance')[0])
-        npts = map(int, sect.getkw('grid_points'))
-        height = map(float, sect.getkw('height'))
-        width = map(float, sect.getkw('width'))
+        npts = list(map(int, sect.getkw('grid_points')))
+        height = list(map(float, sect.getkw('height')))
+        width = list(map(float, sect.getkw('width')))
         fixpoint = int(sect.getkw('fixpoint')[0])
-        radius = map(float, sect.getkw('radius'))
+        radius = list(map(float, sect.getkw('radius')))
 
         atom1 = self.mol[bond[0] - 1]
         atom2 = self.mol[bond[1] - 1]
@@ -115,11 +115,11 @@ class GimicDriver:
         l = sect.getkw('lengths')
         npts = sect.getkw('grid_points')
 
-        npts = map(int, npts)
-        l = np.array(map(float, l))
-        origin = np.array(map(float, origin))
-        ivec = np.array(map(float, ivec))
-        jvec = np.array(map(float, jvec))
+        npts = list(map(int, npts))
+        l = np.array(list(map(float, l)))
+        origin = np.array(list(map(float, origin)))
+        ivec = np.array(list(map(float, ivec)))
+        jvec = np.array(list(map(float, jvec)))
         kvec = np.cross(ivec, jvec)
         basis = np.ndarray((3,3))
         basis[:, 0] = ivec

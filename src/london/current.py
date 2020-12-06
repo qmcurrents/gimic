@@ -216,22 +216,22 @@ def vdens(r,bas,d):
 if __name__ == '__main__':
     basis, dmat = get_bas_dmat('density.txt')
     for k in range(len(basis)):
-        print 'center #', k, basis[k]
+        print('center #', k, basis[k])
 
     for k in range(len(dmat)):
-        print 'D(%d,*) = ... %d elem...' % (k,len(dmat[k]))
+        print('D(%d,*) = ... %d elem...' % (k,len(dmat[k])))
 
 
     r = (0.01, -0.2, 0.1)
     rho, grad_rho, jp = vdens(r,basis,dmat)
-    print 'r = ',r
-    print 'rho(r) = ',rho
-    print 'grad(rho(r)) = ',grad_rho
-    print 'jp(r) = ',jp
+    print('r = ',r)
+    print('rho(r) = ',rho)
+    print('grad(rho(r)) = ',grad_rho)
+    print('jp(r) = ',jp)
 
     r = (0.0, 0.0, 0.0)
     rho, grad_rho, jp = vdens(r,basis,dmat)
-    print '\nr = ',r
-    print 'rho(r) = ',rho
-    print 'grad(rho(r)) = ',grad_rho
-    print 'jp(r) = ',jp
+    print('\nr = ',r)
+    print('rho(r) = ',rho)
+    print('grad(rho(r)) = ',grad_rho)
+    print('jp(r) = ',jp)
