@@ -89,6 +89,7 @@ list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/downloaded)
 
 find_package(Python3 COMPONENTS Interpreter Development NumPy)
 include_directories(${Python3_INCLUDE_DIRS})
+include_directories(${Python3_NumPy_INCLUDE_DIRS})
 
 # included cmake modules
 include(rpath-workaround)
