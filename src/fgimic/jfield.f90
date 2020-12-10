@@ -589,11 +589,11 @@ contains
         ! assume this has been generated with tetgen and is in the same directory
         type(jfield_t) :: this
         real(DP), dimension(:,:), pointer :: jtens
-        real(DP), allocatable :: wg(:), coord(:,:), grd(:,:)
+        real(DP), allocatable :: wg(:), coord(:,:), grd(:,:), grd_tmp(:,:)
         real(DP), allocatable :: intchi(:,:), pdata(:), intsigma(:,:)  
         real(DP), allocatable :: scont(:,:) 
         real(DP), dimension(3) :: d, bb, jvec, sigma, chi, csum
-        real(DP), dimension(3) :: tmpscont 
+        real(DP), dimension(3) :: tmpscont, R0
         real(DP) :: f, tmp, si_tmp, spos, sneg
         integer :: i, j, k, npts, natoms, dummy, ncells
         integer :: iatom, iatom_npts, l
@@ -601,9 +601,13 @@ contains
         integer(int32), allocatable :: nelpts(:,:) 
         logical :: coords_exists, points_exists, weights_exists
         logical :: elements_exists, nelpts_exists
+        logical :: testflag 
         real(DP), parameter :: fac_au2simag = 7.89104d-29
         character(len=70) :: filename
         character(len=70) :: formatstring
+
+        ! testflag to check if int J d^3 is indeed zero
+        testflag = .false.
 
         inquire(FILE='coord.au',     EXIST=coords_exists)
         inquire(FILE='gridfile.grd', EXIST=points_exists)
@@ -650,6 +654,24 @@ contains
         end do
         close(15)
         close(16)
+
+        ! test if int J d^3 eq. zero
+        if (testflag) then
+          allocate(grd_tmp(npts,3))
+          ! hardcode here gauge origin
+          R0(1) = 100.0d0 
+          R0(2) = 100.0d0 
+          R0(3) = 100.0d0 
+          do i=1, npts
+            grd_tmp(:,1) = grd(:,1) - R0(1) 
+            grd_tmp(:,2) = grd(:,2) - R0(2) 
+            grd_tmp(:,3) = grd(:,3) - R0(3) 
+          end do
+          ! check if int j d^3 eq. zero
+          !grd_tmp = 1.0d0
+          grd = grd_tmp
+          deallocate(grd_tmp) 
+        end if
 
         ! get cell information for printing vtu file
         inquire(FILE='grid.1.ele', EXIST=elements_exists)
