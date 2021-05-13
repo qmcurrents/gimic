@@ -50,3 +50,12 @@ When using the NumGrid libary:
 
 * https://github.com/dftlibs/numgrid#citation
 
+NMR shielding constants based on the current density:
+
+* RK Jinger, H Fliegl, R Bast, M Dimitrova, S Lehtola, D Sundholm, Spatial contributions to nuclear magnetic shieldings, J. Phys. Chem. A, 125, 1778-1786 
+
+Magnetizability based on the current density:
+
+* S Lehtola, M Dimitrova, H Fliegl, D Sundholm, Benchmarking magnetizabilities with recent density functionals, J. Chem. Theo. Comp., 17, 1457-1468
+
+
