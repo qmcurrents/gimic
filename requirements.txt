@@ -1,6 +1,6 @@
 cython
 numpy
-pyparsing
+pyparsing == 2.4.7
 pyyaml
 sphinx
 sphinx_rtd_theme

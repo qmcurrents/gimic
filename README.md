@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/qmcurrents/gimic.svg?branch=master)](https://travis-ci.org/qmcurrents/gimic/builds)
+[![test status](https://github.com/qmcurrents/gimic/workflows/Test/badge.svg)](https://github.com/qmcurrents/gimic/actions)
 
 
 # GIMIC: gauge-including magnetically induced currents
