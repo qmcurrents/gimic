@@ -1,0 +1,36 @@
+name: Test-debug
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        python-version: [3.8]
+        os: [ubuntu-latest]
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+
+      # install Python and dependencies
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v1
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install Python dependencies
+      run: pip install -r requirements.txt
+
+    - name: Build
+      run: |
+        sudo apt-get install --yes valgrind
+        ./setup --cmake-options="-DENABLE_VALGRIND_TESTS=ON" --type=debug
+        cd build
+        make
+        make install
+        ctest --output-on-failure -R valgrind
