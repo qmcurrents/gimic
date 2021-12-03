@@ -10,7 +10,7 @@ You need minimum the ones listed below. ::
 
 * cython
 * numpy
-* runtest == 2.2.0
+* runtest == 2.3.2
 
 A convenient way to install the packages listed in ``requirements.txt``
 is to install the 
