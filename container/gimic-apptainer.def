@@ -25,6 +25,9 @@ From: ubuntu:22.04
         cmake \
         build-essential \
         gfortran
+    
+    # Needed for visualizations
+    apt-get install -y gnuplot
 
 
     # Build
@@ -48,8 +51,27 @@ From: ubuntu:22.04
     export PATH="$PATH:/opt/gimic/build/bin"
     export PATH="$PATH:/opt/gimic/jobscripts"
     export PATH="$PATH:/opt/gimic/tools"
-    export GIMIC_HOME="/opt/gimic/jobscripts"
+    export GIMIC_HOME="/opt/gimic/"
 
 
 %runscript
     gimic
+
+
+%help
+    This is Gimic container.
+
+    Calling container directly is equal to calling "gimic".
+
+    Other Gimic commands can be called with
+    "apptainer exec path_to_container.sif <command>"
+
+    E.g.
+
+    "apptainer exec gimic_container.sif gimic gimic.inp > gimic.out"
+    "apptainer exec gimic_container.sif 3D-run.sh"
+
+    Note that commands that call slurm do not work!
+    These include jobscripts that "cluster" in their names.
+    The "local" versions should work. 
+    
