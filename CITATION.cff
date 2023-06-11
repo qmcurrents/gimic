@@ -50,14 +50,18 @@ authors:
     family-names: Kjærgaard
     affiliation: Copenhagen
     orcid: 'https://orcid.org/0000-0001-5986-5840'
-  - given-names: Joerg
+  - given-names: Jörg
     family-names: Kussmann
     email: jkupc@cup.uni-muenchen.de
     affiliation: Munich
     orcid: 'https://orcid.org/0000-0002-4724-8551'
   - given-names: Jaako
-    family-names: Pyykkoe
+    family-names: Pyykkö
     affiliation: Helsinki
+  - given-names: Teemu
+    family-names: Järvinen 
+    affiliation: Helsinki
+    orcid: 'https://orcid.org/0000-0001-9234-9071'
 repository-code: 'https://github.com/qmcurrents/gimic'
 url: 'https://gimic.readthedocs.io/en/latest/'
 abstract: >-
