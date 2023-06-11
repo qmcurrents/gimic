@@ -1,5 +1,18 @@
 #!/usr/bin/env python
 
+# function for avoiding CFOUR trouble 
+def add_blank(filename, old, new):
+    with open(filename) as f:
+        s = f.read()
+
+    with open(filename, 'w') as f:
+        s = s.replace(old, new)
+        f.write(s)
+
+# replace "#" with " #" because of CFOUR problem
+ll = add_blank("MOL", "#", " #")
+
+
 # generate grid for molecule using numgrid external library
 
 import numgrid
@@ -38,6 +51,9 @@ weights = []
 idxb = 0
 
 fin = "MOL"
+# replace "#" with " #" because of CFOUR problem
+# add_blank(fin, "#", " #")
+
 with open(fin) as f:
     # skip first three lines
     for _ in range(3): 
@@ -134,6 +150,3 @@ for n in range(num_centers):
 f1.close()
 f2.close()
 f3.close()
-
-
-
