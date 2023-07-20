@@ -59,7 +59,7 @@ authors:
     family-names: Pyykkö
     affiliation: Helsinki
   - given-names: Teemu
-    family-names: Järvinen 
+    family-names: Järvinen
     affiliation: Helsinki
     orcid: 'https://orcid.org/0000-0001-9234-9071'
 repository-code: 'https://github.com/qmcurrents/gimic'
@@ -81,7 +81,7 @@ abstract: >-
   shieldings as well as magnetizability information with
   GIMIC. For this purpose the program has been interfaced to
   the NumGrid library, which provides optimized atomic grids
-  for accurate numerical calculations. 
+  for accurate numerical calculations.
 keywords:
   - magnetically induced current density
   - aromaticity
