@@ -5,3 +5,4 @@ pyyaml
 sphinx
 sphinx_rtd_theme
 runtest == 2.3.4
+cffconvert

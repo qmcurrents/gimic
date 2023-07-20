@@ -1,0 +1,76 @@
+{
+  "creators": [
+    {
+      "affiliation": "Tromsø",
+      "name": "Juselius, Jonas",
+      "orcid": "0000-0003-4498-3806"
+    },
+    {
+      "affiliation": "Tromsø",
+      "name": "Bast, Radovan",
+      "orcid": "0000-0003-4498-3806"
+    },
+    {
+      "affiliation": "Karlsruhe",
+      "name": "Fliegl, Heike",
+      "orcid": "0000-0002-7541-115X"
+    },
+    {
+      "affiliation": "Helsinki",
+      "name": "Sundholm, Dage",
+      "orcid": "0000-0002-2367-9277"
+    },
+    {
+      "affiliation": "Helsinki",
+      "name": "Dimitrova, Maria",
+      "orcid": "0000-0002-0711-3484"
+    },
+    {
+      "affiliation": "Helsinki",
+      "name": "Wirz, Lukas",
+      "orcid": "0000-0002-6577-7166"
+    },
+    {
+      "affiliation": "Namur",
+      "name": "Liegeois, Vincent",
+      "orcid": "0000-0003-2919-8025"
+    },
+    {
+      "affiliation": "Munich",
+      "name": "Kumar, Chandan"
+    },
+    {
+      "affiliation": "Copenhagen",
+      "name": "Kjærgaard, Thomas",
+      "orcid": "0000-0001-5986-5840"
+    },
+    {
+      "affiliation": "Munich",
+      "name": "Kussmann, Jörg",
+      "orcid": "0000-0002-4724-8551"
+    },
+    {
+      "affiliation": "Helsinki",
+      "name": "Pyykkö, Jaako"
+    },
+    {
+      "affiliation": "Helsinki",
+      "name": "Järvinen, Teemu",
+      "orcid": "0000-0001-9234-9071"
+    }
+  ],
+  "description": "The gauge including magnetically induced current method (GIMIC) is used to obtain magnetically induced current densities in molecules. It provides detailed information about electron delocalization, aromatic character, and current pathways in molecules. GIMIC needs molecular coordinates, basis set and the atomic orbital density as well as the first order perturbed density matrices as input information. It is freely available and interfaced to several well known quantum chemistry software packages like for example Turbomole. Based on Gimic output information it is possible to visualize the current density with the ParaView software package. Beside the current density it is possible to obtain nuclear magnetic shieldings as well as magnetizability information with GIMIC. For this purpose the program has been interfaced to the NumGrid library, which provides optimized atomic grids for accurate numerical calculations.",
+  "keywords": [
+    "magnetically induced current density",
+    "aromaticity",
+    "integration",
+    "numerical methods",
+    "London orbitals"
+  ],
+  "license": {
+    "id": "GPL-2.0"
+  },
+  "publication_date": "2023-09-01",
+  "title": "The gauge including magnetically induced current density method (GIMIC)",
+  "version": "2.0"
+}
