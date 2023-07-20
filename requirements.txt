@@ -1,7 +1,7 @@
-cython
+cython == 0.29.36
 numpy
 pyparsing == 2.4.7
 pyyaml
 sphinx
 sphinx_rtd_theme
-runtest == 2.3.2
+runtest == 2.3.4
