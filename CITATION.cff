@@ -17,7 +17,7 @@ authors:
     orcid: 'https://orcid.org/0000-0003-4498-3806'
   - given-names: Radovan
     family-names: Bast
-    email: radovan.bast@gmail.com
+    email: radovan.bast@uit.no
     affiliation: Tromsø
     orcid: 'https://orcid.org/0000-0003-4498-3806'
   - given-names: Heike
@@ -89,6 +89,5 @@ keywords:
   - numerical methods
   - London orbitals
 license: GPL-2.0
-commit: add commit identifyer here
 version: '2.0'
 date-released: '2023-09-01'
