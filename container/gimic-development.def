@@ -40,9 +40,9 @@ Stage: build
 
 %help
     This is how I use this container image:
-    $ ./venv.sif ./setup --type=debug
+    $ ./container.sif ./setup --type=debug
     $ cd build
-    $ ../venv.sif cmake ..
-    $ ../venv.sif make
-    $ ../venv.sif make install
-    $ ../venv.sif ctest --output-on-failure -E valgrind
+    $ ../container.sif cmake ..
+    $ ../container.sif make
+    $ ../container.sif make install
+    $ ../container.sif ctest --output-on-failure -E valgrind
