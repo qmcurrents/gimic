@@ -1,3 +1,4 @@
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.8180435.svg)](https://doi.org/10.5281/zenodo.8180435)
 [![test status](https://github.com/qmcurrents/gimic/workflows/Test/badge.svg)](https://github.com/qmcurrents/gimic/actions)
 
 
@@ -22,7 +23,11 @@ matrices.
 
 There is an annotated example input in the [examples](examples) directory.
 
+
 ## Citation
+
+For a recommended citation, please check the at the bottom-right of
+https://zenodo.org/record/8180435 (search for "Cite as").
 
 When using GIMIC please cite: 
 
