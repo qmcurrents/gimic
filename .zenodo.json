@@ -70,7 +70,7 @@
   "license": {
     "id": "GPL-2.0"
   },
-  "publication_date": "2023-09-01",
+  "publication_date": "2023-07-24",
   "title": "The gauge including magnetically induced current density method (GIMIC)",
-  "version": "2.0"
+  "version": "2.2.0"
 }
