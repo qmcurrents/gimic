@@ -26,8 +26,9 @@ There is an annotated example input in the [examples](examples) directory.
 
 ## Citation
 
-For a recommended citation, please check the at the bottom-right of
-https://zenodo.org/record/8180435 (search for "Cite as").
+For a **recommended code citation**, please check the at the bottom-right of
+https://zenodo.org/record/8180435 (on that page, search for "Cite as").
+Also the DOI badge on top of the README links to that page.
 
 When using GIMIC please cite: 
 
