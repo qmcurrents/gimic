@@ -64,7 +64,7 @@ authors:
     orcid: 'https://orcid.org/0000-0001-9234-9071'
   - given-names: Juergen
     family-names: Gauss
-    affiliation: Mainy
+    affiliation: Mainz
     orcid: 'https://orcid.org/0000-0002-6432-9345'
 repository-code: 'https://github.com/qmcurrents/gimic'
 url: 'https://gimic.readthedocs.io/en/latest/'
@@ -93,5 +93,5 @@ keywords:
   - numerical methods
   - London orbitals
 license: GPL-2.0
-version: '2.2.0'
-date-released: '2023-07-24'
+version: '2.2.1'
+date-released: '2023-07-25'
