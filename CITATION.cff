@@ -55,16 +55,16 @@ authors:
     email: jkupc@cup.uni-muenchen.de
     affiliation: Munich
     orcid: 'https://orcid.org/0000-0002-4724-8551'
-  - given-names: Jaako
+  - given-names: Jaakko
     family-names: Pyykkö
     affiliation: Helsinki
   - given-names: Teemu
     family-names: Järvinen
     affiliation: Helsinki
     orcid: 'https://orcid.org/0000-0001-9234-9071'
-  - given-names: Juergen
+  - given-names: Jürgen
     family-names: Gauss
-    affiliation: Mainy
+    affiliation: Mainz
     orcid: 'https://orcid.org/0000-0002-6432-9345'
 repository-code: 'https://github.com/qmcurrents/gimic'
 url: 'https://gimic.readthedocs.io/en/latest/'
