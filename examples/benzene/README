@@ -17,4 +17,5 @@ Example: benzene B3LYP/def2-TZVP
 - 2D VTK vti file for JVEC
     - visualization as vectors and streamlines LIC
 
-Run the code with "gimic > gimic.out" 
+Run the code with 
+<code>gimic > gimic.out</code> 
