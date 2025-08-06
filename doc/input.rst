@@ -177,6 +177,27 @@ rotation_origin=[x, y, z]
     The point in space around which to rotate. If not specified, the rotation is 
     done at the middle of the bond.
 
+Density decomposition section
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The **DensityDecomposition** block defines the decomposition of the total density matrices **XDENS**
+into user-defined groups of molecular orbitals and optionally performs the *cdens* calculation for each partial density.
+The decomposed density matrices are located in the XDENSes folder in the corresponding subfolders.
+To start calculation in addition to **XDENS** and **MOL**, file with MO coefficients in Cartesian AO basis produced
+by tool **tm2aomix** from Turbomole package.
+
+cdens_calc=``on`` / ``off``
+    When ``on``, a *cdens* run is launched inside each ``XDENSes/<group>/`` directory.                                     |
+
+mofile="aomix.in"
+    Path to the file containing MO coefficients in Cartesian AO basis produced by ``tm2aomix``.
+
+groups=$groups
+       pi=[17, 20-21] # Grouped density pi orbitals of benzene
+       sigma=[7-16, 18, 19]
+       core=[1-6]
+       $end
+
 Advanced section
 -----------------
 

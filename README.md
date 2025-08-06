@@ -64,4 +64,6 @@ Magnetizability based on the current density:
 
 * S Lehtola, M Dimitrova, H Fliegl, D Sundholm, Benchmarking magnetizabilities with recent density functionals, J. Chem. Theo. Comp., 17, 1457-1468
 
+Orbital contributions to magnetically induced current densities:
 
+* RT Nasibullin, M Dimitrova, RR Valiev, D Sundholm, Orbital contributions to magnetically induced current densities using gauge-including atomic orbitals, Chem. Sci., 16, 8040-8052

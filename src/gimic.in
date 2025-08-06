@@ -26,12 +26,20 @@ def main():
     args = parse_cmdline()
     inkeys = parse_keywords(args)
 
+    dd_sect = inkeys.findsect('DensityDecomposition')
+    if dd_sect:
+        del inkeys.sect['DensityDecomposition']
+
     if inkeys.getkw('backend')[0] == 'fgimic':
         from fgimic.gimic import GimicDriver
     else:
         from pygimic.pygimic import GimicDriver
     gimic = GimicDriver(args, inkeys)
     gimic.run()
+
+    if dd_sect and dd_sect.is_set() and not args.dryrun:
+        run_density_decomposition(dd_sect, args, inkeys)
+
 
 def parse_cmdline():
     parser = ArgumentParser(description="GIMIC {0}".format(version))
@@ -123,10 +131,16 @@ def parse_keywords(args):
     gimlet.add_kw('translation', 'INT_ARRAY', (0,0,0))
     gimlet.add_kw('origin', 'DBL_ARRAY', (0.0,0.0,0.0))
 
+    dd=getkw.Section('DensityDecomposition')
+    dd.add_kw('groups', 'STR', None)
+    dd.add_kw('cdens_calc', 'BOOL', None)
+    dd.add_kw("mofile", 'STR', None)
+
     top.add_sect(adv)
     top.add_sect(ess)
     top.add_sect(grid)
     top.add_sect(gimlet)
+    top.add_sect(dd)
 
     input=getkw.GetkwParser(top)
     inkw=input.parseFile(args.infile)
@@ -281,6 +295,19 @@ def check_top(top):
         b = top.getkw('magnet_axis')[0]
         if b in ortho:
             top['magnet_axis'][0].setkw('X')
+
+def run_density_decomposition(dd_sect, args, inkeys):
+    """Try to run density_decomposition.run();
+       if there is no section, just exit.
+    """
+    try:
+        from pygimic import density_decomposition as dd
+        dd.run(dd_sect, args, inkeys)
+
+    except ImportError as err:
+        sys.stderr.write(f"DensityDecomposition: failed to import module: {err}")
+        sys.exit(1)
+
 
 if __name__ == '__main__':
     main()

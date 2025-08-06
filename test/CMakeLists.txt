@@ -35,6 +35,7 @@ gimic_test(open-shell/3d)
 gimic_test(open-shell/integration)
 gimic_test(benzene/skip-jmod-integration)
 gimic_test(benzene/magnetizability)
+gimic_test(benzene/density-decomposition)
 
 
 option(ENABLE_VALGRIND_TESTS "Enable Valgrind tests" OFF)
