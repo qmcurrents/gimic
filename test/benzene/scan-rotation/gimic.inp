@@ -1,0 +1,47 @@
+# NEW INPUT
+
+calc=scangrid          # cdens, integral, edens, divj
+dryrun=off        # don't actually calculate (good for tuning grids, etc.)
+title=""
+basis="MOL"
+xdens="XDENS"
+debug=1           # debug print level
+openshell=false
+# show_axis=true   # mark "up" axis in .xyz files
+magnet_axis=X #[-] i,j,k || x,y,z -> align magnet along axis
+
+# grid type can be: base/std, bond or file (see examples below)
+Grid(bond) {                    # define grid orthogonal to a bond
+    type=gauss                # gauss distribution of grid points
+    coord1=[-2.0000,  5.0000, 0.0]
+    coord2=[ 2.0000,  5.0000, 0.0]
+    fixcoord=[0.0, 0.0, 0.0]
+    distance=2               # place grid 'distance' between atoms
+    gauss_order=9               # order for gauss quadrature
+    spacing=[0.05, 0.05, 0.05]
+    height=[-15.0, 15.0]
+    width=[ -5.00,  10.00]
+}
+
+ScanGrid(rotation) {
+    max_angle=30
+    step=10
+    rotation_origin = [0.0, 0.0, 0.0]
+    rotation_axis = 'Z'
+    xdenses_path = "XDENSes"
+    add_total_to_scan = on
+}
+
+Advanced {
+    lip_order=5      # order of Lagrange Interpolating Polynominals to use
+    spherical=off     # don't touch, unless you REALLY know what you are doing
+    diamag=on           # turn on/off diamagnetic contributions
+    paramag=on          # turn on/off paramagnetic contributions
+    GIAO=on             # turn on/off GIAOs. Don't change unless you know why.
+    screening=on        # use screening to speed up
+    screening_thrs=1.d-8   # Screening threshold
+}
+
+Essential {
+    acid=on
+}

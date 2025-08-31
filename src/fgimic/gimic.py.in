@@ -1,7 +1,7 @@
 #
 # Jonas Juselius <jonas.juselius@uit.no> 2012
 #
-import os
+import os, subprocess
 
 GIMIC_EXECUTABLE = '@CMAKE_INSTALL_FULL_BINDIR@/gimic.bin'
 
@@ -26,5 +26,14 @@ class GimicDriver:
         os.system(command)
 
         os.unlink(infile)
+ 
+    def run_capture(self):
+        """
+        Run GIMIC and capture output
+        """
+        cmd = GIMIC_EXECUTABLE
+        res = subprocess.run(cmd, input=str(self.kw), shell=True, text=True, capture_output=True)
+        return res.stdout, res.stderr, res.returncode
+
 
 # vim:et:ts=4:sw=4

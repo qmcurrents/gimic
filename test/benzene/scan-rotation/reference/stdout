@@ -1,0 +1,65 @@
+ ****************************************************************
+ ***                                                          ***
+ ***           GIMIC 2.2.1 (38b960c)                          ***
+ ***           Written by Jonas Juselius and co-authors       ***
+ ***                                                          ***
+ ***  This software is copyright (c) 2003-2023 by             ***
+ ***  GIMIC authors.                                          ***
+ ***                                                          ***
+ ***  You are free to distribute this software under the      ***
+ ***  terms of the GNU General Public License                 ***
+ ****************************************************************
+
+ Wed Aug  6 16:05:58 2025
+  TITLE:
+
+ INFO: Detected TURBOMOLE input
+
+ Number of atoms =  12
+
+ Normalizing basis
+
+   Total number of primitive  GTO's    354
+   Total number of contracted GTO's    252
+
+ *** Calculating screening coefficients
+ INFO: Screening threshold:   0.1000E-07
+
+ INFO: Reordering densities [TURBOMOLE]
+
+ Integration grid data
+ ------------------------------------------------
+ center     0.000000    5.000000    0.000000
+ origin     0.000000   15.000000  -15.000000
+ basv1     -0.000000   -0.000000    1.000000
+ basv2      0.000000   -1.000000    0.000000
+ basv3      1.000000    0.000000    0.000000
+ lenghts   30.000000   15.000000    0.000000
+ magnet     0.000000    0.000000   -1.000000
+
+ Grid mode = bond
+ INFO: Rotation is:   0.00000  0.00000  0.00000
+ INFO: Integration grid selected.
+ INFO: Adjusted number of grid points for quadrature:   603  306    0
+   Number of grid points <v1,v2>:  603  306    1
+   Total number of grid points  :    184518
+
+ *** Grid plot in grid.xyz
+ INFO: Closed-shell calculation
+
+ Integrating current density
+ *****************************************
+ Jmod integration skipped.
+ *** Integrating current
+
+ ************************************************************
+[Total          ] 4/4 (100.0%) ETA    0.0s   ...done in   11.6s
+   dia=1.664812e+01 para=-4.703407e+00 tot=1.194472e+01
+
+Data written: dia_scan.dat, para_scan.dat, total_scan.dat
+
+Averaged contributions  (nA/T)
+Group                         dia         para        total
+Total                  1.6648e+01  -4.7034e+00   1.1945e+01
+
+Scan finished.
